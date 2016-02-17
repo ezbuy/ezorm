@@ -7,16 +7,23 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/ezbuy/ezorm/tpl"
 	"github.com/ezbuy/utils/container/set"
 )
 
 var Tpl *template.Template
 
 func init() {
-	tmp, err := template.ParseGlob("src/code.1dmy.com/xyz/xuanwu/tmpl/*.tmpl")
-	Tpl = tmp
-	if err != nil {
-		panic(err)
+	Tpl = template.New("ezorm")
+	files := []string{
+		"mongo.gogo",
+	}
+	for _, fname := range files {
+		data, _ := tpl.Asset(fname)
+		_, err := tmp.Parse(string(data))
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
