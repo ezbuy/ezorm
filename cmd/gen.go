@@ -18,9 +18,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/ezbuy/ezorm/parser"
 	"github.com/spf13/cobra"
 )
 
@@ -31,6 +33,12 @@ var genCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		var objs map[string]map[string]interface{}
 		data, _ := ioutil.ReadFile(input)
+		stat, err := os.Stat(input)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		packageName := strings.Title(strings.Split(stat.Name(), ".")[0])
 		err = yaml.Unmarshal([]byte(data), &objs)
 
 		if err != nil {
@@ -47,7 +55,7 @@ var genCmd = &cobra.Command{
 				println(err.Error())
 			}
 
-			for _, genType = range xwMetaObj.GetGenTypes() {
+			for _, genType := range xwMetaObj.GetGenTypes() {
 				file, err := os.OpenFile(output+"/gen_"+xwMetaObj.Name+"_"+genType+".go", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 				xwMetaObj.TplWriter = file
 				if err != nil {
@@ -67,6 +75,7 @@ var genCmd = &cobra.Command{
 }
 
 var input string
+var output string
 
 func init() {
 	RootCmd.AddCommand(genCmd)
@@ -76,6 +85,7 @@ func init() {
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
 	genCmd.PersistentFlags().StringVarP(&input, "input", "i", "", "input file")
+	genCmd.PersistentFlags().StringVarP(&output, "output", "o", "", "output path")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:

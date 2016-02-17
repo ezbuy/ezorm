@@ -16,11 +16,15 @@ var Tpl *template.Template
 func init() {
 	Tpl = template.New("ezorm")
 	files := []string{
-		"mongo.gogo",
+		"mongo_collection.gogo",
+		"mongo_foreign_key.gogo",
+		"mongo_mongo.gogo",
+		"mongo_orm.gogo",
+		"struct.gogo",
 	}
 	for _, fname := range files {
 		data, _ := tpl.Asset(fname)
-		_, err := tmp.Parse(string(data))
+		_, err := Tpl.Parse(string(data))
 		if err != nil {
 			panic(err)
 		}
@@ -33,7 +37,7 @@ type Obj struct {
 	Fields       []*Field
 	Label        string
 	Name         string
-	GenType      string
+	Db           string
 	Package      string
 	SearchIndex  string
 	SearchType   string
@@ -42,9 +46,7 @@ type Obj struct {
 }
 
 func (o *Obj) init() {
-	if strings.HasSuffix(o.Name, "Form") {
-		o.GenType = "form"
-	}
+
 }
 
 func (o *Obj) LoadTpl(tpl string) string {
@@ -66,9 +68,10 @@ func (o *Obj) LoadField(f *Field) string {
 }
 
 func (o *Obj) GetGenTypes() []string {
-	switch o.GenType {
-	case "form":
-		return []string{"struct", "form"}
+
+	switch o.Db {
+	case "mongo":
+		return []string{"struct", "mongo_orm"}
 	case "enum":
 		return []string{"enum"}
 	default:
@@ -151,15 +154,15 @@ func (o *Obj) Read(data map[string]interface{}) error {
 	hasType := false
 	for key, val := range data {
 		switch key {
-		case "type":
-			o.GenType = val.(string)
+		case "db":
+			o.Db = val.(string)
 			hasType = true
 			break
 		}
 	}
 
 	if hasType {
-		delete(data, "type")
+		delete(data, "db")
 	}
 
 	for key, val := range data {
@@ -173,8 +176,8 @@ func (o *Obj) Read(data map[string]interface{}) error {
 		case "fields":
 			fieldData := val.([]interface{})
 			startPos := 0
-			// println(o.GenType, o.Name)
-			if o.GenType == "" {
+
+			if o.Db == "" {
 				o.Fields = make([]*Field, len(fieldData)+1)
 				f := new(Field)
 				f.init()
