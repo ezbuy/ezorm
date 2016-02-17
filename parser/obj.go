@@ -16,15 +16,19 @@ var Tpl *template.Template
 func init() {
 	Tpl = template.New("ezorm")
 	files := []string{
-		"mongo_collection.gogo",
-		"mongo_foreign_key.gogo",
-		"mongo_mongo.gogo",
-		"mongo_orm.gogo",
-		"struct.gogo",
+		"tpl/mongo_collection.gogo",
+		"tpl/mongo_foreign_key.gogo",
+		"tpl/mongo_mongo.gogo",
+		"tpl/mongo_orm.gogo",
+		"tpl/mongo_search.gogo",
+		"tpl/struct.gogo",
 	}
 	for _, fname := range files {
-		data, _ := tpl.Asset(fname)
-		_, err := Tpl.Parse(string(data))
+		data, err := tpl.Asset(fname)
+		if err != nil {
+			panic(err)
+		}
+		_, err = Tpl.Parse(string(data))
 		if err != nil {
 			panic(err)
 		}

@@ -1,0 +1,6 @@
+
+Page:
+  db: mongo
+  fields:
+    - Title: string
+    - Hits: int32

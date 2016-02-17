@@ -1,0 +1,61 @@
+{{define "struct"}}package {{.Package}}
+import (
+	"fmt"
+
+	"labix.org/v2/mgo/bson"
+	. "gitlab.1dmy.com/ezbuy/ezorm"
+)
+
+
+type {{.Name}} struct {
+	{{range $field := .Fields}}{{if eq $field.Name "ID"}}
+	ID         bson.ObjectId `bson:"_id,omitempty"`{{else}}
+	{{$field.Name}}  {{$field.GetGoType}} `bson:"{{$field.Name}}"`{{end}}{{end}}
+
+	isNew bool
+}
+
+type _{{.Name}}Mgr struct {
+}
+
+var {{.Name}}Mgr *_{{.Name}}Mgr
+
+func init() {
+}
+
+func new{{.Name}}XuanWuObj() IXuanWuObj {
+	return {{.Name}}Mgr.New{{.Name}}()
+}
+
+func (p *{{.Name}}) GetNameSpace() string {
+	return "{{.Package}}"
+}
+
+func (p *{{.Name}}) GetClassName() string {
+	return "{{.Name}}"
+}
+
+func (o *{{.Name}}) Id() string {
+	return o.ID.Hex()
+}
+
+func (p *{{.Name}}) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("{{.Name}}(%+v)", *p)
+}
+
+
+func (m *_{{.Name}}Mgr) New{{.Name}}() *{{.Name}} {
+	rval := new({{.Name}})
+	rval.isNew = true
+	rval.ID = bson.NewObjectId()
+{{range $field := .Fields}}
+{{if $field.HasDefaultValue}}
+	rval.{{$field.Name}} = "{{$field.DefaultValue}}"
+{{end}}
+{{end}}
+	return rval
+}
+{{end}}
