@@ -67,6 +67,13 @@ func GetGoType(typestr string) string {
 		innerType := typestr[5 : len(typestr)-1]
 		return "[]" + GetGoType(innerType) + ""
 	}
+
+	if strings.HasPrefix(typestr, "map[") {
+		i := strings.Index(typestr, "]")
+		keyType := typestr[4:i]
+		valType := typestr[i+1:]
+		return "map[" + GetGoType(keyType) + "]" + GetGoType(valType)
+	}
 	return typestr
 }
 
