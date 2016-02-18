@@ -7,8 +7,8 @@ import (
 	"net/url"
 	"time"
 
-	"labix.org/v2/mgo"
-	"labix.org/v2/mgo/bson"
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 var (
@@ -34,8 +34,8 @@ func RegisterIndexer(namespace, classname string, indexer func()) {
 	Indexers[namespace+"."+classname] = indexer
 }
 
-func NewXuanWuObj(namespace, classname string) EzOrmObj {
-	constructor, ok := xuanWuObjs[namespace+"."+classname]
+func NewEzOrmObjObj(namespace, classname string) EzOrmObj {
+	constructor, ok := ezOrmObjs[namespace+"."+classname]
 	if !ok {
 		return nil
 	}
@@ -43,7 +43,7 @@ func NewXuanWuObj(namespace, classname string) EzOrmObj {
 	return constructor()
 }
 
-func NewEzOrmObjByID(namespace, classname, id string) (result IXuanWuObj, err error) {
+func NewEzOrmObjByID(namespace, classname, id string) (result EzOrmObj, err error) {
 	f, ok := ezOrmObjsByID[namespace+"."+classname]
 	if !ok {
 		return nil, nil
