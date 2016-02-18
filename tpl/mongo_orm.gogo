@@ -6,8 +6,8 @@ import (
 	"labix.org/v2/mgo/bson"
 
 	//Own libs
-	"code.1dmy.com/xyz/db"
-	. "code.1dmy.com/xyz/xuanwu/orm"
+	"github.com/ezbuy/ezdb"
+	. "github.com/ezbuy/ezorm/orm"
 
 	{{range .GetOrmImports}}
 	"{{.}}"
@@ -21,8 +21,8 @@ func init() {
 	{{if .NeedMapping}}
 	db.SetOnFinishInit(init{{.Name}}Mapping)
 	{{end}}
-	RegisterXuanWuObjByID("{{.Package}}", "{{.Name}}", new{{.Name}}FindByID)
-	RegisterXuanWuObjRemove("{{.Package}}", "{{.Name}}", {{.Name}}Mgr.RemoveByID)
+	RegisterEzOrmObjByID("{{.Package}}", "{{.Name}}", new{{.Name}}FindByID)
+	RegisterEzOrmObjRemove("{{.Package}}", "{{.Name}}", {{.Name}}Mgr.RemoveByID)
 	{{if .NeedSearch}}
 	RegisterIndexer("{{.Package}}", "{{.Name}}", {{.Name}}Mgr.SearchRebuild)
 	{{end}}
@@ -70,10 +70,6 @@ reEnsure{{$field.Name}}:
 	{{end}}
 }
 {{end}}
-
-func (m *_{{.Name}}Mgr) DefaultOrder() string {
-	return "{{.DefaultOrder}}"
-}
 
 func new{{.Name}}FindByID(id string) (result IXuanWuObj, err error) {
 	return {{.Name}}Mgr.FindByID(id)

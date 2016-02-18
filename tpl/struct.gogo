@@ -3,7 +3,7 @@ import (
 	"fmt"
 
 	"labix.org/v2/mgo/bson"
-	. "gitlab.1dmy.com/ezbuy/ezorm"
+	. "gitlab.1dmy.com/ezbuy/ezorm/orm"
 )
 
 
