@@ -1,12 +1,8 @@
 {{define "struct"}}package {{.Package}}
 {{$obj := .}}
-import (
-	"fmt"
-
-	"gopkg.in/mgo.v2/bson"
-	. "gitlab.1dmy.com/ezbuy/ezorm/orm"
-)
-
+{{if eq .Db "mongo"}}
+import "gopkg.in/mgo.v2/bson"
+{{end}}
 
 type {{.Name}} struct {
 {{- range $field := .Fields}}
@@ -21,11 +17,6 @@ type {{.Name}} struct {
 {{- end}}
 }
 
-type _{{.Name}}Mgr struct {
-}
-
-var {{.Name}}Mgr *_{{.Name}}Mgr
-
 func (p *{{.Name}}) GetNameSpace() string {
 	return "{{.Package}}"
 }
@@ -34,10 +25,15 @@ func (p *{{.Name}}) GetClassName() string {
 	return "{{.Name}}"
 }
 
+type _{{.Name}}Mgr struct {
+}
+
+var {{.Name}}Mgr *_{{.Name}}Mgr
+
 func (m *_{{.Name}}Mgr) New{{.Name}}() *{{.Name}} {
 	rval := new({{.Name}})
-	rval.isNew = true
 {{if eq .Db "mongo"}}
+	rval.isNew = true
 	rval.ID = bson.NewObjectId()
 {{end}}
 

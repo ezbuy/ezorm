@@ -53,7 +53,7 @@ func NewEzOrmObjByID(namespace, classname, id string) (result EzOrmObj, err erro
 }
 
 func RemoveEzOrmObj(namespace, classname, id string) (err error) {
-	f, ok := ezOrmObjRemove[namespace+"."+classname]
+	f, ok := ezOrmObjsRemove[namespace+"."+classname]
 	if !ok {
 		return errors.New(namespace + "." + classname + " remove func not found")
 
@@ -65,10 +65,7 @@ func RemoveEzOrmObj(namespace, classname, id string) (err error) {
 type EzOrmObj interface {
 	Id() string
 	GetClassName() string
-	GetFieldAsString(fieldKey string) (Value string)
-	GetRawString(fieldKey string) (Value string)
 	GetNameSpace() string
-	String() string
 }
 
 type SearchObj interface {
