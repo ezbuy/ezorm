@@ -32,16 +32,16 @@ var {{.Name}}Mgr *_{{.Name}}Mgr
 
 func (m *_{{.Name}}Mgr) New{{.Name}}() *{{.Name}} {
 	rval := new({{.Name}})
-{{if eq .Db "mongo"}}
+{{- if eq .Db "mongo"}}
 	rval.isNew = true
 	rval.ID = bson.NewObjectId()
-{{end}}
+{{end -}}
 
-{{range $field := .Fields}}
-{{if $field.HasDefaultValue}}
+{{- range $field := .Fields}}
+	{{- if $field.HasDefaultValue}}
 	rval.{{$field.Name}} = "{{$field.DefaultValue}}"
-{{end}}
-{{end}}
+	{{- end -}}
+{{- end}}
 	return rval
 }
 {{end}}
