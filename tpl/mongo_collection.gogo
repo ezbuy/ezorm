@@ -42,7 +42,7 @@ func (o *_{{$obj.Name}}Mgr) FindBy{{$field.Name}}({{$field.Name}} {{$field.Type}
 	query := db.M{
 		"{{$field.Name}}": {{$field.Name}},
 	}
-	session, q := {{.Name}}Mgr.Query(query, 1, 0, nil)
+	session, q := {{$obj.Name}}Mgr.Query(query, 1, 0, nil)
 	defer session.Close()
 	err = q.One(&result)
 	return

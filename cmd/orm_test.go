@@ -23,11 +23,18 @@ func TestGetRefIf(t *testing.T) {
 	section.Data = make(map[string]string)
 	section.Data["foo"] = "bar"
 	p.Sections[0] = section
-	// p.Save()
+	p.Slug = "ezorm"
+	p.Save()
 
-	p, err := page.PageMgr.FindByID("56c5edc940e5bc09d3937ff0")
+	p, err := page.PageMgr.FindBySlug("ezorm")
 	if err != nil {
-		panic(err)
+		t.Error("find fail")
 	}
 	fmt.Println("%v", p)
+	page.PageMgr.RemoveByID(p.Id())
+
+	_, err = page.PageMgr.FindBySlug("ezorm")
+	if err == nil {
+		t.Error("delete fail")
+	}
 }
