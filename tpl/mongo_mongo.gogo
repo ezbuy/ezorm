@@ -14,6 +14,10 @@ func {{.Name}}AddUpdateCallback(cb func(obj EzOrmObj)) {
 	updateCB_{{.Name}} = append(updateCB_{{.Name}}, cb)
 }
 
+func (o *{{.Name}}) Id() string {
+	return o.ID.Hex()
+}
+
 func (o *{{.Name}}) Save() (info *mgo.ChangeInfo, err error) {
 	session, col := {{.Name}}Col()
 	defer session.Close()
