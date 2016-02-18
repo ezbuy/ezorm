@@ -3,11 +3,12 @@ Section:
   fields:
     - Key: string
     - Val: int32
+    - Data: map[string]string
 
 Page:
   db: mongo
   fields:
     - Title: string
     - Hits: int32
-    - Sections: list<int>
-    - Meta: map[string]Section
+    - Sections: list<Section>
+    - Meta: map[string]list<map[string]int>
