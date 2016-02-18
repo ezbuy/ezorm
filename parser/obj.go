@@ -36,10 +36,8 @@ func init() {
 }
 
 type Obj struct {
-	DefaultOrder string
 	Extend       string
 	Fields       []*Field
-	Label        string
 	Name         string
 	Db           string
 	Package      string
@@ -79,7 +77,7 @@ func (o *Obj) GetGenTypes() []string {
 	case "enum":
 		return []string{"enum"}
 	default:
-		return []string{"struct", "thrift_serial", "form", "orm"}
+		return []string{"struct"}
 	}
 }
 
@@ -171,8 +169,6 @@ func (o *Obj) Read(data map[string]interface{}) error {
 
 	for key, val := range data {
 		switch key {
-		case "label":
-			o.Label = val.(string)
 		case "extend":
 			o.Extend = val.(string)
 		case "filterFields":
@@ -181,7 +177,7 @@ func (o *Obj) Read(data map[string]interface{}) error {
 			fieldData := val.([]interface{})
 			startPos := 0
 
-			if o.Db == "" {
+			if o.Db == "mongo" {
 				o.Fields = make([]*Field, len(fieldData)+1)
 				f := new(Field)
 				f.init()

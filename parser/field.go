@@ -58,11 +58,20 @@ func (f *Field) GetThriftType() string {
 	return SupportedFieldTypes[f.Type]
 }
 
-func (f *Field) GetGoType() string {
-	if f.Type == "datetime" {
+func GetGoType(typestr string) string {
+	if typestr == "datetime" {
 		return "int64"
 	}
-	return f.Type
+
+	if strings.HasPrefix(typestr, "list<") {
+		innerType := typestr[5 : len(typestr)-1]
+		return "[]" + GetGoType(innerType) + ""
+	}
+	return typestr
+}
+
+func (f *Field) GetGoType() string {
+	return GetGoType(f.Type)
 }
 
 func (f *Field) HasDefaultValue() bool {
@@ -156,9 +165,9 @@ func (f *Field) Read(data map[interface{}]interface{}) error {
 				foundName = true
 				f.Name = key
 
-				if _, ok := SupportedFieldTypes[val]; !ok {
-					return errors.New(key + " has invalid type: " + val)
-				}
+				// if _, ok := SupportedFieldTypes[val]; !ok {
+				// 	return errors.New(key + " has invalid type: " + val)
+				// }
 
 				f.Type = val
 				if f.Type == "int" {

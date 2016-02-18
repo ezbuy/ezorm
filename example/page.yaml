@@ -1,6 +1,13 @@
 
+Section:
+  fields:
+    - Key: string
+    - Val: int32
+
 Page:
   db: mongo
   fields:
     - Title: string
     - Hits: int32
+    - Sections: list<int>
+    - Meta: map[string]Section
