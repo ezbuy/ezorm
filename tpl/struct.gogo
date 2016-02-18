@@ -8,11 +8,16 @@ import (
 
 
 type {{.Name}} struct {
-	{{range $field := .Fields}}{{if eq $field.Name "ID"}}
-	ID         bson.ObjectId `bson:"_id,omitempty"`{{else}}
-	{{$field.Name}}  {{$field.GetGoType}} `bson:"{{$field.Name}}"`{{end}}{{end}}
-
+{{- range $field := .Fields}}
+	{{- if eq $field.Name "ID"}}
+	ID         bson.ObjectId `bson:"_id,omitempty"`
+	{{- else}}
+	{{$field.Name}}  {{$field.GetGoType}} `bson:"{{$field.Name}}"`
+	{{- end -}}
+{{- end -}}
+{{- if ne .Db ""}}
 	isNew bool
+{{- end}}
 }
 
 type _{{.Name}}Mgr struct {
