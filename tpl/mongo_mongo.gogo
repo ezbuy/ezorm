@@ -2,21 +2,16 @@
 
 //mongo methods
 var (
-	insertCB_{{.Name}} []func(obj IXuanWuObj)
-	updateCB_{{.Name}} []func(obj IXuanWuObj)
-	extraValidation_{{.Name}} []func(o *{{.Name}}) bool
+	insertCB_{{.Name}} []func(obj EzOrmObj)
+	updateCB_{{.Name}} []func(obj EzOrmObj)
 )
 
-func {{.Name}}AddInsertCallback(cb func(obj IXuanWuObj)) {
+func {{.Name}}AddInsertCallback(cb func(obj EzOrmObj)) {
 	insertCB_{{.Name}} = append(insertCB_{{.Name}}, cb)
 }
 
-func {{.Name}}AddUpdateCallback(cb func(obj IXuanWuObj)) {
+func {{.Name}}AddUpdateCallback(cb func(obj EzOrmObj)) {
 	updateCB_{{.Name}} = append(updateCB_{{.Name}}, cb)
-}
-
-func {{.Name}}AddExtraValidation(validate func(o *{{.Name}}) bool) {
-	extraValidation_{{.Name}} = append(extraValidation_{{.Name}}, validate)
 }
 
 func (o *{{.Name}}) Save() (info *mgo.ChangeInfo, err error) {

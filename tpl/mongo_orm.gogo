@@ -2,11 +2,11 @@
 {{$obj := .}}
 import (
 	//3rd party libs
-	"labix.org/v2/mgo"
-	"labix.org/v2/mgo/bson"
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 
 	//Own libs
-	"github.com/ezbuy/ezdb"
+	"github.com/ezbuy/ezorm/db"
 	. "github.com/ezbuy/ezorm/orm"
 
 	{{range .GetOrmImports}}

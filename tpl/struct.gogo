@@ -2,7 +2,7 @@
 import (
 	"fmt"
 
-	"labix.org/v2/mgo/bson"
+	"gopkg.in/mgo.v2/bson"
 	. "gitlab.1dmy.com/ezbuy/ezorm/orm"
 )
 
@@ -23,7 +23,7 @@ var {{.Name}}Mgr *_{{.Name}}Mgr
 func init() {
 }
 
-func new{{.Name}}XuanWuObj() IXuanWuObj {
+func new{{.Name}}EzOrmObj() EzOrmObj {
 	return {{.Name}}Mgr.New{{.Name}}()
 }
 
