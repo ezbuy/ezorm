@@ -19,7 +19,7 @@ func (o *{{.Name}}) Id() string {
 }
 
 func (o *{{.Name}}) Save() (info *mgo.ChangeInfo, err error) {
-	session, col := {{.Name}}Col()
+	session, col := {{.Name}}Mgr.GetCol()
 	defer session.Close()
 
 	isNew := o.isNew
@@ -54,7 +54,7 @@ func (o *{{.Name}}) Save() (info *mgo.ChangeInfo, err error) {
 }
 
 func (o *{{.Name}}) InsertUnique(query interface{}) (saved bool, err error) {
-	session, col := {{.Name}}Col()
+	session, col := {{.Name}}Mgr.GetCol()
 	defer session.Close()
 
 	info, err := col.Upsert(query, db.M{"$setOnInsert": o})
@@ -83,7 +83,4 @@ func {{.Name}}UpdateCallback(o *{{.Name}}) {
 	}
 }
 
-func {{.Name}}Col() (session *mgo.Session, col *mgo.Collection) {
-	return db.GetCol("{{.Package}}.{{.Name}}")
-}
 {{end}}

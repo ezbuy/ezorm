@@ -2,7 +2,7 @@
 //Collection Manage methods
 {{$obj := .}}
 func (o *_{{.Name}}Mgr) FindOne(query interface{}, sortFields ...string) (result *{{$obj.Name}}, err error) {
-	session, col := {{.Name}}Col()
+	session, col := {{.Name}}Mgr.GetCol()
 	defer session.Close()
 
 	q := col.Find(query)
@@ -24,7 +24,7 @@ func _{{$obj.Name}}Sort(q *mgo.Query, sortFields []string) {
 }
 
 func (o *_{{.Name}}Mgr) Query(query interface{}, limit, offset int, sortFields []string) (*mgo.Session, *mgo.Query) {
-	session, col := {{.Name}}Col()
+	session, col := {{.Name}}Mgr.GetCol()
 	q := col.Find(query)
 	if limit > 0 {
 		q.Limit(limit)
@@ -75,7 +75,7 @@ func (o *_{{.Name}}Mgr) FindAll(query interface{}, sortFields ...string) (result
 }
 
 func (o *_{{.Name}}Mgr) Has(query interface{}) bool {
-	session, col := {{.Name}}Col()
+	session, col := {{.Name}}Mgr.GetCol()
 	defer session.Close()
 
 	var ret interface{}
@@ -87,7 +87,7 @@ func (o *_{{.Name}}Mgr) Has(query interface{}) bool {
 }
 
 func (o *_{{.Name}}Mgr) Count(query interface{}) (result int) {
-	session, col := {{.Name}}Col()
+	session, col := {{.Name}}Mgr.GetCol()
 	defer session.Close()
 
 	result, _ = col.Find(query).Count()
@@ -105,7 +105,7 @@ func (o *_{{.Name}}Mgr) FindByIDs(id []string, sortFields ...string) (result []*
 }
 
 func (m *_{{.Name}}Mgr) FindByID(id string) (result *{{$obj.Name}}, err error) {
-	session, col := {{.Name}}Col()
+	session, col := {{.Name}}Mgr.GetCol()
 	defer session.Close()
 
 	if !bson.IsObjectIdHex(id) {
@@ -117,14 +117,14 @@ func (m *_{{.Name}}Mgr) FindByID(id string) (result *{{$obj.Name}}, err error) {
 }
 
 func (m *_{{.Name}}Mgr) RemoveAll(query interface{}) (info *mgo.ChangeInfo, err error) {
-	session, col := {{.Name}}Col()
+	session, col := {{.Name}}Mgr.GetCol()
 	defer session.Close()
 
 	return col.RemoveAll(query)
 }
 
 func (m *_{{.Name}}Mgr) RemoveByID(id string) (err error) {
-	session, col := {{.Name}}Col()
+	session, col := {{.Name}}Mgr.GetCol()
 	defer session.Close()
 
 	if !bson.IsObjectIdHex(id) {
@@ -138,9 +138,13 @@ func (m *_{{.Name}}Mgr) RemoveByID(id string) (err error) {
 	return
 }
 
+func (m *_{{.Name}}Mgr) GetCol() (session *mgo.Session, col *mgo.Collection) {
+	return db.GetCol("{{.Package}}.{{.Name}}")
+}
+
 {{/*
 func {{.Name}}FindAndModify(query interface{}, op mgo.Change) (ret *{{.Name}}, err error) {
-	session, col := {{.Name}}Col()
+	session, col := {{.Name}}Mgr.GetCol()
 	defer session.Close()
 
 	_, err = col.Find(query).Apply(op, &ret)
@@ -149,7 +153,7 @@ func {{.Name}}FindAndModify(query interface{}, op mgo.Change) (ret *{{.Name}}, e
 
 
 func {{.Name}}Update(query, update interface{}) error {
-	session, col := {{.Name}}Col()
+	session, col := {{.Name}}Mgr.GetCol()
 	defer session.Close()
 
 	err := col.Update(query, update)
@@ -157,7 +161,7 @@ func {{.Name}}Update(query, update interface{}) error {
 }
 
 func {{.Name}}UpdateAll(query, update interface{}) (*mgo.ChangeInfo, error) {
-	session, col := {{.Name}}Col()
+	session, col := {{.Name}}Mgr.GetCol()
 	defer session.Close()
 
 	info, err := col.UpdateAll(query, update)

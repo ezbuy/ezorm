@@ -71,7 +71,7 @@ reEnsure{{$field.Name}}:
 }
 {{end}}
 
-func new{{.Name}}FindByID(id string) (result IXuanWuObj, err error) {
+func new{{.Name}}FindByID(id string) (result EzOrmObj, err error) {
 	return {{.Name}}Mgr.FindByID(id)
 }
 
