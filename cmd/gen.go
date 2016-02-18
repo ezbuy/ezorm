@@ -38,7 +38,7 @@ var genCmd = &cobra.Command{
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		packageName := strings.Title(strings.Split(stat.Name(), ".")[0])
+		packageName := strings.Split(stat.Name(), ".")[0]
 		err = yaml.Unmarshal([]byte(data), &objs)
 
 		if err != nil {
