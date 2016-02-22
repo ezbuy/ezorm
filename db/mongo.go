@@ -93,3 +93,11 @@ func GetCol(col string) (session *mgo.Session, collection *mgo.Collection) {
 func NewObjectId() bson.ObjectId {
 	return bson.NewObjectId()
 }
+
+func IsMgoNotFound(err error) bool {
+	return err == mgo.ErrNotFound
+}
+
+func IsMgoDup(err error) bool {
+	return mgo.IsDup(err)
+}
