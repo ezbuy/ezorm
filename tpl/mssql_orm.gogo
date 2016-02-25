@@ -57,8 +57,7 @@ func (o *_{{.Name}}Mgr) Find(where string,args ...interface{}) (results []*{{$ob
 		current.{{$field.Name}} = {{- if eq $field.Type "int32"}}int32({{- end}}{{$field.Name}}.{{getNullType $field.Type -}}{{- if eq $field.Type "int32"}}){{end}}
 	}
 	{{end}}
-
-		results = append(results,current)
+	results = append(results,current)
 	}
 
 	return
