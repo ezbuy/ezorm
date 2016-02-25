@@ -36,6 +36,7 @@ var genmsormCmd = &cobra.Command{
 			createYamlFile(table, columnsinfo)
 			generate(table, columnsinfo)
 		} else {
+
 			generate("table", nil)
 		}
 
@@ -43,25 +44,8 @@ var genmsormCmd = &cobra.Command{
 	},
 }
 
-type YamlStr struct {
-	Table   string       "tableName"
-	Columns []ColumnInfo "columns"
-}
-
-func createYamlFile(table string, columns []ColumnInfo) {
-	newYaml := YamlStr{
-		Table:   table,
-		Columns: columns,
-	}
-	bs, err := yaml.Marshal(newYaml)
-	if err != nil {
-		println(err)
-		return
-	}
-	ioutil.WriteFile("example/sql.yaml", bs, 0644)
-}
-
 var table string
+var outputYaml string
 
 type ColumnInfo struct {
 	ColumnName   string
@@ -69,6 +53,29 @@ type ColumnInfo struct {
 	MaxLength    int
 	Nullable     bool
 	IsPrimaryKey bool
+}
+
+func createYamlFile(table string, columns []ColumnInfo) {
+	objs := mapper(table, columns)
+	bs, err := yaml.Marshal(objs)
+	if err != nil {
+		println(err)
+		return
+	}
+	fileName := "example/" + table + "_mssql.yaml"
+	ioutil.WriteFile(fileName, bs, 0644)
+}
+
+func mapper(table string, columns []ColumnInfo) map[string]map[string]interface{} {
+	objs := make(map[string] map[string]interface{})
+	db := make(map[string] interface{})
+	db["db"]="mssql"
+ 	objs[table]= db 
+ 	fields:= make(map[string] interface{})
+	for i,v := range columns{
+		 fields[v.ColumnName] =  parser.DbToGoType(v.DataType)
+	}
+	db["fields"] = fields
 }
 
 func getColumnInfo(table string) []ColumnInfo {
@@ -103,18 +110,23 @@ func getColumnInfo(table string) []ColumnInfo {
 }
 
 func generate(table string, columnsInfo []ColumnInfo) {
-	xwMetaObj := new(parser.Obj)
-	xwMetaObj.Package = table
-	xwMetaObj.Name = table
-	xwMetaObj.Db = "mssql"
-	xwMetaObj.Fields = make([]*parser.Field, len(columnsInfo))
-
-	for i, v := range columnsInfo {
-		current := parser.Field{}
-		current.Name = v.ColumnName
-		current.Type = parser.DbToGoType(v.DataType)
-		xwMetaObj.Fields[i] = &current
+	var objs map[string]map[string]interface{}
+	data, _ := ioutil.ReadFile(outputYaml)
+	stat, err := os.Stat(outputYaml)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
+	err = yaml.Unmarshal([]byte(data), &objs)
+
+	for key, obj := range objs {
+			xwMetaObj := new(parser.Obj)
+			xwMetaObj.Package = packageName
+			xwMetaObj.Name = key
+			err := xwMetaObj.Read(obj)
+			if err != nil {
+				println(err.Error())
+			}
 
 	for _, genType := range xwMetaObj.GetGenTypes() {
 		file, err := os.OpenFile(output+"/gen_"+xwMetaObj.Name+"_"+genType+".go", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
@@ -144,5 +156,6 @@ func init() {
 	// is called directly, e.g.:
 	// genmsormCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	genmsormCmd.PersistentFlags().StringVarP(&table, "table", "t", "all", "table name, 'all' meaning all tables")
-	genmsormCmd.PersistentFlags().StringVarP(&output, "ourtput", "o", "", "output path")
+	genmsormCmd.PersistentFlags().StringVarP(&output, "output", "o", "", "output path")
+	genmsormCmd.PersistentFlags().StringVarP(&outputYaml, "output yaml", "oy", "", "output *.yaml path")
 }
