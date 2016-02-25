@@ -1,0 +1,71 @@
+{{define "mssql_orm"}}package {{.Package}}
+{{$obj := .}}
+
+import (		
+	"database/sql"
+	"github.com/ezbuy/ezorm/db"
+	{{range .GetOrmImports}}
+	"{{.}}"
+	{{end}}
+)
+
+func (o *_{{.Name}}Mgr) FindOne(where string, args ...interface{}) (result *{{$obj.Name}}, err error) {	
+	query := getQuerysql(true, where)
+
+	server := db.GetSqlServer()	
+	defer server.Close()
+	result = &{{$obj.Name}}{}
+	{{$count := len .Fields}}
+	{{$maxIdx := minus $count 1}}
+	{{- range $field :=.Fields}}
+	var {{$field.Name}} sql.Null{{getNullType $field.Type -}}
+	{{end}}
+
+	err = server.QueryRow(query, args).Scan(
+	{{- range $index, $field := .Fields}}	
+	&{{$field.Name}}{{if ne  $maxIdx $index}},{{end}}
+	{{- end -}}
+	)
+
+	{{- range $field := .Fields}}
+	if {{$field.Name}}.Valid{
+		result.{{$field.Name}} = {{- if eq $field.Type "int32"}}int32({{- end}}{{$field.Name}}.{{getNullType $field.Type -}}{{- if eq $field.Type "int32"}}){{end}}
+	}
+	{{end}}	
+	return     
+}
+
+// func (o *_{{.Name}}Mgr) Find(where string,args ...interface{}) (results *[]{{$obj.Name}}, err error){
+// 	query := getQuerysql(false, where)
+
+// 	server := db.GetSqlServer()	
+// 	defer server.Close()
+// 	rows,err := server.Query(query, args)	
+// 	for rows.Next(){
+// 		current := {{$obj.Name}}{}
+// 		err := rows.Scan(
+// 			{{- range $index, $field := .Fields}}	
+// 			&current.{{$field.Name}}{{if ne  $maxIdx $index}},{{end}}
+// 			{{- end -}}
+// 			)
+// 		results = append(results,current)
+// 	}
+
+// 	return
+// }
+
+func getQuerysql(topOne bool,where string) string{
+
+	query := `SELECT `
+	if topOne {
+		query = query +` TOP 1 `
+	}
+	 query = query + ` * FROM dbo.[{{.Name}}] WITH(NOLOCK) `
+
+	if where != ""{		
+		query = query + ` WHERE ` + where
+	}
+	return query
+}
+
+{{end}}
