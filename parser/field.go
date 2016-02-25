@@ -213,3 +213,29 @@ func (f *Field) Read(data map[interface{}]interface{}) error {
 	}
 	return nil
 }
+
+func DbToGoType(colType string) string {
+	var typeStr string
+	switch colType {
+	case "nvarchar", "timestamp", "text", "cursor", "uniqueidentifier", "sysname", "real",
+		"binary", "varbinary", "nchar", "char":
+		typeStr = "string"
+	case "datetime", "smalldatetime":
+		typeStr = "string"
+	case "decimal", "numeric", "float":
+		typeStr = "float64"
+	case "smallint", "tinyint":
+		typeStr = "int8"
+	case "int":
+		typeStr = "int32"
+	case "bigint":
+		typeStr = "int64"
+	case "money", "smallmoney":
+		typeStr = "float32"
+	case "bit":
+		typeStr = "bool"
+	case "image":
+		typeStr = "[]byte"
+	}
+	return typeStr
+}
