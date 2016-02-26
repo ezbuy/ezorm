@@ -18,11 +18,11 @@ import (
 	"fmt"
 	"github.com/ezbuy/ezorm/db"
 	"github.com/ezbuy/ezorm/parser"
-	"io/ioutil"
-	"os"
-
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
+	"io/ioutil"
+	"os"
+	"strings"
 )
 
 // genmsormCmd represents the genmsorm command
@@ -34,10 +34,10 @@ var genmsormCmd = &cobra.Command{
 		if table != "all" {
 			columnsinfo := getColumnInfo(table)
 			createYamlFile(table, columnsinfo)
-			generate(table, columnsinfo)
+			generate(table)
 		} else {
 
-			generate("table", nil)
+			generate("table")
 		}
 
 		fmt.Println("genmsorm called")
@@ -62,20 +62,23 @@ func createYamlFile(table string, columns []ColumnInfo) {
 		println(err)
 		return
 	}
-	fileName := "example/" + table + "_mssql.yaml"
+	fileName := outputYaml + "/" + strings.ToLower(table) + "_mssql.yaml"
 	ioutil.WriteFile(fileName, bs, 0644)
 }
 
 func mapper(table string, columns []ColumnInfo) map[string]map[string]interface{} {
-	objs := make(map[string] map[string]interface{})
-	db := make(map[string] interface{})
-	db["db"]="mssql"
- 	objs[table]= db 
- 	fields:= make(map[string] interface{})
-	for i,v := range columns{
-		 fields[v.ColumnName] =  parser.DbToGoType(v.DataType)
+	objs := make(map[string]map[string]interface{})
+	db := make(map[string]interface{})
+	db["db"] = "mssql"
+	objs[table] = db
+	fields := make([]interface{}, len(columns))
+	for i, v := range columns {
+		datatiem := make(map[string]interface{}, len(columns))
+		datatiem[v.ColumnName] = parser.DbToGoType(v.DataType)
+		fields[i] = datatiem
 	}
 	db["fields"] = fields
+	return objs
 }
 
 func getColumnInfo(table string) []ColumnInfo {
@@ -109,10 +112,11 @@ func getColumnInfo(table string) []ColumnInfo {
 	return columninfos
 }
 
-func generate(table string, columnsInfo []ColumnInfo) {
+func generate(table string) {
 	var objs map[string]map[string]interface{}
-	data, _ := ioutil.ReadFile(outputYaml)
-	stat, err := os.Stat(outputYaml)
+	fileName := outputYaml + "/" + strings.ToLower(table) + "_mssql.yaml"
+	data, _ := ioutil.ReadFile(fileName)
+	_, err := os.Stat(fileName)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -120,25 +124,26 @@ func generate(table string, columnsInfo []ColumnInfo) {
 	err = yaml.Unmarshal([]byte(data), &objs)
 
 	for key, obj := range objs {
-			xwMetaObj := new(parser.Obj)
-			xwMetaObj.Package = packageName
-			xwMetaObj.Name = key
-			err := xwMetaObj.Read(obj)
+		metaObj := new(parser.Obj)
+		metaObj.Package = strings.ToLower(table)
+		metaObj.Name = key
+		err := metaObj.Read(obj)
+		if err != nil {
+			println(err.Error())
+		}
+
+		for _, genType := range metaObj.GetGenTypes() {
+			file, err := os.OpenFile(output+"/gen_"+metaObj.Name+"_"+genType+".go", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+			metaObj.TplWriter = file
+			if err != nil {
+				panic(err)
+			}
+
+			err = parser.Tpl.ExecuteTemplate(file, genType, metaObj)
+			file.Close()
 			if err != nil {
 				println(err.Error())
 			}
-
-	for _, genType := range xwMetaObj.GetGenTypes() {
-		file, err := os.OpenFile(output+"/gen_"+xwMetaObj.Name+"_"+genType+".go", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-		xwMetaObj.TplWriter = file
-		if err != nil {
-			panic(err)
-		}
-
-		err = parser.Tpl.ExecuteTemplate(file, genType, xwMetaObj)
-		file.Close()
-		if err != nil {
-			println(err.Error())
 		}
 	}
 }
@@ -157,5 +162,5 @@ func init() {
 	// genmsormCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	genmsormCmd.PersistentFlags().StringVarP(&table, "table", "t", "all", "table name, 'all' meaning all tables")
 	genmsormCmd.PersistentFlags().StringVarP(&output, "output", "o", "", "output path")
-	genmsormCmd.PersistentFlags().StringVarP(&outputYaml, "output yaml", "oy", "", "output *.yaml path")
+	genmsormCmd.PersistentFlags().StringVarP(&outputYaml, "output yaml", "y", "", "output *.yaml path")
 }
