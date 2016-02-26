@@ -4,6 +4,7 @@
 import (		
 	"database/sql"
 	"github.com/ezbuy/ezorm/db"
+	"strings"
 	{{range .GetOrmImports}}
 	"{{.}}"
 	{{end}}
@@ -37,17 +38,21 @@ func (o *_{{.Name}}Mgr) FindOne(where string, args ...interface{}) (result *{{$o
 	return     
 }
 
-func (o *_{{.Name}}Mgr) Find(where string,args ...interface{}) (results []*{{$obj.Name}}, err error){
+func (o *_{{.Name}}Mgr) Find(where string, args ...interface{}) (results []*{{$obj.Name}}, err error){
 	query := getQuerysql(false, where)
 
-	server := db.GetSqlServer()	
+	server := db.GetSqlServer()
 	defer server.Close()
 
 	{{- range $field :=.Fields}}
 	var {{$field.Name}} sql.Null{{getNullType $field.Type -}}
 	{{end}}
-
-	rows,err := server.Query(query, args...)	
+	var rows *sql.Rows
+	if len(args) > 0 {
+		rows,err = server.Query(query, args...)
+	} else{
+		rows,err = server.Query(query)
+	}
 	for rows.Next(){
 		current := &{{$obj.Name}}{}
 		err = rows.Scan(
@@ -66,11 +71,26 @@ func (o *_{{.Name}}Mgr) Find(where string,args ...interface{}) (results []*{{$ob
 	{{end}}
 	results = append(results,current)
 	}
-
 	return
 }
 
-func getQuerysql(topOne bool,where string) string{
+func (o *_{{.Name}}Mgr) FindAll() (results []*{{$obj.Name}}, err error){
+	return o.Find("")
+}
+
+func (o *_{{.Name}}Mgr) FindWithOffset(where string, offset int, limit int, args ...interface{}) (results []*{{$obj.Name}}, err error){
+		if !strings.Contains(strings.ToLower(where),"ORDER BY") {
+		{{ $obj := index .Fields 0 }}
+		where = where + "ORDER BY  {{$obj.Name}} "
+		}
+		where = where + " OFFSET ? Rows FETCH NEXT ? Rows ONLY"
+		args = append(args,limit)
+		args = append(args,offset)
+		o.Find(where,args)
+		return
+}
+
+func getQuerysql(topOne bool, where string) string{
 
 	query := `SELECT `
 	if topOne {
@@ -78,8 +98,12 @@ func getQuerysql(topOne bool,where string) string{
 	}
 	 query = query + ` * FROM dbo.[{{.Name}}] WITH(NOLOCK) `
 
-	if where != ""{		
-		query = query + ` WHERE ` + where
+	if where != ""{
+		if strings.Index(strings.Trim(where," "),"ORDER BY") == 0 {
+			query = query + ` WHERE `
+		}
+
+		query = query  + where
 	}
 	return query
 }
