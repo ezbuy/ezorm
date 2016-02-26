@@ -27,7 +27,11 @@ func (o *_{{.Name}}Mgr) FindOne(where string, args ...interface{}) (result *{{$o
 
 	{{range $field := .Fields -}}
 	if {{$field.Name}}.Valid{
-		result.{{$field.Name}} = {{- if eq $field.Type "int32"}}int32({{- end}}{{$field.Name}}.{{getNullType $field.Type -}}{{- if eq $field.Type "int32"}}){{end}}
+		result.{{$field.Name}} = {{- if eq $field.Type "int32"}}int32(
+			{{- else if eq $field.Type "float32"}}float32({{- end -}}
+			{{- $field.Name}}.{{getNullType $field.Type -}}
+			{{- if eq $field.Type "int32" }})
+			{{- else if eq $field.Type "float32"}}){{end}}
 	}
 	{{end}}	
 	return     
@@ -54,7 +58,10 @@ func (o *_{{.Name}}Mgr) Find(where string,args ...interface{}) (results []*{{$ob
 
 	{{range $field := .Fields -}}
 	if {{$field.Name}}.Valid{
-		current.{{$field.Name}} = {{- if eq $field.Type "int32"}}int32({{- end}}{{$field.Name}}.{{getNullType $field.Type -}}{{- if eq $field.Type "int32"}}){{end}}
+		current.{{$field.Name}} = 
+		{{- if eq $field.Type "int32"}}int32({{- else if eq $field.Type "float32"}}float32({{- end -}}
+			{{- $field.Name}}.{{getNullType $field.Type -}}
+			{{- if eq $field.Type "int32"}}){{- else if eq $field.Type "float32"}}){{end}}
 	}
 	{{end}}
 	results = append(results,current)

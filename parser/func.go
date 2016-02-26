@@ -12,6 +12,9 @@ var NullTypes = map[string]string{
 	"int64":     "Int64",
 	"bit":       "Bool",
 	"time.Time": "String",
+	"float":     "Float64",
+	"float32":   "Float64",
+	"float64":   "Float64",
 }
 
 func getNullType(gotype string) string {

@@ -53,6 +53,7 @@ type ColumnInfo struct {
 	MaxLength    int
 	Nullable     bool
 	IsPrimaryKey bool
+	Sort         int
 }
 
 func createYamlFile(table string, columns []ColumnInfo) {
@@ -83,7 +84,7 @@ func mapper(table string, columns []ColumnInfo) map[string]map[string]interface{
 
 func getColumnInfo(table string) []ColumnInfo {
 	query := `SELECT DISTINCT c.name AS ColumnName, t.Name AS DataType, c.max_length AS MaxLength,
-    c.is_nullable AS Nullable, ISNULL(i.is_primary_key, 0) AS IsPrimaryKey
+    c.is_nullable AS Nullable, ISNULL(i.is_primary_key, 0) AS IsPrimaryKey ,c.column_id AS Sort
 	FROM    
     sys.columns c
 	INNER JOIN 
@@ -93,7 +94,7 @@ func getColumnInfo(table string) []ColumnInfo {
 	LEFT OUTER JOIN 
     sys.indexes i ON ic.object_id = i.object_id AND ic.index_id = i.index_id
 	WHERE
-    c.object_id = OBJECT_ID(?)`
+    c.object_id = OBJECT_ID(?) ORDER BY c.column_id `
 
 	server := db.GetSqlServer()
 	rows, err := server.Query(query, table)
@@ -106,7 +107,7 @@ func getColumnInfo(table string) []ColumnInfo {
 	var columninfos []ColumnInfo
 	for rows.Next() {
 		curent := ColumnInfo{}
-		rows.Scan(&curent.ColumnName, &curent.DataType, &curent.MaxLength, &curent.Nullable, &curent.IsPrimaryKey)
+		rows.Scan(&curent.ColumnName, &curent.DataType, &curent.MaxLength, &curent.Nullable, &curent.IsPrimaryKey, &curent.Sort)
 		columninfos = append(columninfos, curent)
 	}
 	return columninfos
