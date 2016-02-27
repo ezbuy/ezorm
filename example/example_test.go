@@ -1,11 +1,10 @@
-package cmd
+package example
 
 import (
 	"fmt"
 	"testing"
 
 	"github.com/ezbuy/ezorm/db"
-	"github.com/ezbuy/ezorm/page"
 )
 
 func TestGetRefIf(t *testing.T) {
@@ -13,11 +12,11 @@ func TestGetRefIf(t *testing.T) {
 	conf.DBName = "ezorm"
 	conf.MongoDB = "mongodb://127.0.0.1"
 	db.Setup(conf)
-	p := page.PageMgr.NewPage()
+	p := PageMgr.NewPage()
 	p.Hits = 19
 	p.Title = "bingo"
-	p.Sections = make([]page.Section, 1)
-	section := page.Section{}
+	p.Sections = make([]Section, 1)
+	section := Section{}
 	section.Key = "key1"
 	section.Val = 2
 	section.Data = make(map[string]string)
@@ -26,14 +25,14 @@ func TestGetRefIf(t *testing.T) {
 	p.Slug = "ezorm"
 	p.Save()
 
-	p, err := page.PageMgr.FindBySlug("ezorm")
+	p, err := PageMgr.FindOneBySlug("ezorm")
 	if err != nil {
 		t.Error("find fail")
 	}
 	fmt.Println("%v", p)
-	page.PageMgr.RemoveByID(p.Id())
+	PageMgr.RemoveByID(p.Id())
 
-	_, err = page.PageMgr.FindBySlug("ezorm")
+	_, err = PageMgr.FindOneBySlug("ezorm")
 	if err == nil {
 		t.Error("delete fail")
 	}
