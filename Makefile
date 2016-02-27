@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-export GOPATH := $(shell pwd)
+export GOPATH := $(shell pwd)/../../../..
 export PATH := ${PATH}:${GOPATH}/bin
 export GOBIN := ${GOPATH}/bin
 
@@ -15,3 +15,8 @@ debugTpl:
 
 buildTpl:
 	go-bindata -o tpl/bindata.go -ignore bindata.go -pkg tpl tpl
+
+test:
+	go install github.com/ezbuy/ezorm
+	ezorm gen -i example/example.yaml -o example
+	go test github.com/ezbuy/ezorm/example
