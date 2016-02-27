@@ -32,12 +32,12 @@ var genmsormCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if table != "all" {
-			columnsinfo := getColumnInfo(table)
-			createYamlFile(table, columnsinfo)
-			generate(table)
+			handler(table)
 		} else {
-
-			generate("table")
+			tables := getAllTables()
+			for _, t := range tables {
+				handler(t)
+			}
 		}
 
 		fmt.Println("genmsorm called")
@@ -54,6 +54,30 @@ type ColumnInfo struct {
 	Nullable     bool
 	IsPrimaryKey bool
 	Sort         int
+}
+
+func handler(table string) {
+	columnsinfo := getColumnInfo(table)
+	createYamlFile(table, columnsinfo)
+	generate(table)
+}
+
+func getAllTables() (tables []string) {
+	query := `SELECT name FROM sys.tables`
+	server := db.GetSqlServer()
+	rows, err := server.Query(query, table)
+	server.Close()
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var t string
+		rows.Scan(&t)
+		tables = append(tables, t)
+	}
+	return tables
 }
 
 func createYamlFile(table string, columns []ColumnInfo) {

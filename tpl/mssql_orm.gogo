@@ -1,7 +1,7 @@
 {{define "mssql_orm"}}package {{.Package}}
 {{$obj := .}}
 
-import (		
+import (
 	"database/sql"
 	"github.com/ezbuy/ezorm/db"
 	"strings"
@@ -10,9 +10,9 @@ import (
 	{{end}}
 )
 
-func (o *_{{.Name}}Mgr) FindOne(where string, args ...interface{}) (result *{{.Name}}, err error) {	
+func (o *_{{.Name}}Mgr) FindOne(where string, args ...interface{}) (result *{{.Name}}, err error) {
 	query := getQuerysql(true, where)
-	server := db.GetSqlServer()	
+	server := db.GetSqlServer()
 	defer server.Close()
 	result = &{{$obj.Name}}{}
 	{{- range $field :=.Fields}}
@@ -20,7 +20,7 @@ func (o *_{{.Name}}Mgr) FindOne(where string, args ...interface{}) (result *{{.N
 	{{end}}
 
 	err = server.QueryRow(query, args...).Scan(
-	{{- range $index, $field := .Fields}}	
+	{{- range $index, $field := .Fields}}
 	&{{$field.Name}},
 	{{- end}}
 	)
@@ -33,8 +33,8 @@ func (o *_{{.Name}}Mgr) FindOne(where string, args ...interface{}) (result *{{.N
 			{{- if eq $field.Type "int32" }})
 			{{- else if eq $field.Type "float32"}}){{end}}
 	}
-	{{end}}	
-	return     
+	{{end}}
+	return
 }
 
 func (o *_{{.Name}}Mgr) Find(where string, args ...interface{}) (results []*{{.Name}}, err error){
@@ -49,9 +49,9 @@ func (o *_{{.Name}}Mgr) FindAll() (results []*{{.Name}}, err error){
 
 func (o *_{{.Name}}Mgr) FindWithOffset(where string, offset int, limit int, args ...interface{}) (results []*{{$obj.Name}}, err error){
 		query:= getQuerysql(false, where)
-
+		{{$item := index .Fields 0}}
 		if !strings.Contains(strings.ToLower(where), "ORDER BY") {
-				where = " ORDER BY CustomerId "
+				where = " ORDER BY {{$item.Name}}"
 		}
 		query = query + where + " OFFSET ? Rows FETCH NEXT ? Rows ONLY"
 		args = append(args, offset)
@@ -76,14 +76,14 @@ func (o * _{{.Name}}Mgr) scanAll(query string, args ...interface{})(results []*{
 	for rows.Next(){
 		current := &{{.Name}}{}
 		err = rows.Scan(
-			{{- range $index, $field := .Fields}}	
+			{{- range $index, $field := .Fields}}
 			&{{$field.Name}},
 			{{- end -}}
 			)
 
 	{{range $field := .Fields -}}
 	if {{$field.Name}}.Valid{
-		current.{{$field.Name}} = 
+		current.{{$field.Name}} =
 		{{- if eq $field.Type "int32"}}int32({{- else if eq $field.Type "float32"}}float32({{- end -}}
 			{{- $field.Name}}.{{getNullType $field.Type -}}
 			{{- if eq $field.Type "int32"}}){{- else if eq $field.Type "float32"}}){{end}}
