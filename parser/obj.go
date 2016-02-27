@@ -120,6 +120,11 @@ func (o *Obj) NeedSearch() bool {
 }
 
 func (o *Obj) NeedIndex() bool {
+	for _, f := range o.Fields {
+		if f.IsUnique() {
+			return true
+		}
+	}
 	return false
 }
 

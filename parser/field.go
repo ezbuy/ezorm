@@ -54,6 +54,10 @@ func (f *Field) IsRequired() bool {
 	return false
 }
 
+func (f *Field) IsUnique() bool {
+	return f.Attrs.Contains("unique")
+}
+
 func (f *Field) GetThriftType() string {
 	return SupportedFieldTypes[f.Type]
 }
@@ -154,7 +158,7 @@ func (f *Field) HasEnums() bool {
 }
 
 func (f *Field) HasIndex() bool {
-	return f.Index != ""
+	return f.Index != "" || f.IsUnique()
 }
 
 func (f *Field) Read(data map[interface{}]interface{}) error {

@@ -53,9 +53,9 @@ func init{{.Name}}Index() {
 reEnsure{{$field.Name}}:
 	if err := collection.EnsureIndex(mgo.Index{
 		Key: []string{"{{$field.Name}}"},
-		{{if eq $field.Index "unique"}}
+		{{- if $field.IsUnique }}
 		Unique: true,
-		{{end}}
+		{{end -}}
 		Sparse: true,
 	}); err != nil {
 		println("error ensureIndex {{.Name}} {{$field.Name}}", err.Error())
