@@ -1,4 +1,4 @@
-package page
+package example
 
 
 
@@ -9,7 +9,7 @@ type Section struct {
 }
 
 func (p *Section) GetNameSpace() string {
-	return "page"
+	return "example"
 }
 
 func (p *Section) GetClassName() string {

@@ -1,4 +1,4 @@
-package page
+package example
 
 
 import "gopkg.in/mgo.v2/bson"
@@ -15,7 +15,7 @@ type Page struct {
 }
 
 func (p *Page) GetNameSpace() string {
-	return "page"
+	return "example"
 }
 
 func (p *Page) GetClassName() string {

@@ -1,4 +1,4 @@
-package page
+package example
 
 import (
 	//3rd party libs
@@ -14,14 +14,37 @@ import (
 
 func init() {
 	
+	db.SetOnFinishInit(initPageIndex)
 	
-	RegisterEzOrmObjByID("page", "Page", newPageFindByID)
-	RegisterEzOrmObjRemove("page", "Page", PageMgr.RemoveByID)
+	
+	RegisterEzOrmObjByID("example", "Page", newPageFindByID)
+	RegisterEzOrmObjRemove("example", "Page", PageMgr.RemoveByID)
 	
 }
 
 
 
+
+func initPageIndex() {
+	session, collection := PageMgr.GetCol()
+	defer session.Close()
+	
+reEnsureSlug:
+	if err := collection.EnsureIndex(mgo.Index{
+		Key: []string{"Slug"},
+		Unique: true,
+		Sparse: true,
+	}); err != nil {
+		println("error ensureIndex Page Slug", err.Error())
+		err = collection.DropIndex("Slug")
+		if err != nil {
+			panic(err)
+		}
+		goto reEnsureSlug
+
+	}
+	
+}
 
 
 func newPageFindByID(id string) (result EzOrmObj, err error) {
@@ -170,16 +193,7 @@ func (o *_PageMgr) Query(query interface{}, limit, offset int, sortFields []stri
 	_PageSort(q, sortFields)
 	return session, q
 }
-
-
-
-
-
-
-
-
-
-func (o *_PageMgr) FindBySlug(Slug string) (result *Page, err error) {
+func (o *_PageMgr) FindOneBySlug(Slug string) (result *Page, err error) {
 	query := db.M{
 		"Slug": Slug,
 	}
@@ -189,8 +203,8 @@ func (o *_PageMgr) FindBySlug(Slug string) (result *Page, err error) {
 	return
 }
 
-func (o *_PageMgr) MustGetBySlug(Slug string) (result *Page) {
-	result, _ = o.FindBySlug(Slug)
+func (o *_PageMgr) MustFindOneBySlug(Slug string) (result *Page) {
+	result, _ = o.FindOneBySlug(Slug)
 	if result == nil {
 		result = PageMgr.NewPage()
 		result.Slug = Slug
@@ -198,12 +212,6 @@ func (o *_PageMgr) MustGetBySlug(Slug string) (result *Page) {
 	}
 	return
 }
-
-
-
-
-
-
 
 func (o *_PageMgr) Find(query interface{}, limit int, offset int, sortFields ...string) (result []*Page, err error) {
 	session, q := PageMgr.Query(query, limit, offset, sortFields)
@@ -282,7 +290,7 @@ func (m *_PageMgr) RemoveByID(id string) (err error) {
 }
 
 func (m *_PageMgr) GetCol() (session *mgo.Session, col *mgo.Collection) {
-	return db.GetCol("page.Page")
+	return db.GetCol("example.Page")
 }
 
 
