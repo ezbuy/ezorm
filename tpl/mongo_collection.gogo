@@ -37,8 +37,8 @@ func (o *_{{.Name}}Mgr) Query(query interface{}, limit, offset int, sortFields [
 }
 
 {{range $field := $obj.Fields}}
-{{if $field.Attrs.Contains "unique"}}
-func (o *_{{$obj.Name}}Mgr) FindBy{{$field.Name}}({{$field.Name}} {{$field.Type}}) (result *{{$obj.Name}}, err error) {
+{{if $field.IsUnique}}
+func (o *_{{$obj.Name}}Mgr) FindOneBy{{$field.Name}}({{$field.Name}} {{$field.Type}}) (result *{{$obj.Name}}, err error) {
 	query := db.M{
 		"{{$field.Name}}": {{$field.Name}},
 	}
@@ -48,8 +48,8 @@ func (o *_{{$obj.Name}}Mgr) FindBy{{$field.Name}}({{$field.Name}} {{$field.Type}
 	return
 }
 
-func (o *_{{$obj.Name}}Mgr) MustGetBy{{$field.Name}}({{$field.Name}} {{$field.Type}}) (result *{{$obj.Name}}) {
-	result, _ = o.FindBy{{$field.Name}}({{$field.Name}})
+func (o *_{{$obj.Name}}Mgr) MustFindOneBy{{$field.Name}}({{$field.Name}} {{$field.Type}}) (result *{{$obj.Name}}) {
+	result, _ = o.FindOneBy{{$field.Name}}({{$field.Name}})
 	if result == nil {
 		result = {{$obj.Name}}Mgr.New{{$obj.Name}}()
 		result.{{$field.Name}} = {{$field.Name}}
