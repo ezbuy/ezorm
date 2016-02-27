@@ -11,7 +11,12 @@ Blog:
     - Title: string
     - Hits: int32
     - Slug: string
+      attrs: [unique]
     - Body: string
+    - User: int32
+    - IsPublished: bool
+      attrs: [index]
+  indexes: [[User, IsPublished]]
 ```
 
 Id field will be automatically included for mongo/mysql/sql server.
