@@ -36,11 +36,11 @@ func (o *_{{.Name}}Mgr) Query(query interface{}, limit, offset int, sortFields [
 	return session, q
 }
 
-{{range $field := $obj.Fields}}
-{{if $field.IsUnique}}
-func (o *_{{$obj.Name}}Mgr) FindOneBy{{$field.Name}}({{$field.Name}} {{$field.Type}}) (result *{{$obj.Name}}, err error) {
+{{- range $index := $obj.Indexes}}
+{{- if $index.IsUnique }}
+func (o *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (result *{{$obj.Name}}, err error) {
 	query := db.M{
-		"{{$field.Name}}": {{$field.Name}},
+		"{{$index.Name}}": {{$index.Name}},
 	}
 	session, q := {{$obj.Name}}Mgr.Query(query, 1, 0, nil)
 	defer session.Close()
@@ -48,17 +48,17 @@ func (o *_{{$obj.Name}}Mgr) FindOneBy{{$field.Name}}({{$field.Name}} {{$field.Ty
 	return
 }
 
-func (o *_{{$obj.Name}}Mgr) MustFindOneBy{{$field.Name}}({{$field.Name}} {{$field.Type}}) (result *{{$obj.Name}}) {
-	result, _ = o.FindOneBy{{$field.Name}}({{$field.Name}})
+func (o *_{{$obj.Name}}Mgr) MustFindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (result *{{$obj.Name}}) {
+	result, _ = o.FindOneBy{{$index.Name}}({{$index.Name}})
 	if result == nil {
 		result = {{$obj.Name}}Mgr.New{{$obj.Name}}()
-		result.{{$field.Name}} = {{$field.Name}}
+		result.{{$index.Name}} = {{$index.Name}}
 		result.Save()
 	}
 	return
 }
-{{end}}
-{{end}}
+{{- end}}
+{{- end}}
 
 func (o *_{{.Name}}Mgr) Find(query interface{}, limit int, offset int, sortFields ...string) (result []*{{$obj.Name}}, err error) {
 	session, q := {{.Name}}Mgr.Query(query, limit, offset, sortFields)
