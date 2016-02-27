@@ -53,7 +53,7 @@ reEnsure{{$index.Name}}:
 		Key: []string{"{{$index.GetFieldList}}"},
 		{{- if $index.IsUnique }}
 		Unique: true,
-		{{end -}}
+		{{- end}}
 		Sparse: true,
 	}); err != nil {
 		println("error ensureIndex {{$obj.Name}} {{$index.Name}}", err.Error())

@@ -158,7 +158,7 @@ func (f *Field) HasEnums() bool {
 }
 
 func (f *Field) HasIndex() bool {
-	return f.Index != "" || f.IsUnique()
+	return f.Attrs.Contains("index") || f.IsUnique()
 }
 
 func (f *Field) Read(data map[interface{}]interface{}) error {

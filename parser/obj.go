@@ -164,10 +164,10 @@ func ToStringSlice(val []interface{}) (result []string) {
 
 func (o *Obj) setIndexes() {
 	for _, f := range o.Fields {
-		if f.IsUnique() {
+		if f.HasIndex() {
 			index := new(Index)
 			index.Fields = []string{f.Name}
-			index.IsUnique = true
+			index.IsUnique = f.IsUnique()
 			index.Name = f.Name
 			o.Indexes = append(o.Indexes, index)
 		}
@@ -192,6 +192,13 @@ func (o *Obj) Read(data map[string]interface{}) error {
 
 	for key, val := range data {
 		switch key {
+		case "indexes":
+			for _, i := range val.([]interface{}) {
+				index := new(Index)
+				index.Fields = ToStringSlice(i.([]interface{}))
+				index.Name = strings.Join(index.Fields, "_")
+				o.Indexes = append(o.Indexes, index)
+			}
 		case "extend":
 			o.Extend = val.(string)
 		case "filterFields":
