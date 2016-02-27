@@ -46,15 +46,15 @@ func (i *Index) GetFieldList() string {
 }
 
 type Obj struct {
+	Db           string
 	Extend       string
 	Fields       []*Field
-	Name         string
-	Db           string
-	Package      string
+	FilterFields []string
 	Indexes      []*Index
+	Name         string
+	Package      string
 	SearchIndex  string
 	SearchType   string
-	FilterFields []string
 	TplWriter    io.Writer
 }
 
@@ -81,7 +81,6 @@ func (o *Obj) LoadField(f *Field) string {
 }
 
 func (o *Obj) GetGenTypes() []string {
-
 	switch o.Db {
 	case "mongo":
 		return []string{"struct", "mongo_orm"}
