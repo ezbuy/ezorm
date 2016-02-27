@@ -47,26 +47,23 @@ func init{{.Name}}Mapping() {
 func init{{.Name}}Index() {
 	session, collection := {{.Name}}Mgr.GetCol()
 	defer session.Close()
-	{{range $field := .Fields}}
-	{{if $field.HasIndex}}
-
-reEnsure{{$field.Name}}:
+	{{range $index := $obj.Indexes}}
+reEnsure{{$index.Name}}:
 	if err := collection.EnsureIndex(mgo.Index{
-		Key: []string{"{{$field.Name}}"},
-		{{- if $field.IsUnique }}
+		Key: []string{"{{$index.GetFieldList}}"},
+		{{- if $index.IsUnique }}
 		Unique: true,
 		{{end -}}
 		Sparse: true,
 	}); err != nil {
-		println("error ensureIndex {{.Name}} {{$field.Name}}", err.Error())
-		err = collection.DropIndex("{{$field.Name}}")
+		println("error ensureIndex {{$obj.Name}} {{$index.Name}}", err.Error())
+		err = collection.DropIndex("{{$index.Name}}")
 		if err != nil {
 			panic(err)
 		}
-		goto reEnsure{{$field.Name}}
+		goto reEnsure{{$index.Name}}
 
 	}
-	{{end}}
 	{{end}}
 }
 {{end}}

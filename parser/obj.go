@@ -35,12 +35,23 @@ func init() {
 	}
 }
 
+type Index struct {
+	Name     string
+	Fields   []string
+	IsUnique bool
+}
+
+func (i *Index) GetFieldList() string {
+	return strings.Join(i.Fields, `","`)
+}
+
 type Obj struct {
 	Extend       string
 	Fields       []*Field
 	Name         string
 	Db           string
 	Package      string
+	Indexes      []*Index
 	SearchIndex  string
 	SearchType   string
 	FilterFields []string
@@ -120,12 +131,7 @@ func (o *Obj) NeedSearch() bool {
 }
 
 func (o *Obj) NeedIndex() bool {
-	for _, f := range o.Fields {
-		if f.IsUnique() {
-			return true
-		}
-	}
-	return false
+	return len(o.Indexes) > 0
 }
 
 func (o *Obj) NeedMapping() bool {
@@ -154,6 +160,18 @@ func ToStringSlice(val []interface{}) (result []string) {
 		result[i] = v.(string)
 	}
 	return
+}
+
+func (o *Obj) setIndexes() {
+	for _, f := range o.Fields {
+		if f.IsUnique() {
+			index := new(Index)
+			index.Fields = []string{f.Name}
+			index.IsUnique = true
+			index.Name = f.Name
+			o.Indexes = append(o.Indexes, index)
+		}
+	}
 }
 
 func (o *Obj) Read(data map[string]interface{}) error {
@@ -211,5 +229,6 @@ func (o *Obj) Read(data map[string]interface{}) error {
 			return errors.New(o.Name + " has invalid obj property: " + key)
 		}
 	}
+	o.setIndexes()
 	return nil
 }
