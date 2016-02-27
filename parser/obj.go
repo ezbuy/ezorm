@@ -35,31 +35,22 @@ func init() {
 	}
 }
 
-type Index struct {
-	Name     string
-	Fields   []string
-	IsUnique bool
-}
-
-func (i *Index) GetFieldList() string {
-	return strings.Join(i.Fields, `","`)
-}
-
 type Obj struct {
+	Db           string
 	Extend       string
 	Fields       []*Field
-	Name         string
-	Db           string
-	Package      string
+	FieldNameMap map[string]*Field
+	FilterFields []string
 	Indexes      []*Index
+	Name         string
+	Package      string
 	SearchIndex  string
 	SearchType   string
-	FilterFields []string
 	TplWriter    io.Writer
 }
 
 func (o *Obj) init() {
-
+	o.FieldNameMap = make(map[string]*Field)
 }
 
 func (o *Obj) LoadTpl(tpl string) string {
@@ -81,7 +72,6 @@ func (o *Obj) LoadField(f *Field) string {
 }
 
 func (o *Obj) GetGenTypes() []string {
-
 	switch o.Db {
 	case "mongo":
 		return []string{"struct", "mongo_orm"}
@@ -163,10 +153,17 @@ func ToStringSlice(val []interface{}) (result []string) {
 }
 
 func (o *Obj) setIndexes() {
+	for _, i := range o.Indexes {
+		for _, name := range i.FieldNames {
+			i.Fields = append(i.Fields, o.FieldNameMap[name])
+		}
+	}
+
 	for _, f := range o.Fields {
 		if f.HasIndex() {
 			index := new(Index)
-			index.Fields = []string{f.Name}
+			index.FieldNames = []string{f.Name}
+			index.Fields = []*Field{f}
 			index.IsUnique = f.IsUnique()
 			index.Name = f.Name
 			o.Indexes = append(o.Indexes, index)
@@ -195,8 +192,8 @@ func (o *Obj) Read(data map[string]interface{}) error {
 		case "indexes":
 			for _, i := range val.([]interface{}) {
 				index := new(Index)
-				index.Fields = ToStringSlice(i.([]interface{}))
-				index.Name = strings.Join(index.Fields, "_")
+				index.FieldNames = ToStringSlice(i.([]interface{}))
+				index.Name = strings.Join(index.FieldNames, "")
 				o.Indexes = append(o.Indexes, index)
 			}
 		case "extend":
@@ -231,6 +228,7 @@ func (o *Obj) Read(data map[string]interface{}) error {
 					return errors.New(o.Name + " obj has " + err.Error())
 				}
 				o.Fields[i+startPos] = f
+				o.FieldNameMap[f.Name] = f
 			}
 		default:
 			return errors.New(o.Name + " has invalid obj property: " + key)
