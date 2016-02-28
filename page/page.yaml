@@ -1,0 +1,16 @@
+
+Section:
+  fields:
+    - Key: string
+    - Val: int32
+    - Data: map[string]string
+
+Page:
+  db: mysql
+  fields:
+    - Title: string
+    - Hits: int32
+    - Slug: string
+      attrs: [unique]
+    - Sections: list<Section>
+    - Meta: map[string]list<map[string]int>

@@ -3,12 +3,12 @@ package cmd
 import (
 	"fmt"
 	"testing"
-
 	"github.com/ezbuy/ezorm/db"
 	"github.com/ezbuy/ezorm/page"
 )
 
-func TestGetRefIf(t *testing.T) {
+
+
 	conf := new(db.MongoConfig)
 	conf.DBName = "ezorm"
 	conf.MongoDB = "mongodb://127.0.0.1"
@@ -31,10 +31,10 @@ func TestGetRefIf(t *testing.T) {
 		t.Error("find fail")
 	}
 	fmt.Println("%v", p)
-	page.PageMgr.RemoveByID(p.Id())
+	// page.PageMgr.RemoveByID(p.Id())
 
-	_, err = page.PageMgr.FindBySlug("ezorm")
-	if err == nil {
-		t.Error("delete fail")
-	}
+	// _, err = page.PageMgr.FindBySlug("ezorm")
+	// if err == nil {
+	// 	t.Error("delete fail")
+	// }
 }

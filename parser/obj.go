@@ -22,6 +22,11 @@ func init() {
 		"tpl/mongo_orm.gogo",
 		"tpl/mongo_search.gogo",
 		"tpl/struct.gogo",
+		"tpl/mysql_collection.gogo",
+		"tpl/mysql_foreign_key.gogo",
+		"tpl/mysql_mysql.gogo",
+		"tpl/mysql_orm.gogo",
+		"tpl/mysql_search.gogo",
 	}
 	for _, fname := range files {
 		data, err := tpl.Asset(fname)
@@ -74,6 +79,8 @@ func (o *Obj) GetGenTypes() []string {
 	switch o.Db {
 	case "mongo":
 		return []string{"struct", "mongo_orm"}
+	case "mysql":
+		return []string{"struct", "mysql_orm"}
 	case "enum":
 		return []string{"enum"}
 	default:

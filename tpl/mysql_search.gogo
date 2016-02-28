@@ -1,0 +1,7 @@
+{{define "mysql_search"}}
+{{$obj := .}}
+
+// mysql_search
+// TO DO
+
+{{end}}

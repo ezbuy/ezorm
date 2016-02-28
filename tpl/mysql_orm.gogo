@@ -1,0 +1,20 @@
+{{define "mysql_orm"}}package {{.Package}}
+{{$obj := .}}
+
+// mysql_orm
+
+import (
+	"database/sql"
+
+	//Own libs
+	"github.com/ezbuy/ezorm/mysql"
+)
+
+{{ .LoadTpl "mysql_mysql" }}
+
+{{ .LoadTpl "mysql_foreign_key" }}
+
+{{ .LoadTpl "mysql_collection" }}
+
+{{ .LoadTpl "mysql_search" }}
+{{end}}

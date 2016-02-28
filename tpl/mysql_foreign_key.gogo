@@ -1,0 +1,7 @@
+{{define "mysql_foreign_key"}}
+{{$obj := .}}
+
+// mysql_foreign_key
+// TO DO
+
+{{end}}

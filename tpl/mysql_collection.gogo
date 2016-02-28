@@ -1,0 +1,56 @@
+{{define "mysql_collection"}}
+{{$obj := .}}
+
+// mysql_collection
+
+func (m *_{{.Name}}Mgr) Query(sqlStr string) (result map[string]string) {
+	db := {{.Name}}Mgr.GetCol()
+
+	rows, err := db.Query(sqlStr)
+    if err != nil {
+        panic(err.Error())
+    }
+
+    // Get column names
+    columns, err := rows.Columns()
+    if err != nil {
+        panic(err.Error())
+    }
+
+    values := make([]sql.RawBytes, len(columns))
+
+    scanArgs := make([]interface{}, len(values))
+    for i := range values {
+        scanArgs[i] = &values[i]
+    }
+
+	result = make(map[string]string)
+    for rows.Next() {
+        err = rows.Scan(scanArgs...)
+        if err != nil {
+            panic(err.Error())
+        }
+
+        var value string
+        for i, col := range values {
+            if col == nil {
+                value = "NULL"
+            } else {
+                value = string(col)
+            }
+            result[columns[i]] = value
+        }
+    }
+    if err = rows.Err(); err != nil {
+        panic(err.Error())
+    }
+
+    return
+}
+
+
+func (m *_{{.Name}}Mgr) GetCol() (db *sql.DB) {
+	return mysql.GetCol()
+}
+
+{{end}}

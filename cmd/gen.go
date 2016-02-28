@@ -69,7 +69,7 @@ var genCmd = &cobra.Command{
 				}
 			}
 		}
-
+		
 		fmt.Println("gen called")
 	},
 }
