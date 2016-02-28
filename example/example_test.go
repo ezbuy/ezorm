@@ -7,11 +7,41 @@ import (
 	"github.com/ezbuy/ezorm/db"
 )
 
-func TestGetRefIf(t *testing.T) {
+func init() {
 	conf := new(db.MongoConfig)
 	conf.DBName = "ezorm"
 	conf.MongoDB = "mongodb://127.0.0.1"
 	db.Setup(conf)
+}
+
+func TestBlog(t *testing.T) {
+	b, _ := BlogMgr.FindOneBySlug("bingo")
+	if b != nil {
+		BlogMgr.RemoveByID(b.Id())
+	}
+
+	b = BlogMgr.NewBlog()
+	b.Slug = "bingo"
+	_, err := b.Save()
+	if err != nil {
+		t.Error(err)
+	}
+
+	b = BlogMgr.NewBlog()
+	b.Slug = "bingo"
+	_, err = b.Save()
+	if err == nil {
+		t.Error(err)
+	}
+
+	b, err = BlogMgr.FindOneBySlug("bingo")
+	if err != nil {
+		t.Error(err)
+	}
+	BlogMgr.RemoveByID(b.Id())
+}
+
+func TestPage(t *testing.T) {
 	p := PageMgr.NewPage()
 	p.Hits = 19
 	p.Title = "bingo"
