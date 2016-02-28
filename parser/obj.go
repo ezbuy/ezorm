@@ -14,7 +14,11 @@ import (
 var Tpl *template.Template
 
 func init() {
-	Tpl = template.New("ezorm")
+	funcMap := template.FuncMap{
+		"minus":       minus,
+		"getNullType": getNullType,
+	}
+	Tpl = template.New("ezorm").Funcs(funcMap)
 	files := []string{
 		"tpl/mongo_collection.gogo",
 		"tpl/mongo_foreign_key.gogo",
@@ -22,6 +26,7 @@ func init() {
 		"tpl/mongo_orm.gogo",
 		"tpl/mongo_search.gogo",
 		"tpl/struct.gogo",
+		"tpl/mssql_orm.gogo",
 	}
 	for _, fname := range files {
 		data, err := tpl.Asset(fname)
@@ -77,6 +82,8 @@ func (o *Obj) GetGenTypes() []string {
 		return []string{"struct", "mongo_orm"}
 	case "enum":
 		return []string{"enum"}
+	case "mssql":
+		return []string{"struct", "mssql_orm"}
 	default:
 		return []string{"struct"}
 	}

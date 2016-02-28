@@ -9,6 +9,7 @@ init:
 	go get gopkg.in/yaml.v2
 	go get github.com/spf13/cobra/cobra
 	go get -u github.com/jteeuwen/go-bindata/...
+	go get github.com/denisenkom/go-mssqldb
 
 debugTpl:
 	go-bindata -o tpl/bindata.go -ignore bindata.go -pkg tpl -debug tpl

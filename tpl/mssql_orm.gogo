@@ -1,0 +1,114 @@
+{{define "mssql_orm"}}package {{.Package}}
+{{$obj := .}}
+
+import (
+	"database/sql"
+	"github.com/ezbuy/ezorm/db"
+	"strings"
+	{{range .GetOrmImports}}
+	"{{.}}"
+	{{end}}
+)
+
+func (o *_{{.Name}}Mgr) FindOne(where string, args ...interface{}) (result *{{.Name}}, err error) {
+	query := getQuerysql(true, where)
+	server := db.GetSqlServer()
+	defer server.Close()
+	result = &{{$obj.Name}}{}
+	{{- range $field :=.Fields}}
+	var {{$field.Name}} sql.Null{{getNullType $field.Type -}}
+	{{end}}
+
+	err = server.QueryRow(query, args...).Scan(
+	{{- range $index, $field := .Fields}}
+	&{{$field.Name}},
+	{{- end}}
+	)
+
+	{{range $field := .Fields -}}
+	if {{$field.Name}}.Valid{
+		result.{{$field.Name}} = {{- if eq $field.Type "int32"}}int32(
+			{{- else if eq $field.Type "float32"}}float32({{- end -}}
+			{{- $field.Name}}.{{getNullType $field.Type -}}
+			{{- if eq $field.Type "int32" }})
+			{{- else if eq $field.Type "float32"}}){{end}}
+	}
+	{{end}}
+	return
+}
+
+func (o *_{{.Name}}Mgr) Find(where string, args ...interface{}) (results []*{{.Name}}, err error){
+	query := getQuerysql(false, where)
+
+	return o.scanAll(query,args...)
+}
+
+func (o *_{{.Name}}Mgr) FindAll() (results []*{{.Name}}, err error){
+	return o.Find("")
+}
+
+func (o *_{{.Name}}Mgr) FindWithOffset(where string, offset int, limit int, args ...interface{}) (results []*{{$obj.Name}}, err error){
+		query:= getQuerysql(false, where)
+		{{$item := index .Fields 0}}
+		if !strings.Contains(strings.ToLower(where), "ORDER BY") {
+				where = " ORDER BY {{$item.Name}}"
+		}
+		query = query + where + " OFFSET ? Rows FETCH NEXT ? Rows ONLY"
+		args = append(args, offset)
+		args = append(args, limit)
+
+		return o.scanAll(query,args...)
+}
+
+func (o * _{{.Name}}Mgr) scanAll(query string, args ...interface{})(results []*{{.Name}}, err error) {
+	server := db.GetSqlServer()
+	defer server.Close()
+
+	{{- range $field :=.Fields}}
+	var {{$field.Name}} sql.Null{{getNullType $field.Type -}}
+	{{end}}
+	var rows *sql.Rows
+	if len(args) > 0 {
+		rows,err = server.Query(query, args...)
+	} else{
+		rows,err = server.Query(query)
+	}
+	for rows.Next(){
+		current := &{{.Name}}{}
+		err = rows.Scan(
+			{{- range $index, $field := .Fields}}
+			&{{$field.Name}},
+			{{- end -}}
+			)
+
+	{{range $field := .Fields -}}
+	if {{$field.Name}}.Valid{
+		current.{{$field.Name}} =
+		{{- if eq $field.Type "int32"}}int32({{- else if eq $field.Type "float32"}}float32({{- end -}}
+			{{- $field.Name}}.{{getNullType $field.Type -}}
+			{{- if eq $field.Type "int32"}}){{- else if eq $field.Type "float32"}}){{end}}
+	}
+	{{end}}
+	results = append(results,current)
+	}
+	return
+}
+
+func getQuerysql(topOne bool, where string) string{
+
+	query := `SELECT `
+	if topOne {
+		query = query +` TOP 1 `
+	}
+	 query = query + ` * FROM dbo.[{{.Name}}] WITH(NOLOCK) `
+
+	if where != ""{
+		if strings.Index(strings.Trim(where," "),"WHERE") == -1 {
+			where = " WHERE " + where
+		}
+		query = query  + where
+	}
+	return query
+}
+
+{{end}}
