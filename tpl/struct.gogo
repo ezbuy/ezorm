@@ -3,16 +3,25 @@
 {{if eq .Db "mongo"}}
 import "gopkg.in/mgo.v2/bson"
 {{end}}
+{{if and (eq .Db "mssql")}}
+{{if (eq GetHaveTime true) }} 
+import "time"
+{{- end}}
+{{end}}
 
 type {{.Name}} struct {
 {{- range $field := .Fields}}
+{{if eq $obj.Db "mssql"}}
+{{$field.Name}}  {{$field.GetGoType}}
+{{- else}}
 	{{- if and (eq $obj.Db "mongo") (eq $field.Name "ID")}}
 	ID         bson.ObjectId `bson:"_id,omitempty"`
 	{{- else}}
 	{{$field.Name}}  {{$field.GetGoType}} `bson:"{{$field.Name}}"`
 	{{- end -}}
 {{- end -}}
-{{- if ne .Db ""}}
+{{- end -}}
+{{- if and (ne .Db "") (ne .Db "mssql")}}
 	isNew bool
 {{- end}}
 }

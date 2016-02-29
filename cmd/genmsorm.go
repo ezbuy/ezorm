@@ -100,6 +100,9 @@ func mapper(table string, columns []ColumnInfo) map[string]map[string]interface{
 	for i, v := range columns {
 		datatiem := make(map[string]interface{}, len(columns))
 		datatiem[v.ColumnName] = parser.DbToGoType(v.DataType)
+		if datatiem[v.ColumnName] == "time.Time" {
+			parser.HaveTime = true
+		}
 		fields[i] = datatiem
 	}
 	db["fields"] = fields
@@ -152,6 +155,7 @@ func generate(table string) {
 		metaObj := new(parser.Obj)
 		metaObj.Package = strings.ToLower(table)
 		metaObj.Name = key
+		metaObj.Db = obj["db"].(string)
 		err := metaObj.Read(obj)
 		if err != nil {
 			println(err.Error())
