@@ -15,12 +15,12 @@ func (m *_{{.Name}}Mgr) Where(query interface{},params ...interface{}) error {
 	
 	stmt,err := dbConn.Prepare("delete from {{.Name}}" + " where " + query.(string))
 	
-	defer stmt.Close()
-	
 	if err!=nil{
 		return err
 	}
-	
+
+	defer stmt.Close()
+
 	paramArr = append(paramArr,params...)
 	stmt.Exec(paramArr)
 	return  nil
@@ -37,12 +37,13 @@ func (m *_{{.Name}}Mgr) Or(params ...string) error {
 	}
 	
 	stmt,err := dbConn.Prepare("delete from {{.Name}}" + " where " + paramStr[:strings.LastIndex(paramStr, "or")-1])
-	defer stmt.Close()
 	
 	if err!=nil{
 		return err
 	}
 	
+	defer stmt.Close()
+
 	stmt.Exec()
 	return  nil
 }

@@ -20,11 +20,12 @@ func (this *UpdOpt) OrWhere(params ...string) error {
 		updStr += v+ " or "
 	}
 	stmt,err := dbConn.Prepare(this.Condition + " where " + updStr[:strings.LastIndex(updStr, "or")-1])
-    defer stmt.Close()
 
     if err!=nil{
     	return err
     }
+    defer stmt.Close()
+    
 	stmt.Exec()
 	return nil
 }
@@ -38,11 +39,12 @@ func (this *UpdOpt) AndWhere(params ...string) error {
 		updStr += v+ " and "
 	}
 	stmt,err := dbConn.Prepare(this.Condition + " where " + updStr[:strings.LastIndex(updStr, "and")-1])
-    defer stmt.Close()
-
+   
     if err!=nil{
     	return err
     }
+
+    defer stmt.Close()
 	stmt.Exec()
 	return nil
 }

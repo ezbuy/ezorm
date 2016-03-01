@@ -98,12 +98,12 @@ func mapper(table string, columns []ColumnInfo) map[string]map[string]interface{
 	objs[table] = db
 	fields := make([]interface{}, len(columns))
 	for i, v := range columns {
-		datatiem := make(map[string]interface{}, len(columns))
-		datatiem[v.ColumnName] = parser.DbToGoType(v.DataType)
-		if datatiem[v.ColumnName] == "time.Time" {
+		dataitem := make(map[string]interface{}, len(columns))
+		dataitem[v.ColumnName] = parser.DbToGoType(v.DataType)
+		if dataitem[v.ColumnName] == "time.Time" {
 			parser.HaveTime = true
 		}
-		fields[i] = datatiem
+		fields[i] = dataitem
 	}
 	db["fields"] = fields
 	return objs
