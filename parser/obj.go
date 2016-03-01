@@ -12,11 +12,13 @@ import (
 )
 
 var Tpl *template.Template
+var HaveTime bool
 
 func init() {
 	funcMap := template.FuncMap{
 		"minus":       minus,
 		"getNullType": getNullType,
+		"getHaveTime": getHaveTime,
 	}
 	Tpl = template.New("ezorm").Funcs(funcMap)
 	files := []string{
@@ -27,6 +29,8 @@ func init() {
 		"tpl/mongo_search.gogo",
 		"tpl/struct.gogo",
 		"tpl/mssql_orm.gogo",
+		"tpl/mssql_del.gogo",
+		"tpl/mssql_update.gogo",
 	}
 	for _, fname := range files {
 		data, err := tpl.Asset(fname)
@@ -38,6 +42,10 @@ func init() {
 			panic(err)
 		}
 	}
+}
+
+func getHaveTime() bool {
+	return HaveTime
 }
 
 type Obj struct {
@@ -83,7 +91,7 @@ func (o *Obj) GetGenTypes() []string {
 	case "enum":
 		return []string{"enum"}
 	case "mssql":
-		return []string{"struct", "mssql_orm"}
+		return []string{"struct", "mssql_orm", "mssql_del", "mssql_update"}
 	default:
 		return []string{"struct"}
 	}

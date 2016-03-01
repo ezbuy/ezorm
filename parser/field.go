@@ -225,7 +225,7 @@ func DbToGoType(colType string) string {
 		"binary", "varbinary", "nchar", "char":
 		typeStr = "string"
 	case "datetime", "smalldatetime":
-		typeStr = "string"
+		typeStr = "time.Time"
 	case "decimal", "numeric", "float":
 		typeStr = "float64"
 	case "smallint", "tinyint":

@@ -111,4 +111,8 @@ func getQuerysql(topOne bool, where string) string{
 	return query
 }
 
+{{ .LoadTpl "mssql_del" }}
+
+{{ .LoadTpl "mssql_update" }}
+
 {{end}}

@@ -1,0 +1,68 @@
+{{define "mssql_update"}} package {{.Package}}
+{{$obj :=.}}
+
+import(
+	"github.com/ezbuy/ezorm/db"
+	"strings"
+)
+//Update
+
+type UpdOpt struct{
+	Condition string
+}
+
+func (this *UpdOpt) OrWhere(params ...string) error {
+	dbConn := db.GetSqlServer()
+	defer dbConn.Close()
+
+	var updStr string
+    for _,v := range params {
+		updStr += v+ " or "
+	}
+	stmt,err := dbConn.Prepare(this.Condition + " where " + updStr[:strings.LastIndex(updStr, "or")-1])
+
+    if err!=nil{
+    	return err
+    }
+    defer stmt.Close()
+    
+	stmt.Exec()
+	return nil
+}
+
+func (this *UpdOpt) AndWhere(params ...string) error {
+    dbConn := db.GetSqlServer()
+	defer dbConn.Close()
+
+	var updStr string
+    for _,v := range params {
+		updStr += v+ " and "
+	}
+	stmt,err := dbConn.Prepare(this.Condition + " where " + updStr[:strings.LastIndex(updStr, "and")-1])
+   
+    if err!=nil{
+    	return err
+    }
+
+    defer stmt.Close()
+	stmt.Exec()
+	return nil
+}
+
+
+func (this *_{{.Name}}Mgr) Set(params ...string) *UpdOpt {
+    var paramStr string
+    for _,v := range params {
+		paramStr += v + ","
+	}
+    updStr := "update {{.Name}} " + " set "+strings.TrimSuffix(paramStr,",")
+
+    newUpdOpt := &UpdOpt{
+		Condition:updStr,
+	}
+
+	return newUpdOpt
+}
+
+{{end}}
+
