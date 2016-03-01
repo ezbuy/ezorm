@@ -18,7 +18,7 @@ func init() {
 	funcMap := template.FuncMap{
 		"minus":       minus,
 		"getNullType": getNullType,
-		"GetHaveTime": GetHaveTime,
+		"getHaveTime": getHaveTime,
 	}
 	Tpl = template.New("ezorm").Funcs(funcMap)
 	files := []string{
@@ -44,7 +44,7 @@ func init() {
 	}
 }
 
-func GetHaveTime() bool {
+func getHaveTime() bool {
 	return HaveTime
 }
 

@@ -1,5 +1,5 @@
 {
 	"DB": {
-		"SqlServerConn": "server=192.168.199.66;user id=manager;password=65ezbuy@nicemanager;database=Pro"
+		"SqlServerConn": ""
 	}
 }

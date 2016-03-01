@@ -4,7 +4,7 @@
 import "gopkg.in/mgo.v2/bson"
 {{end}}
 {{if and (eq .Db "mssql")}}
-{{if (eq GetHaveTime true) }} 
+{{if (eq getHaveTime true) }} 
 import "time"
 {{- end}}
 {{end}}
