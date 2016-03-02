@@ -1,5 +1,5 @@
 package db
 
-type DbConfig struct {
+type SqlDbConfig struct {
 	SqlConnStr string
 }

@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 )
 
-var _config *Config
+var _config *SqlDbConfig
 
 func GetSqlServer() *sql.DB {
 	sqlServer, err := sql.Open("mssql", _config.SqlConnStr)
@@ -18,6 +18,6 @@ func GetSqlServer() *sql.DB {
 	return sqlServer
 }
 
-func SetDBConfig(conf *Config) {
+func SetDBConfig(conf *SqlDbConfig) {
 	_config = conf
 }
