@@ -2,10 +2,8 @@ package db
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	_ "github.com/denisenkom/go-mssqldb"
-	"io/ioutil"
 )
 
 var _config *SqlDbConfig
