@@ -1,9 +1,5 @@
 package db
 
-type Config struct {
-	DB *DB
-}
-
-type DB struct {
-	SqlServerConn string
+type SqlDbConfig struct {
+	SqlConnStr string
 }
