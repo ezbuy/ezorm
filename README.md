@@ -14,6 +14,8 @@ Blog:
       attrs: [unique]
     - Body: string
     - User: int32
+    - CreateDate: datetime
+      attrs: [sort]
     - IsPublished: bool
       attrs: [index]
   indexes: [[User, IsPublished]]

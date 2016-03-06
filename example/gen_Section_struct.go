@@ -2,9 +2,13 @@ package example
 
 
 
+
 type Section struct {
+
 	Key  string `bson:"Key"`
+
 	Val  int32 `bson:"Val"`
+
 	Data  map[string]string `bson:"Data"`
 }
 

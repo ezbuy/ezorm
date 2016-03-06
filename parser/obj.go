@@ -180,6 +180,7 @@ func (o *Obj) setIndexes() {
 			index.FieldNames = []string{f.Name}
 			index.Fields = []*Field{f}
 			index.IsUnique = f.IsUnique()
+			index.IsSparse = !f.Attrs.Contains("sort")
 			index.Name = f.Name
 			o.Indexes = append(o.Indexes, index)
 		}
@@ -209,6 +210,7 @@ func (o *Obj) Read(data map[string]interface{}) error {
 				index := new(Index)
 				index.FieldNames = ToStringSlice(i.([]interface{}))
 				index.Name = strings.Join(index.FieldNames, "")
+				index.IsSparse = true
 				o.Indexes = append(o.Indexes, index)
 			}
 		case "extend":

@@ -7,6 +7,7 @@ type Index struct {
 	Fields     []*Field
 	FieldNames []string
 	IsUnique   bool
+	IsSparse   bool
 }
 
 func (i *Index) GetFieldList() string {

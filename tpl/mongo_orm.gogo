@@ -54,7 +54,9 @@ reEnsure{{$index.Name}}:
 		{{- if $index.IsUnique }}
 		Unique: true,
 		{{- end}}
+		{{- if $index.IsSparse }}
 		Sparse: true,
+		{{- end}}
 	}); err != nil {
 		println("error ensureIndex {{$obj.Name}} {{$index.Name}}", err.Error())
 		err = collection.DropIndex("{{$index.Name}}")
