@@ -91,7 +91,7 @@ func (o *Obj) GetGenTypes() []string {
 	case "enum":
 		return []string{"enum"}
 	case "mssql":
-		return []string{"struct", "mssql_orm", "mssql_del", "mssql_update"}
+		return []string{"struct", "mssql_orm"}
 	default:
 		return []string{"struct"}
 	}
