@@ -1,10 +1,6 @@
-{{define "mssql_update"}} package {{.Package}}
+{{define "mssql_update"}}
 {{$obj :=.}}
 
-import(
-	"github.com/ezbuy/ezorm/db"
-	"strings"
-)
 //Update
 
 type UpdOpt struct{
@@ -25,7 +21,7 @@ func (this *UpdOpt) OrWhere(params ...string) error {
     	return err
     }
     defer stmt.Close()
-    
+
 	stmt.Exec()
 	return nil
 }
@@ -39,7 +35,7 @@ func (this *UpdOpt) AndWhere(params ...string) error {
 		updStr += v+ " and "
 	}
 	stmt,err := dbConn.Prepare(this.Condition + " where " + updStr[:strings.LastIndex(updStr, "and")-1])
-   
+
     if err!=nil{
     	return err
     }
@@ -65,4 +61,3 @@ func (this *_{{.Name}}Mgr) Set(params ...string) *UpdOpt {
 }
 
 {{end}}
-

@@ -1,10 +1,5 @@
-{{define "mssql_del"}} package {{.Package}}
+{{define "mssql_del"}}
 {{$obj := .}}
-import 
-(
-	"github.com/ezbuy/ezorm/db"
-	"strings"
-)
 
 //Del
 func (m *_{{.Name}}Mgr) Where(query interface{},params ...interface{}) error {
@@ -12,9 +7,9 @@ func (m *_{{.Name}}Mgr) Where(query interface{},params ...interface{}) error {
 	defer dbConn.Close()
 
 	var paramArr = make([]interface{},0)
-	
+
 	stmt,err := dbConn.Prepare("delete from {{.Name}}" + " where " + query.(string))
-	
+
 	if err!=nil{
 		return err
 	}
@@ -24,24 +19,24 @@ func (m *_{{.Name}}Mgr) Where(query interface{},params ...interface{}) error {
 	paramArr = append(paramArr,params...)
 	stmt.Exec(paramArr)
 	return  nil
-        
+
 }
 
 func (m *_{{.Name}}Mgr) Or(params ...string) error {
 	dbConn := db.GetSqlServer()
 	defer dbConn.Close()
-	
+
 	var paramStr string
 	for _,v := range params {
 	   	paramStr += v + " or "
 	}
-	
+
 	stmt,err := dbConn.Prepare("delete from {{.Name}}" + " where " + paramStr[:strings.LastIndex(paramStr, "or")-1])
-	
+
 	if err!=nil{
 		return err
 	}
-	
+
 	defer stmt.Close()
 
 	stmt.Exec()
