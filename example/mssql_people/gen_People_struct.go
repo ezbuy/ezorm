@@ -3,9 +3,11 @@ package mssql_people
 import "github.com/ezbuy/ezorm/cache"
 
 type People struct {
+	Age int32 `db:"Age"`
+
 	Name string `db:"Name"`
-	Id   int32  `db:"Id"`
-	Age  int32  `db:"Age"`
+
+	Id int32 `db:"Id"`
 }
 
 func (p *People) GetNameSpace() string {
@@ -22,8 +24,6 @@ type _PeopleMgr struct {
 var PeopleMgr *_PeopleMgr
 
 var PeopleCache cache.Cache
-
-var idFieldName = "Id"
 
 func (m *_PeopleMgr) NewPeople() *People {
 	rval := new(People)

@@ -10,6 +10,8 @@ import (
 	"github.com/ezbuy/ezorm/db"
 )
 
+var idFieldName = "Id"
+
 func (m *_PeopleMgr) Save(obj *People) (sql.Result, error) {
 	if obj.Id == 0 {
 		return m.saveInsert(obj)

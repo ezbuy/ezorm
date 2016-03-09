@@ -1,4 +1,4 @@
-people:
+People:
   db: mssql
   fields:
   - Age: int32

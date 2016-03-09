@@ -29,8 +29,6 @@ func init() {
 		"tpl/mongo_search.gogo",
 		"tpl/struct.gogo",
 		"tpl/mssql_orm.gogo",
-		"tpl/mssql_del.gogo",
-		"tpl/mssql_update.gogo",
 	}
 	for _, fname := range files {
 		data, err := tpl.Asset(fname)
