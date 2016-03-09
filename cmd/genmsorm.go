@@ -16,13 +16,14 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"strings"
+
 	"github.com/ezbuy/ezorm/db"
 	"github.com/ezbuy/ezorm/parser"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
-	"os"
-	"strings"
 )
 
 // genmsormCmd represents the genmsorm command
@@ -30,7 +31,9 @@ var genmsormCmd = &cobra.Command{
 	Use:   "genmsorm",
 	Short: "Generate sql server orm code",
 	Run: func(cmd *cobra.Command, args []string) {
-
+		db.SetDBConfig(&db.SqlDbConfig{
+			SqlConnStr: dbConfig,
+		})
 		if table != "all" {
 			handler(table)
 		} else {
@@ -46,14 +49,15 @@ var genmsormCmd = &cobra.Command{
 
 var table string
 var outputYaml string
+var dbConfig string
 
 type ColumnInfo struct {
-	ColumnName   string
-	DataType     string
-	MaxLength    int
-	Nullable     bool
-	IsPrimaryKey bool
-	Sort         int
+	ColumnName   string `db:"ColumnName"`
+	DataType     string `db:"DataType"`
+	MaxLength    int    `db:"MaxLength"`
+	Nullable     bool   `db:"Nullable"`
+	IsPrimaryKey bool   `db:"IsPrimaryKey"`
+	Sort         int    `db:"Sort"`
 }
 
 func handler(table string) {
@@ -65,10 +69,11 @@ func handler(table string) {
 func getAllTables() (tables []string) {
 	query := `SELECT name FROM sys.tables`
 	server := db.GetSqlServer()
-	rows, err := server.Query(query, table)
+	rows, err := server.DB.Query(query)
 	server.Close()
 	if err != nil {
 		fmt.Println(err.Error())
+		panic(err)
 		return nil
 	}
 	defer rows.Close()
@@ -112,31 +117,25 @@ func mapper(table string, columns []ColumnInfo) map[string]map[string]interface{
 func getColumnInfo(table string) []ColumnInfo {
 	query := `SELECT DISTINCT c.name AS ColumnName, t.Name AS DataType, c.max_length AS MaxLength,
     c.is_nullable AS Nullable, ISNULL(i.is_primary_key, 0) AS IsPrimaryKey ,c.column_id AS Sort
-	FROM    
+	FROM
     sys.columns c
-	INNER JOIN 
+	INNER JOIN
     sys.types t ON c.user_type_id = t.user_type_id
-	LEFT OUTER JOIN 
+	LEFT OUTER JOIN
     sys.index_columns ic ON ic.object_id = c.object_id AND ic.column_id = c.column_id
-	LEFT OUTER JOIN 
+	LEFT OUTER JOIN
     sys.indexes i ON ic.object_id = i.object_id AND ic.index_id = i.index_id
 	WHERE
     c.object_id = OBJECT_ID(?) ORDER BY c.column_id `
 
 	server := db.GetSqlServer()
-	rows, err := server.Query(query, table)
-	server.Close()
+	var columninfos []ColumnInfo
+	err := server.Query(&columninfos, query, table)
 	if err != nil {
 		fmt.Println(err.Error())
-		return nil
+		panic(err)
 	}
-	defer rows.Close()
-	var columninfos []ColumnInfo
-	for rows.Next() {
-		curent := ColumnInfo{}
-		rows.Scan(&curent.ColumnName, &curent.DataType, &curent.MaxLength, &curent.Nullable, &curent.IsPrimaryKey, &curent.Sort)
-		columninfos = append(columninfos, curent)
-	}
+
 	return columninfos
 }
 
@@ -192,4 +191,5 @@ func init() {
 	genmsormCmd.PersistentFlags().StringVarP(&table, "table", "t", "all", "table name, 'all' meaning all tables")
 	genmsormCmd.PersistentFlags().StringVarP(&output, "output", "o", "", "output path")
 	genmsormCmd.PersistentFlags().StringVarP(&outputYaml, "output yaml", "y", "", "output *.yaml path")
+	genmsormCmd.PersistentFlags().StringVarP(&dbConfig, "db config", "d", "", "database configuration")
 }
