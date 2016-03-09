@@ -2,9 +2,7 @@ package mssql_people
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
-	"reflect"
 	"strings"
 
 	"github.com/ezbuy/ezorm/db"
@@ -20,27 +18,9 @@ func (m *_PeopleMgr) Save(obj *People) (sql.Result, error) {
 }
 
 func (m *_PeopleMgr) saveInsert(obj *People) (sql.Result, error) {
-	var fieldNames []string
-	var placeHolders []string
-	var fieldValues []interface{}
-	t := reflect.TypeOf(obj).Elem()
-	v := reflect.ValueOf(obj).Elem()
-	nf := t.NumField()
-	for i := 0; i < nf; i++ {
-		fieldName := t.Field(i).Name
-		if fieldName == idFieldName {
-			continue
-		}
-		fieldNames = append(fieldNames, fieldName)
-		placeHolders = append(placeHolders, "?")
-		fieldValues = append(fieldValues, v.FieldByName(fieldName).Interface())
-	}
-
-	query := fmt.Sprintf("insert into dbo.[People] (%s) values (%s)",
-		strings.Join(fieldNames, ","),
-		strings.Join(placeHolders, ","))
+	query := "insert into dbo.[people] (Age, Name) values (?, ?)"
 	server := db.GetSqlServer()
-	result, err := server.Exec(query, fieldValues...)
+	result, err := server.Exec(query, obj.Age, obj.Name)
 	if err != nil {
 		return result, err
 	}
@@ -56,34 +36,9 @@ func (m *_PeopleMgr) saveInsert(obj *People) (sql.Result, error) {
 }
 
 func (m *_PeopleMgr) saveUpdate(obj *People) (sql.Result, error) {
-	var fieldSets []string
-	var fieldValues []interface{}
-	t := reflect.TypeOf(obj).Elem()
-	v := reflect.ValueOf(obj).Elem()
-	nf := t.NumField()
-	for i := 0; i < nf; i++ {
-		fieldName := t.Field(i).Name
-		if fieldName == idFieldName {
-			continue
-		}
-		fieldSets = append(fieldSets, fieldName+"=?")
-		fieldValues = append(fieldValues, v.FieldByName(fieldName).Interface())
-	}
-
-	idField, ok := t.FieldByName(idFieldName)
-	if !ok {
-		return nil, errors.New("no Id field")
-	}
-
-	idFieldStr := idField.Tag.Get("db")
-	if idFieldStr != "" {
-		idFieldStr = idFieldName
-	}
-
-	query := fmt.Sprintf("update dbo.[People] set %s where %s=%d",
-		strings.Join(fieldSets, ","), idFieldStr, obj.Id)
+	query := "update dbo.[People] set Age=?, Name=? where id=?"
 	server := db.GetSqlServer()
-	return server.Exec(query, fieldValues...)
+	return server.Exec(query, obj.Age, obj.Name, obj.Id)
 }
 
 func (m *_PeopleMgr) FindOne(where string, args ...interface{}) (*People, error) {
