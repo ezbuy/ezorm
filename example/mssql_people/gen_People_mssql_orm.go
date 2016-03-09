@@ -10,19 +10,19 @@ import (
 	"github.com/ezbuy/ezorm/db"
 )
 
-func (m *_PeopleMgr) Save(people *People) (sql.Result, error) {
-	if people.Id == 0 {
-		return m.saveInsert(people)
+func (m *_PeopleMgr) Save(obj *People) (sql.Result, error) {
+	if obj.Id == 0 {
+		return m.saveInsert(obj)
 	}
-	return m.saveUpdate(people)
+	return m.saveUpdate(obj)
 }
 
-func (m *_PeopleMgr) saveInsert(people *People) (sql.Result, error) {
+func (m *_PeopleMgr) saveInsert(obj *People) (sql.Result, error) {
 	var fieldNames []string
 	var placeHolders []string
 	var fieldValues []interface{}
-	t := reflect.TypeOf(people).Elem()
-	v := reflect.ValueOf(people).Elem()
+	t := reflect.TypeOf(obj).Elem()
+	v := reflect.ValueOf(obj).Elem()
 	nf := t.NumField()
 	for i := 0; i < nf; i++ {
 		fieldName := t.Field(i).Name
@@ -48,16 +48,16 @@ func (m *_PeopleMgr) saveInsert(people *People) (sql.Result, error) {
 		return result, err
 	}
 
-	people.Id = int32(lastInsertId)
+	obj.Id = int32(lastInsertId)
 
 	return result, err
 }
 
-func (m *_PeopleMgr) saveUpdate(people *People) (sql.Result, error) {
+func (m *_PeopleMgr) saveUpdate(obj *People) (sql.Result, error) {
 	var fieldSets []string
 	var fieldValues []interface{}
-	t := reflect.TypeOf(people).Elem()
-	v := reflect.ValueOf(people).Elem()
+	t := reflect.TypeOf(obj).Elem()
+	v := reflect.ValueOf(obj).Elem()
 	nf := t.NumField()
 	for i := 0; i < nf; i++ {
 		fieldName := t.Field(i).Name
@@ -79,7 +79,7 @@ func (m *_PeopleMgr) saveUpdate(people *People) (sql.Result, error) {
 	}
 
 	query := fmt.Sprintf("update dbo.[People] set %s where %s=%d",
-		strings.Join(fieldSets, ","), idFieldStr, people.Id)
+		strings.Join(fieldSets, ","), idFieldStr, obj.Id)
 	server := db.GetSqlServer()
 	return server.Exec(query, fieldValues...)
 }
@@ -87,9 +87,9 @@ func (m *_PeopleMgr) saveUpdate(people *People) (sql.Result, error) {
 func (m *_PeopleMgr) FindOne(where string, args ...interface{}) (*People, error) {
 	query := getQuerysql(true, where)
 	server := db.GetSqlServer()
-	var people People
-	err := server.Query(&people, query, args...)
-	return &people, err
+	var obj People
+	err := server.Query(&obj, query, args...)
+	return &obj, err
 }
 
 func (m *_PeopleMgr) Find(where string, args ...interface{}) (results []*People, err error) {
