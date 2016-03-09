@@ -1,0 +1,5 @@
+People:
+  db: mssql
+  fields:
+    - Name: string
+    - Age: int
