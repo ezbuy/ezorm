@@ -1,5 +1,8 @@
-People:
+people:
   db: mssql
   fields:
-    - Name: string
-    - Age: int
+  - Age: int32
+  - Name: string
+  - Id: int32
+    attrs:
+      IsPrimaryKey: true

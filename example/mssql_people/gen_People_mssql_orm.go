@@ -2,6 +2,7 @@ package mssql_people
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -9,7 +10,14 @@ import (
 	"github.com/ezbuy/ezorm/db"
 )
 
-func (o *_PeopleMgr) Save(people *People) (sql.Result, error) {
+func (m *_PeopleMgr) Save(people *People) (sql.Result, error) {
+	if people.Id == 0 {
+		return m.saveInsert(people)
+	}
+	return m.saveUpdate(people)
+}
+
+func (m *_PeopleMgr) saveInsert(people *People) (sql.Result, error) {
 	var fieldNames []string
 	var placeHolders []string
 	var fieldValues []interface{}
@@ -18,6 +26,9 @@ func (o *_PeopleMgr) Save(people *People) (sql.Result, error) {
 	nf := t.NumField()
 	for i := 0; i < nf; i++ {
 		fieldName := t.Field(i).Name
+		if fieldName == idFieldName {
+			continue
+		}
 		fieldNames = append(fieldNames, fieldName)
 		placeHolders = append(placeHolders, "?")
 		fieldValues = append(fieldValues, v.FieldByName(fieldName).Interface())
@@ -27,10 +38,53 @@ func (o *_PeopleMgr) Save(people *People) (sql.Result, error) {
 		strings.Join(fieldNames, ","),
 		strings.Join(placeHolders, ","))
 	server := db.GetSqlServer()
+	result, err := server.Exec(query, fieldValues...)
+	if err != nil {
+		return result, err
+	}
+
+	lastInsertId, err := result.LastInsertId()
+	if err != nil {
+		return result, err
+	}
+
+	people.Id = int32(lastInsertId)
+
+	return result, err
+}
+
+func (m *_PeopleMgr) saveUpdate(people *People) (sql.Result, error) {
+	var fieldSets []string
+	var fieldValues []interface{}
+	t := reflect.TypeOf(people).Elem()
+	v := reflect.ValueOf(people).Elem()
+	nf := t.NumField()
+	for i := 0; i < nf; i++ {
+		fieldName := t.Field(i).Name
+		if fieldName == idFieldName {
+			continue
+		}
+		fieldSets = append(fieldSets, fieldName+"=?")
+		fieldValues = append(fieldValues, v.FieldByName(fieldName).Interface())
+	}
+
+	idField, ok := t.FieldByName(idFieldName)
+	if !ok {
+		return nil, errors.New("no Id field")
+	}
+
+	idFieldStr := idField.Tag.Get("db")
+	if idFieldStr != "" {
+		idFieldStr = idFieldName
+	}
+
+	query := fmt.Sprintf("update dbo.[People] set %s where %s=%d",
+		strings.Join(fieldSets, ","), idFieldStr, people.Id)
+	server := db.GetSqlServer()
 	return server.Exec(query, fieldValues...)
 }
 
-func (o *_PeopleMgr) FindOne(where string, args ...interface{}) (*People, error) {
+func (m *_PeopleMgr) FindOne(where string, args ...interface{}) (*People, error) {
 	query := getQuerysql(true, where)
 	server := db.GetSqlServer()
 	var people People
@@ -38,18 +92,18 @@ func (o *_PeopleMgr) FindOne(where string, args ...interface{}) (*People, error)
 	return &people, err
 }
 
-func (o *_PeopleMgr) Find(where string, args ...interface{}) (results []*People, err error) {
+func (m *_PeopleMgr) Find(where string, args ...interface{}) (results []*People, err error) {
 	query := getQuerysql(false, where)
 	server := db.GetSqlServer()
 	err = server.Query(&results, query, args...)
 	return
 }
 
-func (o *_PeopleMgr) FindAll() (results []*People, err error) {
-	return o.Find("")
+func (m *_PeopleMgr) FindAll() (results []*People, err error) {
+	return m.Find("")
 }
 
-func (o *_PeopleMgr) FindWithOffset(where string, offset int, limit int, args ...interface{}) (results []*People, err error) {
+func (m *_PeopleMgr) FindWithOffset(where string, offset int, limit int, args ...interface{}) (results []*People, err error) {
 	query := getQuerysql(false, where)
 
 	if !strings.Contains(strings.ToLower(where), "ORDER BY") {

@@ -72,9 +72,7 @@ func getAllTables() (tables []string) {
 	rows, err := server.DB.Query(query)
 	server.Close()
 	if err != nil {
-		fmt.Println(err.Error())
 		panic(err)
-		return nil
 	}
 	defer rows.Close()
 	for rows.Next() {
@@ -89,8 +87,7 @@ func createYamlFile(table string, columns []ColumnInfo) {
 	objs := mapper(table, columns)
 	bs, err := yaml.Marshal(objs)
 	if err != nil {
-		println(err)
-		return
+		panic(err)
 	}
 	fileName := outputYaml + "/" + strings.ToLower(table) + "_mssql.yaml"
 	ioutil.WriteFile(fileName, bs, 0644)
@@ -108,6 +105,11 @@ func mapper(table string, columns []ColumnInfo) map[string]map[string]interface{
 		if dataitem[v.ColumnName] == "time.Time" {
 			parser.HaveTime = true
 		}
+
+		if v.IsPrimaryKey {
+			dataitem["attrs"] = map[string]interface{}{"IsPrimaryKey": true}
+		}
+
 		fields[i] = dataitem
 	}
 	db["fields"] = fields
@@ -132,7 +134,6 @@ func getColumnInfo(table string) []ColumnInfo {
 	var columninfos []ColumnInfo
 	err := server.Query(&columninfos, query, table)
 	if err != nil {
-		fmt.Println(err.Error())
 		panic(err)
 	}
 
@@ -145,8 +146,7 @@ func generate(table string) {
 	data, _ := ioutil.ReadFile(fileName)
 	_, err := os.Stat(fileName)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		panic(err)
 	}
 	err = yaml.Unmarshal([]byte(data), &objs)
 
@@ -157,7 +157,7 @@ func generate(table string) {
 		metaObj.Db = obj["db"].(string)
 		err := metaObj.Read(obj)
 		if err != nil {
-			println(err.Error())
+			panic(err)
 		}
 
 		for _, genType := range metaObj.GetGenTypes() {
@@ -170,7 +170,7 @@ func generate(table string) {
 			err = parser.Tpl.ExecuteTemplate(file, genType, metaObj)
 			file.Close()
 			if err != nil {
-				println(err.Error())
+				panic(err)
 			}
 		}
 	}

@@ -25,7 +25,7 @@ func savePeole(t *testing.T) (*People, error) {
 	return p, err
 }
 
-func TestSave(t *testing.T) {
+func TestSaveInsert(t *testing.T) {
 	_, err := PeopleMgr.Del("")
 	if err != nil {
 		t.Errorf("delete error:%s", err.Error())
@@ -35,6 +35,38 @@ func TestSave(t *testing.T) {
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}
+}
+
+func TestSaveUpdate(t *testing.T) {
+	_, err := PeopleMgr.Del("")
+	if err != nil {
+		t.Errorf("delete error:%s", err.Error())
+	}
+
+	p, err := savePeole(t)
+	if err != nil {
+		t.Errorf("save err:%s", err.Error())
+	}
+
+	p.Age = p.Age + 1
+	result, err := PeopleMgr.Save(p)
+	if err != nil {
+		t.Errorf("save err:%s", err.Error())
+	}
+
+	affectedRows, err := result.RowsAffected()
+	if err != nil {
+		t.Errorf("save err:%s", err.Error())
+	}
+	if affectedRows != 1 {
+		t.Errorf("save err:affectedRows[%d]!=1", affectedRows)
+	}
+
+	pFound, err := PeopleMgr.FindOne("")
+	if err != nil {
+		t.Errorf("find one error:%s", err.Error())
+	}
+	assertPeopleEqual(p, pFound, t)
 }
 
 func assertPeopleEqual(a, b *People, t *testing.T) {

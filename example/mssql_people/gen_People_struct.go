@@ -4,8 +4,8 @@ import "github.com/ezbuy/ezorm/cache"
 
 type People struct {
 	Name string `db:"Name"`
-
-	Age int32 `db:"Age"`
+	Id   int32  `db:"Id"`
+	Age  int32  `db:"Age"`
 }
 
 func (p *People) GetNameSpace() string {
@@ -22,6 +22,8 @@ type _PeopleMgr struct {
 var PeopleMgr *_PeopleMgr
 
 var PeopleCache cache.Cache
+
+var idFieldName = "Id"
 
 func (m *_PeopleMgr) NewPeople() *People {
 	rval := new(People)
