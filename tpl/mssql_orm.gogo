@@ -3,9 +3,7 @@
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
-	"reflect"
 	"strings"
 	{{range .GetOrmImports}}
 	"{{.}}"
@@ -24,27 +22,9 @@ func (m *_{{.Name}}Mgr) Save(obj *{{.Name}}) (sql.Result, error) {
 }
 
 func (m *_{{.Name}}Mgr) saveInsert(obj *{{.Name}}) (sql.Result, error) {
-	var fieldNames []string
-	var placeHolders []string
-	var fieldValues []interface{}
-	t := reflect.TypeOf(obj).Elem()
-	v := reflect.ValueOf(obj).Elem()
-	nf := t.NumField()
-	for i := 0; i < nf; i++ {
-		fieldName := t.Field(i).Name
-		if fieldName == idFieldName {
-			continue
-		}
-		fieldNames = append(fieldNames, fieldName)
-		placeHolders = append(placeHolders, "?")
-		fieldValues = append(fieldValues, v.FieldByName(fieldName).Interface())
-	}
-
-	query := fmt.Sprintf("insert into dbo.[{{.Name}}] (%s) values (%s)",
-		strings.Join(fieldNames, ","),
-		strings.Join(placeHolders, ","))
+	query := "insert into dbo.[people] ({{range $index, $field := .Fields}}{{if ne $field.Name "Id"}}{{if $index}}, {{end}}{{$field.Name}}{{end}}{{end}}) values ({{range $index, $field := .Fields}}{{if ne $field.Name "Id"}}{{if $index}}, {{end}}?{{end}}{{end}})"
 	server := db.GetSqlServer()
-	result, err := server.Exec(query, fieldValues...)
+	result, err := server.Exec(query, {{range $index, $field := .Fields}}{{if ne $field.Name "Id"}}{{if $index}}, {{end}}obj.{{$field.Name}}{{end}}{{end}})
 	if err != nil {
 		return result, err
 	}
@@ -59,36 +39,10 @@ func (m *_{{.Name}}Mgr) saveInsert(obj *{{.Name}}) (sql.Result, error) {
 	return result, err
 }
 
-
 func (m *_{{.Name}}Mgr) saveUpdate(obj *{{.Name}}) (sql.Result, error) {
-	var fieldSets []string
-	var fieldValues []interface{}
-	t := reflect.TypeOf(obj).Elem()
-	v := reflect.ValueOf(obj).Elem()
-	nf := t.NumField()
-	for i := 0; i < nf; i++ {
-		fieldName := t.Field(i).Name
-		if fieldName == idFieldName {
-			continue
-		}
-		fieldSets = append(fieldSets, fieldName+"=?")
-		fieldValues = append(fieldValues, v.FieldByName(fieldName).Interface())
-	}
-
-	idField, ok := t.FieldByName(idFieldName)
-	if !ok {
-		return nil, errors.New("no Id field")
-	}
-
-	idFieldStr := idField.Tag.Get("db")
-	if idFieldStr != "" {
-		idFieldStr = idFieldName
-	}
-
-	query := fmt.Sprintf("update dbo.[{{.Name}}] set %s where %s=%d",
-		strings.Join(fieldSets, ","), idFieldStr, obj.Id)
+	query := "update dbo.[People] set {{range $index, $field := .Fields}}{{if ne $field.Name "Id"}}{{if $index}}, {{end}}{{$field.Name}}=?{{end}}{{end}} where id=?"
 	server := db.GetSqlServer()
-	return server.Exec(query, fieldValues...)
+	return server.Exec(query, {{range $field := .Fields}}{{if ne $field.Name "Id"}}obj.{{$field.Name}}, {{end}}{{end}}obj.Id)
 }
 
 func (m *_{{.Name}}Mgr) FindOne(where string, args ...interface{}) (*{{.Name}}, error) {
