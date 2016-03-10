@@ -1,4 +1,4 @@
-package mssql_people
+package people
 
 import "github.com/ezbuy/ezorm/cache"
 
@@ -11,7 +11,7 @@ type People struct {
 }
 
 func (p *People) GetNameSpace() string {
-	return "mssql_people"
+	return "people"
 }
 
 func (p *People) GetClassName() string {
