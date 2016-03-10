@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/ezbuy/ezorm/db"
@@ -174,6 +175,9 @@ func generate(table string) {
 			}
 		}
 	}
+
+	cmd := exec.Command("gofmt", "-w", output)
+	cmd.Run()
 }
 
 func init() {
