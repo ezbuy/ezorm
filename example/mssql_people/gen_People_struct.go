@@ -7,7 +7,7 @@ type People struct {
 
 	Name string `db:"Name"`
 
-	Id int32 `db:"Id"`
+	Id int32 `db:"PeopleId"`
 }
 
 func (p *People) GetNameSpace() string {

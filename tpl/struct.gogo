@@ -12,7 +12,7 @@ import "time"
 type {{.Name}} struct {
 {{- range $field := .Fields}}
 {{if eq $obj.Db "mssql"}}
-{{$field.Name}}  {{$field.GetGoType}} `db:"{{$field.Name}}"`
+{{$field.Name}}  {{$field.GetGoType}} `db:"{{$field.Tag}}"`
 {{- else}}
 	{{- if and (eq $obj.Db "mongo") (eq $field.Name "ID")}}
 	ID         bson.ObjectId `bson:"_id,omitempty"`
