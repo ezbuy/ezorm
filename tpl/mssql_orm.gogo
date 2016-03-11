@@ -1,34 +1,39 @@
 {{define "mssql_orm"}}package {{.Package}}
-{{$idFieldName := printf "%sId" .Name}}
 {{$obj := .}}
+{{$idFieldName := printf "%sId" .Name}}
+{{/* Only generate source file for table with primary key */}}
+{{range $index, $field := $obj.Fields}}
+{{if eq $field.Name $idFieldName}}
+{{$idField := $field}}
+
 
 import (
 	"database/sql"
 	"fmt"
 	"strings"
-	{{range .GetOrmImports}}
+	{{range $obj.GetOrmImports}}
 	"{{.}}"
 	{{end}}
 
 	"github.com/ezbuy/ezorm/db"
 )
 
-func (m *_{{.Name}}Mgr) Save(obj *{{.Name}}) (sql.Result, error) {
+func (m *_{{$obj.Name}}Mgr) Save(obj *{{$obj.Name}}) (sql.Result, error) {
 	if obj.{{$idFieldName}} == 0 {
 		return m.saveInsert(obj)
 	}
 	return m.saveUpdate(obj)
 }
 
-func (m *_{{.Name}}Mgr) saveInsert(obj *{{.Name}}) (sql.Result, error) {
+func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
 	query := "insert into dbo.[people] (
-	{{- range $index, $field := .Fields}}
+	{{- range $index, $field := $obj.Fields}}
 		{{- if ne $field.Name $idFieldName}}
 			{{- if $index}}, {{end}}{{$field.Name}}
 		{{- end -}}
 	{{- end -}}
 	) values (
-	{{- range $index, $field := .Fields}}
+	{{- range $index, $field := $obj.Fields}}
 		{{- if ne $field.Name $idFieldName}}
 			{{- if $index}}, {{end}}?
 		{{- end -}}
@@ -36,7 +41,7 @@ func (m *_{{.Name}}Mgr) saveInsert(obj *{{.Name}}) (sql.Result, error) {
 	)"
 	server := db.GetSqlServer()
 	result, err := server.Exec(query,
-	{{- range $index, $field := .Fields}}
+	{{- range $index, $field := $obj.Fields}}
 		{{- if ne $field.Name $idFieldName}}
 			{{- if $index}}, {{- end -}}obj.{{$field.Name -}}
 		{{- end -}}
@@ -50,52 +55,48 @@ func (m *_{{.Name}}Mgr) saveInsert(obj *{{.Name}}) (sql.Result, error) {
 		return result, err
 	}
 
-	{{range $index, $field := .Fields}}
-		{{- if eq $field.Name $idFieldName}}
-			obj.{{$idFieldName}} = {{$field.Type}}(lastInsertId)
-		{{- end -}}
-	{{end}}
+	obj.{{$idFieldName}} = {{$idField.Type}}(lastInsertId)
 
 	return result, err
 }
 
-func (m *_{{.Name}}Mgr) saveUpdate(obj *{{.Name}}) (sql.Result, error) {
+func (m *_{{$obj.Name}}Mgr) saveUpdate(obj *{{$obj.Name}}) (sql.Result, error) {
 	query := "update dbo.[People] set
-	{{- range $index, $field := .Fields}}
+	{{- range $index, $field := $obj.Fields}}
 		{{- if ne $field.Name $idFieldName}}{{if $index}},{{end}} {{$field.Name}}=?{{end -}}
 	{{- end }} where
-	{{- range $index, $field := .Fields}}
+	{{- range $index, $field := $obj.Fields}}
 		{{- if eq $field.Name $idFieldName}} {{$field.Name}}=?{{end}}
 	{{- end -}}"
 	server := db.GetSqlServer()
 	return server.Exec(query,
-	{{- range $field := .Fields}}
+	{{- range $field := $obj.Fields}}
 		{{- if ne $field.Name $idFieldName}}obj.{{$field.Name}}, {{end}}
 	{{- end -}}
 	obj.{{$idFieldName}})
 }
 
-func (m *_{{.Name}}Mgr) FindOne(where string, args ...interface{}) (*{{.Name}}, error) {
+func (m *_{{$obj.Name}}Mgr) FindOne(where string, args ...interface{}) (*{{$obj.Name}}, error) {
 	query := getQuerysql(true, where)
 	server := db.GetSqlServer()
-	var obj {{.Name}}
+	var obj {{$obj.Name}}
 	err := server.Query(&obj, query, args...)
 	return &obj, err
 }
 
 
-func (m *_{{.Name}}Mgr) Find(where string, args ...interface{}) (results []*{{.Name}}, err error) {
+func (m *_{{$obj.Name}}Mgr) Find(where string, args ...interface{}) (results []*{{$obj.Name}}, err error) {
 	query := getQuerysql(false, where)
 	server := db.GetSqlServer()
 	err = server.Query(&results, query, args...)
 	return
 }
 
-func (m *_{{.Name}}Mgr) FindAll() (results []*{{.Name}}, err error) {
+func (m *_{{$obj.Name}}Mgr) FindAll() (results []*{{$obj.Name}}, err error) {
 	return m.Find("")
 }
 
-func (m *_{{.Name}}Mgr) FindWithOffset(where string, offset int, limit int, args ...interface{}) (results []*{{.Name}}, err error) {
+func (m *_{{$obj.Name}}Mgr) FindWithOffset(where string, offset int, limit int, args ...interface{}) (results []*{{$obj.Name}}, err error) {
 	query := getQuerysql(false, where)
 
 	if !strings.Contains(strings.ToLower(where), "ORDER BY") {
@@ -116,7 +117,7 @@ func getQuerysql(topOne bool, where string) string {
 	if topOne {
 		query = query + ` TOP 1 `
 	}
-	query = query + ` * FROM dbo.[{{.Name}}] WITH(NOLOCK) `
+	query = query + ` * FROM dbo.[{{$obj.Name}}] WITH(NOLOCK) `
 
 	if where != "" {
 		if strings.Index(strings.Trim(where, " "), "WHERE") == -1 {
@@ -127,10 +128,10 @@ func getQuerysql(topOne bool, where string) string {
 	return query
 }
 
-func (m *_{{.Name}}Mgr) Del(where string, params ...interface{}) (sql.Result, error) {
-	query := "delete from {{.Name}}"
+func (m *_{{$obj.Name}}Mgr) Del(where string, params ...interface{}) (sql.Result, error) {
+	query := "delete from {{$obj.Name}}"
 	if where != "" {
-		query = fmt.Sprintf("delete from {{.Name}} where " + where)
+		query = fmt.Sprintf("delete from {{$obj.Name}} where " + where)
 	}
 	server := db.GetSqlServer()
 	return server.Exec(query, params...)
@@ -140,13 +141,15 @@ func (m *_{{.Name}}Mgr) Del(where string, params ...interface{}) (sql.Result, er
 // set:"a=?, b=?"
 // where:"c=? and d=?"
 // params:[]interface{}{"a", "b", "c", "d"}...
-func (m *_{{.Name}}Mgr) Update(set, where string, params ...interface{}) (sql.Result, error) {
-	query := fmt.Sprintf("update {{.Name}} set %s", set)
+func (m *_{{$obj.Name}}Mgr) Update(set, where string, params ...interface{}) (sql.Result, error) {
+	query := fmt.Sprintf("update {{$obj.Name}} set %s", set)
 	if where != "" {
-		query = fmt.Sprintf("update {{.Name}} set %s where %s", set, where)
+		query = fmt.Sprintf("update {{$obj.Name}} set %s where %s", set, where)
 	}
 	server := db.GetSqlServer()
 	return server.Exec(query, params...)
 }
 
+{{end}}
+{{end}}
 {{end}}
