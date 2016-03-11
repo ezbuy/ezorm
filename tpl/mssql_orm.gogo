@@ -22,26 +22,9 @@ func (m *_{{.Name}}Mgr) Save(obj *{{.Name}}) (sql.Result, error) {
 }
 
 func (m *_{{.Name}}Mgr) saveInsert(obj *{{.Name}}) (sql.Result, error) {
-	query := "insert into dbo.[people] (
-	{{- range $index, $field := .Fields}}
-		{{- if ne $field.Name "Id"}}
-			{{- if $index}}, {{end}}{{$field.Tag}}
-		{{- end -}}
-	{{- end -}}
-	) values (
-	{{- range $index, $field := .Fields}}
-		{{- if ne $field.Name "Id"}}
-			{{- if $index}}, {{end}}?
-		{{- end -}}
-	{{- end -}}
-	)"
+	query := "insert into dbo.[people] ({{range $index, $field := .Fields}}{{if ne $field.Name "Id"}}{{if $index}}, {{end}}{{$field.Name}}{{end}}{{end}}) values ({{range $index, $field := .Fields}}{{if ne $field.Name "Id"}}{{if $index}}, {{end}}?{{end}}{{end}})"
 	server := db.GetSqlServer()
-	result, err := server.Exec(query,
-	{{- range $index, $field := .Fields}}
-		{{- if ne $field.Name "Id"}}
-			{{- if $index}}, {{- end -}}obj.{{$field.Name -}}
-		{{- end -}}
-	{{- end -}})
+	result, err := server.Exec(query, {{range $index, $field := .Fields}}{{if ne $field.Name "Id"}}{{if $index}}, {{end}}obj.{{$field.Name}}{{end}}{{end}})
 	if err != nil {
 		return result, err
 	}
@@ -57,19 +40,9 @@ func (m *_{{.Name}}Mgr) saveInsert(obj *{{.Name}}) (sql.Result, error) {
 }
 
 func (m *_{{.Name}}Mgr) saveUpdate(obj *{{.Name}}) (sql.Result, error) {
-	query := "update dbo.[People] set
-	{{- range $index, $field := .Fields}}
-		{{- if ne $field.Name "Id"}}{{if $index}},{{end}} {{$field.Tag}}=?{{end -}}
-	{{- end }} where
-	{{- range $index, $field := .Fields}}
-		{{- if eq $field.Name "Id"}} {{$field.Tag}}=?{{end}}
-	{{- end -}}"
+	query := "update dbo.[People] set {{range $index, $field := .Fields}}{{if ne $field.Name "Id"}}{{if $index}}, {{end}}{{$field.Name}}=?{{end}}{{end}} where id=?"
 	server := db.GetSqlServer()
-	return server.Exec(query,
-	{{- range $field := .Fields}}
-		{{- if ne $field.Name "Id"}}obj.{{$field.Name}}, {{end}}
-	{{- end -}}
-	obj.Id)
+	return server.Exec(query, {{range $field := .Fields}}{{if ne $field.Name "Id"}}obj.{{$field.Name}}, {{end}}{{end}}obj.Id)
 }
 
 func (m *_{{.Name}}Mgr) FindOne(where string, args ...interface{}) (*{{.Name}}, error) {

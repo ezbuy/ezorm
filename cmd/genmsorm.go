@@ -98,32 +98,27 @@ func capitalize(a string) string {
 	return strings.ToUpper(a[:1]) + a[1:]
 }
 
-func mapper(table string, columns []ColumnInfo) map[string]*parser.Obj {
-	fields := make([]*parser.Field, 0, len(columns))
-	for _, v := range columns {
-		f := new(parser.Field)
-		f.Tag = v.ColumnName
-		f.Type = parser.DbToGoType(v.DataType)
-		if f.Type == "time.Time" {
+func mapper(table string, columns []ColumnInfo) map[string]map[string]interface{} {
+	objs := make(map[string]map[string]interface{})
+	db := make(map[string]interface{})
+	db["db"] = "mssql"
+	objs[capitalize(table)] = db
+	fields := make([]interface{}, len(columns))
+	for i, v := range columns {
+		dataitem := make(map[string]interface{}, len(columns))
+		dataitem[v.ColumnName] = parser.DbToGoType(v.DataType)
+		if dataitem[v.ColumnName] == "time.Time" {
 			parser.HaveTime = true
 		}
 
 		if v.IsPrimaryKey {
-			f.Name = "Id"
-		} else {
-			f.Name = capitalize(v.ColumnName)
+			dataitem["attrs"] = map[string]interface{}{"IsPrimaryKey": true}
 		}
-		fields = append(fields, f)
-	}
 
-	name := capitalize(table)
-	t := &parser.Obj{
-		Package: strings.ToLower(table),
-		Name:    name,
-		Db:      "mssql",
-		Fields:  fields,
+		fields[i] = dataitem
 	}
-	return map[string]*parser.Obj{name: t}
+	db["fields"] = fields
+	return objs
 }
 
 func getColumnInfo(table string) []ColumnInfo {
@@ -151,7 +146,7 @@ func getColumnInfo(table string) []ColumnInfo {
 }
 
 func generate(table string) {
-	var objs map[string]*parser.Obj
+	var objs map[string]map[string]interface{}
 	fileName := outputYaml + "/" + strings.ToLower(table) + "_mssql.yaml"
 	data, _ := ioutil.ReadFile(fileName)
 	_, err := os.Stat(fileName)
@@ -159,19 +154,26 @@ func generate(table string) {
 		panic(err)
 	}
 	err = yaml.Unmarshal([]byte(data), &objs)
-	if err != nil {
-		panic(err)
-	}
 
-	for name, obj := range objs {
-		for _, genType := range obj.GetGenTypes() {
-			file, err := os.OpenFile(output+"/gen_"+name+"_"+genType+".go", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	for key, obj := range objs {
+		metaObj := new(parser.Obj)
+		metaObj.Package = strings.ToLower(table)
+		metaObj.Name = key
+		metaObj.Db = obj["db"].(string)
+		err := metaObj.Read(obj)
+		if err != nil {
+			panic(err)
+		}
+
+		for _, genType := range metaObj.GetGenTypes() {
+			file, err := os.OpenFile(output+"/gen_"+metaObj.Name+"_"+genType+".go", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+			metaObj.TplWriter = file
 			if err != nil {
 				panic(err)
 			}
-			defer file.Close()
 
-			err = parser.Tpl.ExecuteTemplate(file, genType, obj)
+			err = parser.Tpl.ExecuteTemplate(file, genType, metaObj)
+			file.Close()
 			if err != nil {
 				panic(err)
 			}

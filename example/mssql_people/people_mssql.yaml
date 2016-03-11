@@ -1,54 +1,8 @@
 People:
   db: mssql
-  extend: ""
   fields:
-  - defaultvalue: ""
-    attrs: null
-    index: ""
-    key: ""
-    label: ""
-    placeholder: ""
-    name: Age
-    order: ""
-    tag: Age
-    type: int32
-    widget: ""
-    remark: ""
-    fk: ""
-    obj: null
-  - defaultvalue: ""
-    attrs: null
-    index: ""
-    key: ""
-    label: ""
-    placeholder: ""
-    name: Name
-    order: ""
-    tag: Name
-    type: string
-    widget: ""
-    remark: ""
-    fk: ""
-    obj: null
-  - defaultvalue: ""
-    attrs: null
-    index: ""
-    key: ""
-    label: ""
-    placeholder: ""
-    name: Id
-    order: ""
-    tag: PeopleId
-    type: int32
-    widget: ""
-    remark: ""
-    fk: ""
-    obj: null
-  fieldnamemap: {}
-  filterfields: []
-  indexes: []
-  name: People
-  package: people
-  searchindex: ""
-  searchtype: ""
-  tplwriter: null
+  - Age: int32
+  - Name: string
+  - Id: int32
+    attrs:
+      IsPrimaryKey: true

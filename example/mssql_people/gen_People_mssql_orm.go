@@ -36,7 +36,7 @@ func (m *_PeopleMgr) saveInsert(obj *People) (sql.Result, error) {
 }
 
 func (m *_PeopleMgr) saveUpdate(obj *People) (sql.Result, error) {
-	query := "update dbo.[People] set Age=?, Name=? where PeopleId=?"
+	query := "update dbo.[People] set Age=?, Name=? where id=?"
 	server := db.GetSqlServer()
 	return server.Exec(query, obj.Age, obj.Name, obj.Id)
 }
