@@ -16,9 +16,9 @@ func (m *_PeopleMgr) Save(obj *People) (sql.Result, error) {
 }
 
 func (m *_PeopleMgr) saveInsert(obj *People) (sql.Result, error) {
-	query := "insert into dbo.[People] (Age, Name) values (?, ?)"
+	query := "insert into dbo.[People] (NonIndexA, NonIndexB, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3) values (?, ?, ?, ?, ?, ?, ?)"
 	server := db.GetSqlServer()
-	result, err := server.Exec(query, obj.Age, obj.Name)
+	result, err := server.Exec(query, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3)
 	if err != nil {
 		return result, err
 	}
@@ -34,9 +34,9 @@ func (m *_PeopleMgr) saveInsert(obj *People) (sql.Result, error) {
 }
 
 func (m *_PeopleMgr) saveUpdate(obj *People) (sql.Result, error) {
-	query := "update dbo.[People] set Age=?, Name=? where PeopleId=?"
+	query := "update dbo.[People] set NonIndexA=?, NonIndexB=?, Age=?, Name=?, IndexAPart1=?, IndexAPart2=?, IndexAPart3=? where PeopleId=?"
 	server := db.GetSqlServer()
-	return server.Exec(query, obj.Age, obj.Name, obj.PeopleId)
+	return server.Exec(query, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.PeopleId)
 }
 
 func (m *_PeopleMgr) FindByID(id int32) (obj *People, err error) {

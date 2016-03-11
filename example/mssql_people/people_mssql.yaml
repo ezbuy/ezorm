@@ -1,6 +1,16 @@
 People:
   db: mssql
   fields:
-  - Age: int32
-  - Name: string
+  - NonIndexA: string
+  - NonIndexB: string
   - PeopleId: int32
+  - Age: int32
+    attrs:
+    - index
+  - Name: string
+    attrs:
+    - unique
+  - IndexAPart1: int32
+  - IndexAPart2: int32
+  - IndexAPart3: int32
+  indexes: [[IndexAPart1, IndexAPart2, IndexAPart3]]

@@ -3,11 +3,21 @@ package people
 import "github.com/ezbuy/ezorm/cache"
 
 type People struct {
+	NonIndexA string `db:"NonIndexA"`
+
+	NonIndexB string `db:"NonIndexB"`
+
+	PeopleId int32 `db:"PeopleId"`
+
 	Age int32 `db:"Age"`
 
 	Name string `db:"Name"`
 
-	PeopleId int32 `db:"PeopleId"`
+	IndexAPart1 int32 `db:"IndexAPart1"`
+
+	IndexAPart2 int32 `db:"IndexAPart2"`
+
+	IndexAPart3 int32 `db:"IndexAPart3"`
 }
 
 func (p *People) GetNameSpace() string {
