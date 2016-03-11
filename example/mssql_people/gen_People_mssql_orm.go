@@ -39,6 +39,23 @@ func (m *_PeopleMgr) saveUpdate(obj *People) (sql.Result, error) {
 	return server.Exec(query, obj.Age, obj.Name, obj.PeopleId)
 }
 
+func (m *_PeopleMgr) FindByID(id int32) (obj *People, err error) {
+	if PeopleCache == nil {
+		return m.FindByIDFromDB(id)
+	}
+
+	err = PeopleCache.Get(fmt.Sprintf("%d", id), &obj)
+	return
+}
+
+func (m *_PeopleMgr) FindByIDFromDB(id int32) (*People, error) {
+	query := "SELECT * FROM people WHERE PeopleId=?"
+	server := db.GetSqlServer()
+	var obj People
+	err := server.Query(&obj, query, id)
+	return &obj, err
+}
+
 func (m *_PeopleMgr) FindOne(where string, args ...interface{}) (*People, error) {
 	query := getQuerysql(true, where)
 	server := db.GetSqlServer()

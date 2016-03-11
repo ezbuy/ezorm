@@ -249,3 +249,21 @@ func TestUpdate(t *testing.T) {
 		t.Errorf("update error:%s!=%s, pNew.Name!=newName", pNew.Name, newName)
 	}
 }
+
+func TestFindByID(t *testing.T) {
+	_, err := PeopleMgr.Del("")
+	if err != nil {
+		t.Errorf("delete error:%s", err.Error())
+	}
+
+	p1, err := savePeole(t)
+	if err != nil {
+		t.Errorf("save err:%s", err.Error())
+	}
+
+	p2, err := PeopleMgr.FindByID(p1.PeopleId)
+	if err != nil {
+		t.Errorf("findByID err:%s", err.Error())
+	}
+	assertPeopleEqual(p1, p2, t)
+}
