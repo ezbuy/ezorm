@@ -76,6 +76,23 @@ func (m *_{{$obj.Name}}Mgr) saveUpdate(obj *{{$obj.Name}}) (sql.Result, error) {
 	obj.{{$idFieldName}})
 }
 
+func (m *_{{$obj.Name}}Mgr) FindByID(id {{$idField.Type}}) (obj *{{$obj.Name}}, err error) {
+	if {{$obj.Name}}Cache == nil {
+		return m.FindByIDFromDB(id)
+	}
+
+	err = {{$obj.Name}}Cache.Get(fmt.Sprintf("%d", id), &obj)
+	return
+}
+
+func (m *_{{$obj.Name}}Mgr) FindByIDFromDB(id {{$idField.Type}}) (*{{$obj.Name}}, error) {
+	query := "SELECT * FROM {{$obj.Name}} WHERE {{$idFieldName}}=?"
+	server := db.GetSqlServer()
+	var obj {{$obj.Name}}
+	err := server.Query(&obj, query, id)
+	return &obj, err
+}
+
 func (m *_{{$obj.Name}}Mgr) FindOne(where string, args ...interface{}) (*{{$obj.Name}}, error) {
 	query := getQuerysql(true, where)
 	server := db.GetSqlServer()
