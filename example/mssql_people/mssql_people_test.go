@@ -1,4 +1,4 @@
-package people
+package mssql_people
 
 import (
 	"fmt"

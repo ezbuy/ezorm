@@ -94,15 +94,11 @@ func createYamlFile(table string, columns []ColumnInfo) {
 	ioutil.WriteFile(fileName, bs, 0644)
 }
 
-func capitalize(a string) string {
-	return strings.ToUpper(a[:1]) + a[1:]
-}
-
 func mapper(table string, columns []ColumnInfo) map[string]map[string]interface{} {
 	objs := make(map[string]map[string]interface{})
 	db := make(map[string]interface{})
 	db["db"] = "mssql"
-	objs[capitalize(table)] = db
+	objs[table] = db
 	fields := make([]interface{}, len(columns))
 	for i, v := range columns {
 		dataitem := make(map[string]interface{}, len(columns))
