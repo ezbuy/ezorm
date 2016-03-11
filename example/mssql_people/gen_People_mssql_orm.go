@@ -16,7 +16,7 @@ func (m *_PeopleMgr) Save(obj *People) (sql.Result, error) {
 }
 
 func (m *_PeopleMgr) saveInsert(obj *People) (sql.Result, error) {
-	query := "insert into dbo.[people] (Age, Name) values (?, ?)"
+	query := "insert into dbo.[People] (Age, Name) values (?, ?)"
 	server := db.GetSqlServer()
 	result, err := server.Exec(query, obj.Age, obj.Name)
 	if err != nil {
@@ -49,7 +49,7 @@ func (m *_PeopleMgr) FindByID(id int32) (obj *People, err error) {
 }
 
 func (m *_PeopleMgr) FindByIDFromDB(id int32) (*People, error) {
-	query := "SELECT * FROM people WHERE PeopleId=?"
+	query := "SELECT * FROM People WHERE PeopleId=?"
 	server := db.GetSqlServer()
 	var obj People
 	err := server.Query(&obj, query, id)

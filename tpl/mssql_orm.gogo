@@ -26,7 +26,7 @@ func (m *_{{$obj.Name}}Mgr) Save(obj *{{$obj.Name}}) (sql.Result, error) {
 }
 
 func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
-	query := "insert into dbo.[people] (
+	query := "insert into dbo.[{{$obj.Name}}] (
 	{{- range $index, $field := $obj.Fields}}
 		{{- if ne $field.Name $idFieldName}}
 			{{- if $index}}, {{end}}{{$field.Name}}
@@ -61,7 +61,7 @@ func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
 }
 
 func (m *_{{$obj.Name}}Mgr) saveUpdate(obj *{{$obj.Name}}) (sql.Result, error) {
-	query := "update dbo.[People] set
+	query := "update dbo.[{{$obj.Name}}] set
 	{{- range $index, $field := $obj.Fields}}
 		{{- if ne $field.Name $idFieldName}}{{if $index}},{{end}} {{$field.Name}}=?{{end -}}
 	{{- end }} where
