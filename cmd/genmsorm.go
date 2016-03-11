@@ -107,10 +107,6 @@ func mapper(table string, columns []ColumnInfo) map[string]map[string]interface{
 			parser.HaveTime = true
 		}
 
-		if v.IsPrimaryKey {
-			dataitem["attrs"] = map[string]interface{}{"IsPrimaryKey": true}
-		}
-
 		fields[i] = dataitem
 	}
 	db["fields"] = fields

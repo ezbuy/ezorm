@@ -3,6 +3,4 @@ People:
   fields:
   - Age: int32
   - Name: string
-  - Id: int32
-    attrs:
-      IsPrimaryKey: true
+  - PeopleId: int32

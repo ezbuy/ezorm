@@ -1,4 +1,4 @@
-package mssql_people
+package people
 
 import (
 	"database/sql"
@@ -8,10 +8,8 @@ import (
 	"github.com/ezbuy/ezorm/db"
 )
 
-var idFieldName = "Id"
-
 func (m *_PeopleMgr) Save(obj *People) (sql.Result, error) {
-	if obj.Id == 0 {
+	if obj.PeopleId == 0 {
 		return m.saveInsert(obj)
 	}
 	return m.saveUpdate(obj)
@@ -30,15 +28,15 @@ func (m *_PeopleMgr) saveInsert(obj *People) (sql.Result, error) {
 		return result, err
 	}
 
-	obj.Id = int32(lastInsertId)
+	obj.PeopleId = int32(lastInsertId)
 
 	return result, err
 }
 
 func (m *_PeopleMgr) saveUpdate(obj *People) (sql.Result, error) {
-	query := "update dbo.[People] set Age=?, Name=? where id=?"
+	query := "update dbo.[People] set Age=?, Name=? where PeopleId=?"
 	server := db.GetSqlServer()
-	return server.Exec(query, obj.Age, obj.Name, obj.Id)
+	return server.Exec(query, obj.Age, obj.Name, obj.PeopleId)
 }
 
 func (m *_PeopleMgr) FindOne(where string, args ...interface{}) (*People, error) {

@@ -1,4 +1,5 @@
 {{define "mssql_orm"}}package {{.Package}}
+{{$idFieldName := printf "%sId" .Name}}
 {{$obj := .}}
 
 import (
@@ -12,19 +13,34 @@ import (
 	"github.com/ezbuy/ezorm/db"
 )
 
-var idFieldName = "Id"
-
 func (m *_{{.Name}}Mgr) Save(obj *{{.Name}}) (sql.Result, error) {
-	if obj.Id == 0 {
+	if obj.{{$idFieldName}} == 0 {
 		return m.saveInsert(obj)
 	}
 	return m.saveUpdate(obj)
 }
 
 func (m *_{{.Name}}Mgr) saveInsert(obj *{{.Name}}) (sql.Result, error) {
-	query := "insert into dbo.[people] ({{range $index, $field := .Fields}}{{if ne $field.Name "Id"}}{{if $index}}, {{end}}{{$field.Name}}{{end}}{{end}}) values ({{range $index, $field := .Fields}}{{if ne $field.Name "Id"}}{{if $index}}, {{end}}?{{end}}{{end}})"
+	query := "insert into dbo.[people] (
+	{{- range $index, $field := .Fields}}
+		{{- if ne $field.Name $idFieldName}}
+			{{- if $index}}, {{end}}{{$field.Name}}
+		{{- end -}}
+	{{- end -}}
+	) values (
+	{{- range $index, $field := .Fields}}
+		{{- if ne $field.Name $idFieldName}}
+			{{- if $index}}, {{end}}?
+		{{- end -}}
+	{{- end -}}
+	)"
 	server := db.GetSqlServer()
-	result, err := server.Exec(query, {{range $index, $field := .Fields}}{{if ne $field.Name "Id"}}{{if $index}}, {{end}}obj.{{$field.Name}}{{end}}{{end}})
+	result, err := server.Exec(query,
+	{{- range $index, $field := .Fields}}
+		{{- if ne $field.Name $idFieldName}}
+			{{- if $index}}, {{- end -}}obj.{{$field.Name -}}
+		{{- end -}}
+	{{- end -}})
 	if err != nil {
 		return result, err
 	}
@@ -34,15 +50,29 @@ func (m *_{{.Name}}Mgr) saveInsert(obj *{{.Name}}) (sql.Result, error) {
 		return result, err
 	}
 
-	obj.Id = int32(lastInsertId)
+	{{range $index, $field := .Fields}}
+		{{- if eq $field.Name $idFieldName}}
+			obj.{{$idFieldName}} = {{$field.Type}}(lastInsertId)
+		{{- end -}}
+	{{end}}
 
 	return result, err
 }
 
 func (m *_{{.Name}}Mgr) saveUpdate(obj *{{.Name}}) (sql.Result, error) {
-	query := "update dbo.[People] set {{range $index, $field := .Fields}}{{if ne $field.Name "Id"}}{{if $index}}, {{end}}{{$field.Name}}=?{{end}}{{end}} where id=?"
+	query := "update dbo.[People] set
+	{{- range $index, $field := .Fields}}
+		{{- if ne $field.Name $idFieldName}}{{if $index}},{{end}} {{$field.Name}}=?{{end -}}
+	{{- end }} where
+	{{- range $index, $field := .Fields}}
+		{{- if eq $field.Name $idFieldName}} {{$field.Name}}=?{{end}}
+	{{- end -}}"
 	server := db.GetSqlServer()
-	return server.Exec(query, {{range $field := .Fields}}{{if ne $field.Name "Id"}}obj.{{$field.Name}}, {{end}}{{end}}obj.Id)
+	return server.Exec(query,
+	{{- range $field := .Fields}}
+		{{- if ne $field.Name $idFieldName}}obj.{{$field.Name}}, {{end}}
+	{{- end -}}
+	obj.{{$idFieldName}})
 }
 
 func (m *_{{.Name}}Mgr) FindOne(where string, args ...interface{}) (*{{.Name}}, error) {
