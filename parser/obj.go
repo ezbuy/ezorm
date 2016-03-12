@@ -57,6 +57,7 @@ type Obj struct {
 	Package      string
 	SearchIndex  string
 	SearchType   string
+	Table        string
 	TplWriter    io.Writer
 }
 
@@ -213,6 +214,8 @@ func (o *Obj) Read(data map[string]interface{}) error {
 			}
 		case "extend":
 			o.Extend = val.(string)
+		case "table":
+			o.Table = val.(string)
 		case "filterFields":
 			o.FilterFields = ToStringSlice(val.([]interface{}))
 		case "fields":

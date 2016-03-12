@@ -341,7 +341,7 @@ func (m *_BlogMgr) RemoveByID(id string) (err error) {
 }
 
 func (m *_BlogMgr) GetCol() (session *mgo.Session, col *mgo.Collection) {
-	return db.GetCol("blog.Blog")
+	return db.GetCol("test_blog")
 }
 
 
