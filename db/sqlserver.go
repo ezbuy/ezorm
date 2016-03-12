@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"fmt"
 	"reflect"
 
@@ -34,4 +35,12 @@ func (s *SqlServer) Query(dest interface{}, query string, args ...interface{}) e
 	}
 
 	return s.DB.Get(dest, query, args...)
+}
+
+func Query(dest interface{}, query string, args ...interface{}) error {
+	return GetSqlServer().Query(dest, query, args...)
+}
+
+func Exec(query string, args ...interface{}) (sql.Result, error) {
+	return GetSqlServer().Exec(query, args...)
 }

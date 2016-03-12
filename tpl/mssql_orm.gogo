@@ -39,8 +39,7 @@ func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
 		{{- end -}}
 	{{- end -}}
 	)"
-	server := db.GetSqlServer()
-	result, err := server.Exec(query,
+	result, err := db.Exec(query,
 	{{- range $index, $field := $obj.Fields}}
 		{{- if ne $field.Name $idFieldName}}
 			{{- if $index}}, {{- end -}}obj.{{$field.Name -}}
@@ -68,8 +67,7 @@ func (m *_{{$obj.Name}}Mgr) saveUpdate(obj *{{$obj.Name}}) (sql.Result, error) {
 	{{- range $index, $field := $obj.Fields}}
 		{{- if eq $field.Name $idFieldName}} {{$field.Name}}=?{{end}}
 	{{- end -}}"
-	server := db.GetSqlServer()
-	return server.Exec(query,
+	return db.Exec(query,
 	{{- range $field := $obj.Fields}}
 		{{- if ne $field.Name $idFieldName}}obj.{{$field.Name}}, {{end}}
 	{{- end -}}
@@ -87,9 +85,8 @@ func (m *_{{$obj.Name}}Mgr) FindByID(id {{$idField.Type}}) (obj *{{$obj.Name}}, 
 
 func (m *_{{$obj.Name}}Mgr) FindByIDFromDB(id {{$idField.Type}}) (*{{$obj.Name}}, error) {
 	query := "SELECT * FROM {{$obj.Name}} WHERE {{$idFieldName}}=?"
-	server := db.GetSqlServer()
 	var obj {{$obj.Name}}
-	err := server.Query(&obj, query, id)
+	err := db.Query(&obj, query, id)
 	return &obj, err
 }
 
@@ -97,9 +94,8 @@ func (m *_{{$obj.Name}}Mgr) FindByIDFromDB(id {{$idField.Type}}) (*{{$obj.Name}}
 {{if $index.IsUnique }}
 func (m *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (*{{$obj.Name}}, error) {
 	query := "SELECT * FROM {{$obj.Name}} WHERE {{$index.Name}}=?"
-	server := db.GetSqlServer()
 	var obj {{$obj.Name}}
-	err := server.Query(&obj, query, {{$index.Name}})
+	err := db.Query(&obj, query, {{$index.Name}})
 	return &obj, err
 }
 {{else}}
@@ -115,8 +111,7 @@ func (m *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, offse
 	{{- range $index, $field := $index.Fields}}{{if $index}} AND {{end}} {{$field.Name}}=? {{end -}}
 	%s  OFFSET ? Rows FETCH NEXT ? Rows ONLY", orderBy)
 
-	server := db.GetSqlServer()
-	err = server.Query(&objs, query, {{range $field := $index.Fields}}{{$field.Name}}, {{end}}offset, limit)
+	err = db.Query(&objs, query, {{range $field := $index.Fields}}{{$field.Name}}, {{end}}offset, limit)
 	return
 }
 {{end}}
@@ -124,17 +119,15 @@ func (m *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, offse
 
 func (m *_{{$obj.Name}}Mgr) FindOne(where string, args ...interface{}) (*{{$obj.Name}}, error) {
 	query := getQuerysql(true, where)
-	server := db.GetSqlServer()
 	var obj {{$obj.Name}}
-	err := server.Query(&obj, query, args...)
+	err := db.Query(&obj, query, args...)
 	return &obj, err
 }
 
 
 func (m *_{{$obj.Name}}Mgr) Find(where string, args ...interface{}) (results []*{{$obj.Name}}, err error) {
 	query := getQuerysql(false, where)
-	server := db.GetSqlServer()
-	err = server.Query(&results, query, args...)
+	err = db.Query(&results, query, args...)
 	return
 }
 
@@ -152,8 +145,7 @@ func (m *_{{$obj.Name}}Mgr) FindWithOffset(where string, offset int, limit int, 
 	args = append(args, offset)
 	args = append(args, limit)
 
-	server := db.GetSqlServer()
-	err = server.Query(&results, query, args...)
+	err = db.Query(&results, query, args...)
 	return
 }
 
@@ -179,8 +171,7 @@ func (m *_{{$obj.Name}}Mgr) Del(where string, params ...interface{}) (sql.Result
 	if where != "" {
 		query = fmt.Sprintf("delete from {{$obj.Name}} where " + where)
 	}
-	server := db.GetSqlServer()
-	return server.Exec(query, params...)
+	return db.Exec(query, params...)
 }
 
 // argument example:
@@ -192,8 +183,7 @@ func (m *_{{$obj.Name}}Mgr) Update(set, where string, params ...interface{}) (sq
 	if where != "" {
 		query = fmt.Sprintf("update {{$obj.Name}} set %s where %s", set, where)
 	}
-	server := db.GetSqlServer()
-	return server.Exec(query, params...)
+	return db.Exec(query, params...)
 }
 
 {{end}}
