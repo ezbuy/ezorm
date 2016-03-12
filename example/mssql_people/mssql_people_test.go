@@ -2,6 +2,7 @@ package people
 
 import (
 	"fmt"
+	"math/rand"
 	"testing"
 	"time"
 
@@ -284,4 +285,118 @@ func TestFindOneByName(t *testing.T) {
 		t.Errorf("FindOneByName err:%s", err.Error())
 	}
 	assertPeopleEqual(p1, p2, t)
+}
+
+func TestFindByAge(t *testing.T) {
+	_, err := PeopleMgr.Del("")
+	if err != nil {
+		t.Errorf("delete error:%s", err.Error())
+	}
+
+	rand.Seed(time.Now().UnixNano())
+
+	p1 := &People{
+		Name:        fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
+		Age:         rand.Int31n(200),
+		NonIndexA:   fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
+		NonIndexB:   fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
+		IndexAPart1: rand.Int31n(1000000),
+		IndexAPart2: rand.Int31n(1000000),
+		IndexAPart3: rand.Int31n(1000000),
+	}
+
+	_, err = PeopleMgr.Save(p1)
+	if err != nil {
+		t.Errorf("save error:%s", err.Error())
+	}
+
+	p2 := &People{
+		Name:        fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
+		Age:         rand.Int31n(200) + 200,
+		NonIndexA:   fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
+		NonIndexB:   fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
+		IndexAPart1: rand.Int31n(1000000),
+		IndexAPart2: rand.Int31n(1000000),
+		IndexAPart3: rand.Int31n(1000000),
+	}
+
+	_, err = PeopleMgr.Save(p2)
+	if err != nil {
+		t.Errorf("save error:%s", err.Error())
+	}
+
+	ps, err := PeopleMgr.FindByAge(p1.Age, 0, 100)
+	if err != nil {
+		t.Errorf("FindByAge err:%s", err.Error())
+	} else if len(ps) != 1 {
+		t.Errorf("FindByAge incorrect:len(ps)[%d]!=1", len(ps))
+	}
+
+	assertPeopleEqual(p1, ps[0], t)
+
+	ps, err = PeopleMgr.FindByAge(p2.Age, 0, 100)
+	if err != nil {
+		t.Errorf("FindByAge err:%s", err.Error())
+	} else if len(ps) != 1 {
+		t.Errorf("FindByAge incorrect:len(ps)[%d]!=1", len(ps))
+	}
+
+	assertPeopleEqual(p2, ps[0], t)
+}
+
+func TestFindByIndexAPart1IndexAPart2IndexAPart3(t *testing.T) {
+	_, err := PeopleMgr.Del("")
+	if err != nil {
+		t.Errorf("delete error:%s", err.Error())
+	}
+
+	rand.Seed(time.Now().UnixNano())
+
+	p1 := &People{
+		Name:        fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
+		Age:         rand.Int31n(200),
+		NonIndexA:   fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
+		NonIndexB:   fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
+		IndexAPart1: rand.Int31n(1000000),
+		IndexAPart2: rand.Int31n(1000000),
+		IndexAPart3: rand.Int31n(1000000),
+	}
+
+	_, err = PeopleMgr.Save(p1)
+	if err != nil {
+		t.Errorf("save error:%s", err.Error())
+	}
+
+	p2 := &People{
+		Name:        fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
+		Age:         rand.Int31n(200) + 200,
+		NonIndexA:   fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
+		NonIndexB:   fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
+		IndexAPart1: rand.Int31n(1000000),
+		IndexAPart2: rand.Int31n(1000000),
+		IndexAPart3: rand.Int31n(1000000),
+	}
+
+	_, err = PeopleMgr.Save(p2)
+	if err != nil {
+		t.Errorf("save error:%s", err.Error())
+	}
+
+	ps, err := PeopleMgr.FindByIndexAPart1IndexAPart2IndexAPart3(p1.IndexAPart1, p1.IndexAPart2, p1.IndexAPart3, 0, 100)
+	if err != nil {
+		t.Errorf("FindByIndexAPart1IndexAPart2IndexAPart3 err:%s", err.Error())
+	} else if len(ps) != 1 {
+		t.Errorf("FindByIndexAPart1IndexAPart2IndexAPart3 incorrect:len(ps)[%d]!=1", len(ps))
+	}
+
+	assertPeopleEqual(p1, ps[0], t)
+
+	ps, err = PeopleMgr.FindByIndexAPart1IndexAPart2IndexAPart3(p2.IndexAPart1, p2.IndexAPart2, p2.IndexAPart3, 0, 100)
+	if err != nil {
+		t.Errorf("FindByIndexAPart1IndexAPart2IndexAPart3 err:%s", err.Error())
+	} else if len(ps) != 1 {
+		t.Errorf("FindByIndexAPart1IndexAPart2IndexAPart3 incorrect:len(ps)[%d]!=1", len(ps))
+	}
+
+	assertPeopleEqual(p2, ps[0], t)
 }

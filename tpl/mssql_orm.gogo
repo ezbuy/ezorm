@@ -94,16 +94,33 @@ func (m *_{{$obj.Name}}Mgr) FindByIDFromDB(id {{$idField.Type}}) (*{{$obj.Name}}
 }
 
 {{range $index := $obj.Indexes}}
-{{- if $index.IsUnique }}
-func (o *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (*{{$obj.Name}}, error) {
+{{if $index.IsUnique }}
+func (m *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (*{{$obj.Name}}, error) {
 	query := "SELECT * FROM {{$obj.Name}} WHERE {{$index.Name}}=?"
 	server := db.GetSqlServer()
 	var obj {{$obj.Name}}
 	err := server.Query(&obj, query, {{$index.Name}})
 	return &obj, err
 }
-{{- end -}}
-{{- end}}
+{{else}}
+func (m *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, offset int, limit int, sortFields ...string) (objs []*{{$obj.Name}}, err error) {
+	orderBy := "ORDER BY %s"
+	if len(sortFields) != 0 {
+		orderBy = fmt.Sprintf(orderBy, strings.Join(sortFields, ","))
+	} else {
+		orderBy = fmt.Sprintf(orderBy, "{{$idFieldName}}")
+	}
+
+	query := fmt.Sprintf("SELECT * FROM {{$obj.Name}} WHERE
+	{{- range $index, $field := $index.Fields}}{{if $index}} AND {{end}} {{$field.Name}}=? {{end -}}
+	%s  OFFSET ? Rows FETCH NEXT ? Rows ONLY", orderBy)
+
+	server := db.GetSqlServer()
+	err = server.Query(&objs, query, {{range $field := $index.Fields}}{{$field.Name}}, {{end}}offset, limit)
+	return
+}
+{{end}}
+{{end}}
 
 func (m *_{{$obj.Name}}Mgr) FindOne(where string, args ...interface{}) (*{{$obj.Name}}, error) {
 	query := getQuerysql(true, where)

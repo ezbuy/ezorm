@@ -56,7 +56,37 @@ func (m *_PeopleMgr) FindByIDFromDB(id int32) (*People, error) {
 	return &obj, err
 }
 
-func (o *_PeopleMgr) FindOneByName(Name string) (*People, error) {
+func (m *_PeopleMgr) FindByIndexAPart1IndexAPart2IndexAPart3(IndexAPart1 int32, IndexAPart2 int32, IndexAPart3 int32, offset int, limit int, sortFields ...string) (objs []*People, err error) {
+	orderBy := "ORDER BY %s"
+	if len(sortFields) != 0 {
+		orderBy = fmt.Sprintf(orderBy, strings.Join(sortFields, ","))
+	} else {
+		orderBy = fmt.Sprintf(orderBy, "PeopleId")
+	}
+
+	query := fmt.Sprintf("SELECT * FROM People WHERE IndexAPart1=?  AND  IndexAPart2=?  AND  IndexAPart3=? %s  OFFSET ? Rows FETCH NEXT ? Rows ONLY", orderBy)
+
+	server := db.GetSqlServer()
+	err = server.Query(&objs, query, IndexAPart1, IndexAPart2, IndexAPart3, offset, limit)
+	return
+}
+
+func (m *_PeopleMgr) FindByAge(Age int32, offset int, limit int, sortFields ...string) (objs []*People, err error) {
+	orderBy := "ORDER BY %s"
+	if len(sortFields) != 0 {
+		orderBy = fmt.Sprintf(orderBy, strings.Join(sortFields, ","))
+	} else {
+		orderBy = fmt.Sprintf(orderBy, "PeopleId")
+	}
+
+	query := fmt.Sprintf("SELECT * FROM People WHERE Age=? %s  OFFSET ? Rows FETCH NEXT ? Rows ONLY", orderBy)
+
+	server := db.GetSqlServer()
+	err = server.Query(&objs, query, Age, offset, limit)
+	return
+}
+
+func (m *_PeopleMgr) FindOneByName(Name string) (*People, error) {
 	query := "SELECT * FROM People WHERE Name=?"
 	server := db.GetSqlServer()
 	var obj People
