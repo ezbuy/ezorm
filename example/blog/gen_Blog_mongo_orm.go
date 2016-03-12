@@ -43,6 +43,35 @@ reEnsureUserIsPublished:
 
 	}
 	
+reEnsureSlug:
+	if err := collection.EnsureIndex(mgo.Index{
+		Key: []string{"Slug"},
+		Unique: true,
+		Sparse: true,
+	}); err != nil {
+		println("error ensureIndex Blog Slug", err.Error())
+		err = collection.DropIndex("Slug")
+		if err != nil {
+			panic(err)
+		}
+		goto reEnsureSlug
+
+	}
+	
+reEnsureIsPublished:
+	if err := collection.EnsureIndex(mgo.Index{
+		Key: []string{"IsPublished"},
+		Sparse: true,
+	}); err != nil {
+		println("error ensureIndex Blog IsPublished", err.Error())
+		err = collection.DropIndex("IsPublished")
+		if err != nil {
+			panic(err)
+		}
+		goto reEnsureIsPublished
+
+	}
+	
 }
 
 
@@ -199,6 +228,34 @@ func (o *_BlogMgr) Query(query interface{}, limit, offset int, sortFields []stri
 func (o *_BlogMgr) FindByUserIsPublished(User int32, IsPublished bool, limit int, offset int, sortFields ...string) (result []*Blog, err error) {
 	query := db.M{
 		"User": User,
+		"IsPublished": IsPublished,
+	}
+	session, q := BlogMgr.Query(query, limit, offset, sortFields)
+	defer session.Close()
+	err = q.All(&result)
+	return
+}
+func (o *_BlogMgr) FindOneBySlug(Slug string) (result *Blog, err error) {
+	query := db.M{
+		"Slug": Slug,
+	}
+	session, q := BlogMgr.Query(query, 1, 0, nil)
+	defer session.Close()
+	err = q.One(&result)
+	return
+}
+
+func (o *_BlogMgr) MustFindOneBySlug(Slug string) (result *Blog) {
+	result, _ = o.FindOneBySlug(Slug)
+	if result == nil {
+		result = BlogMgr.NewBlog()
+		result.Slug = Slug
+		result.Save()
+	}
+	return
+}
+func (o *_BlogMgr) FindByIsPublished(IsPublished bool, limit int, offset int, sortFields ...string) (result []*Blog, err error) {
+	query := db.M{
 		"IsPublished": IsPublished,
 	}
 	session, q := BlogMgr.Query(query, limit, offset, sortFields)

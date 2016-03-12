@@ -178,7 +178,7 @@ func (o *Obj) setIndexes() {
 			index.FieldNames = []string{f.Name}
 			index.Fields = []*Field{f}
 			index.IsUnique = f.IsUnique()
-			index.IsSparse = !f.Attrs.Contains("sort")
+			index.IsSparse = !f.Flags.Contains("sort")
 			index.Name = f.Name
 			o.Indexes = append(o.Indexes, index)
 		}
