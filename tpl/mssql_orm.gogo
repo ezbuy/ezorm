@@ -93,6 +93,18 @@ func (m *_{{$obj.Name}}Mgr) FindByIDFromDB(id {{$idField.Type}}) (*{{$obj.Name}}
 	return &obj, err
 }
 
+{{range $index := $obj.Indexes}}
+{{- if $index.IsUnique }}
+func (o *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (*{{$obj.Name}}, error) {
+	query := "SELECT * FROM {{$obj.Name}} WHERE {{$index.Name}}=?"
+	server := db.GetSqlServer()
+	var obj {{$obj.Name}}
+	err := server.Query(&obj, query, {{$index.Name}})
+	return &obj, err
+}
+{{- end -}}
+{{- end}}
+
 func (m *_{{$obj.Name}}Mgr) FindOne(where string, args ...interface{}) (*{{$obj.Name}}, error) {
 	query := getQuerysql(true, where)
 	server := db.GetSqlServer()

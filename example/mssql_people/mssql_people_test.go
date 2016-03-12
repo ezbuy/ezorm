@@ -267,3 +267,21 @@ func TestFindByID(t *testing.T) {
 	}
 	assertPeopleEqual(p1, p2, t)
 }
+
+func TestFindOneByName(t *testing.T) {
+	_, err := PeopleMgr.Del("")
+	if err != nil {
+		t.Errorf("delete error:%s", err.Error())
+	}
+
+	p1, err := savePeole(t)
+	if err != nil {
+		t.Errorf("save err:%s", err.Error())
+	}
+
+	p2, err := PeopleMgr.FindOneByName(p1.Name)
+	if err != nil {
+		t.Errorf("FindOneByName err:%s", err.Error())
+	}
+	assertPeopleEqual(p1, p2, t)
+}

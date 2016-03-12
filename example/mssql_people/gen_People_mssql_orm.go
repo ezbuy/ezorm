@@ -56,6 +56,14 @@ func (m *_PeopleMgr) FindByIDFromDB(id int32) (*People, error) {
 	return &obj, err
 }
 
+func (o *_PeopleMgr) FindOneByName(Name string) (*People, error) {
+	query := "SELECT * FROM People WHERE Name=?"
+	server := db.GetSqlServer()
+	var obj People
+	err := server.Query(&obj, query, Name)
+	return &obj, err
+}
+
 func (m *_PeopleMgr) FindOne(where string, args ...interface{}) (*People, error) {
 	query := getQuerysql(true, where)
 	server := db.GetSqlServer()
