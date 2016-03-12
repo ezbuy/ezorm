@@ -1,7 +1,5 @@
 package people
 
-import "github.com/ezbuy/ezorm/cache"
-
 type People struct {
 	NonIndexA string `db:"NonIndexA"`
 
@@ -32,8 +30,6 @@ type _PeopleMgr struct {
 }
 
 var PeopleMgr *_PeopleMgr
-
-var PeopleCache cache.Cache
 
 func (m *_PeopleMgr) NewPeople() *People {
 	rval := new(People)

@@ -37,16 +37,7 @@ func (m *_PeopleMgr) saveUpdate(obj *People) (sql.Result, error) {
 	return db.Exec(query, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.PeopleId)
 }
 
-func (m *_PeopleMgr) FindByID(id int32) (obj *People, err error) {
-	if PeopleCache == nil {
-		return m.FindByIDFromDB(id)
-	}
-
-	err = PeopleCache.Get(fmt.Sprintf("%d", id), &obj)
-	return
-}
-
-func (m *_PeopleMgr) FindByIDFromDB(id int32) (*People, error) {
+func (m *_PeopleMgr) FindByID(id int32) (*People, error) {
 	query := "SELECT * FROM People WHERE PeopleId=?"
 	var obj People
 	err := db.Query(&obj, query, id)
