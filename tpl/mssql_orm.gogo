@@ -1,118 +1,182 @@
 {{define "mssql_orm"}}package {{.Package}}
 {{$obj := .}}
+{{$idFieldName := printf "%sId" .Name}}
+{{/* Only generate source file for table with primary key */}}
+{{range $index, $field := $obj.Fields}}
+{{if eq $field.Name $idFieldName}}
+{{$idField := $field}}
+
 
 import (
 	"database/sql"
-	"github.com/ezbuy/ezorm/db"
+	"fmt"
 	"strings"
-	{{range .GetOrmImports}}
+	{{range $obj.GetOrmImports}}
 	"{{.}}"
 	{{end}}
+
+	"github.com/ezbuy/ezorm/db"
 )
 
-func (o *_{{.Name}}Mgr) FindOne(where string, args ...interface{}) (result *{{.Name}}, err error) {
-	query := getQuerysql(true, where)
-	server := db.GetSqlServer()
-	defer server.Close()
-	result = &{{$obj.Name}}{}
-	{{- range $field :=.Fields}}
-	var {{$field.Name}} sql.Null{{getNullType $field.Type -}}
-	{{end}}
-
-	err = server.QueryRow(query, args...).Scan(
-	{{- range $index, $field := .Fields}}
-	&{{$field.Name}},
-	{{- end}}
-	)
-
-	{{range $field := .Fields -}}
-	if {{$field.Name}}.Valid{
-		result.{{$field.Name}} = {{- if eq $field.Type "int32"}}int32(
-			{{- else if eq $field.Type "float32"}}float32({{- end -}}
-			{{- $field.Name}}.{{getNullType $field.Type -}}
-			{{- if eq $field.Type "int32" }})
-			{{- else if eq $field.Type "float32"}}){{end}}
+func (m *_{{$obj.Name}}Mgr) Save(obj *{{$obj.Name}}) (sql.Result, error) {
+	if obj.{{$idFieldName}} == 0 {
+		return m.saveInsert(obj)
 	}
-	{{end}}
+	return m.saveUpdate(obj)
+}
+
+func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
+	query := "insert into dbo.[{{$obj.Name}}] (
+	{{- range $index, $field := $obj.Fields}}
+		{{- if ne $field.Name $idFieldName}}
+			{{- if $index}}, {{end}}{{$field.Name}}
+		{{- end -}}
+	{{- end -}}
+	) values (
+	{{- range $index, $field := $obj.Fields}}
+		{{- if ne $field.Name $idFieldName}}
+			{{- if $index}}, {{end}}?
+		{{- end -}}
+	{{- end -}}
+	)"
+	result, err := db.Exec(query,
+	{{- range $index, $field := $obj.Fields}}
+		{{- if ne $field.Name $idFieldName}}
+			{{- if $index}}, {{- end -}}obj.{{$field.Name -}}
+		{{- end -}}
+	{{- end -}})
+	if err != nil {
+		return result, err
+	}
+
+	lastInsertId, err := result.LastInsertId()
+	if err != nil {
+		return result, err
+	}
+
+	obj.{{$idFieldName}} = {{$idField.Type}}(lastInsertId)
+
+	return result, err
+}
+
+func (m *_{{$obj.Name}}Mgr) saveUpdate(obj *{{$obj.Name}}) (sql.Result, error) {
+	query := "update dbo.[{{$obj.Name}}] set
+	{{- range $index, $field := $obj.Fields}}
+		{{- if ne $field.Name $idFieldName}}{{if $index}},{{end}} {{$field.Name}}=?{{end -}}
+	{{- end }} where
+	{{- range $index, $field := $obj.Fields}}
+		{{- if eq $field.Name $idFieldName}} {{$field.Name}}=?{{end}}
+	{{- end -}}"
+	return db.Exec(query,
+	{{- range $field := $obj.Fields}}
+		{{- if ne $field.Name $idFieldName}}obj.{{$field.Name}}, {{end}}
+	{{- end -}}
+	obj.{{$idFieldName}})
+}
+
+func (m *_{{$obj.Name}}Mgr) FindByID(id {{$idField.Type}}) (*{{$obj.Name}}, error) {
+	query := "SELECT * FROM {{$obj.Name}} WHERE {{$idFieldName}}=?"
+	var obj {{$obj.Name}}
+	err := db.Query(&obj, query, id)
+	return &obj, err
+}
+
+{{range $index := $obj.Indexes}}
+{{if $index.IsUnique }}
+func (m *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (*{{$obj.Name}}, error) {
+	query := "SELECT * FROM {{$obj.Name}} WHERE {{$index.Name}}=?"
+	var obj {{$obj.Name}}
+	err := db.Query(&obj, query, {{$index.Name}})
+	return &obj, err
+}
+{{else}}
+func (m *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, offset int, limit int, sortFields ...string) (objs []*{{$obj.Name}}, err error) {
+	orderBy := "ORDER BY %s"
+	if len(sortFields) != 0 {
+		orderBy = fmt.Sprintf(orderBy, strings.Join(sortFields, ","))
+	} else {
+		orderBy = fmt.Sprintf(orderBy, "{{$idFieldName}}")
+	}
+
+	query := fmt.Sprintf("SELECT * FROM {{$obj.Name}} WHERE
+	{{- range $index, $field := $index.Fields}}{{if $index}} AND {{end}} {{$field.Name}}=? {{end -}}
+	%s  OFFSET ? Rows FETCH NEXT ? Rows ONLY", orderBy)
+
+	err = db.Query(&objs, query, {{range $field := $index.Fields}}{{$field.Name}}, {{end}}offset, limit)
+	return
+}
+{{end}}
+{{end}}
+
+func (m *_{{$obj.Name}}Mgr) FindOne(where string, args ...interface{}) (*{{$obj.Name}}, error) {
+	query := getQuerysql(true, where)
+	var obj {{$obj.Name}}
+	err := db.Query(&obj, query, args...)
+	return &obj, err
+}
+
+
+func (m *_{{$obj.Name}}Mgr) Find(where string, args ...interface{}) (results []*{{$obj.Name}}, err error) {
+	query := getQuerysql(false, where)
+	err = db.Query(&results, query, args...)
 	return
 }
 
-func (o *_{{.Name}}Mgr) Find(where string, args ...interface{}) (results []*{{.Name}}, err error){
+func (m *_{{$obj.Name}}Mgr) FindAll() (results []*{{$obj.Name}}, err error) {
+	return m.Find("")
+}
+
+func (m *_{{$obj.Name}}Mgr) FindWithOffset(where string, offset int, limit int, args ...interface{}) (results []*{{$obj.Name}}, err error) {
 	query := getQuerysql(false, where)
 
-	return o.scanAll(query,args...)
-}
-
-func (o *_{{.Name}}Mgr) FindAll() (results []*{{.Name}}, err error){
-	return o.Find("")
-}
-
-func (o *_{{.Name}}Mgr) FindWithOffset(where string, offset int, limit int, args ...interface{}) (results []*{{$obj.Name}}, err error){
-		query:= getQuerysql(false, where)
-		{{$item := index .Fields 0}}
-		if !strings.Contains(strings.ToLower(where), "ORDER BY") {
-				where = " ORDER BY {{$item.Name}}"
-		}
-		query = query + where + " OFFSET ? Rows FETCH NEXT ? Rows ONLY"
-		args = append(args, offset)
-		args = append(args, limit)
-
-		return o.scanAll(query,args...)
-}
-
-func (o * _{{.Name}}Mgr) scanAll(query string, args ...interface{})(results []*{{.Name}}, err error) {
-	server := db.GetSqlServer()
-	defer server.Close()
-
-	{{- range $field :=.Fields}}
-	var {{$field.Name}} sql.Null{{getNullType $field.Type -}}
-	{{end}}
-	var rows *sql.Rows
-	if len(args) > 0 {
-		rows,err = server.Query(query, args...)
-	} else{
-		rows,err = server.Query(query)
+	if !strings.Contains(strings.ToLower(where), "ORDER BY") {
+		where = " ORDER BY Name"
 	}
-	for rows.Next(){
-		current := &{{.Name}}{}
-		err = rows.Scan(
-			{{- range $index, $field := .Fields}}
-			&{{$field.Name}},
-			{{- end -}}
-			)
+	query = query + where + " OFFSET ? Rows FETCH NEXT ? Rows ONLY"
+	args = append(args, offset)
+	args = append(args, limit)
 
-	{{range $field := .Fields -}}
-	if {{$field.Name}}.Valid{
-		current.{{$field.Name}} =
-		{{- if eq $field.Type "int32"}}int32({{- else if eq $field.Type "float32"}}float32({{- end -}}
-			{{- $field.Name}}.{{getNullType $field.Type -}}
-			{{- if eq $field.Type "int32"}}){{- else if eq $field.Type "float32"}}){{end}}
-	}
-	{{end}}
-	results = append(results,current)
-	}
+	err = db.Query(&results, query, args...)
 	return
 }
 
-func getQuerysql(topOne bool, where string) string{
 
+func getQuerysql(topOne bool, where string) string {
 	query := `SELECT `
 	if topOne {
-		query = query +` TOP 1 `
+		query = query + ` TOP 1 `
 	}
-	 query = query + ` * FROM dbo.[{{.Name}}] WITH(NOLOCK) `
+	query = query + ` * FROM dbo.[{{$obj.Name}}] WITH(NOLOCK) `
 
-	if where != ""{
-		if strings.Index(strings.Trim(where," "),"WHERE") == -1 {
+	if where != "" {
+		if strings.Index(strings.Trim(where, " "), "WHERE") == -1 {
 			where = " WHERE " + where
 		}
-		query = query  + where
+		query = query + where
 	}
 	return query
 }
 
-{{ .LoadTpl "mssql_del" }}
+func (m *_{{$obj.Name}}Mgr) Del(where string, params ...interface{}) (sql.Result, error) {
+	query := "delete from {{$obj.Name}}"
+	if where != "" {
+		query = fmt.Sprintf("delete from {{$obj.Name}} where " + where)
+	}
+	return db.Exec(query, params...)
+}
 
-{{ .LoadTpl "mssql_update" }}
+// argument example:
+// set:"a=?, b=?"
+// where:"c=? and d=?"
+// params:[]interface{}{"a", "b", "c", "d"}...
+func (m *_{{$obj.Name}}Mgr) Update(set, where string, params ...interface{}) (sql.Result, error) {
+	query := fmt.Sprintf("update {{$obj.Name}} set %s", set)
+	if where != "" {
+		query = fmt.Sprintf("update {{$obj.Name}} set %s where %s", set, where)
+	}
+	return db.Exec(query, params...)
+}
 
+{{end}}
+{{end}}
 {{end}}

@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"strings"
 
 	"gopkg.in/yaml.v2"
@@ -70,6 +71,8 @@ var genCmd = &cobra.Command{
 			}
 		}
 
+		oscmd := exec.Command("gofmt", "-w", output)
+		oscmd.Run()
 		fmt.Println("gen called")
 	},
 }

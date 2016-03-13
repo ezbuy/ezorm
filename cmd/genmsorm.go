@@ -15,14 +15,17 @@
 package cmd
 
 import (
+	"database/sql"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"os/exec"
+	"strings"
+
 	"github.com/ezbuy/ezorm/db"
 	"github.com/ezbuy/ezorm/parser"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
-	"os"
-	"strings"
 )
 
 // genmsormCmd represents the genmsorm command
@@ -30,7 +33,9 @@ var genmsormCmd = &cobra.Command{
 	Use:   "genmsorm",
 	Short: "Generate sql server orm code",
 	Run: func(cmd *cobra.Command, args []string) {
-
+		db.SetDBConfig(&db.SqlDbConfig{
+			SqlConnStr: dbConfig,
+		})
 		if table != "all" {
 			handler(table)
 		} else {
@@ -46,14 +51,18 @@ var genmsormCmd = &cobra.Command{
 
 var table string
 var outputYaml string
+var dbConfig string
 
 type ColumnInfo struct {
-	ColumnName   string
-	DataType     string
-	MaxLength    int
-	Nullable     bool
-	IsPrimaryKey bool
-	Sort         int
+	ColumnName    string        `db:"ColumnName"`
+	DataType      string        `db:"DataType"`
+	MaxLength     int           `db:"MaxLength"`
+	Nullable      bool          `db:"Nullable"`
+	IsPrimaryKey  bool          `db:"IsPrimaryKey"`
+	Sort          int           `db:"Sort"`
+	IndexId       sql.NullInt64 `db:"IndexId"`
+	IndexColumnId sql.NullInt64 `db:"IndexColumnId"`
+	IsUnique      sql.NullBool  `db:"IsUnique"`
 }
 
 func handler(table string) {
@@ -65,11 +74,10 @@ func handler(table string) {
 func getAllTables() (tables []string) {
 	query := `SELECT name FROM sys.tables`
 	server := db.GetSqlServer()
-	rows, err := server.Query(query, table)
+	rows, err := server.DB.Query(query)
 	server.Close()
 	if err != nil {
-		fmt.Println(err.Error())
-		return nil
+		panic(err)
 	}
 	defer rows.Close()
 	for rows.Next() {
@@ -80,22 +88,56 @@ func getAllTables() (tables []string) {
 	return tables
 }
 
-func createYamlFile(table string, columns []ColumnInfo) {
+func createYamlFile(table string, columns []*ColumnInfo) {
 	objs := mapper(table, columns)
 	bs, err := yaml.Marshal(objs)
 	if err != nil {
-		println(err)
-		return
+		panic(err)
 	}
 	fileName := outputYaml + "/" + strings.ToLower(table) + "_mssql.yaml"
 	ioutil.WriteFile(fileName, bs, 0644)
 }
 
-func mapper(table string, columns []ColumnInfo) map[string]map[string]interface{} {
-	objs := make(map[string]map[string]interface{})
-	db := make(map[string]interface{})
-	db["db"] = "mssql"
-	objs[table] = db
+func getIndexInfo(columns []*ColumnInfo) (multiColumnIndexes [][]string, singleColumnIndexSet map[int64]struct{}) {
+	indexIdToColumns := make(map[int64][]*ColumnInfo)
+	for _, v := range columns {
+		indexId := v.IndexId.Int64
+		if indexId > 0 && !v.IsPrimaryKey {
+			indexIdToColumns[indexId] = append(indexIdToColumns[indexId], v)
+		}
+	}
+
+	singleColumnIndexSet = make(map[int64]struct{})
+	for indexId, indexColums := range indexIdToColumns {
+		if len(indexColums) == 1 {
+			singleColumnIndexSet[indexId] = struct{}{}
+		} else {
+			columnNames := make([]string, 0, len(indexColums))
+			// Note: columns are sorted by IndexColumdId
+			for _, c := range indexColums {
+				columnNames = append(columnNames, c.ColumnName)
+			}
+			multiColumnIndexes = append(multiColumnIndexes, columnNames)
+		}
+	}
+
+	return
+}
+
+type tbl struct {
+	DB      string        `yaml:"db"`
+	Fields  []interface{} `yaml:"fields"`
+	Indexes [][]string    `yaml:"indexes,flow"`
+}
+
+func mapper(table string, columns []*ColumnInfo) map[string]*tbl {
+	multiColumnIndexes, singleColumnIndexSet := getIndexInfo(columns)
+
+	var t tbl
+	t.DB = "mssql"
+	t.Indexes = multiColumnIndexes
+	objs := make(map[string]*tbl)
+	objs[table] = &t
 	fields := make([]interface{}, len(columns))
 	for i, v := range columns {
 		dataitem := make(map[string]interface{}, len(columns))
@@ -103,40 +145,42 @@ func mapper(table string, columns []ColumnInfo) map[string]map[string]interface{
 		if dataitem[v.ColumnName] == "time.Time" {
 			parser.HaveTime = true
 		}
+
+		if v.IsUnique.Bool && !v.IsPrimaryKey {
+			dataitem["attrs"] = []string{"unique"}
+		} else if _, ok := singleColumnIndexSet[v.IndexId.Int64]; ok {
+			dataitem["attrs"] = []string{"index"}
+		}
+
 		fields[i] = dataitem
 	}
-	db["fields"] = fields
+	t.Fields = fields
 	return objs
 }
 
-func getColumnInfo(table string) []ColumnInfo {
+func getColumnInfo(table string) []*ColumnInfo {
+	// Note: sort columns by IndexId and IndexColumnId to simplify later process
 	query := `SELECT DISTINCT c.name AS ColumnName, t.Name AS DataType, c.max_length AS MaxLength,
-    c.is_nullable AS Nullable, ISNULL(i.is_primary_key, 0) AS IsPrimaryKey ,c.column_id AS Sort
-	FROM    
+    c.is_nullable AS Nullable, ISNULL(i.is_primary_key, 0) AS IsPrimaryKey ,c.column_id AS Sort,
+	i.index_id AS IndexId, ic.index_column_id AS IndexColumnId, i.is_unique AS IsUnique
+	FROM
     sys.columns c
-	INNER JOIN 
+	INNER JOIN
     sys.types t ON c.user_type_id = t.user_type_id
-	LEFT OUTER JOIN 
+	LEFT OUTER JOIN
     sys.index_columns ic ON ic.object_id = c.object_id AND ic.column_id = c.column_id
-	LEFT OUTER JOIN 
+	LEFT OUTER JOIN
     sys.indexes i ON ic.object_id = i.object_id AND ic.index_id = i.index_id
 	WHERE
-    c.object_id = OBJECT_ID(?) ORDER BY c.column_id `
+    c.object_id = OBJECT_ID(?) ORDER BY IndexId, IndexColumnId`
 
 	server := db.GetSqlServer()
-	rows, err := server.Query(query, table)
-	server.Close()
+	var columninfos []*ColumnInfo
+	err := server.Query(&columninfos, query, table)
 	if err != nil {
-		fmt.Println(err.Error())
-		return nil
+		panic(err)
 	}
-	defer rows.Close()
-	var columninfos []ColumnInfo
-	for rows.Next() {
-		curent := ColumnInfo{}
-		rows.Scan(&curent.ColumnName, &curent.DataType, &curent.MaxLength, &curent.Nullable, &curent.IsPrimaryKey, &curent.Sort)
-		columninfos = append(columninfos, curent)
-	}
+
 	return columninfos
 }
 
@@ -146,8 +190,7 @@ func generate(table string) {
 	data, _ := ioutil.ReadFile(fileName)
 	_, err := os.Stat(fileName)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		panic(err)
 	}
 	err = yaml.Unmarshal([]byte(data), &objs)
 
@@ -158,7 +201,7 @@ func generate(table string) {
 		metaObj.Db = obj["db"].(string)
 		err := metaObj.Read(obj)
 		if err != nil {
-			println(err.Error())
+			panic(err)
 		}
 
 		for _, genType := range metaObj.GetGenTypes() {
@@ -171,10 +214,13 @@ func generate(table string) {
 			err = parser.Tpl.ExecuteTemplate(file, genType, metaObj)
 			file.Close()
 			if err != nil {
-				println(err.Error())
+				panic(err)
 			}
 		}
 	}
+
+	cmd := exec.Command("gofmt", "-w", output)
+	cmd.Run()
 }
 
 func init() {
@@ -192,4 +238,5 @@ func init() {
 	genmsormCmd.PersistentFlags().StringVarP(&table, "table", "t", "all", "table name, 'all' meaning all tables")
 	genmsormCmd.PersistentFlags().StringVarP(&output, "output", "o", "", "output path")
 	genmsormCmd.PersistentFlags().StringVarP(&outputYaml, "output yaml", "y", "", "output *.yaml path")
+	genmsormCmd.PersistentFlags().StringVarP(&dbConfig, "db config", "d", "", "database configuration")
 }
