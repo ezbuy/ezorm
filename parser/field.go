@@ -9,6 +9,7 @@ import (
 )
 
 type Field struct {
+	Attrs        map[string]string
 	DefaultValue string
 	Flags        set.Set
 	Index        string
@@ -166,6 +167,14 @@ func (f *Field) Read(data map[interface{}]interface{}) error {
 	foundName := false
 	for k, v := range data {
 		key := k.(string)
+
+		if key == "attrs" {
+			attrs := make(map[string]string)
+			for ki, vi := range v.(map[interface{}]interface{}) {
+				attrs[ki.(string)] = vi.(string)
+			}
+			f.Attrs = attrs
+		}
 
 		switch val := v.(type) {
 		case string:

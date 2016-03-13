@@ -9,7 +9,7 @@ type Blog struct {
 
 	ID         bson.ObjectId `bson:"_id,omitempty"`
 
-	Title  string `bson:"Title"`
+	Title  string `bson:"title"`
 
 	Hits  int32 `bson:"Hits"`
 
