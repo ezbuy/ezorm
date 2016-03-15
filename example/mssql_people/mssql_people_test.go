@@ -16,9 +16,9 @@ func init() {
 	db.SetDBConfig(conf)
 }
 
-func savePeole(t *testing.T) (*People, error) {
+func savePeople(name string) (*People, error) {
 	p := &People{
-		Name: fmt.Sprintf("test_%d", time.Now().Nanosecond()),
+		Name: name,
 		Age:  1,
 	}
 
@@ -32,7 +32,7 @@ func TestSaveInsert(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	_, err = savePeole(t)
+	_, err = savePeople("testuser")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}
@@ -44,7 +44,7 @@ func TestSaveUpdate(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	p, err := savePeole(t)
+	p, err := savePeople("testuser")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}
@@ -82,7 +82,7 @@ func TestFindOne(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	p, err := savePeole(t)
+	p, err := savePeople("testuser")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}
@@ -100,7 +100,7 @@ func TestFind(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	p, err := savePeole(t)
+	p, err := savePeople("testuser")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}
@@ -122,12 +122,12 @@ func TestFindAll(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	_, err = savePeole(t)
+	_, err = savePeople("testuser1")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}
 
-	_, err = savePeole(t)
+	_, err = savePeople("testuser2")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}
@@ -149,7 +149,7 @@ func TestFindWithOffset(t *testing.T) {
 	}
 
 	for i := 0; i < 5; i++ {
-		_, err = savePeole(t)
+		_, err = savePeople(fmt.Sprint(i))
 		if err != nil {
 			t.Errorf("save err:%s", err.Error())
 		}
@@ -180,12 +180,12 @@ func TestDel(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	p1, err := savePeole(t)
+	p1, err := savePeople("testuser1")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}
 
-	p2, err := savePeole(t)
+	p2, err := savePeople("testuser2")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}
@@ -221,7 +221,7 @@ func TestUpdate(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	p, err := savePeole(t)
+	p, err := savePeople("testuser")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}
@@ -257,7 +257,7 @@ func TestFindByID(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	p1, err := savePeole(t)
+	p1, err := savePeople("testuser")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}
@@ -275,7 +275,7 @@ func TestFindOneByName(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	p1, err := savePeole(t)
+	p1, err := savePeople("testuser")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}
