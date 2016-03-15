@@ -10,18 +10,23 @@ import (
 	"github.com/jmoiron/sqlx/reflectx"
 )
 
-var _config *SqlDbConfig
+var (
+	_config *SqlDbConfig
+	_db     *SqlServer
+)
 
 func GetSqlServer() *SqlServer {
-	db, err := sqlx.Connect("mssql", _config.SqlConnStr)
-	if err != nil {
-		fmt.Printf("[db.GetSqlServer] open sql fail:%s", err.Error())
-	}
-	return &SqlServer{DB: db}
+	return _db
 }
 
 func SetDBConfig(conf *SqlDbConfig) {
 	_config = conf
+	db, err := sqlx.Connect("mssql", _config.SqlConnStr)
+	if err != nil {
+		fmt.Printf("[db.GetSqlServer] open sql fail:%s", err.Error())
+	}
+
+	_db = &SqlServer{DB: db}
 }
 
 type SqlServer struct {
@@ -38,9 +43,9 @@ func (s *SqlServer) Query(dest interface{}, query string, args ...interface{}) e
 }
 
 func Query(dest interface{}, query string, args ...interface{}) error {
-	return GetSqlServer().Query(dest, query, args...)
+	return _db.Query(dest, query, args...)
 }
 
-func Exec(query string, args ...interface{}) (sql.Result, error) {
-	return GetSqlServer().Exec(query, args...)
+func Exec(query string, args ...interface{}) (result sql.Result, err error) {
+	return _db.Exec(query, args...)
 }
