@@ -73,18 +73,11 @@ func handler(table string) {
 
 func getAllTables() (tables []string) {
 	query := `SELECT name FROM sys.tables`
-	server := db.GetSqlServer()
-	rows, err := server.DB.Query(query)
-	server.Close()
+	err := db.Query(&tables, query)
 	if err != nil {
 		panic(err)
 	}
-	defer rows.Close()
-	for rows.Next() {
-		var t string
-		rows.Scan(&t)
-		tables = append(tables, t)
-	}
+
 	return tables
 }
 
