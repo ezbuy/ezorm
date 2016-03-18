@@ -91,7 +91,8 @@ func createYamlFile(table string, columns []*ColumnInfo) {
 	ioutil.WriteFile(fileName, bs, 0644)
 }
 
-func getIndexInfo(columns []*ColumnInfo) (multiColumnIndexes [][]string, singleColumnIndexSet map[int64]struct{}) {
+func getIndexInfo(columns []*ColumnInfo) (multiColumnIndexes, multiColumnUniques [][]string,
+	singleColumnIndexSet, singleColumnUniqueSet map[int64]struct{}) {
 	indexIdToColumns := make(map[int64][]*ColumnInfo)
 	for _, v := range columns {
 		indexId := v.IndexId.Int64
@@ -101,16 +102,26 @@ func getIndexInfo(columns []*ColumnInfo) (multiColumnIndexes [][]string, singleC
 	}
 
 	singleColumnIndexSet = make(map[int64]struct{})
+	singleColumnUniqueSet = make(map[int64]struct{})
 	for indexId, indexColums := range indexIdToColumns {
 		if len(indexColums) == 1 {
-			singleColumnIndexSet[indexId] = struct{}{}
+			if indexColums[0].IsUnique.Bool {
+				singleColumnUniqueSet[indexId] = struct{}{}
+			} else {
+				singleColumnIndexSet[indexId] = struct{}{}
+			}
 		} else {
 			columnNames := make([]string, 0, len(indexColums))
 			// Note: columns are sorted by IndexColumdId
 			for _, c := range indexColums {
 				columnNames = append(columnNames, c.ColumnName)
 			}
-			multiColumnIndexes = append(multiColumnIndexes, columnNames)
+
+			if indexColums[0].IsUnique.Bool {
+				multiColumnUniques = append(multiColumnUniques, columnNames)
+			} else {
+				multiColumnIndexes = append(multiColumnIndexes, columnNames)
+			}
 		}
 	}
 
@@ -121,14 +132,16 @@ type tbl struct {
 	DB      string        `yaml:"db"`
 	Fields  []interface{} `yaml:"fields"`
 	Indexes [][]string    `yaml:"indexes,flow"`
+	Uniques [][]string    `yaml:"uniques,flow"`
 }
 
 func mapper(table string, columns []*ColumnInfo) map[string]*tbl {
-	multiColumnIndexes, singleColumnIndexSet := getIndexInfo(columns)
+	multiColumnIndexes, multiColumnUniques, singleColumnIndexSet, singleColumnUniqueSet := getIndexInfo(columns)
 
 	var t tbl
 	t.DB = "mssql"
 	t.Indexes = multiColumnIndexes
+	t.Uniques = multiColumnUniques
 	objs := make(map[string]*tbl)
 	objs[table] = &t
 	fields := make([]interface{}, len(columns))
@@ -139,7 +152,7 @@ func mapper(table string, columns []*ColumnInfo) map[string]*tbl {
 			parser.HaveTime = true
 		}
 
-		if v.IsUnique.Bool && !v.IsPrimaryKey {
+		if _, ok := singleColumnUniqueSet[v.IndexId.Int64]; ok {
 			dataitem["attrs"] = []string{"unique"}
 		} else if _, ok := singleColumnIndexSet[v.IndexId.Int64]; ok {
 			dataitem["attrs"] = []string{"index"}
