@@ -16,8 +16,8 @@ func (m *_PeopleMgr) Save(obj *People) (sql.Result, error) {
 }
 
 func (m *_PeopleMgr) saveInsert(obj *People) (sql.Result, error) {
-	query := "insert into dbo.[People] (NonIndexA, NonIndexB, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3) values (?, ?, ?, ?, ?, ?, ?)"
-	result, err := db.Exec(query, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3)
+	query := "insert into dbo.[People] (NonIndexA, NonIndexB, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2) values (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	result, err := db.Exec(query, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.UniquePart1, obj.UniquePart2)
 	if err != nil {
 		return result, err
 	}
@@ -33,8 +33,8 @@ func (m *_PeopleMgr) saveInsert(obj *People) (sql.Result, error) {
 }
 
 func (m *_PeopleMgr) saveUpdate(obj *People) (sql.Result, error) {
-	query := "update dbo.[People] set NonIndexA=?, NonIndexB=?, Age=?, Name=?, IndexAPart1=?, IndexAPart2=?, IndexAPart3=? where PeopleId=?"
-	return db.Exec(query, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.PeopleId)
+	query := "update dbo.[People] set NonIndexA=?, NonIndexB=?, Age=?, Name=?, IndexAPart1=?, IndexAPart2=?, IndexAPart3=?, UniquePart1=?, UniquePart2=? where PeopleId=?"
+	return db.Exec(query, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.UniquePart1, obj.UniquePart2, obj.PeopleId)
 }
 
 func (m *_PeopleMgr) FindByID(id int32) (*People, error) {
@@ -56,6 +56,13 @@ func (m *_PeopleMgr) FindByIndexAPart1IndexAPart2IndexAPart3(IndexAPart1 int32, 
 
 	err = db.Query(&objs, query, IndexAPart1, IndexAPart2, IndexAPart3, offset, limit)
 	return
+}
+
+func (m *_PeopleMgr) FindOneByUniquePart1UniquePart2(UniquePart1 int32, UniquePart2 int32) (*People, error) {
+	query := "SELECT * FROM People WHERE UniquePart1UniquePart2=?"
+	var obj People
+	err := db.Query(&obj, query, UniquePart1UniquePart2)
+	return &obj, err
 }
 
 func (m *_PeopleMgr) FindByAge(Age int32, offset int, limit int, sortFields ...string) (objs []*People, err error) {

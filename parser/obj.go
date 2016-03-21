@@ -211,6 +211,15 @@ func (o *Obj) Read(data map[string]interface{}) error {
 				index.IsSparse = true
 				o.Indexes = append(o.Indexes, index)
 			}
+		case "uniques":
+			for _, i := range val.([]interface{}) {
+				index := new(Index)
+				index.FieldNames = ToStringSlice(i.([]interface{}))
+				index.Name = strings.Join(index.FieldNames, "")
+				index.IsSparse = true
+				index.IsUnique = true
+				o.Indexes = append(o.Indexes, index)
+			}
 		case "extend":
 			o.Extend = val.(string)
 		case "filterFields":
