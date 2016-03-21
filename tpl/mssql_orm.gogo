@@ -5,6 +5,7 @@
 {{range $index, $field := $obj.Fields}}
 {{if eq $field.Name $idFieldName}}
 {{$idField := $field}}
+{{$idFirstField := (eq (index $obj.Fields 0).Name $idFieldName)}}
 
 
 import (
@@ -29,20 +30,20 @@ func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
 	query := "insert into dbo.[{{$obj.Name}}] (
 	{{- range $index, $field := $obj.Fields}}
 		{{- if ne $field.Name $idFieldName}}
-			{{- if $index}}, {{end}}{{$field.Name}}
+			{{- if and ($index) (not (and (eq $index 1) $idFirstField))}}, {{end}}{{$field.Name}}
 		{{- end -}}
 	{{- end -}}
 	) values (
 	{{- range $index, $field := $obj.Fields}}
 		{{- if ne $field.Name $idFieldName}}
-			{{- if $index}}, {{end}}?
+			{{- if and ($index) (not (and (eq $index 1) $idFirstField))}}, {{end}}?
 		{{- end -}}
 	{{- end -}}
 	)"
 	result, err := db.Exec(query,
 	{{- range $index, $field := $obj.Fields}}
 		{{- if ne $field.Name $idFieldName}}
-			{{- if $index}}, {{- end -}}obj.{{$field.Name -}}
+			{{- if  and ($index) (not (and (eq $index 1) $idFirstField))}}, {{- end -}}obj.{{$field.Name -}}
 		{{- end -}}
 	{{- end -}})
 	if err != nil {
@@ -62,7 +63,7 @@ func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
 func (m *_{{$obj.Name}}Mgr) saveUpdate(obj *{{$obj.Name}}) (sql.Result, error) {
 	query := "update dbo.[{{$obj.Name}}] set
 	{{- range $index, $field := $obj.Fields}}
-		{{- if ne $field.Name $idFieldName}}{{if $index}},{{end}} {{$field.Name}}=?{{end -}}
+		{{- if ne $field.Name $idFieldName}}{{if and ($index) (not (and (eq $index 1) $idFirstField))}},{{end}} {{$field.Name}}=?{{end -}}
 	{{- end }} where
 	{{- range $index, $field := $obj.Fields}}
 		{{- if eq $field.Name $idFieldName}} {{$field.Name}}=?{{end}}
