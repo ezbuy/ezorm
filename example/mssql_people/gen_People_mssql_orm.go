@@ -59,9 +59,9 @@ func (m *_PeopleMgr) FindByIndexAPart1IndexAPart2IndexAPart3(IndexAPart1 int32, 
 }
 
 func (m *_PeopleMgr) FindOneByUniquePart1UniquePart2(UniquePart1 int32, UniquePart2 int32) (*People, error) {
-	query := "SELECT * FROM People WHERE UniquePart1UniquePart2=?"
+	query := "SELECT * FROM People WHERE UniquePart1=? AND UniquePart2=?"
 	var obj People
-	err := db.Query(&obj, query, UniquePart1UniquePart2)
+	err := db.Query(&obj, query, UniquePart1, UniquePart2)
 	return &obj, err
 }
 

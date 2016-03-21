@@ -84,9 +84,10 @@ func (m *_{{$obj.Name}}Mgr) FindByID(id {{$idField.Type}}) (*{{$obj.Name}}, erro
 {{range $index := $obj.Indexes}}
 {{if $index.IsUnique }}
 func (m *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (*{{$obj.Name}}, error) {
-	query := "SELECT * FROM {{$obj.Name}} WHERE {{$index.Name}}=?"
+	query := "SELECT * FROM {{$obj.Name}} WHERE
+	{{- range $index, $field := $index.Fields}}{{if $index}} AND{{end}} {{$field.Name}}=?{{end -}}"
 	var obj {{$obj.Name}}
-	err := db.Query(&obj, query, {{$index.Name}})
+	err := db.Query(&obj, query {{range $field := $index.Fields}}, {{$field.Name}}{{end}})
 	return &obj, err
 }
 {{else}}
