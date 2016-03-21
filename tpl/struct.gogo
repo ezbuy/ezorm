@@ -17,7 +17,7 @@ type {{.Name}} struct {
 	{{- if and (eq $obj.Db "mongo") (eq $field.Name "ID")}}
 	ID         bson.ObjectId `bson:"_id,omitempty"`
 	{{- else}}
-	{{$field.Name}}  {{$field.GetGoType}} `bson:"{{or (and $field.Attrs $field.Attrs.name) $field.Name}}"`
+	{{$field.Name}}  {{$field.GetGoType}} `json:"{{or (and $field.Alias $field.Alias.name) $field.Name}}" bson:"{{or (and $field.Attrs $field.Attrs.name) $field.Name}}"`
 	{{- end -}}
 {{- end -}}
 {{- end -}}
