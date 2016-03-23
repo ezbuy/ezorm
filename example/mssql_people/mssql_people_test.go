@@ -18,8 +18,10 @@ func init() {
 
 func savePeople(name string) (*People, error) {
 	p := &People{
-		Name: name,
-		Age:  1,
+		Name:        name,
+		Age:         1,
+		UniquePart1: rand.Int31n(1000000),
+		UniquePart2: rand.Int31n(1000000),
 	}
 
 	_, err := PeopleMgr.Save(p)
@@ -287,6 +289,20 @@ func TestFindOneByName(t *testing.T) {
 	assertPeopleEqual(p1, p2, t)
 }
 
+func newUnsavedPeople() *People {
+	return &People{
+		Name:        fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
+		Age:         rand.Int31n(200),
+		NonIndexA:   fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
+		NonIndexB:   fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
+		IndexAPart1: rand.Int31n(1000000),
+		IndexAPart2: rand.Int31n(1000000),
+		IndexAPart3: rand.Int31n(1000000),
+		UniquePart1: rand.Int31n(1000000),
+		UniquePart2: rand.Int31n(1000000),
+	}
+}
+
 func TestFindByAge(t *testing.T) {
 	_, err := PeopleMgr.Del("")
 	if err != nil {
@@ -295,30 +311,14 @@ func TestFindByAge(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
 
-	p1 := &People{
-		Name:        fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
-		Age:         rand.Int31n(200),
-		NonIndexA:   fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
-		NonIndexB:   fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
-		IndexAPart1: rand.Int31n(1000000),
-		IndexAPart2: rand.Int31n(1000000),
-		IndexAPart3: rand.Int31n(1000000),
-	}
+	p1 := newUnsavedPeople()
 
 	_, err = PeopleMgr.Save(p1)
 	if err != nil {
 		t.Errorf("save error:%s", err.Error())
 	}
 
-	p2 := &People{
-		Name:        fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
-		Age:         rand.Int31n(200) + 200,
-		NonIndexA:   fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
-		NonIndexB:   fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
-		IndexAPart1: rand.Int31n(1000000),
-		IndexAPart2: rand.Int31n(1000000),
-		IndexAPart3: rand.Int31n(1000000),
-	}
+	p2 := newUnsavedPeople()
 
 	_, err = PeopleMgr.Save(p2)
 	if err != nil {
@@ -352,30 +352,14 @@ func TestFindByIndexAPart1IndexAPart2IndexAPart3(t *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
 
-	p1 := &People{
-		Name:        fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
-		Age:         rand.Int31n(200),
-		NonIndexA:   fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
-		NonIndexB:   fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
-		IndexAPart1: rand.Int31n(1000000),
-		IndexAPart2: rand.Int31n(1000000),
-		IndexAPart3: rand.Int31n(1000000),
-	}
+	p1 := newUnsavedPeople()
 
 	_, err = PeopleMgr.Save(p1)
 	if err != nil {
 		t.Errorf("save error:%s", err.Error())
 	}
 
-	p2 := &People{
-		Name:        fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
-		Age:         rand.Int31n(200) + 200,
-		NonIndexA:   fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
-		NonIndexB:   fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
-		IndexAPart1: rand.Int31n(1000000),
-		IndexAPart2: rand.Int31n(1000000),
-		IndexAPart3: rand.Int31n(1000000),
-	}
+	p2 := newUnsavedPeople()
 
 	_, err = PeopleMgr.Save(p2)
 	if err != nil {
