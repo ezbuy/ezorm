@@ -1,0 +1,14 @@
+Blog:
+  db: mongo
+  fields:
+    - Title: string
+      attrs: {name: title}
+    - Hits: int32
+    - Slug: string
+      flags: [unique]
+    - Body: string
+    - User: int32
+    - IsPublished: bool
+      flags: [index]
+  indexes: [[User, IsPublished]]
+  table: test_blog

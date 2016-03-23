@@ -11,13 +11,13 @@ Blog:
     - Title: string
     - Hits: int32
     - Slug: string
-      attrs: [unique]
+      flags: [unique]
     - Body: string
     - User: int32
     - CreateDate: datetime
-      attrs: [sort]
+      flags: [sort]
     - IsPublished: bool
-      attrs: [index]
+      flags: [index]
   indexes: [[User, IsPublished]]
 ```
 

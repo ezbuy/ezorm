@@ -4,7 +4,7 @@
 import "gopkg.in/mgo.v2/bson"
 {{end}}
 {{if and (eq .Db "mssql")}}
-{{if (eq getHaveTime true) }} 
+{{if (eq getHaveTime true) }}
 import "time"
 {{- end}}
 {{end}}
@@ -15,9 +15,9 @@ type {{.Name}} struct {
 {{$field.Name}}  {{$field.GetGoType}} `db:"{{$field.Name}}"`
 {{- else}}
 	{{- if and (eq $obj.Db "mongo") (eq $field.Name "ID")}}
-	ID         bson.ObjectId `bson:"_id,omitempty"`
+	ID         bson.ObjectId `json:"id" bson:"_id,omitempty"`
 	{{- else}}
-	{{$field.Name}}  {{$field.GetGoType}} `bson:"{{$field.Name}}"`
+	{{$field.Name}}  {{$field.GetGoType}} {{$field.BJTag}}
 	{{- end -}}
 {{- end -}}
 {{- end -}}

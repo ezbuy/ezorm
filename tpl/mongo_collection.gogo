@@ -151,7 +151,7 @@ func (m *_{{.Name}}Mgr) RemoveByID(id string) (err error) {
 }
 
 func (m *_{{.Name}}Mgr) GetCol() (session *mgo.Session, col *mgo.Collection) {
-	return db.GetCol("{{.Package}}.{{.Name}}")
+	return db.GetCol({{if eq .Table ""}}"{{.Package}}.{{.Name}}"{{else}}"{{.Table}}"{{end}})
 }
 
 {{/*

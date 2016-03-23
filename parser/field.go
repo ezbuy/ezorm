@@ -9,8 +9,10 @@ import (
 )
 
 type Field struct {
+	Alias        map[string]string
+	Attrs        map[string]string
 	DefaultValue string
-	Attrs        set.Set
+	Flags        set.Set
 	Index        string
 	Key          string
 	Label        string
@@ -47,7 +49,7 @@ func isUpperCase(c string) bool {
 }
 
 func (f *Field) init() {
-	f.Attrs = set.NewStringSet()
+	f.Flags = set.NewStringSet()
 }
 
 func (f *Field) IsRequired() bool {
@@ -55,7 +57,7 @@ func (f *Field) IsRequired() bool {
 }
 
 func (f *Field) IsUnique() bool {
-	return f.Attrs.Contains("unique")
+	return f.Flags.Contains("unique")
 }
 
 func (f *Field) GetThriftType() string {
@@ -158,7 +160,7 @@ func (f *Field) HasEnums() bool {
 }
 
 func (f *Field) HasIndex() bool {
-	return f.Attrs.Contains("index") || f.Attrs.Contains("sort") || f.IsUnique()
+	return f.Flags.Contains("index") || f.Flags.Contains("sort") || f.IsUnique()
 }
 
 func (f *Field) Read(data map[interface{}]interface{}) error {
@@ -166,6 +168,22 @@ func (f *Field) Read(data map[interface{}]interface{}) error {
 	foundName := false
 	for k, v := range data {
 		key := k.(string)
+
+		if key == "attrs" {
+			attrs := make(map[string]string)
+			for ki, vi := range v.(map[interface{}]interface{}) {
+				attrs[ki.(string)] = vi.(string)
+			}
+			f.Attrs = attrs
+		}
+
+		if key == "alias" {
+			alias := make(map[string]string)
+			for ai, av := range v.(map[interface{}]interface{}) {
+				alias[ai.(string)] = av.(string)
+			}
+			f.Alias = alias
+		}
 
 		switch val := v.(type) {
 		case string:
@@ -207,9 +225,9 @@ func (f *Field) Read(data map[interface{}]interface{}) error {
 			f.Tag = strconv.Itoa(val)
 		case []interface{}:
 			switch key {
-			case "attrs":
+			case "flags":
 				for _, v := range val {
-					f.Attrs.Add(v.(string))
+					f.Flags.Add(v.(string))
 				}
 			}
 		}

@@ -13,12 +13,15 @@ import (
 
 var Tpl *template.Template
 var HaveTime bool
+var bsonTag = make(map[string]string)
+var jsonTag = make(map[string]string)
 
 func init() {
 	funcMap := template.FuncMap{
 		"minus":       minus,
 		"getNullType": getNullType,
 		"getHaveTime": getHaveTime,
+		"BJTag":       BJTag,
 	}
 	Tpl = template.New("ezorm").Funcs(funcMap)
 	files := []string{
@@ -46,6 +49,27 @@ func getHaveTime() bool {
 	return HaveTime
 }
 
+func (f *Field) BJTag() string {
+	var bjTag string
+	for bIndex, bVal := range bsonTag {
+		if bIndex == f.Name {
+			bjTag = "`bson:" + '"' + bVal + '"'
+		}
+	}
+	if bjTag == "" {
+		bjTag = "`bson:" + '"' + f.Name + '"'
+	}
+	for jIndex, jVal := range jsonTag {
+		if jIndex == f.Name {
+			bjTag += " json:" + '"' + bVal + '"' + '`'
+		}
+	}
+	if strings.Index(bjTag, "json") == -1 {
+		bjTag += " json:" + '"' + f.Name + '"' + '`'
+	}
+	return bjTag
+}
+
 type Obj struct {
 	Db           string
 	Extend       string
@@ -57,6 +81,7 @@ type Obj struct {
 	Package      string
 	SearchIndex  string
 	SearchType   string
+	Table        string
 	TplWriter    io.Writer
 }
 
@@ -178,7 +203,7 @@ func (o *Obj) setIndexes() {
 			index.FieldNames = []string{f.Name}
 			index.Fields = []*Field{f}
 			index.IsUnique = f.IsUnique()
-			index.IsSparse = !f.Attrs.Contains("sort")
+			index.IsSparse = !f.Flags.Contains("sort")
 			index.Name = f.Name
 			o.Indexes = append(o.Indexes, index)
 		}
@@ -222,6 +247,8 @@ func (o *Obj) Read(data map[string]interface{}) error {
 			}
 		case "extend":
 			o.Extend = val.(string)
+		case "table":
+			o.Table = val.(string)
 		case "filterFields":
 			o.FilterFields = ToStringSlice(val.([]interface{}))
 		case "fields":
@@ -248,6 +275,8 @@ func (o *Obj) Read(data map[string]interface{}) error {
 				f.Tag = strconv.Itoa(i + 2)
 
 				err := f.Read(field.(map[interface{}]interface{}))
+				bsonTag = f.Attrs
+				jsonTag = f.Alias
 				if err != nil {
 					return errors.New(o.Name + " obj has " + err.Error())
 				}
