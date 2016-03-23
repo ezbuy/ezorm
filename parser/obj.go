@@ -21,7 +21,6 @@ func init() {
 		"minus":       minus,
 		"getNullType": getNullType,
 		"getHaveTime": getHaveTime,
-		"BJTag":       BJTag,
 	}
 	Tpl = template.New("ezorm").Funcs(funcMap)
 	files := []string{
@@ -53,19 +52,19 @@ func (f *Field) BJTag() string {
 	var bjTag string
 	for bIndex, bVal := range bsonTag {
 		if bIndex == f.Name {
-			bjTag = "`bson:" + '"' + bVal + '"'
+			bjTag = "`bson:" + "\"" + bVal + "\""
 		}
 	}
 	if bjTag == "" {
-		bjTag = "`bson:" + '"' + f.Name + '"'
+		bjTag = "`bson:" + "\"" + f.Name + "\""
 	}
 	for jIndex, jVal := range jsonTag {
 		if jIndex == f.Name {
-			bjTag += " json:" + '"' + bVal + '"' + '`'
+			bjTag += " json:" + "\"" + jVal + "\"" + "`"
 		}
 	}
 	if strings.Index(bjTag, "json") == -1 {
-		bjTag += " json:" + '"' + f.Name + '"' + '`'
+		bjTag += " json:" + "\"" + f.Name + "\"" + "`"
 	}
 	return bjTag
 }
