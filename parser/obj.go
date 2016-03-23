@@ -13,12 +13,15 @@ import (
 
 var Tpl *template.Template
 var HaveTime bool
+var bsonTag = make(map[string]string)
+var jsonTag = make(map[string]string)
 
 func init() {
 	funcMap := template.FuncMap{
 		"minus":       minus,
 		"getNullType": getNullType,
 		"getHaveTime": getHaveTime,
+		"BJTag":       BJTag,
 	}
 	Tpl = template.New("ezorm").Funcs(funcMap)
 	files := []string{
@@ -44,6 +47,27 @@ func init() {
 
 func getHaveTime() bool {
 	return HaveTime
+}
+
+func (f *Field) BJTag() string {
+	var bjTag string
+	for bIndex, bVal := range bsonTag {
+		if bIndex == f.Name {
+			bjTag = "`bson:" + '"' + bVal + '"'
+		}
+	}
+	if bjTag == "" {
+		bjTag = "`bson:" + '"' + f.Name + '"'
+	}
+	for jIndex, jVal := range jsonTag {
+		if jIndex == f.Name {
+			bjTag += " json:" + '"' + bVal + '"' + '`'
+		}
+	}
+	if strings.Index(bjTag, "json") == -1 {
+		bjTag += " json:" + '"' + f.Name + '"' + '`'
+	}
+	return bjTag
 }
 
 type Obj struct {
@@ -242,6 +266,8 @@ func (o *Obj) Read(data map[string]interface{}) error {
 				f.Tag = strconv.Itoa(i + 2)
 
 				err := f.Read(field.(map[interface{}]interface{}))
+				bsonTag = f.Attrs
+				jsonTag = f.Alias
 				if err != nil {
 					return errors.New(o.Name + " obj has " + err.Error())
 				}
