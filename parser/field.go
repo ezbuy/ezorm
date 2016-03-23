@@ -9,7 +9,6 @@ import (
 )
 
 type Field struct {
-	Alias        map[string]string
 	Attrs        map[string]string
 	DefaultValue string
 	Flags        set.Set
@@ -168,23 +167,6 @@ func (f *Field) Read(data map[interface{}]interface{}) error {
 	foundName := false
 	for k, v := range data {
 		key := k.(string)
-
-		if key == "attrs" {
-			attrs := make(map[string]string)
-			for ki, vi := range v.(map[interface{}]interface{}) {
-				attrs[ki.(string)] = vi.(string)
-			}
-			f.Attrs = attrs
-		}
-
-		if key == "alias" {
-			alias := make(map[string]string)
-			for ai, av := range v.(map[interface{}]interface{}) {
-				alias[ai.(string)] = av.(string)
-			}
-			f.Alias = alias
-		}
-
 		switch val := v.(type) {
 		case string:
 			if isUpperCase(key[0:1]) {
@@ -232,6 +214,13 @@ func (f *Field) Read(data map[interface{}]interface{}) error {
 			}
 		}
 
+		if key == "attrs" {
+			attrs := make(map[string]string)
+			for ki, vi := range v.(map[interface{}]interface{}) {
+				attrs[ki.(string)] = vi.(string)
+			}
+			f.Attrs = attrs
+		}
 	}
 	return nil
 }

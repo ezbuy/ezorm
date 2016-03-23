@@ -7,14 +7,13 @@ import (
 	"strings"
 	"text/template"
 
+	"fmt"
 	"github.com/ezbuy/ezorm/tpl"
 	"github.com/ezbuy/utils/container/set"
 )
 
 var Tpl *template.Template
 var HaveTime bool
-var bsonTag = make(map[string]string)
-var jsonTag = make(map[string]string)
 
 func init() {
 	funcMap := template.FuncMap{
@@ -50,21 +49,20 @@ func getHaveTime() bool {
 
 func (f *Field) BJTag() string {
 	var bjTag string
-	for bIndex, bVal := range bsonTag {
-		if bIndex == f.Name {
-			bjTag = "`bson:" + "\"" + bVal + "\""
+	if bVal, ok := f.Attrs["bsonTag"]; ok {
+		if bVal != "" {
+			bjTag = fmt.Sprintf("`bson:\"%s\"", bVal)
 		}
+	} else {
+		bjTag = fmt.Sprintf("`bson:\"%s\"", f.Name)
 	}
-	if bjTag == "" {
-		bjTag = "`bson:" + "\"" + f.Name + "\""
-	}
-	for jIndex, jVal := range jsonTag {
-		if jIndex == f.Name {
-			bjTag += " json:" + "\"" + jVal + "\"" + "`"
+
+	if jVal, ok := f.Attrs["jsonTag"]; ok {
+		if jVal != "" {
+			bjTag += fmt.Sprintf(" json:\"%s\"`", jVal)
 		}
-	}
-	if strings.Index(bjTag, "json") == -1 {
-		bjTag += " json:" + "\"" + f.Name + "\"" + "`"
+	} else {
+		bjTag += fmt.Sprintf(" json:\"%s\"`", f.Name)
 	}
 	return bjTag
 }
@@ -265,8 +263,6 @@ func (o *Obj) Read(data map[string]interface{}) error {
 				f.Tag = strconv.Itoa(i + 2)
 
 				err := f.Read(field.(map[interface{}]interface{}))
-				bsonTag = f.Attrs
-				jsonTag = f.Alias
 				if err != nil {
 					return errors.New(o.Name + " obj has " + err.Error())
 				}
