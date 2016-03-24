@@ -40,7 +40,9 @@ func (o *_{{.Name}}Mgr) Query(query interface{}, limit, offset int, sortFields [
 {{- if $index.IsUnique }}
 func (o *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (result *{{$obj.Name}}, err error) {
 	query := db.M{
-		"{{$index.Name}}": {{$index.Name}},
+		{{- range $field := $index.Fields}}
+		"{{$field.Name}}": {{$field.Name}},
+		{{- end}}
 	}
 	session, q := {{$obj.Name}}Mgr.Query(query, 1, 0, nil)
 	defer session.Close()
@@ -49,10 +51,12 @@ func (o *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (r
 }
 
 func (o *_{{$obj.Name}}Mgr) MustFindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (result *{{$obj.Name}}) {
-	result, _ = o.FindOneBy{{$index.Name}}({{$index.Name}})
+	result, _ = o.FindOneBy{{$index.Name}}({{$index.GetFuncParamNames}})
 	if result == nil {
 		result = {{$obj.Name}}Mgr.New{{$obj.Name}}()
-		result.{{$index.Name}} = {{$index.Name}}
+		{{- range $field := $index.Fields}}
+		result.{{$field.Name}} = {{$field.Name}}
+		{{- end}}
 		result.Save()
 	}
 	return
