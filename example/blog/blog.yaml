@@ -2,7 +2,7 @@ Blog:
   db: mongo
   fields:
     - Title: string
-      attrs: {name: title}
+      attrs: {bsonTag: title,jsonTag: title}
     - Hits: int32
     - Slug: string
       flags: [unique]
