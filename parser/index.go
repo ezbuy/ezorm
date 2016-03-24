@@ -23,9 +23,5 @@ func (i *Index) GetFuncParam() string {
 }
 
 func (i *Index) GetFuncParamNames() string {
-	var names []string
-	for _, f := range i.Fields {
-		names = append(names, f.Name)
-	}
-	return strings.Join(names, ", ")
+	return strings.Join(i.FieldNames, ", ")
 }
