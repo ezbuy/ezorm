@@ -10,6 +10,8 @@ init:
 	go get github.com/spf13/cobra/cobra
 	go get -u github.com/jteeuwen/go-bindata/...
 	go get github.com/denisenkom/go-mssqldb
+	go get github.com/jmoiron/sqlx
+	go get gopkg.in/mgo.v2
 
 debugTpl:
 	go-bindata -o tpl/bindata.go -ignore bindata.go -pkg tpl -debug tpl
