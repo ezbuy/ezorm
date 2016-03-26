@@ -52,6 +52,7 @@ var genmsormCmd = &cobra.Command{
 var table string
 var outputYaml string
 var dbConfig string
+var packageName string
 
 type ColumnInfo struct {
 	ColumnName    string        `db:"ColumnName"`
@@ -200,9 +201,12 @@ func generate(table string) {
 	}
 	err = yaml.Unmarshal([]byte(data), &objs)
 
+	if packageName == "" {
+		packageName = strings.ToLower(table)
+	}
 	for key, obj := range objs {
 		metaObj := new(parser.Obj)
-		metaObj.Package = strings.ToLower(table)
+		metaObj.Package = packageName
 		metaObj.Name = key
 		metaObj.Db = obj["db"].(string)
 		err := metaObj.Read(obj)
@@ -245,4 +249,5 @@ func init() {
 	genmsormCmd.PersistentFlags().StringVarP(&output, "output", "o", "", "output path")
 	genmsormCmd.PersistentFlags().StringVarP(&outputYaml, "output yaml", "y", "", "output *.yaml path")
 	genmsormCmd.PersistentFlags().StringVarP(&dbConfig, "db config", "d", "", "database configuration")
+	genmsormCmd.PersistentFlags().StringVarP(&packageName, "package name", "p", "", "package name")
 }
