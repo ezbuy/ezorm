@@ -38,7 +38,7 @@ func (m *_PeopleMgr) saveUpdate(obj *People) (sql.Result, error) {
 }
 
 func (m *_PeopleMgr) FindByID(id int32) (*People, error) {
-	query := "SELECT * FROM People WHERE PeopleId=?"
+	query := "SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2 FROM People WHERE PeopleId=?"
 	var obj People
 	err := db.Query(&obj, query, id)
 	return &obj, err
@@ -52,14 +52,14 @@ func (m *_PeopleMgr) FindByIndexAPart1IndexAPart2IndexAPart3(IndexAPart1 int32, 
 		orderBy = fmt.Sprintf(orderBy, "PeopleId")
 	}
 
-	query := fmt.Sprintf("SELECT * FROM People WHERE IndexAPart1=?  AND  IndexAPart2=?  AND  IndexAPart3=? %s  OFFSET ? Rows FETCH NEXT ? Rows ONLY", orderBy)
+	query := fmt.Sprintf("SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2 FROM People WHERE IndexAPart1=?  AND  IndexAPart2=?  AND  IndexAPart3=? %s  OFFSET ? Rows FETCH NEXT ? Rows ONLY", orderBy)
 
 	err = db.Query(&objs, query, IndexAPart1, IndexAPart2, IndexAPart3, offset, limit)
 	return
 }
 
 func (m *_PeopleMgr) FindOneByUniquePart1UniquePart2(UniquePart1 int32, UniquePart2 int32) (*People, error) {
-	query := "SELECT * FROM People WHERE UniquePart1=? AND UniquePart2=?"
+	query := "SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2 FROM People WHERE UniquePart1=? AND UniquePart2=?"
 	var obj People
 	err := db.Query(&obj, query, UniquePart1, UniquePart2)
 	return &obj, err
@@ -73,14 +73,14 @@ func (m *_PeopleMgr) FindByAge(Age int32, offset int, limit int, sortFields ...s
 		orderBy = fmt.Sprintf(orderBy, "PeopleId")
 	}
 
-	query := fmt.Sprintf("SELECT * FROM People WHERE Age=? %s  OFFSET ? Rows FETCH NEXT ? Rows ONLY", orderBy)
+	query := fmt.Sprintf("SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2 FROM People WHERE Age=? %s  OFFSET ? Rows FETCH NEXT ? Rows ONLY", orderBy)
 
 	err = db.Query(&objs, query, Age, offset, limit)
 	return
 }
 
 func (m *_PeopleMgr) FindOneByName(Name string) (*People, error) {
-	query := "SELECT * FROM People WHERE Name=?"
+	query := "SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2 FROM People WHERE Name=?"
 	var obj People
 	err := db.Query(&obj, query, Name)
 	return &obj, err
@@ -122,7 +122,7 @@ func getQuerysql(topOne bool, where string) string {
 	if topOne {
 		query = query + ` TOP 1 `
 	}
-	query = query + ` * FROM dbo.[People] WITH(NOLOCK) `
+	query = query + ` NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2 FROM dbo.[People] WITH(NOLOCK) `
 
 	if where != "" {
 		if strings.Index(strings.Trim(where, " "), "WHERE") == -1 {

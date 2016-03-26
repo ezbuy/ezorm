@@ -6,6 +6,7 @@
 {{if eq $field.Name $idFieldName}}
 {{$idField := $field}}
 {{$idFirstField := (eq (index $obj.Fields 0).Name $idFieldName)}}
+{{$allFields := print ($obj.JoinFieldNames ", ")}}
 
 
 import (
@@ -76,7 +77,7 @@ func (m *_{{$obj.Name}}Mgr) saveUpdate(obj *{{$obj.Name}}) (sql.Result, error) {
 }
 
 func (m *_{{$obj.Name}}Mgr) FindByID(id {{$idField.Type}}) (*{{$obj.Name}}, error) {
-	query := "SELECT * FROM {{$obj.Name}} WHERE {{$idFieldName}}=?"
+	query := "SELECT {{$allFields}} FROM {{$obj.Name}} WHERE {{$idFieldName}}=?"
 	var obj {{$obj.Name}}
 	err := db.Query(&obj, query, id)
 	return &obj, err
@@ -85,7 +86,7 @@ func (m *_{{$obj.Name}}Mgr) FindByID(id {{$idField.Type}}) (*{{$obj.Name}}, erro
 {{range $index := $obj.Indexes}}
 {{if $index.IsUnique }}
 func (m *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (*{{$obj.Name}}, error) {
-	query := "SELECT * FROM {{$obj.Name}} WHERE
+	query := "SELECT {{$allFields}} FROM {{$obj.Name}} WHERE
 	{{- range $index, $field := $index.Fields}}{{if $index}} AND{{end}} {{$field.Name}}=?{{end -}}"
 	var obj {{$obj.Name}}
 	err := db.Query(&obj, query {{range $field := $index.Fields}}, {{$field.Name}}{{end}})
@@ -100,7 +101,7 @@ func (m *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, offse
 		orderBy = fmt.Sprintf(orderBy, "{{$idFieldName}}")
 	}
 
-	query := fmt.Sprintf("SELECT * FROM {{$obj.Name}} WHERE
+	query := fmt.Sprintf("SELECT {{$allFields}} FROM {{$obj.Name}} WHERE
 	{{- range $index, $field := $index.Fields}}{{if $index}} AND {{end}} {{$field.Name}}=? {{end -}}
 	%s  OFFSET ? Rows FETCH NEXT ? Rows ONLY", orderBy)
 
@@ -148,7 +149,7 @@ func getQuerysql(topOne bool, where string) string {
 	if topOne {
 		query = query + ` TOP 1 `
 	}
-	query = query + ` * FROM dbo.[{{$obj.Name}}] WITH(NOLOCK) `
+	query = query + ` {{$allFields}} FROM dbo.[{{$obj.Name}}] WITH(NOLOCK) `
 
 	if where != "" {
 		if strings.Index(strings.Trim(where, " "), "WHERE") == -1 {
