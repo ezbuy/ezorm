@@ -153,9 +153,9 @@ func mapper(table string, columns []*ColumnInfo) map[string]*tbl {
 		}
 
 		if _, ok := singleColumnUniqueSet[v.IndexId.Int64]; ok {
-			dataitem["attrs"] = []string{"unique"}
+			dataitem["flags"] = []string{"unique"}
 		} else if _, ok := singleColumnIndexSet[v.IndexId.Int64]; ok {
-			dataitem["attrs"] = []string{"index"}
+			dataitem["flags"] = []string{"index"}
 		}
 
 		fields[i] = dataitem

@@ -5,10 +5,10 @@ People:
   - NonIndexB: string
   - PeopleId: int32
   - Age: int32
-    attrs:
+    flags:
     - index
   - Name: string
-    attrs:
+    flags:
     - unique
   - IndexAPart1: int32
   - IndexAPart2: int32
