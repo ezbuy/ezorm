@@ -102,7 +102,7 @@ func (m *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, offse
 	}
 
 	query := fmt.Sprintf("SELECT {{$allFields}} FROM {{$obj.Name}} WHERE
-	{{- compexJoin $index.FieldNames " " "=? " "AND" -}}
+	{{-preSuffixJoin $index.FieldNames " " "=? " "AND" -}}
 	%s  OFFSET ? Rows FETCH NEXT ? Rows ONLY", orderBy)
 
 	err = db.Query(&objs, query, {{$index.GetFuncParamNames}}, offset, limit)

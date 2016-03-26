@@ -26,7 +26,7 @@ func getNullType(gotype string) string {
 	return NullTypes[gotype]
 }
 
-func complexJoin(s []string, prefix, suffix, sep string) string {
+func preSuffixJoin(s []string, prefix, suffix, sep string) string {
 	sNew := make([]string, 0, len(s))
 	for _, each := range s {
 		sNew = append(sNew, fmt.Sprintf("%s%s%s", prefix, each, suffix))

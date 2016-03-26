@@ -18,11 +18,11 @@ var HaveTime bool
 
 func init() {
 	funcMap := template.FuncMap{
-		"minus":       minus,
-		"getNullType": getNullType,
-		"getHaveTime": getHaveTime,
-		"join":        strings.Join,
-		"compexJoin":  complexJoin,
+		"minus":         minus,
+		"getNullType":   getNullType,
+		"getHaveTime":   getHaveTime,
+		"join":          strings.Join,
+		"preSuffixJoin": preSuffixJoin,
 	}
 	Tpl = template.New("ezorm").Funcs(funcMap)
 	files := []string{
