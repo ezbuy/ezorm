@@ -21,6 +21,7 @@ func init() {
 		"minus":       minus,
 		"getNullType": getNullType,
 		"getHaveTime": getHaveTime,
+		"join":        strings.Join,
 	}
 	Tpl = template.New("ezorm").Funcs(funcMap)
 	files := []string{
@@ -87,13 +88,13 @@ func (o *Obj) init() {
 	o.FieldNameMap = make(map[string]*Field)
 }
 
-func (o *Obj) JoinFieldNames(sep string) string {
+func (o *Obj) GetFieldNames() []string {
 	fieldNames := make([]string, 0, len(o.Fields))
 	for _, f := range o.Fields {
 		fieldNames = append(fieldNames, f.Name)
 	}
 
-	return strings.Join(fieldNames, sep)
+	return fieldNames
 }
 
 func (o *Obj) LoadTpl(tpl string) string {

@@ -6,7 +6,7 @@
 {{if eq $field.Name $idFieldName}}
 {{$idField := $field}}
 {{$idFirstField := (eq (index $obj.Fields 0).Name $idFieldName)}}
-{{$allFields := print ($obj.JoinFieldNames ", ")}}
+{{$allFields := join $obj.GetFieldNames ", "}}
 
 
 import (
