@@ -28,9 +28,9 @@ func (m *_{{$obj.Name}}Mgr) Save(obj *{{$obj.Name}}) (sql.Result, error) {
 }
 
 func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
-	query := "insert into dbo.[{{$obj.Name}}] (
+	query := "INSERT INTO [dbo].[{{$obj.Name}}] (
 	{{- join $obj.GetNonIdFieldNames ", " -}}
-	) values (
+	) VALUES (
 	{{- repeatJoin (len $obj.GetNonIdFieldNames) "?" ", " -}}
 	)"
 	result, err := db.Exec(query, {{$nonIdFieldNames}})
@@ -49,13 +49,13 @@ func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
 }
 
 func (m *_{{$obj.Name}}Mgr) saveUpdate(obj *{{$obj.Name}}) (sql.Result, error) {
-	query := "update dbo.[{{$obj.Name}}] set
-	{{- preSuffixJoin $obj.GetNonIdFieldNames " " "=?" "," }} where {{$field.Name}}=?"
+	query := "UPDATE [dbo].[{{$obj.Name}}] SET
+	{{- preSuffixJoin $obj.GetNonIdFieldNames " " "=?" "," }} WHERE {{$field.Name}}=?"
 	return db.Exec(query, {{$nonIdFieldNames}}, obj.{{$field.Name}})
 }
 
 func (m *_{{$obj.Name}}Mgr) FindByID(id {{$idField.Type}}) (*{{$obj.Name}}, error) {
-	query := "SELECT {{$allFields}} FROM {{$obj.Name}} WHERE {{$idFieldName}}=?"
+	query := "SELECT {{$allFields}} FROM [dbo].[{{$obj.Name}}] WHERE {{$idFieldName}}=?"
 	var obj {{$obj.Name}}
 	err := db.Query(&obj, query, id)
 	return &obj, err
@@ -64,7 +64,7 @@ func (m *_{{$obj.Name}}Mgr) FindByID(id {{$idField.Type}}) (*{{$obj.Name}}, erro
 {{range $index := $obj.Indexes}}
 {{if $index.IsUnique }}
 func (m *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (*{{$obj.Name}}, error) {
-	query := "SELECT {{$allFields}} FROM {{$obj.Name}} WHERE
+	query := "SELECT {{$allFields}} FROM [dbo].[{{$obj.Name}}] WHERE
 	{{- preSuffixJoin $index.FieldNames " " "=?" " AND" -}}"
 	var obj {{$obj.Name}}
 	err := db.Query(&obj, query, {{$index.GetFuncParamNames}})
@@ -79,7 +79,7 @@ func (m *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, offse
 		orderBy = fmt.Sprintf(orderBy, "{{$idFieldName}}")
 	}
 
-	query := fmt.Sprintf("SELECT {{$allFields}} FROM {{$obj.Name}} WHERE
+	query := fmt.Sprintf("SELECT {{$allFields}} FROM [dbo].[{{$obj.Name}}] WHERE
 	{{- preSuffixJoin $index.FieldNames " " "=? " "AND" -}}
 	%s  OFFSET ? Rows FETCH NEXT ? Rows ONLY", orderBy)
 
@@ -127,7 +127,7 @@ func getQuerysql(topOne bool, where string) string {
 	if topOne {
 		query = query + ` TOP 1 `
 	}
-	query = query + ` {{$allFields}} FROM dbo.[{{$obj.Name}}] WITH(NOLOCK) `
+	query = query + ` {{$allFields}} FROM [dbo].[{{$obj.Name}}] WITH(NOLOCK) `
 
 	if where != "" {
 		if strings.Index(strings.Trim(where, " "), "WHERE") == -1 {
@@ -139,9 +139,9 @@ func getQuerysql(topOne bool, where string) string {
 }
 
 func (m *_{{$obj.Name}}Mgr) Del(where string, params ...interface{}) (sql.Result, error) {
-	query := "delete from {{$obj.Name}}"
+	query := "DELETE FROM [dbo].[{{$obj.Name}}]"
 	if where != "" {
-		query = fmt.Sprintf("delete from {{$obj.Name}} where " + where)
+		query = fmt.Sprintf("DELETE FROM {{$obj.Name}} WHERE " + where)
 	}
 	return db.Exec(query, params...)
 }
@@ -151,9 +151,9 @@ func (m *_{{$obj.Name}}Mgr) Del(where string, params ...interface{}) (sql.Result
 // where:"c=? and d=?"
 // params:[]interface{}{"a", "b", "c", "d"}...
 func (m *_{{$obj.Name}}Mgr) Update(set, where string, params ...interface{}) (sql.Result, error) {
-	query := fmt.Sprintf("update {{$obj.Name}} set %s", set)
+	query := fmt.Sprintf("UPDATE [dbo].[{{$obj.Name}}] SET %s", set)
 	if where != "" {
-		query = fmt.Sprintf("update {{$obj.Name}} set %s where %s", set, where)
+		query = fmt.Sprintf("UPDATE [dbo].[{{$obj.Name}}] SET %s WHERE %s", set, where)
 	}
 	return db.Exec(query, params...)
 }
