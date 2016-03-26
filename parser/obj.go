@@ -23,6 +23,7 @@ func init() {
 		"getHaveTime":   getHaveTime,
 		"join":          strings.Join,
 		"preSuffixJoin": preSuffixJoin,
+		"repeatJoin":    repeatJoin,
 	}
 	Tpl = template.New("ezorm").Funcs(funcMap)
 	files := []string{
@@ -93,6 +94,18 @@ func (o *Obj) GetFieldNames() []string {
 	fieldNames := make([]string, 0, len(o.Fields))
 	for _, f := range o.Fields {
 		fieldNames = append(fieldNames, f.Name)
+	}
+
+	return fieldNames
+}
+
+func (o *Obj) GetNonIdFieldNames() []string {
+	fieldNames := make([]string, 0, len(o.Fields))
+	idFieldName := o.Name + "Id"
+	for _, f := range o.Fields {
+		if f.Name != idFieldName {
+			fieldNames = append(fieldNames, f.Name)
+		}
 	}
 
 	return fieldNames

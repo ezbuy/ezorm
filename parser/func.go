@@ -33,3 +33,11 @@ func preSuffixJoin(s []string, prefix, suffix, sep string) string {
 	}
 	return strings.Join(sNew, sep)
 }
+
+func repeatJoin(n int, repeatStr, sep string) string {
+	a := make([]string, 0, n)
+	for i := 0; i < n; i++ {
+		a = append(a, repeatStr)
+	}
+	return strings.Join(a, sep)
+}

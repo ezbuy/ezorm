@@ -5,8 +5,8 @@
 {{range $index, $field := $obj.Fields}}
 {{if eq $field.Name $idFieldName}}
 {{$idField := $field}}
-{{$idFirstField := (eq (index $obj.Fields 0).Name $idFieldName)}}
 {{$allFields := join $obj.GetFieldNames ", "}}
+{{$nonIdFieldNames := preSuffixJoin $obj.GetNonIdFieldNames "obj." "" ", "}}
 
 
 import (
@@ -29,24 +29,11 @@ func (m *_{{$obj.Name}}Mgr) Save(obj *{{$obj.Name}}) (sql.Result, error) {
 
 func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
 	query := "insert into dbo.[{{$obj.Name}}] (
-	{{- range $index, $field := $obj.Fields}}
-		{{- if ne $field.Name $idFieldName}}
-			{{- if and ($index) (not (and (eq $index 1) $idFirstField))}}, {{end}}{{$field.Name}}
-		{{- end -}}
-	{{- end -}}
+	{{- join $obj.GetNonIdFieldNames ", " -}}
 	) values (
-	{{- range $index, $field := $obj.Fields}}
-		{{- if ne $field.Name $idFieldName}}
-			{{- if and ($index) (not (and (eq $index 1) $idFirstField))}}, {{end}}?
-		{{- end -}}
-	{{- end -}}
+	{{- repeatJoin (len $obj.GetNonIdFieldNames) "?" ", " -}}
 	)"
-	result, err := db.Exec(query,
-	{{- range $index, $field := $obj.Fields}}
-		{{- if ne $field.Name $idFieldName}}
-			{{- if  and ($index) (not (and (eq $index 1) $idFirstField))}}, {{- end -}}obj.{{$field.Name -}}
-		{{- end -}}
-	{{- end -}})
+	result, err := db.Exec(query, {{$nonIdFieldNames}})
 	if err != nil {
 		return result, err
 	}
@@ -63,17 +50,8 @@ func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
 
 func (m *_{{$obj.Name}}Mgr) saveUpdate(obj *{{$obj.Name}}) (sql.Result, error) {
 	query := "update dbo.[{{$obj.Name}}] set
-	{{- range $index, $field := $obj.Fields}}
-		{{- if ne $field.Name $idFieldName}}{{if and ($index) (not (and (eq $index 1) $idFirstField))}},{{end}} {{$field.Name}}=?{{end -}}
-	{{- end }} where
-	{{- range $index, $field := $obj.Fields}}
-		{{- if eq $field.Name $idFieldName}} {{$field.Name}}=?{{end}}
-	{{- end -}}"
-	return db.Exec(query,
-	{{- range $field := $obj.Fields}}
-		{{- if ne $field.Name $idFieldName}}obj.{{$field.Name}}, {{end}}
-	{{- end -}}
-	obj.{{$idFieldName}})
+	{{- preSuffixJoin $obj.GetNonIdFieldNames " " "=?" "," }} where {{$field.Name}}=?"
+	return db.Exec(query, {{$nonIdFieldNames}}, obj.{{$field.Name}})
 }
 
 func (m *_{{$obj.Name}}Mgr) FindByID(id {{$idField.Type}}) (*{{$obj.Name}}, error) {
@@ -87,7 +65,7 @@ func (m *_{{$obj.Name}}Mgr) FindByID(id {{$idField.Type}}) (*{{$obj.Name}}, erro
 {{if $index.IsUnique }}
 func (m *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (*{{$obj.Name}}, error) {
 	query := "SELECT {{$allFields}} FROM {{$obj.Name}} WHERE
-	{{- range $index, $field := $index.Fields}}{{if $index}} AND{{end}} {{$field.Name}}=?{{end -}}"
+	{{- preSuffixJoin $index.FieldNames " " "=?" " AND" -}}"
 	var obj {{$obj.Name}}
 	err := db.Query(&obj, query, {{$index.GetFuncParamNames}})
 	return &obj, err
