@@ -22,6 +22,7 @@ func init() {
 		"getNullType": getNullType,
 		"getHaveTime": getHaveTime,
 		"join":        strings.Join,
+		"compexJoin":  complexJoin,
 	}
 	Tpl = template.New("ezorm").Funcs(funcMap)
 	files := []string{

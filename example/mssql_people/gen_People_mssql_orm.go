@@ -52,7 +52,7 @@ func (m *_PeopleMgr) FindByIndexAPart1IndexAPart2IndexAPart3(IndexAPart1 int32, 
 		orderBy = fmt.Sprintf(orderBy, "PeopleId")
 	}
 
-	query := fmt.Sprintf("SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2 FROM People WHERE IndexAPart1=?  AND  IndexAPart2=?  AND  IndexAPart3=? %s  OFFSET ? Rows FETCH NEXT ? Rows ONLY", orderBy)
+	query := fmt.Sprintf("SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2 FROM People WHERE IndexAPart1=? AND IndexAPart2=? AND IndexAPart3=? %s  OFFSET ? Rows FETCH NEXT ? Rows ONLY", orderBy)
 
 	err = db.Query(&objs, query, IndexAPart1, IndexAPart2, IndexAPart3, offset, limit)
 	return
