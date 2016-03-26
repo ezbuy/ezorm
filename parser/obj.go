@@ -8,6 +8,7 @@ import (
 	"text/template"
 
 	"fmt"
+
 	"github.com/ezbuy/ezorm/tpl"
 	"github.com/ezbuy/utils/container/set"
 )
@@ -84,6 +85,15 @@ type Obj struct {
 
 func (o *Obj) init() {
 	o.FieldNameMap = make(map[string]*Field)
+}
+
+func (o *Obj) JoinFieldNames(sep string) string {
+	fieldNames := make([]string, 0, len(o.Fields))
+	for _, f := range o.Fields {
+		fieldNames = append(fieldNames, f.Name)
+	}
+
+	return strings.Join(fieldNames, sep)
 }
 
 func (o *Obj) LoadTpl(tpl string) string {
