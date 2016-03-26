@@ -89,7 +89,7 @@ func (m *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (*
 	query := "SELECT {{$allFields}} FROM {{$obj.Name}} WHERE
 	{{- range $index, $field := $index.Fields}}{{if $index}} AND{{end}} {{$field.Name}}=?{{end -}}"
 	var obj {{$obj.Name}}
-	err := db.Query(&obj, query {{range $field := $index.Fields}}, {{$field.Name}}{{end}})
+	err := db.Query(&obj, query, {{$index.GetFuncParamNames}})
 	return &obj, err
 }
 {{else}}
@@ -105,7 +105,7 @@ func (m *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, offse
 	{{- range $index, $field := $index.Fields}}{{if $index}} AND {{end}} {{$field.Name}}=? {{end -}}
 	%s  OFFSET ? Rows FETCH NEXT ? Rows ONLY", orderBy)
 
-	err = db.Query(&objs, query, {{range $field := $index.Fields}}{{$field.Name}}, {{end}}offset, limit)
+	err = db.Query(&objs, query, {{$index.GetFuncParamNames}}, offset, limit)
 	return
 }
 {{end}}
