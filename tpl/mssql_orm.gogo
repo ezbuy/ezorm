@@ -90,7 +90,7 @@ func (m *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, offse
 {{end}}
 
 func (m *_{{$obj.Name}}Mgr) FindOne(where string, args ...interface{}) (*{{$obj.Name}}, error) {
-	query := getQuerysql(true, where)
+	query := m.getQuerysql(true, where)
 	var obj {{$obj.Name}}
 	err := db.Query(&obj, query, args...)
 	return &obj, err
@@ -98,7 +98,7 @@ func (m *_{{$obj.Name}}Mgr) FindOne(where string, args ...interface{}) (*{{$obj.
 
 
 func (m *_{{$obj.Name}}Mgr) Find(where string, args ...interface{}) (results []*{{$obj.Name}}, err error) {
-	query := getQuerysql(false, where)
+	query := m.getQuerysql(false, where)
 	err = db.Query(&results, query, args...)
 	return
 }
@@ -108,7 +108,7 @@ func (m *_{{$obj.Name}}Mgr) FindAll() (results []*{{$obj.Name}}, err error) {
 }
 
 func (m *_{{$obj.Name}}Mgr) FindWithOffset(where string, offset int, limit int, args ...interface{}) (results []*{{$obj.Name}}, err error) {
-	query := getQuerysql(false, where)
+	query := m.getQuerysql(false, where)
 
 	if !strings.Contains(strings.ToLower(where), "ORDER BY") {
 		where = " ORDER BY Name"
@@ -122,7 +122,7 @@ func (m *_{{$obj.Name}}Mgr) FindWithOffset(where string, offset int, limit int, 
 }
 
 
-func getQuerysql(topOne bool, where string) string {
+func (m *_{{$obj.Name}}Mgr) getQuerysql(topOne bool, where string) string {
 	query := `SELECT `
 	if topOne {
 		query = query + ` TOP 1 `
