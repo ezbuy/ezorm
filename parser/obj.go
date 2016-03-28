@@ -8,6 +8,7 @@ import (
 	"text/template"
 
 	"fmt"
+
 	"github.com/ezbuy/ezorm/tpl"
 	"github.com/ezbuy/utils/container/set"
 )
@@ -17,9 +18,12 @@ var HaveTime bool
 
 func init() {
 	funcMap := template.FuncMap{
-		"minus":       minus,
-		"getNullType": getNullType,
-		"getHaveTime": getHaveTime,
+		"minus":         minus,
+		"getNullType":   getNullType,
+		"getHaveTime":   getHaveTime,
+		"join":          strings.Join,
+		"preSuffixJoin": preSuffixJoin,
+		"repeatJoin":    repeatJoin,
 	}
 	Tpl = template.New("ezorm").Funcs(funcMap)
 	files := []string{
@@ -84,6 +88,27 @@ type Obj struct {
 
 func (o *Obj) init() {
 	o.FieldNameMap = make(map[string]*Field)
+}
+
+func (o *Obj) GetFieldNames() []string {
+	fieldNames := make([]string, 0, len(o.Fields))
+	for _, f := range o.Fields {
+		fieldNames = append(fieldNames, f.Name)
+	}
+
+	return fieldNames
+}
+
+func (o *Obj) GetNonIdFieldNames() []string {
+	fieldNames := make([]string, 0, len(o.Fields))
+	idFieldName := o.Name + "Id"
+	for _, f := range o.Fields {
+		if f.Name != idFieldName {
+			fieldNames = append(fieldNames, f.Name)
+		}
+	}
+
+	return fieldNames
 }
 
 func (o *Obj) LoadTpl(tpl string) string {

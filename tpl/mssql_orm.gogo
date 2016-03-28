@@ -5,7 +5,8 @@
 {{range $index, $field := $obj.Fields}}
 {{if eq $field.Name $idFieldName}}
 {{$idField := $field}}
-{{$idFirstField := (eq (index $obj.Fields 0).Name $idFieldName)}}
+{{$allFields := join $obj.GetFieldNames ", "}}
+{{$nonIdFieldNames := preSuffixJoin $obj.GetNonIdFieldNames "obj." "" ", "}}
 
 
 import (
@@ -27,25 +28,12 @@ func (m *_{{$obj.Name}}Mgr) Save(obj *{{$obj.Name}}) (sql.Result, error) {
 }
 
 func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
-	query := "insert into dbo.[{{$obj.Name}}] (
-	{{- range $index, $field := $obj.Fields}}
-		{{- if ne $field.Name $idFieldName}}
-			{{- if and ($index) (not (and (eq $index 1) $idFirstField))}}, {{end}}{{$field.Name}}
-		{{- end -}}
-	{{- end -}}
-	) values (
-	{{- range $index, $field := $obj.Fields}}
-		{{- if ne $field.Name $idFieldName}}
-			{{- if and ($index) (not (and (eq $index 1) $idFirstField))}}, {{end}}?
-		{{- end -}}
-	{{- end -}}
+	query := "INSERT INTO [dbo].[{{$obj.Name}}] (
+	{{- join $obj.GetNonIdFieldNames ", " -}}
+	) VALUES (
+	{{- repeatJoin (len $obj.GetNonIdFieldNames) "?" ", " -}}
 	)"
-	result, err := db.Exec(query,
-	{{- range $index, $field := $obj.Fields}}
-		{{- if ne $field.Name $idFieldName}}
-			{{- if  and ($index) (not (and (eq $index 1) $idFirstField))}}, {{- end -}}obj.{{$field.Name -}}
-		{{- end -}}
-	{{- end -}})
+	result, err := db.Exec(query, {{$nonIdFieldNames}})
 	if err != nil {
 		return result, err
 	}
@@ -61,22 +49,13 @@ func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
 }
 
 func (m *_{{$obj.Name}}Mgr) saveUpdate(obj *{{$obj.Name}}) (sql.Result, error) {
-	query := "update dbo.[{{$obj.Name}}] set
-	{{- range $index, $field := $obj.Fields}}
-		{{- if ne $field.Name $idFieldName}}{{if and ($index) (not (and (eq $index 1) $idFirstField))}},{{end}} {{$field.Name}}=?{{end -}}
-	{{- end }} where
-	{{- range $index, $field := $obj.Fields}}
-		{{- if eq $field.Name $idFieldName}} {{$field.Name}}=?{{end}}
-	{{- end -}}"
-	return db.Exec(query,
-	{{- range $field := $obj.Fields}}
-		{{- if ne $field.Name $idFieldName}}obj.{{$field.Name}}, {{end}}
-	{{- end -}}
-	obj.{{$idFieldName}})
+	query := "UPDATE [dbo].[{{$obj.Name}}] SET
+	{{- preSuffixJoin $obj.GetNonIdFieldNames " " "=?" "," }} WHERE {{$field.Name}}=?"
+	return db.Exec(query, {{$nonIdFieldNames}}, obj.{{$field.Name}})
 }
 
 func (m *_{{$obj.Name}}Mgr) FindByID(id {{$idField.Type}}) (*{{$obj.Name}}, error) {
-	query := "SELECT * FROM {{$obj.Name}} WHERE {{$idFieldName}}=?"
+	query := "SELECT {{$allFields}} FROM [dbo].[{{$obj.Name}}] WHERE {{$idFieldName}}=?"
 	var obj {{$obj.Name}}
 	err := db.Query(&obj, query, id)
 	return &obj, err
@@ -85,10 +64,10 @@ func (m *_{{$obj.Name}}Mgr) FindByID(id {{$idField.Type}}) (*{{$obj.Name}}, erro
 {{range $index := $obj.Indexes}}
 {{if $index.IsUnique }}
 func (m *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (*{{$obj.Name}}, error) {
-	query := "SELECT * FROM {{$obj.Name}} WHERE
-	{{- range $index, $field := $index.Fields}}{{if $index}} AND{{end}} {{$field.Name}}=?{{end -}}"
+	query := "SELECT {{$allFields}} FROM [dbo].[{{$obj.Name}}] WHERE
+	{{- preSuffixJoin $index.FieldNames " " "=?" " AND" -}}"
 	var obj {{$obj.Name}}
-	err := db.Query(&obj, query {{range $field := $index.Fields}}, {{$field.Name}}{{end}})
+	err := db.Query(&obj, query, {{$index.GetFuncParamNames}})
 	return &obj, err
 }
 {{else}}
@@ -100,18 +79,18 @@ func (m *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, offse
 		orderBy = fmt.Sprintf(orderBy, "{{$idFieldName}}")
 	}
 
-	query := fmt.Sprintf("SELECT * FROM {{$obj.Name}} WHERE
-	{{- range $index, $field := $index.Fields}}{{if $index}} AND {{end}} {{$field.Name}}=? {{end -}}
+	query := fmt.Sprintf("SELECT {{$allFields}} FROM [dbo].[{{$obj.Name}}] WHERE
+	{{- preSuffixJoin $index.FieldNames " " "=? " "AND" -}}
 	%s  OFFSET ? Rows FETCH NEXT ? Rows ONLY", orderBy)
 
-	err = db.Query(&objs, query, {{range $field := $index.Fields}}{{$field.Name}}, {{end}}offset, limit)
+	err = db.Query(&objs, query, {{$index.GetFuncParamNames}}, offset, limit)
 	return
 }
 {{end}}
 {{end}}
 
 func (m *_{{$obj.Name}}Mgr) FindOne(where string, args ...interface{}) (*{{$obj.Name}}, error) {
-	query := getQuerysql(true, where)
+	query := m.getQuerysql(true, where)
 	var obj {{$obj.Name}}
 	err := db.Query(&obj, query, args...)
 	return &obj, err
@@ -119,7 +98,7 @@ func (m *_{{$obj.Name}}Mgr) FindOne(where string, args ...interface{}) (*{{$obj.
 
 
 func (m *_{{$obj.Name}}Mgr) Find(where string, args ...interface{}) (results []*{{$obj.Name}}, err error) {
-	query := getQuerysql(false, where)
+	query := m.getQuerysql(false, where)
 	err = db.Query(&results, query, args...)
 	return
 }
@@ -129,7 +108,7 @@ func (m *_{{$obj.Name}}Mgr) FindAll() (results []*{{$obj.Name}}, err error) {
 }
 
 func (m *_{{$obj.Name}}Mgr) FindWithOffset(where string, offset int, limit int, args ...interface{}) (results []*{{$obj.Name}}, err error) {
-	query := getQuerysql(false, where)
+	query := m.getQuerysql(false, where)
 
 	if !strings.Contains(strings.ToLower(where), "ORDER BY") {
 		where = " ORDER BY Name"
@@ -143,12 +122,12 @@ func (m *_{{$obj.Name}}Mgr) FindWithOffset(where string, offset int, limit int, 
 }
 
 
-func getQuerysql(topOne bool, where string) string {
+func (m *_{{$obj.Name}}Mgr) getQuerysql(topOne bool, where string) string {
 	query := `SELECT `
 	if topOne {
 		query = query + ` TOP 1 `
 	}
-	query = query + ` * FROM dbo.[{{$obj.Name}}] WITH(NOLOCK) `
+	query = query + ` {{$allFields}} FROM [dbo].[{{$obj.Name}}] WITH(NOLOCK) `
 
 	if where != "" {
 		if strings.Index(strings.Trim(where, " "), "WHERE") == -1 {
@@ -160,9 +139,9 @@ func getQuerysql(topOne bool, where string) string {
 }
 
 func (m *_{{$obj.Name}}Mgr) Del(where string, params ...interface{}) (sql.Result, error) {
-	query := "delete from {{$obj.Name}}"
+	query := "DELETE FROM [dbo].[{{$obj.Name}}]"
 	if where != "" {
-		query = fmt.Sprintf("delete from {{$obj.Name}} where " + where)
+		query = fmt.Sprintf("DELETE FROM {{$obj.Name}} WHERE " + where)
 	}
 	return db.Exec(query, params...)
 }
@@ -172,9 +151,9 @@ func (m *_{{$obj.Name}}Mgr) Del(where string, params ...interface{}) (sql.Result
 // where:"c=? and d=?"
 // params:[]interface{}{"a", "b", "c", "d"}...
 func (m *_{{$obj.Name}}Mgr) Update(set, where string, params ...interface{}) (sql.Result, error) {
-	query := fmt.Sprintf("update {{$obj.Name}} set %s", set)
+	query := fmt.Sprintf("UPDATE [dbo].[{{$obj.Name}}] SET %s", set)
 	if where != "" {
-		query = fmt.Sprintf("update {{$obj.Name}} set %s where %s", set, where)
+		query = fmt.Sprintf("UPDATE [dbo].[{{$obj.Name}}] SET %s WHERE %s", set, where)
 	}
 	return db.Exec(query, params...)
 }

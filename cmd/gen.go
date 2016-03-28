@@ -39,7 +39,6 @@ var genCmd = &cobra.Command{
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		packageName := strings.Split(stat.Name(), ".")[0]
 		err = yaml.Unmarshal([]byte(data), &objs)
 
 		if err != nil {
@@ -47,9 +46,12 @@ var genCmd = &cobra.Command{
 			return
 		}
 
+		if genPackageName == "" {
+			genPackageName = strings.Split(stat.Name(), ".")[0]
+		}
 		for key, obj := range objs {
 			xwMetaObj := new(parser.Obj)
-			xwMetaObj.Package = packageName
+			xwMetaObj.Package = genPackageName
 			xwMetaObj.Name = key
 			err := xwMetaObj.Read(obj)
 			if err != nil {
@@ -79,6 +81,7 @@ var genCmd = &cobra.Command{
 
 var input string
 var output string
+var genPackageName string
 
 func init() {
 	RootCmd.AddCommand(genCmd)
@@ -89,6 +92,7 @@ func init() {
 	// and all subcommands, e.g.:
 	genCmd.PersistentFlags().StringVarP(&input, "input", "i", "", "input file")
 	genCmd.PersistentFlags().StringVarP(&output, "output", "o", "", "output path")
+	genCmd.PersistentFlags().StringVarP(&genPackageName, "package name", "p", "", "package name")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
