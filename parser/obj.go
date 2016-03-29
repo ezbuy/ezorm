@@ -84,6 +84,7 @@ type Obj struct {
 	SearchType   string
 	Table        string
 	TplWriter    io.Writer
+	DbName       string
 }
 
 func (o *Obj) init() {
@@ -271,6 +272,8 @@ func (o *Obj) Read(data map[string]interface{}) error {
 			o.Extend = val.(string)
 		case "table":
 			o.Table = val.(string)
+		case "dbname":
+			o.DbName = val.(string)
 		case "filterFields":
 			o.FilterFields = ToStringSlice(val.([]interface{}))
 		case "fields":
