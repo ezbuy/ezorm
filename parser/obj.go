@@ -272,6 +272,8 @@ func (o *Obj) Read(data map[string]interface{}) error {
 			o.Extend = val.(string)
 		case "table":
 			o.Table = val.(string)
+		case "dbname":
+			o.DbName = val.(string)
 		case "filterFields":
 			o.FilterFields = ToStringSlice(val.([]interface{}))
 		case "fields":
@@ -303,10 +305,6 @@ func (o *Obj) Read(data map[string]interface{}) error {
 				}
 				o.Fields[i+startPos] = f
 				o.FieldNameMap[f.Name] = f
-			}
-		case "dbname":
-			{
-				o.DbName = val.(string)
 			}
 		default:
 			return errors.New(o.Name + " has invalid obj property: " + key)
