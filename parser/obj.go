@@ -84,6 +84,7 @@ type Obj struct {
 	SearchType   string
 	Table        string
 	TplWriter    io.Writer
+	DbName       string
 }
 
 func (o *Obj) init() {
@@ -302,6 +303,10 @@ func (o *Obj) Read(data map[string]interface{}) error {
 				}
 				o.Fields[i+startPos] = f
 				o.FieldNameMap[f.Name] = f
+			}
+		case "dbname":
+			{
+				o.DbName = val.(string)
 			}
 		default:
 			return errors.New(o.Name + " has invalid obj property: " + key)

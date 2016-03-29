@@ -80,13 +80,16 @@ func NewSession() (session *mgo.Session) {
 	return ShareSession.Copy()
 }
 
-func NewCollection(session *mgo.Session, name string) *mgo.Collection {
-	return session.DB(config.DBName).C(name)
+func NewCollection(session *mgo.Session, dbName, name string) *mgo.Collection {
+	if dbName == "" {
+		return session.DB(config.DBName).C(name)
+	}
+	return session.DB(dbName).C(name)
 }
 
-func GetCol(col string) (session *mgo.Session, collection *mgo.Collection) {
+func GetCol(dbName, col string) (session *mgo.Session, collection *mgo.Collection) {
 	session = NewSession()
-	collection = NewCollection(session, col)
+	collection = NewCollection(session, dbName, col)
 	return
 }
 
