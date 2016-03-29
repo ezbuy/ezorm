@@ -32,7 +32,10 @@ func (o *_{{.Name}}Mgr) Query(query interface{}, limit, offset int, sortFields [
 	if offset > 0 {
 		q.Skip(offset)
 	}
-	_{{$obj.Name}}Sort(q, sortFields)
+
+	if limit != 1 {
+		_{{$obj.Name}}Sort(q, sortFields)
+	}
 	return session, q
 }
 
