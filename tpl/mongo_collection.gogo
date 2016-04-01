@@ -33,9 +33,24 @@ func (o *_{{.Name}}Mgr) Query(query interface{}, limit, offset int, sortFields [
 		q.Skip(offset)
 	}
 
-	if offset > 0 || limit != 1 {
-		_{{$obj.Name}}Sort(q, sortFields)
+	_{{$obj.Name}}Sort(q, sortFields)
+	return session, q
+}
+
+func (o *_{{.Name}}Mgr) NQuery(query interface{}, limit, offset int, sortFields []string) (*mgo.Session, *mgo.Query) {
+	session, col := {{.Name}}Mgr.GetCol()
+	q := col.Find(query)
+	if limit > 0 {
+		q.Limit(limit)
 	}
+	if offset > 0 {
+		q.Skip(offset)
+	}
+
+	if sortFields = XSortFieldsFilter(sortFields); len(sortFields) > 0 {
+		q.Sort(sortFields...)
+	}
+
 	return session, q
 }
 
@@ -47,7 +62,7 @@ func (o *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (r
 		"{{$field.Name}}": {{$field.Name}},
 		{{- end}}
 	}
-	session, q := {{$obj.Name}}Mgr.Query(query, 1, 0, nil)
+	session, q := {{$obj.Name}}Mgr.NQuery(query, 1, 0, nil)
 	defer session.Close()
 	err = q.One(&result)
 	return
