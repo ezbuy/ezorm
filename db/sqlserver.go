@@ -1,7 +1,6 @@
 package db
 
 import (
-	"database/sql"
 	"fmt"
 	"reflect"
 
@@ -10,23 +9,13 @@ import (
 	"github.com/jmoiron/sqlx/reflectx"
 )
 
-var (
-	_config *SqlDbConfig
-	_db     *SqlServer
-)
-
-func GetSqlServer() *SqlServer {
-	return _db
-}
-
-func SetDBConfig(conf *SqlDbConfig) {
-	_config = conf
-	db, err := sqlx.Connect("mssql", _config.SqlConnStr)
+func GetSqlServer(dataSourceName string) *SqlServer {
+	db, err := sqlx.Connect("mssql", dataSourceName)
 	if err != nil {
 		fmt.Printf("[db.GetSqlServer] open sql fail:%s", err.Error())
 	}
 
-	_db = &SqlServer{DB: db}
+	return &SqlServer{DB: db}
 }
 
 type SqlServer struct {
@@ -40,12 +29,4 @@ func (s *SqlServer) Query(dest interface{}, query string, args ...interface{}) e
 	}
 
 	return s.DB.Get(dest, query, args...)
-}
-
-func Query(dest interface{}, query string, args ...interface{}) error {
-	return _db.Query(dest, query, args...)
-}
-
-func Exec(query string, args ...interface{}) (result sql.Result, err error) {
-	return _db.Exec(query, args...)
 }

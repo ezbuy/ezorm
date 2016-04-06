@@ -5,15 +5,12 @@ import (
 	"math/rand"
 	"testing"
 	"time"
-
-	"github.com/ezbuy/ezorm/db"
 )
 
 func init() {
-	conf := &db.SqlDbConfig{
-		SqlConnStr: "server=localhost;user id=testuser;password=888888;DATABASE=test",
-	}
-	db.SetDBConfig(conf)
+	MssqlSetUp("server=localhost;user id=testuser;password=888888;DATABASE=test")
+	MssqlSetMaxOpenConns(255)
+	MssqlSetMaxIdleConns(255)
 }
 
 func savePeople(name string) (*People, error) {
