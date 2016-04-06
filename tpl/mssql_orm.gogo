@@ -16,8 +16,6 @@ import (
 	{{range $obj.GetOrmImports}}
 	"{{.}}"
 	{{end}}
-
-	"github.com/ezbuy/ezorm/db"
 )
 
 func (m *_{{$obj.Name}}Mgr) Save(obj *{{$obj.Name}}) (sql.Result, error) {
@@ -33,7 +31,7 @@ func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
 	) VALUES (
 	{{- repeatJoin (len $obj.GetNonIdFieldNames) "?" ", " -}}
 	)"
-	result, err := db.Exec(query, {{$nonIdFieldNames}})
+	result, err := _sqlServer.Exec(query, {{$nonIdFieldNames}})
 	if err != nil {
 		return result, err
 	}
@@ -51,13 +49,13 @@ func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
 func (m *_{{$obj.Name}}Mgr) saveUpdate(obj *{{$obj.Name}}) (sql.Result, error) {
 	query := "UPDATE [dbo].[{{$obj.Name}}] SET
 	{{- preSuffixJoin $obj.GetNonIdFieldNames " " "=?" "," }} WHERE {{$field.Name}}=?"
-	return db.Exec(query, {{$nonIdFieldNames}}, obj.{{$field.Name}})
+	return _sqlServer.Exec(query, {{$nonIdFieldNames}}, obj.{{$field.Name}})
 }
 
 func (m *_{{$obj.Name}}Mgr) FindByID(id {{$idField.Type}}) (*{{$obj.Name}}, error) {
 	query := "SELECT {{$allFields}} FROM [dbo].[{{$obj.Name}}] WHERE {{$idFieldName}}=?"
 	var obj {{$obj.Name}}
-	err := db.Query(&obj, query, id)
+	err := _sqlServer.Query(&obj, query, id)
 	return &obj, err
 }
 
@@ -67,7 +65,7 @@ func (m *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (*
 	query := "SELECT {{$allFields}} FROM [dbo].[{{$obj.Name}}] WHERE
 	{{- preSuffixJoin $index.FieldNames " " "=?" " AND" -}}"
 	var obj {{$obj.Name}}
-	err := db.Query(&obj, query, {{$index.GetFuncParamNames}})
+	err := _sqlServer.Query(&obj, query, {{$index.GetFuncParamNames}})
 	return &obj, err
 }
 {{else}}
@@ -83,7 +81,7 @@ func (m *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, offse
 	{{- preSuffixJoin $index.FieldNames " " "=? " "AND" -}}
 	%s  OFFSET ? Rows FETCH NEXT ? Rows ONLY", orderBy)
 
-	err = db.Query(&objs, query, {{$index.GetFuncParamNames}}, offset, limit)
+	err = _sqlServer.Query(&objs, query, {{$index.GetFuncParamNames}}, offset, limit)
 	return
 }
 {{end}}
@@ -92,14 +90,14 @@ func (m *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, offse
 func (m *_{{$obj.Name}}Mgr) FindOne(where string, args ...interface{}) (*{{$obj.Name}}, error) {
 	query := m.getQuerysql(true, where)
 	var obj {{$obj.Name}}
-	err := db.Query(&obj, query, args...)
+	err := _sqlServer.Query(&obj, query, args...)
 	return &obj, err
 }
 
 
 func (m *_{{$obj.Name}}Mgr) Find(where string, args ...interface{}) (results []*{{$obj.Name}}, err error) {
 	query := m.getQuerysql(false, where)
-	err = db.Query(&results, query, args...)
+	err = _sqlServer.Query(&results, query, args...)
 	return
 }
 
@@ -117,7 +115,7 @@ func (m *_{{$obj.Name}}Mgr) FindWithOffset(where string, offset int, limit int, 
 	args = append(args, offset)
 	args = append(args, limit)
 
-	err = db.Query(&results, query, args...)
+	err = _sqlServer.Query(&results, query, args...)
 	return
 }
 
@@ -143,7 +141,7 @@ func (m *_{{$obj.Name}}Mgr) Del(where string, params ...interface{}) (sql.Result
 	if where != "" {
 		query = fmt.Sprintf("DELETE FROM {{$obj.Name}} WHERE " + where)
 	}
-	return db.Exec(query, params...)
+	return _sqlServer.Exec(query, params...)
 }
 
 // argument example:
@@ -155,7 +153,7 @@ func (m *_{{$obj.Name}}Mgr) Update(set, where string, params ...interface{}) (sq
 	if where != "" {
 		query = fmt.Sprintf("UPDATE [dbo].[{{$obj.Name}}] SET %s WHERE %s", set, where)
 	}
-	return db.Exec(query, params...)
+	return _sqlServer.Exec(query, params...)
 }
 
 {{end}}

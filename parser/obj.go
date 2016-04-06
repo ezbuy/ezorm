@@ -34,6 +34,7 @@ func init() {
 		"tpl/mongo_search.gogo",
 		"tpl/struct.gogo",
 		"tpl/mssql_orm.gogo",
+		"tpl/mssql_config.gogo",
 	}
 	for _, fname := range files {
 		data, err := tpl.Asset(fname)
@@ -140,6 +141,15 @@ func (o *Obj) GetGenTypes() []string {
 		return []string{"struct", "mssql_orm"}
 	default:
 		return []string{"struct"}
+	}
+}
+
+func (o *Obj) GetConfigTemplate() (string, bool) {
+	switch o.Db {
+	case "mssql":
+		return "mssql_config", true
+	default:
+		return "", false
 	}
 }
 

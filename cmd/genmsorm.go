@@ -33,15 +33,13 @@ var genmsormCmd = &cobra.Command{
 	Use:   "genmsorm",
 	Short: "Generate sql server orm code",
 	Run: func(cmd *cobra.Command, args []string) {
-		db.SetDBConfig(&db.SqlDbConfig{
-			SqlConnStr: dbConfig,
-		})
+		sqlServer := db.GetSqlServer(dbConfig)
 		if table != "all" {
-			handler(table)
+			handler(table, sqlServer)
 		} else {
-			tables := getAllTables()
+			tables := getAllTables(sqlServer)
 			for _, t := range tables {
-				handler(t)
+				handler(t, sqlServer)
 			}
 		}
 
@@ -66,15 +64,15 @@ type ColumnInfo struct {
 	IsUnique      sql.NullBool  `db:"IsUnique"`
 }
 
-func handler(table string) {
-	columnsinfo := getColumnInfo(table)
+func handler(table string, sqlServer *db.SqlServer) {
+	columnsinfo := getColumnInfo(table, sqlServer)
 	createYamlFile(table, columnsinfo)
 	generate(table)
 }
 
-func getAllTables() (tables []string) {
+func getAllTables(sqlServer *db.SqlServer) (tables []string) {
 	query := `SELECT name FROM sys.tables`
-	err := db.Query(&tables, query)
+	err := sqlServer.Query(&tables, query)
 	if err != nil {
 		panic(err)
 	}
@@ -165,7 +163,7 @@ func mapper(table string, columns []*ColumnInfo) map[string]*tbl {
 	return objs
 }
 
-func getColumnInfo(table string) []*ColumnInfo {
+func getColumnInfo(table string, sqlServer *db.SqlServer) []*ColumnInfo {
 	// Note: sort columns by IndexId and IndexColumnId to simplify later process
 	query := `SELECT DISTINCT c.name AS ColumnName, t.Name AS DataType, c.max_length AS MaxLength,
     c.is_nullable AS Nullable, ISNULL(i.is_primary_key, 0) AS IsPrimaryKey ,c.column_id AS Sort,
@@ -181,9 +179,8 @@ func getColumnInfo(table string) []*ColumnInfo {
 	WHERE
     c.object_id = OBJECT_ID(?) ORDER BY IndexId, IndexColumnId`
 
-	server := db.GetSqlServer()
 	var columninfos []*ColumnInfo
-	err := server.Query(&columninfos, query, table)
+	err := sqlServer.Query(&columninfos, query, table)
 	if err != nil {
 		panic(err)
 	}

@@ -4,8 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
-
-	"github.com/ezbuy/ezorm/db"
 )
 
 func (m *_PeopleMgr) Save(obj *People) (sql.Result, error) {
@@ -17,7 +15,7 @@ func (m *_PeopleMgr) Save(obj *People) (sql.Result, error) {
 
 func (m *_PeopleMgr) saveInsert(obj *People) (sql.Result, error) {
 	query := "INSERT INTO [dbo].[People] (NonIndexA, NonIndexB, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
-	result, err := db.Exec(query, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.UniquePart1, obj.UniquePart2)
+	result, err := _sqlServer.Exec(query, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.UniquePart1, obj.UniquePart2)
 	if err != nil {
 		return result, err
 	}
@@ -34,13 +32,13 @@ func (m *_PeopleMgr) saveInsert(obj *People) (sql.Result, error) {
 
 func (m *_PeopleMgr) saveUpdate(obj *People) (sql.Result, error) {
 	query := "UPDATE [dbo].[People] SET NonIndexA=?, NonIndexB=?, Age=?, Name=?, IndexAPart1=?, IndexAPart2=?, IndexAPart3=?, UniquePart1=?, UniquePart2=? WHERE PeopleId=?"
-	return db.Exec(query, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.UniquePart1, obj.UniquePart2, obj.PeopleId)
+	return _sqlServer.Exec(query, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.UniquePart1, obj.UniquePart2, obj.PeopleId)
 }
 
 func (m *_PeopleMgr) FindByID(id int32) (*People, error) {
 	query := "SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2 FROM [dbo].[People] WHERE PeopleId=?"
 	var obj People
-	err := db.Query(&obj, query, id)
+	err := _sqlServer.Query(&obj, query, id)
 	return &obj, err
 }
 
@@ -54,14 +52,14 @@ func (m *_PeopleMgr) FindByIndexAPart1IndexAPart2IndexAPart3(IndexAPart1 int32, 
 
 	query := fmt.Sprintf("SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2 FROM [dbo].[People] WHERE IndexAPart1=? AND IndexAPart2=? AND IndexAPart3=? %s  OFFSET ? Rows FETCH NEXT ? Rows ONLY", orderBy)
 
-	err = db.Query(&objs, query, IndexAPart1, IndexAPart2, IndexAPart3, offset, limit)
+	err = _sqlServer.Query(&objs, query, IndexAPart1, IndexAPart2, IndexAPart3, offset, limit)
 	return
 }
 
 func (m *_PeopleMgr) FindOneByUniquePart1UniquePart2(UniquePart1 int32, UniquePart2 int32) (*People, error) {
 	query := "SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2 FROM [dbo].[People] WHERE UniquePart1=? AND UniquePart2=?"
 	var obj People
-	err := db.Query(&obj, query, UniquePart1, UniquePart2)
+	err := _sqlServer.Query(&obj, query, UniquePart1, UniquePart2)
 	return &obj, err
 }
 
@@ -75,27 +73,27 @@ func (m *_PeopleMgr) FindByAge(Age int32, offset int, limit int, sortFields ...s
 
 	query := fmt.Sprintf("SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2 FROM [dbo].[People] WHERE Age=? %s  OFFSET ? Rows FETCH NEXT ? Rows ONLY", orderBy)
 
-	err = db.Query(&objs, query, Age, offset, limit)
+	err = _sqlServer.Query(&objs, query, Age, offset, limit)
 	return
 }
 
 func (m *_PeopleMgr) FindOneByName(Name string) (*People, error) {
 	query := "SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2 FROM [dbo].[People] WHERE Name=?"
 	var obj People
-	err := db.Query(&obj, query, Name)
+	err := _sqlServer.Query(&obj, query, Name)
 	return &obj, err
 }
 
 func (m *_PeopleMgr) FindOne(where string, args ...interface{}) (*People, error) {
-	query := getQuerysql(true, where)
+	query := m.getQuerysql(true, where)
 	var obj People
-	err := db.Query(&obj, query, args...)
+	err := _sqlServer.Query(&obj, query, args...)
 	return &obj, err
 }
 
 func (m *_PeopleMgr) Find(where string, args ...interface{}) (results []*People, err error) {
-	query := getQuerysql(false, where)
-	err = db.Query(&results, query, args...)
+	query := m.getQuerysql(false, where)
+	err = _sqlServer.Query(&results, query, args...)
 	return
 }
 
@@ -104,7 +102,7 @@ func (m *_PeopleMgr) FindAll() (results []*People, err error) {
 }
 
 func (m *_PeopleMgr) FindWithOffset(where string, offset int, limit int, args ...interface{}) (results []*People, err error) {
-	query := getQuerysql(false, where)
+	query := m.getQuerysql(false, where)
 
 	if !strings.Contains(strings.ToLower(where), "ORDER BY") {
 		where = " ORDER BY Name"
@@ -113,11 +111,11 @@ func (m *_PeopleMgr) FindWithOffset(where string, offset int, limit int, args ..
 	args = append(args, offset)
 	args = append(args, limit)
 
-	err = db.Query(&results, query, args...)
+	err = _sqlServer.Query(&results, query, args...)
 	return
 }
 
-func getQuerysql(topOne bool, where string) string {
+func (m *_PeopleMgr) getQuerysql(topOne bool, where string) string {
 	query := `SELECT `
 	if topOne {
 		query = query + ` TOP 1 `
@@ -138,7 +136,7 @@ func (m *_PeopleMgr) Del(where string, params ...interface{}) (sql.Result, error
 	if where != "" {
 		query = fmt.Sprintf("DELETE FROM People WHERE " + where)
 	}
-	return db.Exec(query, params...)
+	return _sqlServer.Exec(query, params...)
 }
 
 // argument example:
@@ -150,5 +148,5 @@ func (m *_PeopleMgr) Update(set, where string, params ...interface{}) (sql.Resul
 	if where != "" {
 		query = fmt.Sprintf("UPDATE [dbo].[People] SET %s WHERE %s", set, where)
 	}
-	return db.Exec(query, params...)
+	return _sqlServer.Exec(query, params...)
 }

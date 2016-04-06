@@ -49,6 +49,9 @@ var genCmd = &cobra.Command{
 		if genPackageName == "" {
 			genPackageName = strings.Split(stat.Name(), ".")[0]
 		}
+
+		databases := make(map[string]*parser.Obj)
+
 		for key, obj := range objs {
 			xwMetaObj := new(parser.Obj)
 			xwMetaObj.Package = genPackageName
@@ -58,18 +61,17 @@ var genCmd = &cobra.Command{
 				println(err.Error())
 			}
 
+			databases[xwMetaObj.Db] = xwMetaObj
 			for _, genType := range xwMetaObj.GetGenTypes() {
-				file, err := os.OpenFile(output+"/gen_"+xwMetaObj.Name+"_"+genType+".go", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-				xwMetaObj.TplWriter = file
-				if err != nil {
-					panic(err)
-				}
+				fileAbsPath := output + "/gen_" + xwMetaObj.Name + "_" + genType + ".go"
+				executeTpl(fileAbsPath, genType, xwMetaObj)
+			}
+		}
 
-				err = parser.Tpl.ExecuteTemplate(file, genType, xwMetaObj)
-				file.Close()
-				if err != nil {
-					println(err.Error())
-				}
+		for db, obj := range databases {
+			if tpl, ok := obj.GetConfigTemplate(); ok {
+				fileAbsPath := output + "/gen_" + db + "_config.go"
+				executeTpl(fileAbsPath, tpl, obj)
 			}
 		}
 
@@ -77,6 +79,20 @@ var genCmd = &cobra.Command{
 		oscmd.Run()
 		fmt.Println("gen called")
 	},
+}
+
+func executeTpl(fileAbsPath, tplName string, xwMetaObj *parser.Obj) {
+	file, err := os.OpenFile(fileAbsPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		panic(err)
+	}
+	xwMetaObj.TplWriter = file
+
+	err = parser.Tpl.ExecuteTemplate(file, tplName, xwMetaObj)
+	file.Close()
+	if err != nil {
+		panic(err)
+	}
 }
 
 var input string
