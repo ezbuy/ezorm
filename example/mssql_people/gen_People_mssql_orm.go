@@ -33,21 +33,13 @@ func (m *_PeopleMgr) query(query string, args ...interface{}) ([]*People, error)
 }
 
 func (m *_PeopleMgr) queryOne(query string, args ...interface{}) (*People, error) {
-	rows, err := _db.Query(query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	if !rows.Next() {
-		return nil, sql.ErrNoRows
-	}
+	row := _db.QueryRow(query, args...)
 
 	var Age sql.NullInt64
 	var IndexAPart2 sql.NullInt64
 
 	var result People
-	err = rows.Scan(&(result.NonIndexA), &(result.NonIndexB), &(result.PeopleId), &Age, &(result.Name), &(result.IndexAPart1), &IndexAPart2, &(result.IndexAPart3), &(result.UniquePart1), &(result.UniquePart2))
+	err := row.Scan(&(result.NonIndexA), &(result.NonIndexB), &(result.PeopleId), &Age, &(result.Name), &(result.IndexAPart1), &IndexAPart2, &(result.IndexAPart3), &(result.UniquePart1), &(result.UniquePart2))
 	if err != nil {
 		return nil, err
 	}

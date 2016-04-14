@@ -67,15 +67,7 @@ func (m *_{{$obj.Name}}Mgr) query(query string, args ...interface{}) ([]*{{$obj.
 
 
 func (m *_{{$obj.Name}}Mgr) queryOne(query string, args ...interface{}) (*{{$obj.Name}}, error) {
-	rows, err := _db.Query(query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	if !rows.Next() {
-		return nil, sql.ErrNoRows
-	}
+	row := _db.QueryRow(query, args...)
 
 	{{range $index, $field := $obj.Fields}}
 	{{- if $field.IsNullable}}
@@ -85,7 +77,7 @@ func (m *_{{$obj.Name}}Mgr) queryOne(query string, args ...interface{}) (*{{$obj
 
 
 	var result {{$obj.Name}}
-	err = rows.Scan(
+	err := row.Scan(
 	{{- range $index, $field := $obj.Fields -}}
 	{{- if $field.IsNullable -}}
 		&{{$field.Name}},
