@@ -27,7 +27,7 @@ func (m *_{{$obj.Name}}Mgr) query(query string, args ...interface{}) ([]*{{$obj.
 
 
 	{{range $index, $field := $obj.Fields}}
-	{{- if ne $field.Name $idFieldName}}
+	{{- if $field.IsNullable}}
 		var {{$field.Name}} sql.{{$field.GetNullSQLType}}
 	{{- end -}}
 	{{end}}
@@ -38,7 +38,7 @@ func (m *_{{$obj.Name}}Mgr) query(query string, args ...interface{}) ([]*{{$obj.
 		var result {{$obj.Name}}
 		err := rows.Scan(
 		{{- range $index, $field := $obj.Fields -}}
-		{{- if ne $field.Name $idFieldName -}}
+		{{- if $field.IsNullable -}}
 			&{{$field.Name}},
 		{{- else -}}
 		&(result.{{$field.Name}}),
@@ -50,7 +50,7 @@ func (m *_{{$obj.Name}}Mgr) query(query string, args ...interface{}) ([]*{{$obj.
 		}
 
 		{{range $index, $field := $obj.Fields}}
-		{{- if ne $field.Name $idFieldName }}
+		{{- if $field.IsNullable}}
 			result.{{$field.Name}} =
 			{{- if $field.NullSQLTypeNeedCast -}}
 				{{$field.GetGoType}}({{$field.Name}}.{{$field.NullSQLTypeValue}})
@@ -78,7 +78,7 @@ func (m *_{{$obj.Name}}Mgr) queryOne(query string, args ...interface{}) (*{{$obj
 	}
 
 	{{range $index, $field := $obj.Fields}}
-	{{- if ne $field.Name $idFieldName}}
+	{{- if $field.IsNullable}}
 		var {{$field.Name}} sql.{{$field.GetNullSQLType}}
 	{{- end -}}
 	{{end}}
@@ -87,7 +87,7 @@ func (m *_{{$obj.Name}}Mgr) queryOne(query string, args ...interface{}) (*{{$obj
 	var result {{$obj.Name}}
 	err = rows.Scan(
 	{{- range $index, $field := $obj.Fields -}}
-	{{- if ne $field.Name $idFieldName -}}
+	{{- if $field.IsNullable -}}
 		&{{$field.Name}},
 	{{- else -}}
 	&(result.{{$field.Name}}),
@@ -99,7 +99,7 @@ func (m *_{{$obj.Name}}Mgr) queryOne(query string, args ...interface{}) (*{{$obj
 	}
 
 	{{range $index, $field := $obj.Fields}}
-	{{- if ne $field.Name $idFieldName }}
+	{{- if $field.IsNullable}}
 		result.{{$field.Name}} =
 		{{- if $field.NullSQLTypeNeedCast -}}
 			{{$field.GetGoType}}({{$field.Name}}.{{$field.NullSQLTypeValue}})

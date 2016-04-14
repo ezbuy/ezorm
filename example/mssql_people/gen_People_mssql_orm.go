@@ -13,33 +13,19 @@ func (m *_PeopleMgr) query(query string, args ...interface{}) ([]*People, error)
 	}
 	defer rows.Close()
 
-	var NonIndexA sql.NullString
-	var NonIndexB sql.NullString
 	var Age sql.NullInt64
-	var Name sql.NullString
-	var IndexAPart1 sql.NullInt64
 	var IndexAPart2 sql.NullInt64
-	var IndexAPart3 sql.NullInt64
-	var UniquePart1 sql.NullInt64
-	var UniquePart2 sql.NullInt64
 
 	var results []*People
 	for rows.Next() {
 		var result People
-		err := rows.Scan(&NonIndexA, &NonIndexB, &(result.PeopleId), &Age, &Name, &IndexAPart1, &IndexAPart2, &IndexAPart3, &UniquePart1, &UniquePart2)
+		err := rows.Scan(&(result.NonIndexA), &(result.NonIndexB), &(result.PeopleId), &Age, &(result.Name), &(result.IndexAPart1), &IndexAPart2, &(result.IndexAPart3), &(result.UniquePart1), &(result.UniquePart2))
 		if err != nil {
 			return nil, err
 		}
 
-		result.NonIndexA = NonIndexA.String
-		result.NonIndexB = NonIndexB.String
 		result.Age = int32(Age.Int64)
-		result.Name = Name.String
-		result.IndexAPart1 = IndexAPart1.Int64
 		result.IndexAPart2 = int32(IndexAPart2.Int64)
-		result.IndexAPart3 = int32(IndexAPart3.Int64)
-		result.UniquePart1 = int32(UniquePart1.Int64)
-		result.UniquePart2 = int32(UniquePart2.Int64)
 
 		results = append(results, &result)
 	}
@@ -57,31 +43,17 @@ func (m *_PeopleMgr) queryOne(query string, args ...interface{}) (*People, error
 		return nil, sql.ErrNoRows
 	}
 
-	var NonIndexA sql.NullString
-	var NonIndexB sql.NullString
 	var Age sql.NullInt64
-	var Name sql.NullString
-	var IndexAPart1 sql.NullInt64
 	var IndexAPart2 sql.NullInt64
-	var IndexAPart3 sql.NullInt64
-	var UniquePart1 sql.NullInt64
-	var UniquePart2 sql.NullInt64
 
 	var result People
-	err = rows.Scan(&NonIndexA, &NonIndexB, &(result.PeopleId), &Age, &Name, &IndexAPart1, &IndexAPart2, &IndexAPart3, &UniquePart1, &UniquePart2)
+	err = rows.Scan(&(result.NonIndexA), &(result.NonIndexB), &(result.PeopleId), &Age, &(result.Name), &(result.IndexAPart1), &IndexAPart2, &(result.IndexAPart3), &(result.UniquePart1), &(result.UniquePart2))
 	if err != nil {
 		return nil, err
 	}
 
-	result.NonIndexA = NonIndexA.String
-	result.NonIndexB = NonIndexB.String
 	result.Age = int32(Age.Int64)
-	result.Name = Name.String
-	result.IndexAPart1 = IndexAPart1.Int64
 	result.IndexAPart2 = int32(IndexAPart2.Int64)
-	result.IndexAPart3 = int32(IndexAPart3.Int64)
-	result.UniquePart1 = int32(UniquePart1.Int64)
-	result.UniquePart2 = int32(UniquePart2.Int64)
 
 	return &result, nil
 }

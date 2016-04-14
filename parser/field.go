@@ -8,6 +8,10 @@ import (
 	"github.com/ezbuy/utils/container/set"
 )
 
+const (
+	flagNullable = "nullable"
+)
+
 type Field struct {
 	Attrs        map[string]string
 	DefaultValue string
@@ -194,6 +198,10 @@ func (f *Field) HasMeta() bool {
 
 func (f *Field) HasEnums() bool {
 	return false
+}
+
+func (f *Field) IsNullable() bool {
+	return f.Flags.Contains(flagNullable)
 }
 
 func (f *Field) HasIndex() bool {
