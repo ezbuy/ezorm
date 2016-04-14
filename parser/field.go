@@ -86,6 +86,44 @@ func (f *Field) GetGoType() string {
 	return GetGoType(f.Type)
 }
 
+func (f *Field) GetNullSQLType() string {
+	t := GetGoType(f.Type)
+	if t == "bool" {
+		return "NullBool"
+	} else if t == "string" {
+		return "NullString"
+	} else if strings.HasPrefix(t, "int") {
+		return "NullInt64"
+	} else if strings.HasPrefix(t, "float") {
+		return "NullFloat64"
+	}
+	return t
+}
+
+func (f *Field) NullSQLTypeValue() string {
+	t := GetGoType(f.Type)
+	if t == "bool" {
+		return "Bool"
+	} else if t == "string" {
+		return "String"
+	} else if strings.HasPrefix(t, "int") {
+		return "Int64"
+	} else if strings.HasPrefix(t, "float") {
+		return "Float64"
+	}
+	panic("not null sql type")
+}
+
+func (f *Field) NullSQLTypeNeedCast() bool {
+	t := GetGoType(f.Type)
+	if strings.HasPrefix(t, "int") && t != "int64" {
+		return true
+	} else if strings.HasPrefix(t, "float") && t != "float64" {
+		return true
+	}
+	return false
+}
+
 func (f *Field) HasDefaultValue() bool {
 	return f.DefaultValue != "" && f.DefaultValue != "currentUser"
 }

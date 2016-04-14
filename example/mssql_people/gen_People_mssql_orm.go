@@ -40,6 +40,7 @@ func (m *_PeopleMgr) query(query string, args ...interface{}) ([]*People, error)
 		result.IndexAPart3 = int32(IndexAPart3.Int64)
 		result.UniquePart1 = int32(UniquePart1.Int64)
 		result.UniquePart2 = int32(UniquePart2.Int64)
+
 		results = append(results, &result)
 	}
 	return results, nil
@@ -52,6 +53,10 @@ func (m *_PeopleMgr) queryOne(query string, args ...interface{}) (*People, error
 	}
 	defer rows.Close()
 
+	if !rows.Next() {
+		return nil, sql.ErrNoRows
+	}
+
 	var NonIndexA sql.NullString
 	var NonIndexB sql.NullString
 	var Age sql.NullInt64
@@ -61,10 +66,6 @@ func (m *_PeopleMgr) queryOne(query string, args ...interface{}) (*People, error
 	var IndexAPart3 sql.NullInt64
 	var UniquePart1 sql.NullInt64
 	var UniquePart2 sql.NullInt64
-
-	if !rows.Next() {
-		return nil, sql.ErrNoRows
-	}
 
 	var result People
 	err = rows.Scan(&NonIndexA, &NonIndexB, &(result.PeopleId), &Age, &Name, &IndexAPart1, &IndexAPart2, &IndexAPart3, &UniquePart1, &UniquePart2)
@@ -81,6 +82,7 @@ func (m *_PeopleMgr) queryOne(query string, args ...interface{}) (*People, error
 	result.IndexAPart3 = int32(IndexAPart3.Int64)
 	result.UniquePart1 = int32(UniquePart1.Int64)
 	result.UniquePart2 = int32(UniquePart2.Int64)
+
 	return &result, nil
 }
 
@@ -159,7 +161,7 @@ func (m *_PeopleMgr) FindOne(where string, args ...interface{}) (*People, error)
 	return m.queryOne(query, args...)
 }
 
-func (m *_PeopleMgr) Find(where string, args ...interface{}) (results []*People, err error) {
+func (m *_PeopleMgr) Find(where string, args ...interface{}) ([]*People, error) {
 	query := m.getQuerysql(false, where)
 	return m.query(query, args...)
 }
@@ -168,7 +170,7 @@ func (m *_PeopleMgr) FindAll() (results []*People, err error) {
 	return m.Find("")
 }
 
-func (m *_PeopleMgr) FindWithOffset(where string, offset int, limit int, args ...interface{}) (results []*People, err error) {
+func (m *_PeopleMgr) FindWithOffset(where string, offset int, limit int, args ...interface{}) ([]*People, error) {
 	query := m.getQuerysql(false, where)
 
 	if !strings.Contains(strings.ToLower(where), "ORDER BY") {

@@ -10,7 +10,7 @@ People:
   - Name: string
     flags:
     - unique
-  - IndexAPart1: int32
+  - IndexAPart1: int64
   - IndexAPart2: int32
   - IndexAPart3: int32
   - UniquePart1: int32

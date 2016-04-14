@@ -2,6 +2,7 @@
 {{$obj := .}}
 import (
 	"fmt"
+	"database/sql"
 
 	_ "github.com/denisenkom/go-mssqldb"
 	"github.com/ezbuy/ezorm/db"
@@ -10,6 +11,7 @@ import (
 
 var (
 	_sqlServer *db.SqlServer
+	_db        *sql.DB
 )
 
 func MssqlSetUp(dataSourceName string) {
@@ -19,6 +21,7 @@ func MssqlSetUp(dataSourceName string) {
 	}
 
 	_sqlServer = &db.SqlServer{DB: conn}
+	_db = conn.DB
 }
 
 func MssqlSetMaxOpenConns(maxOpenConns int) {
