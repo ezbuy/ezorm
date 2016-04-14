@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	MssqlSetUp("server=localhost;user id=testuser;password=888888;DATABASE=test")
+	MssqlSetUp("server=192.168.199.105;user id=manager;password=65ezbuy@nicemanager;DATABASE=test")
 	MssqlSetMaxOpenConns(255)
 	MssqlSetMaxIdleConns(255)
 }
@@ -292,7 +292,7 @@ func newUnsavedPeople() *People {
 		Age:         rand.Int31n(200),
 		NonIndexA:   fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
 		NonIndexB:   fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
-		IndexAPart1: rand.Int31n(1000000),
+		IndexAPart1: rand.Int63n(1000000),
 		IndexAPart2: rand.Int31n(1000000),
 		IndexAPart3: rand.Int31n(1000000),
 		UniquePart1: rand.Int31n(1000000),

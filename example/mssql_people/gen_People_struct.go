@@ -11,7 +11,7 @@ type People struct {
 
 	Name string `db:"Name"`
 
-	IndexAPart1 int32 `db:"IndexAPart1"`
+	IndexAPart1 int64 `db:"IndexAPart1"`
 
 	IndexAPart2 int32 `db:"IndexAPart2"`
 
