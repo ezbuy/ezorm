@@ -18,6 +18,93 @@ import (
 	{{end}}
 )
 
+func (m *_{{$obj.Name}}Mgr) query(query string, args ...interface{}) ([]*{{$obj.Name}}, error) {
+	rows, err := _db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+
+	{{range $index, $field := $obj.Fields}}
+	{{- if $field.IsNullable}}
+		var {{$field.Name}} sql.{{$field.GetNullSQLType}}
+	{{- end -}}
+	{{end}}
+
+
+	var results []*{{$obj.Name}}
+	for rows.Next() {
+		var result {{$obj.Name}}
+		err := rows.Scan(
+		{{- range $index, $field := $obj.Fields -}}
+		{{- if $field.IsNullable -}}
+			&{{$field.Name}},
+		{{- else -}}
+		&(result.{{$field.Name}}),
+		{{- end -}}
+		{{- end -}}
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		{{range $index, $field := $obj.Fields}}
+		{{- if $field.IsNullable}}
+			result.{{$field.Name}} =
+			{{- if $field.NullSQLTypeNeedCast -}}
+				{{$field.GetGoType}}({{$field.Name}}.{{$field.NullSQLTypeValue}})
+			{{- else -}}
+			{{$field.Name}}.{{$field.NullSQLTypeValue}}
+			{{- end -}}
+		{{end -}}
+		{{end}}
+
+		results = append(results, &result)
+	}
+	return results, nil
+}
+
+
+func (m *_{{$obj.Name}}Mgr) queryOne(query string, args ...interface{}) (*{{$obj.Name}}, error) {
+	row := _db.QueryRow(query, args...)
+
+	{{range $index, $field := $obj.Fields}}
+	{{- if $field.IsNullable}}
+		var {{$field.Name}} sql.{{$field.GetNullSQLType}}
+	{{- end -}}
+	{{end}}
+
+
+	var result {{$obj.Name}}
+	err := row.Scan(
+	{{- range $index, $field := $obj.Fields -}}
+	{{- if $field.IsNullable -}}
+		&{{$field.Name}},
+	{{- else -}}
+	&(result.{{$field.Name}}),
+	{{- end -}}
+	{{- end -}}
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	{{range $index, $field := $obj.Fields}}
+	{{- if $field.IsNullable}}
+		result.{{$field.Name}} =
+		{{- if $field.NullSQLTypeNeedCast -}}
+			{{$field.GetGoType}}({{$field.Name}}.{{$field.NullSQLTypeValue}})
+		{{- else -}}
+		{{$field.Name}}.{{$field.NullSQLTypeValue}}
+		{{- end -}}
+	{{end -}}
+	{{end}}
+
+	return &result, nil
+}
+
+
 func (m *_{{$obj.Name}}Mgr) Save(obj *{{$obj.Name}}) (sql.Result, error) {
 	if obj.{{$idFieldName}} == 0 {
 		return m.saveInsert(obj)
@@ -54,9 +141,7 @@ func (m *_{{$obj.Name}}Mgr) saveUpdate(obj *{{$obj.Name}}) (sql.Result, error) {
 
 func (m *_{{$obj.Name}}Mgr) FindByID(id {{$idField.Type}}) (*{{$obj.Name}}, error) {
 	query := "SELECT {{$allFields}} FROM [dbo].[{{$obj.Name}}] WHERE {{$idFieldName}}=?"
-	var obj {{$obj.Name}}
-	err := _sqlServer.Query(&obj, query, id)
-	return &obj, err
+	return m.queryOne(query, id)
 }
 
 {{range $index := $obj.Indexes}}
@@ -64,12 +149,10 @@ func (m *_{{$obj.Name}}Mgr) FindByID(id {{$idField.Type}}) (*{{$obj.Name}}, erro
 func (m *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (*{{$obj.Name}}, error) {
 	query := "SELECT {{$allFields}} FROM [dbo].[{{$obj.Name}}] WHERE
 	{{- preSuffixJoin $index.FieldNames " " "=?" " AND" -}}"
-	var obj {{$obj.Name}}
-	err := _sqlServer.Query(&obj, query, {{$index.GetFuncParamNames}})
-	return &obj, err
+	return m.queryOne(query, {{$index.GetFuncParamNames}})
 }
 {{else}}
-func (m *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, offset int, limit int, sortFields ...string) (objs []*{{$obj.Name}}, err error) {
+func (m *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, offset int, limit int, sortFields ...string) ( []*{{$obj.Name}},  error) {
 	orderBy := "ORDER BY %s"
 	if len(sortFields) != 0 {
 		orderBy = fmt.Sprintf(orderBy, strings.Join(sortFields, ","))
@@ -81,31 +164,27 @@ func (m *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, offse
 	{{- preSuffixJoin $index.FieldNames " " "=? " "AND" -}}
 	%s  OFFSET ? Rows FETCH NEXT ? Rows ONLY", orderBy)
 
-	err = _sqlServer.Query(&objs, query, {{$index.GetFuncParamNames}}, offset, limit)
-	return
+	return m.query(query, {{$index.GetFuncParamNames}}, offset, limit)
 }
 {{end}}
 {{end}}
 
 func (m *_{{$obj.Name}}Mgr) FindOne(where string, args ...interface{}) (*{{$obj.Name}}, error) {
 	query := m.getQuerysql(true, where)
-	var obj {{$obj.Name}}
-	err := _sqlServer.Query(&obj, query, args...)
-	return &obj, err
+	return m.queryOne(query, args...)
 }
 
 
-func (m *_{{$obj.Name}}Mgr) Find(where string, args ...interface{}) (results []*{{$obj.Name}}, err error) {
+func (m *_{{$obj.Name}}Mgr) Find(where string, args ...interface{}) ([]*{{$obj.Name}}, error) {
 	query := m.getQuerysql(false, where)
-	err = _sqlServer.Query(&results, query, args...)
-	return
+	return m.query(query, args...)
 }
 
 func (m *_{{$obj.Name}}Mgr) FindAll() (results []*{{$obj.Name}}, err error) {
 	return m.Find("")
 }
 
-func (m *_{{$obj.Name}}Mgr) FindWithOffset(where string, offset int, limit int, args ...interface{}) (results []*{{$obj.Name}}, err error) {
+func (m *_{{$obj.Name}}Mgr) FindWithOffset(where string, offset int, limit int, args ...interface{}) ([]*{{$obj.Name}}, error) {
 	query := m.getQuerysql(false, where)
 
 	if !strings.Contains(strings.ToLower(where), "ORDER BY") {
@@ -115,8 +194,7 @@ func (m *_{{$obj.Name}}Mgr) FindWithOffset(where string, offset int, limit int, 
 	args = append(args, offset)
 	args = append(args, limit)
 
-	err = _sqlServer.Query(&results, query, args...)
-	return
+	return m.query(query, args...)
 }
 
 
@@ -141,7 +219,7 @@ func (m *_{{$obj.Name}}Mgr) Del(where string, params ...interface{}) (sql.Result
 	if where != "" {
 		query = fmt.Sprintf("DELETE FROM {{$obj.Name}} WHERE " + where)
 	}
-	return _sqlServer.Exec(query, params...)
+	return _db.Exec(query, params...)
 }
 
 // argument example:
@@ -153,7 +231,7 @@ func (m *_{{$obj.Name}}Mgr) Update(set, where string, params ...interface{}) (sq
 	if where != "" {
 		query = fmt.Sprintf("UPDATE [dbo].[{{$obj.Name}}] SET %s WHERE %s", set, where)
 	}
-	return _sqlServer.Exec(query, params...)
+	return _db.Exec(query, params...)
 }
 
 {{end}}
