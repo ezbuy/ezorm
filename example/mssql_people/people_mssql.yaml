@@ -7,11 +7,14 @@ People:
   - Age: int32
     flags:
     - index
+    - nullable
   - Name: string
     flags:
     - unique
-  - IndexAPart1: int32
+  - IndexAPart1: int64
   - IndexAPart2: int32
+    flags:
+    - nullable
   - IndexAPart3: int32
   - UniquePart1: int32
   - UniquePart2: int32
