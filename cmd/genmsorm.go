@@ -86,7 +86,7 @@ func createYamlFile(table string, columns []*ColumnInfo) {
 	if err != nil {
 		panic(err)
 	}
-	fileName := outputYaml + "/" + strings.ToLower(table) + "_mssql.yaml"
+	fileName := getOutYamlFileName(table)
 	ioutil.WriteFile(fileName, bs, 0644)
 }
 
@@ -135,6 +135,16 @@ type tbl struct {
 }
 
 func mapper(table string, columns []*ColumnInfo) map[string]*tbl {
+	// 如果第一个字符不是大写，变为大写
+	for _, v := range columns {
+		colName := v.ColumnName
+		firstChar := colName[:1]
+		firstCharUpper := strings.ToUpper(firstChar)
+		if firstChar != firstCharUpper {
+			v.ColumnName = firstCharUpper + colName[1:]
+		}
+	}
+
 	multiColumnIndexes, multiColumnUniques, singleColumnIndexSet, singleColumnUniqueSet := getIndexInfo(columns)
 
 	var t tbl
@@ -143,21 +153,38 @@ func mapper(table string, columns []*ColumnInfo) map[string]*tbl {
 	t.Uniques = multiColumnUniques
 	objs := make(map[string]*tbl)
 	objs[table] = &t
-	fields := make([]interface{}, len(columns))
-	for i, v := range columns {
+	lenColumns := len(columns)
+	fields := make([]interface{}, 0, lenColumns)
+	processedFields := make(map[string]struct{}, lenColumns)
+	for _, v := range columns {
+		// 有的字段可能出现在多个索引内，排除掉已经处理掉字段
+		if _, ok := processedFields[v.ColumnName]; ok {
+			continue
+		}
+		processedFields[v.ColumnName] = struct{}{}
+
 		dataitem := make(map[string]interface{}, len(columns))
 		dataitem[v.ColumnName] = parser.DbToGoType(v.DataType)
-		if dataitem[v.ColumnName] == "time.Time" {
+		isTypeTime := dataitem[v.ColumnName] == "time.Time"
+		if isTypeTime {
 			parser.HaveTime = true
 		}
 
+		var flags []string
 		if _, ok := singleColumnUniqueSet[v.IndexId.Int64]; ok {
-			dataitem["flags"] = []string{"unique"}
+			flags = append(flags, "unique")
 		} else if _, ok := singleColumnIndexSet[v.IndexId.Int64]; ok {
-			dataitem["flags"] = []string{"index"}
+			flags = append(flags, "index")
 		}
 
-		fields[i] = dataitem
+		if v.Nullable {
+			flags = append(flags, "nullable")
+		}
+
+		if flags != nil {
+			dataitem["flags"] = flags
+		}
+		fields = append(fields, dataitem)
 	}
 	t.Fields = fields
 	return objs
@@ -188,9 +215,13 @@ func getColumnInfo(table string, sqlServer *db.SqlServer) []*ColumnInfo {
 	return columninfos
 }
 
+func getOutYamlFileName(table string) string {
+	return outputYaml + "/gen_" + strings.ToLower(table) + "_mssql.yaml"
+}
+
 func generate(table string) {
 	var objs map[string]map[string]interface{}
-	fileName := outputYaml + "/" + strings.ToLower(table) + "_mssql.yaml"
+	fileName := getOutYamlFileName(table)
 	data, _ := ioutil.ReadFile(fileName)
 	_, err := os.Stat(fileName)
 	if err != nil {
@@ -201,6 +232,8 @@ func generate(table string) {
 	if packageName == "" {
 		packageName = strings.ToLower(table)
 	}
+
+	genConfigDone := false
 	for key, obj := range objs {
 		metaObj := new(parser.Obj)
 		metaObj.Package = packageName
@@ -211,18 +244,17 @@ func generate(table string) {
 			panic(err)
 		}
 
-		for _, genType := range metaObj.GetGenTypes() {
-			file, err := os.OpenFile(output+"/gen_"+metaObj.Name+"_"+genType+".go", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-			metaObj.TplWriter = file
-			if err != nil {
-				panic(err)
+		if !genConfigDone {
+			if tpl, ok := metaObj.GetConfigTemplate(); ok {
+				fileAbsPath := output + "/gen_" + metaObj.Db + "_config.go"
+				executeTpl(fileAbsPath, tpl, metaObj)
+				genConfigDone = true
 			}
+		}
 
-			err = parser.Tpl.ExecuteTemplate(file, genType, metaObj)
-			file.Close()
-			if err != nil {
-				panic(err)
-			}
+		for _, genType := range metaObj.GetGenTypes() {
+			fileAbsPath := output + "/gen_" + metaObj.Name + "_" + genType + ".go"
+			executeTpl(fileAbsPath, genType, metaObj)
 		}
 	}
 
