@@ -275,7 +275,7 @@ func DbToGoType(colType string) string {
 	var typeStr string
 	switch colType {
 	case "nvarchar", "timestamp", "text", "cursor", "uniqueidentifier", "sysname", "real",
-		"binary", "varbinary", "nchar", "char":
+		"binary", "varbinary", "nchar", "char", "varchar":
 		typeStr = "string"
 	case "datetime", "smalldatetime":
 		typeStr = "time.Time"
