@@ -13,10 +13,15 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 	{{range $obj.GetOrmImports}}
 	"{{.}}"
 	{{end}}
 )
+
+// Avoid compile error
+// Find no easy way to determine if "time" package should be imported
+var _ time.Time
 
 func (m *_{{$obj.Name}}Mgr) query(query string, args ...interface{}) ([]*{{$obj.Name}}, error) {
 	rows, err := _db.Query(query, args...)
@@ -27,7 +32,7 @@ func (m *_{{$obj.Name}}Mgr) query(query string, args ...interface{}) ([]*{{$obj.
 
 
 	{{range $index, $field := $obj.Fields}}
-	{{- if $field.IsNullable}}
+	{{- if $field.IsNullablePrimitive}}
 		var {{$field.Name}} sql.{{$field.GetNullSQLType}}
 	{{- end -}}
 	{{end}}
@@ -38,7 +43,7 @@ func (m *_{{$obj.Name}}Mgr) query(query string, args ...interface{}) ([]*{{$obj.
 		var result {{$obj.Name}}
 		err := rows.Scan(
 		{{- range $index, $field := $obj.Fields -}}
-		{{- if $field.IsNullable -}}
+		{{- if $field.IsNullablePrimitive -}}
 			&{{$field.Name}},
 		{{- else -}}
 		&(result.{{$field.Name}}),
@@ -50,7 +55,7 @@ func (m *_{{$obj.Name}}Mgr) query(query string, args ...interface{}) ([]*{{$obj.
 		}
 
 		{{range $index, $field := $obj.Fields}}
-		{{- if $field.IsNullable}}
+		{{- if $field.IsNullablePrimitive}}
 			result.{{$field.Name}} =
 			{{- if $field.NullSQLTypeNeedCast -}}
 				{{$field.GetGoType}}({{$field.Name}}.{{$field.NullSQLTypeValue}})
@@ -70,7 +75,7 @@ func (m *_{{$obj.Name}}Mgr) queryOne(query string, args ...interface{}) (*{{$obj
 	row := _db.QueryRow(query, args...)
 
 	{{range $index, $field := $obj.Fields}}
-	{{- if $field.IsNullable}}
+	{{- if $field.IsNullablePrimitive}}
 		var {{$field.Name}} sql.{{$field.GetNullSQLType}}
 	{{- end -}}
 	{{end}}
@@ -79,7 +84,7 @@ func (m *_{{$obj.Name}}Mgr) queryOne(query string, args ...interface{}) (*{{$obj
 	var result {{$obj.Name}}
 	err := row.Scan(
 	{{- range $index, $field := $obj.Fields -}}
-	{{- if $field.IsNullable -}}
+	{{- if $field.IsNullablePrimitive -}}
 		&{{$field.Name}},
 	{{- else -}}
 	&(result.{{$field.Name}}),
@@ -91,7 +96,7 @@ func (m *_{{$obj.Name}}Mgr) queryOne(query string, args ...interface{}) (*{{$obj
 	}
 
 	{{range $index, $field := $obj.Fields}}
-	{{- if $field.IsNullable}}
+	{{- if $field.IsNullablePrimitive}}
 		result.{{$field.Name}} =
 		{{- if $field.NullSQLTypeNeedCast -}}
 			{{$field.GetGoType}}({{$field.Name}}.{{$field.NullSQLTypeValue}})
