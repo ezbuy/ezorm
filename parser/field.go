@@ -12,6 +12,23 @@ const (
 	flagNullable = "nullable"
 )
 
+var (
+	nullablePrimitiveSet = map[string]bool{
+		"uint8":   true,
+		"uint16":  true,
+		"uint32":  true,
+		"uint64":  true,
+		"int8":    true,
+		"int16":   true,
+		"int32":   true,
+		"int64":   true,
+		"float32": true,
+		"float64": true,
+		"bool":    true,
+		"string":  true,
+	}
+)
+
 type Field struct {
 	Attrs        map[string]string
 	DefaultValue string
@@ -67,31 +84,35 @@ func (f *Field) GetThriftType() string {
 	return SupportedFieldTypes[f.Type]
 }
 
-func GetGoType(typestr string) string {
+func (f *Field) getGoType(typestr string) string {
 	if typestr == "datetime" {
+		// Use pointer type to avoid null value panic
+		if f.Obj.Db == "mssql" {
+			return "*time.Time"
+		}
 		return "int64"
 	}
 
 	if strings.HasPrefix(typestr, "list<") {
 		innerType := typestr[5 : len(typestr)-1]
-		return "[]" + GetGoType(innerType) + ""
+		return "[]" + f.getGoType(innerType) + ""
 	}
 
 	if strings.HasPrefix(typestr, "map[") {
 		i := strings.Index(typestr, "]")
 		keyType := typestr[4:i]
 		valType := typestr[i+1:]
-		return "map[" + GetGoType(keyType) + "]" + GetGoType(valType)
+		return "map[" + f.getGoType(keyType) + "]" + f.getGoType(valType)
 	}
 	return typestr
 }
 
 func (f *Field) GetGoType() string {
-	return GetGoType(f.Type)
+	return f.getGoType(f.Type)
 }
 
 func (f *Field) GetNullSQLType() string {
-	t := GetGoType(f.Type)
+	t := f.GetGoType()
 	if t == "bool" {
 		return "NullBool"
 	} else if t == "string" {
@@ -105,7 +126,7 @@ func (f *Field) GetNullSQLType() string {
 }
 
 func (f *Field) NullSQLTypeValue() string {
-	t := GetGoType(f.Type)
+	t := f.GetGoType()
 	if t == "bool" {
 		return "Bool"
 	} else if t == "string" {
@@ -115,11 +136,11 @@ func (f *Field) NullSQLTypeValue() string {
 	} else if strings.HasPrefix(t, "float") {
 		return "Float64"
 	}
-	panic("not null sql type")
+	panic("unsupported null sql type: " + t)
 }
 
 func (f *Field) NullSQLTypeNeedCast() bool {
-	t := GetGoType(f.Type)
+	t := f.GetGoType()
 	if strings.HasPrefix(t, "int") && t != "int64" {
 		return true
 	} else if strings.HasPrefix(t, "float") && t != "float64" {
@@ -204,6 +225,10 @@ func (f *Field) IsNullable() bool {
 	return f.Flags.Contains(flagNullable)
 }
 
+func (f *Field) IsNullablePrimitive() bool {
+	return f.IsNullable() && nullablePrimitiveSet[f.GetGoType()]
+}
+
 func (f *Field) HasIndex() bool {
 	return f.Flags.Contains("index") || f.Flags.Contains("sort") || f.IsUnique()
 }
@@ -275,10 +300,11 @@ func DbToGoType(colType string) string {
 	var typeStr string
 	switch colType {
 	case "nvarchar", "timestamp", "text", "cursor", "uniqueidentifier", "sysname", "real",
-		"binary", "varbinary", "nchar", "char":
+		"binary", "varbinary", "nchar", "char", "varchar":
 		typeStr = "string"
 	case "datetime", "smalldatetime":
-		typeStr = "time.Time"
+		// Use pointer type to avoid null value panic
+		typeStr = "*time.Time"
 	case "decimal", "numeric", "float":
 		typeStr = "float64"
 	case "smallint", "tinyint":

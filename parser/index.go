@@ -17,7 +17,7 @@ func (i *Index) GetFieldList() string {
 func (i *Index) GetFuncParam() string {
 	var params []string
 	for _, f := range i.Fields {
-		params = append(params, f.Name+" "+GetGoType(f.Type))
+		params = append(params, f.Name+" "+f.GetGoType())
 	}
 	return strings.Join(params, ", ")
 }
