@@ -67,31 +67,31 @@ func (f *Field) GetThriftType() string {
 	return SupportedFieldTypes[f.Type]
 }
 
-func GetGoType(typestr string) string {
+func (f *Field) getGoType(typestr string) string {
 	if typestr == "datetime" {
 		return "int64"
 	}
 
 	if strings.HasPrefix(typestr, "list<") {
 		innerType := typestr[5 : len(typestr)-1]
-		return "[]" + GetGoType(innerType) + ""
+		return "[]" + f.getGoType(innerType) + ""
 	}
 
 	if strings.HasPrefix(typestr, "map[") {
 		i := strings.Index(typestr, "]")
 		keyType := typestr[4:i]
 		valType := typestr[i+1:]
-		return "map[" + GetGoType(keyType) + "]" + GetGoType(valType)
+		return "map[" + f.getGoType(keyType) + "]" + f.getGoType(valType)
 	}
 	return typestr
 }
 
 func (f *Field) GetGoType() string {
-	return GetGoType(f.Type)
+	return f.getGoType(f.Type)
 }
 
 func (f *Field) GetNullSQLType() string {
-	t := GetGoType(f.Type)
+	t := f.GetGoType()
 	if t == "bool" {
 		return "NullBool"
 	} else if t == "string" {
@@ -105,7 +105,7 @@ func (f *Field) GetNullSQLType() string {
 }
 
 func (f *Field) NullSQLTypeValue() string {
-	t := GetGoType(f.Type)
+	t := f.GetGoType()
 	if t == "bool" {
 		return "Bool"
 	} else if t == "string" {
@@ -119,7 +119,7 @@ func (f *Field) NullSQLTypeValue() string {
 }
 
 func (f *Field) NullSQLTypeNeedCast() bool {
-	t := GetGoType(f.Type)
+	t := f.GetGoType()
 	if strings.HasPrefix(t, "int") && t != "int64" {
 		return true
 	} else if strings.HasPrefix(t, "float") && t != "float64" {
