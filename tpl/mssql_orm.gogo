@@ -192,10 +192,8 @@ func (m *_{{$obj.Name}}Mgr) FindAll() (results []*{{$obj.Name}}, err error) {
 func (m *_{{$obj.Name}}Mgr) FindWithOffset(where string, offset int, limit int, args ...interface{}) ([]*{{$obj.Name}}, error) {
 	query := m.getQuerysql(false, where)
 
-	if !strings.Contains(strings.ToLower(where), "ORDER BY") {
-		where = " ORDER BY Name"
-	}
-	query = query + where + " OFFSET ? Rows FETCH NEXT ? Rows ONLY"
+	query = query + " OFFSET ? Rows FETCH NEXT ? Rows ONLY"
+
 	args = append(args, offset)
 	args = append(args, limit)
 
@@ -210,10 +208,14 @@ func (m *_{{$obj.Name}}Mgr) getQuerysql(topOne bool, where string) string {
 	}
 	query = query + ` {{$allFields}} FROM [dbo].[{{$obj.Name}}] WITH(NOLOCK) `
 
+	where = strings.Trim(where, " ")
 	if where != "" {
-		if strings.Index(strings.Trim(where, " "), "WHERE") == -1 {
+		upwhere := strings.ToUpper(where)
+
+		if !strings.HasPrefix(upwhere, "WHERE") && !strings.HasPrefix(upwhere, "ORDER BY") {
 			where = " WHERE " + where
 		}
+
 		query = query + where
 	}
 	return query
