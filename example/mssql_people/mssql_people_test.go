@@ -8,7 +8,10 @@ import (
 )
 
 func init() {
-	MssqlSetUp("server=localhost;user id=testuser;password=888888;DATABASE=test")
+	dsn := fmt.Sprintf("server=%s;user id=%s;password=%s;DATABASE=%s",
+		host, userId, password, database)
+	MssqlSetUp(dsn)
+
 	MssqlSetMaxOpenConns(255)
 	MssqlSetMaxIdleConns(255)
 }
