@@ -130,7 +130,7 @@ func tplMongo_mongoGogo() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "tpl/mongo_mongo.gogo", size: 1893, mode: os.FileMode(420), modTime: time.Unix(1463048150, 0)}
+	info := bindataFileInfo{name: "tpl/mongo_mongo.gogo", size: 1893, mode: os.FileMode(420), modTime: time.Unix(1463048946, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
