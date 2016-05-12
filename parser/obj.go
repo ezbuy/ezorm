@@ -53,23 +53,25 @@ func getHaveTime() bool {
 }
 
 func (f *Field) BJTag() string {
-	var bjTag string
-	if bVal, ok := f.Attrs["bsonTag"]; ok {
-		if bVal != "" {
-			bjTag = fmt.Sprintf("`bson:\"%s\"", bVal)
-		}
-	} else {
-		bjTag = fmt.Sprintf("`bson:\"%s\"", f.Name)
+	return fmt.Sprintf("`bson:\"%s\" json:\"%s\"`", f.BsonFieldName(), f.JsonFieldName())
+}
+
+func (f *Field) BsonFieldName() string {
+	bVal, _ := f.Attrs["bsonTag"]
+	if bVal == "" {
+		bVal = f.Name
 	}
 
-	if jVal, ok := f.Attrs["jsonTag"]; ok {
-		if jVal != "" {
-			bjTag += fmt.Sprintf(" json:\"%s\"`", jVal)
-		}
-	} else {
-		bjTag += fmt.Sprintf(" json:\"%s\"`", f.Name)
+	return bVal
+}
+
+func (f *Field) JsonFieldName() string {
+	jVal, _ := f.Attrs["jsonTag"]
+	if jVal == "" {
+		jVal = f.Name
 	}
-	return bjTag
+
+	return jVal
 }
 
 type Obj struct {

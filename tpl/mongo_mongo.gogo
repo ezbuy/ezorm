@@ -37,7 +37,17 @@ func (o *{{.Name}}) Save() (info *mgo.ChangeInfo, err error) {
 	{{end}}
 	{{end}}
 
-	info, err = col.UpsertId(o.ID, o)
+	update := bson.M{
+		"$set": bson.M{
+			{{- range $field := .Fields}}
+			{{- if ne $field.Name "ID"}}
+			"{{ $field.BsonFieldName}}": o.{{$field.Name}},
+			{{- end}}
+			{{- end}}
+		},
+	}
+
+	info, err = col.UpsertId(o.ID, update)
 	o.isNew = false
 
 	{{if .NeedSearch}}
