@@ -2,9 +2,15 @@ package people
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
+	"time"
 )
+
+// Avoid compile error
+// Find no easy way to determine if "time" package should be imported
+var _ time.Time
 
 func (m *_PeopleMgr) query(query string, args ...interface{}) ([]*People, error) {
 	rows, err := _db.Query(query, args...)
@@ -79,6 +85,21 @@ func (m *_PeopleMgr) saveUpdate(obj *People) (sql.Result, error) {
 	return _sqlServer.Exec(query, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.UniquePart1, obj.UniquePart2, obj.PeopleId)
 }
 
+func (m *_PeopleMgr) InsertBatch(objs []*People) (sql.Result, error) {
+	if len(objs) == 0 {
+		return nil, errors.New("Empty insert")
+	}
+
+	values := make([]string, 0, len(objs))
+	params := make([]interface{}, 0, len(objs)*9)
+	for _, obj := range objs {
+		values = append(values, "(?, ?, ?, ?, ?, ?, ?, ?, ?)")
+		params = append(params, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.UniquePart1, obj.UniquePart2)
+	}
+	query := fmt.Sprintf("INSERT INTO [dbo].[People] (NonIndexA, NonIndexB, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2) VALUES %s", strings.Join(values, ","))
+	return _sqlServer.Exec(query, params...)
+}
+
 func (m *_PeopleMgr) FindByID(id int32) (*People, error) {
 	query := "SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2 FROM [dbo].[People] WHERE PeopleId=?"
 	return m.queryOne(query, id)
@@ -137,10 +158,8 @@ func (m *_PeopleMgr) FindAll() (results []*People, err error) {
 func (m *_PeopleMgr) FindWithOffset(where string, offset int, limit int, args ...interface{}) ([]*People, error) {
 	query := m.getQuerysql(false, where)
 
-	if !strings.Contains(strings.ToLower(where), "ORDER BY") {
-		where = " ORDER BY Name"
-	}
-	query = query + where + " OFFSET ? Rows FETCH NEXT ? Rows ONLY"
+	query = query + " OFFSET ? Rows FETCH NEXT ? Rows ONLY"
+
 	args = append(args, offset)
 	args = append(args, limit)
 
@@ -154,10 +173,14 @@ func (m *_PeopleMgr) getQuerysql(topOne bool, where string) string {
 	}
 	query = query + ` NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2 FROM [dbo].[People] WITH(NOLOCK) `
 
+	where = strings.Trim(where, " ")
 	if where != "" {
-		if strings.Index(strings.Trim(where, " "), "WHERE") == -1 {
+		upwhere := strings.ToUpper(where)
+
+		if !strings.HasPrefix(upwhere, "WHERE") && !strings.HasPrefix(upwhere, "ORDER BY") {
 			where = " WHERE " + where
 		}
+
 		query = query + where
 	}
 	return query

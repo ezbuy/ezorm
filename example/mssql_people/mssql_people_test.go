@@ -8,7 +8,10 @@ import (
 )
 
 func init() {
-	MssqlSetUp("server=localhost;user id=testuser;password=888888;DATABASE=test")
+	dsn := fmt.Sprintf("server=%s;user id=%s;password=%s;DATABASE=%s",
+		host, userId, password, database)
+	MssqlSetUp(dsn)
+
 	MssqlSetMaxOpenConns(255)
 	MssqlSetMaxIdleConns(255)
 }
@@ -154,7 +157,7 @@ func TestFindWithOffset(t *testing.T) {
 		}
 	}
 
-	pSlice, err := PeopleMgr.FindWithOffset("", 0, 4)
+	pSlice, err := PeopleMgr.FindWithOffset("ORDER BY PeopleId", 0, 4)
 	if err != nil {
 		t.Errorf("FindWithOffset error:%s", err.Error())
 	}
@@ -163,7 +166,7 @@ func TestFindWithOffset(t *testing.T) {
 		t.Errorf("FindWithOffset result incorrect, len(result)[%d]!=4", len(pSlice))
 	}
 
-	pSlice, err = PeopleMgr.FindWithOffset("", 3, 4)
+	pSlice, err = PeopleMgr.FindWithOffset("ORDER BY PeopleId", 3, 4)
 	if err != nil {
 		t.Errorf("FindWithOffset error:%s", err.Error())
 	}
@@ -380,4 +383,20 @@ func TestFindByIndexAPart1IndexAPart2IndexAPart3(t *testing.T) {
 	}
 
 	assertPeopleEqual(p2, ps[0], t)
+}
+
+func TestInsertBatch(t *testing.T) {
+	_, err := PeopleMgr.Del("")
+	if err != nil {
+		t.Errorf("delete error:%s", err.Error())
+	}
+
+	p1 := newUnsavedPeople()
+
+	p2 := newUnsavedPeople()
+
+	_, err = PeopleMgr.InsertBatch([]*People{p1, p2})
+	if err != nil {
+		t.Errorf("InsertBatch err:%v", err)
+	}
 }
