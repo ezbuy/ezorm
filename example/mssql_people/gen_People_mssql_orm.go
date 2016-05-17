@@ -4,7 +4,12 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 )
+
+// Avoid compile error
+// Find no easy way to determine if "time" package should be imported
+var _ time.Time
 
 func (m *_PeopleMgr) query(query string, args ...interface{}) ([]*People, error) {
 	rows, err := _db.Query(query, args...)
@@ -137,10 +142,8 @@ func (m *_PeopleMgr) FindAll() (results []*People, err error) {
 func (m *_PeopleMgr) FindWithOffset(where string, offset int, limit int, args ...interface{}) ([]*People, error) {
 	query := m.getQuerysql(false, where)
 
-	if !strings.Contains(strings.ToLower(where), "ORDER BY") {
-		where = " ORDER BY Name"
-	}
-	query = query + where + " OFFSET ? Rows FETCH NEXT ? Rows ONLY"
+	query = query + " OFFSET ? Rows FETCH NEXT ? Rows ONLY"
+
 	args = append(args, offset)
 	args = append(args, limit)
 
@@ -154,10 +157,14 @@ func (m *_PeopleMgr) getQuerysql(topOne bool, where string) string {
 	}
 	query = query + ` NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2 FROM [dbo].[People] WITH(NOLOCK) `
 
+	where = strings.Trim(where, " ")
 	if where != "" {
-		if strings.Index(strings.Trim(where, " "), "WHERE") == -1 {
+		upwhere := strings.ToUpper(where)
+
+		if !strings.HasPrefix(upwhere, "WHERE") && !strings.HasPrefix(upwhere, "ORDER BY") {
 			where = " WHERE " + where
 		}
+
 		query = query + where
 	}
 	return query
