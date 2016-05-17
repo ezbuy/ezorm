@@ -27,4 +27,4 @@ test:
 testmssql:buildTpl
 	go install
 	ezorm gen -i ./example/mssql_people/people_mssql.yaml -o ./example/mssql_people -p people
-
+	go test ./example/mssql_people/...

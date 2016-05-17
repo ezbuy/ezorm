@@ -2,6 +2,7 @@ package people
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -82,6 +83,21 @@ func (m *_PeopleMgr) saveInsert(obj *People) (sql.Result, error) {
 func (m *_PeopleMgr) saveUpdate(obj *People) (sql.Result, error) {
 	query := "UPDATE [dbo].[People] SET NonIndexA=?, NonIndexB=?, Age=?, Name=?, IndexAPart1=?, IndexAPart2=?, IndexAPart3=?, UniquePart1=?, UniquePart2=? WHERE PeopleId=?"
 	return _sqlServer.Exec(query, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.UniquePart1, obj.UniquePart2, obj.PeopleId)
+}
+
+func (m *_PeopleMgr) InsertBatch(objs []*People) (sql.Result, error) {
+	if len(objs) == 0 {
+		return nil, errors.New("Empty insert")
+	}
+
+	values := make([]string, 0, len(objs))
+	params := make([]interface{}, 0, len(objs)*9)
+	for _, obj := range objs {
+		values = append(values, "(?, ?, ?, ?, ?, ?, ?, ?, ?)")
+		params = append(params, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.UniquePart1, obj.UniquePart2)
+	}
+	query := fmt.Sprintf("INSERT INTO [dbo].[People] (NonIndexA, NonIndexB, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2) VALUES %s", strings.Join(values, ","))
+	return _sqlServer.Exec(query, params...)
 }
 
 func (m *_PeopleMgr) FindByID(id int32) (*People, error) {
