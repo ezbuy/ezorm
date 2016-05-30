@@ -165,10 +165,6 @@ func mapper(table string, columns []*ColumnInfo) map[string]*tbl {
 
 		dataitem := make(map[string]interface{}, len(columns))
 		dataitem[v.ColumnName] = parser.DbToGoType(v.DataType)
-		isTypeTime := dataitem[v.ColumnName] == "*time.Time"
-		if isTypeTime {
-			parser.HaveTime = true
-		}
 
 		var flags []string
 		if _, ok := singleColumnUniqueSet[v.IndexId.Int64]; ok {

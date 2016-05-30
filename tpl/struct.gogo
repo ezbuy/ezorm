@@ -3,11 +3,9 @@
 {{if eq .Db "mongo"}}
 import "gopkg.in/mgo.v2/bson"
 {{end}}
-{{if and (eq .Db "mssql")}}
-{{if (eq getHaveTime true) }}
 import "time"
-{{- end}}
-{{end}}
+
+var _ time.Time
 
 type {{.Name}} struct {
 {{- range $field := .Fields}}
