@@ -14,13 +14,11 @@ import (
 )
 
 var Tpl *template.Template
-var HaveTime bool
 
 func init() {
 	funcMap := template.FuncMap{
 		"minus":         minus,
 		"getNullType":   getNullType,
-		"getHaveTime":   getHaveTime,
 		"join":          strings.Join,
 		"preSuffixJoin": preSuffixJoin,
 		"repeatJoin":    repeatJoin,
@@ -46,10 +44,6 @@ func init() {
 			panic(err)
 		}
 	}
-}
-
-func getHaveTime() bool {
-	return HaveTime
 }
 
 func (f *Field) BJTag() string {
