@@ -255,7 +255,11 @@ func (f *Field) Read(data map[interface{}]interface{}) error {
 				if f.Type == "int" {
 					f.Type = "int32"
 				} else if f.Type == "datetime" {
-					f.Type = "int64"
+					if f.Obj.Db == "mssql" {
+						f.Type = "*time.Time"
+					} else {
+						f.Type = "int64"
+					}
 					f.Widget = "datetime"
 				}
 

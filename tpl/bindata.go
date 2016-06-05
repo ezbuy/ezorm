@@ -150,7 +150,7 @@ func tplMongo_ormGogo() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "tpl/mongo_orm.gogo", size: 1893, mode: os.FileMode(420), modTime: time.Unix(1460103153, 0)}
+	info := bindataFileInfo{name: "tpl/mongo_orm.gogo", size: 1893, mode: os.FileMode(420), modTime: time.Unix(1465110336, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -210,7 +210,7 @@ func tplMssql_ormGogo() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "tpl/mssql_orm.gogo", size: 7238, mode: os.FileMode(420), modTime: time.Unix(1464591791, 0)}
+	info := bindataFileInfo{name: "tpl/mssql_orm.gogo", size: 7238, mode: os.FileMode(420), modTime: time.Unix(1465110527, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -230,7 +230,7 @@ func tplStructGogo() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "tpl/struct.gogo", size: 1106, mode: os.FileMode(420), modTime: time.Unix(1464593889, 0)}
+	info := bindataFileInfo{name: "tpl/struct.gogo", size: 1106, mode: os.FileMode(420), modTime: time.Unix(1465110350, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
