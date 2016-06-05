@@ -209,6 +209,25 @@ func (o *Obj) GetNonIDFields() []*Field {
 	return o.Fields[1:]
 }
 
+func (o *Obj) HasTimeFields() bool {
+	for _, f := range o.Fields {
+		if f.GetGoType() == "*time.Time" {
+			return true
+		}
+	}
+	return false
+}
+
+func (o *Obj) GetTimeFields() []*Field {
+	timeFields := make([]*Field, 0)
+	for _, f := range o.Fields {
+		if f.GetGoType() == "*time.Time" {
+			timeFields = append(timeFields, f)
+		}
+	}
+	return timeFields
+}
+
 func ToStringSlice(val []interface{}) (result []string) {
 	result = make([]string, len(val))
 	for i, v := range val {

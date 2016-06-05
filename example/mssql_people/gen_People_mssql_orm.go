@@ -8,10 +8,6 @@ import (
 	"time"
 )
 
-// Avoid compile error
-// Find no easy way to determine if "time" package should be imported
-var _ time.Time
-
 func (m *_PeopleMgr) query(query string, args ...interface{}) ([]*People, error) {
 	rows, err := _db.Query(query, args...)
 	if err != nil {
@@ -35,6 +31,13 @@ func (m *_PeopleMgr) query(query string, args ...interface{}) ([]*People, error)
 
 		results = append(results, &result)
 	}
+
+	// 目前sql server保存的都是local time
+	for _, r := range results {
+		r.CreateDate = m.timeConvToLocal(r.CreateDate)
+		r.UpdateDate = m.timeConvToLocal(r.UpdateDate)
+	}
+
 	return results, nil
 }
 
@@ -52,6 +55,8 @@ func (m *_PeopleMgr) queryOne(query string, args ...interface{}) (*People, error
 
 	result.Age = int32(Age.Int64)
 	result.IndexAPart2 = int32(IndexAPart2.Int64)
+	result.CreateDate = m.timeConvToLocal(result.CreateDate)
+	result.UpdateDate = m.timeConvToLocal(result.UpdateDate)
 
 	return &result, nil
 }
@@ -204,4 +209,13 @@ func (m *_PeopleMgr) Update(set, where string, params ...interface{}) (sql.Resul
 		query = fmt.Sprintf("UPDATE [dbo].[People] SET %s WHERE %s", set, where)
 	}
 	return _db.Exec(query, params...)
+}
+
+func (m *_PeopleMgr) timeConvToLocal(t *time.Time) *time.Time {
+	if t == nil {
+		return nil
+	}
+	localTime := time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(),
+		t.Second(), t.Nanosecond(), time.Local)
+	return &localTime
 }

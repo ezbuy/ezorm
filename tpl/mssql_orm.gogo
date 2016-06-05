@@ -20,10 +20,6 @@ import (
 	{{end}}
 )
 
-// Avoid compile error
-// Find no easy way to determine if "time" package should be imported
-var _ time.Time
-
 func (m *_{{$obj.Name}}Mgr) query(query string, args ...interface{}) ([]*{{$obj.Name}}, error) {
 	rows, err := _db.Query(query, args...)
 	if err != nil {
@@ -68,6 +64,16 @@ func (m *_{{$obj.Name}}Mgr) query(query string, args ...interface{}) ([]*{{$obj.
 
 		results = append(results, &result)
 	}
+
+	{{if $obj.HasTimeFields}}
+		// 目前sql server保存的都是local time
+		for _, r := range results {
+			{{- range $field := $obj.GetTimeFields}}
+				r.{{$field.Name}} = m.timeConvToLocal(r.{{$field.Name}})
+			{{- end}}
+		}
+	{{end}}
+
 	return results, nil
 }
 
@@ -106,6 +112,10 @@ func (m *_{{$obj.Name}}Mgr) queryOne(query string, args ...interface{}) (*{{$obj
 		{{- end -}}
 	{{end -}}
 	{{end}}
+
+	{{- range $field := $obj.GetTimeFields}}
+		result.{{$field.Name}} = m.timeConvToLocal(result.{{$field.Name}})
+	{{- end}}
 
 	return &result, nil
 }
@@ -255,6 +265,15 @@ func (m *_{{$obj.Name}}Mgr) Update(set, where string, params ...interface{}) (sq
 		query = fmt.Sprintf("UPDATE [dbo].[{{$obj.Name}}] SET %s WHERE %s", set, where)
 	}
 	return _db.Exec(query, params...)
+}
+
+func (m *_{{$obj.Name}}Mgr) timeConvToLocal(t *time.Time) *time.Time{
+	if t == nil{
+		return nil
+	}
+	localTime := time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(),
+	t.Second(), t.Nanosecond(), time.Local)
+	return &localTime
 }
 
 {{end}}

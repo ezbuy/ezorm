@@ -325,6 +325,7 @@ func TestFindByAge(t *testing.T) {
 	}
 
 	p2 := newUnsavedPeople()
+	p2.Age = p1.Age + 1
 
 	_, err = PeopleMgr.Save(p2)
 	if err != nil {
