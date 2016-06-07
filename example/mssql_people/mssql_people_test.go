@@ -17,11 +17,14 @@ func init() {
 }
 
 func savePeople(name string) (*People, error) {
+	now := time.Now()
 	p := &People{
 		Name:        name,
 		Age:         1,
 		UniquePart1: rand.Int31n(1000000),
 		UniquePart2: rand.Int31n(1000000),
+		CreateDate:  &now,
+		UpdateDate:  &now,
 	}
 
 	_, err := PeopleMgr.Save(p)
@@ -290,6 +293,7 @@ func TestFindOneByName(t *testing.T) {
 }
 
 func newUnsavedPeople() *People {
+	now := time.Now()
 	return &People{
 		Name:        fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
 		Age:         rand.Int31n(200),
@@ -300,6 +304,8 @@ func newUnsavedPeople() *People {
 		IndexAPart3: rand.Int31n(1000000),
 		UniquePart1: rand.Int31n(1000000),
 		UniquePart2: rand.Int31n(1000000),
+		CreateDate:  &now,
+		UpdateDate:  &now,
 	}
 }
 
@@ -319,6 +325,7 @@ func TestFindByAge(t *testing.T) {
 	}
 
 	p2 := newUnsavedPeople()
+	p2.Age = p1.Age + 1
 
 	_, err = PeopleMgr.Save(p2)
 	if err != nil {

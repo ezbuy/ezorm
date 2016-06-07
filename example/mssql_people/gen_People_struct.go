@@ -1,5 +1,9 @@
 package people
 
+import "time"
+
+var _ time.Time
+
 type People struct {
 	NonIndexA string `db:"NonIndexA"`
 
@@ -20,6 +24,10 @@ type People struct {
 	UniquePart1 int32 `db:"UniquePart1"`
 
 	UniquePart2 int32 `db:"UniquePart2"`
+
+	CreateDate *time.Time `db:"CreateDate"`
+
+	UpdateDate *time.Time `db:"UpdateDate"`
 }
 
 func (p *People) GetNameSpace() string {

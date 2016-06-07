@@ -16,6 +16,8 @@ CREATE TABLE [dbo].[People](
 	[IndexAPart3] [int] NULL,
 	[UniquePart1] [int] NOT NULL,
 	[UniquePart2] [int] NOT NULL,
+	[CreateDate] [datetime] NOT NULL,
+	[UpdateDate] [datetime] NOT NULL,
  CONSTRAINT [PK_People] PRIMARY KEY CLUSTERED
 (
 	[PeopleId] ASC
