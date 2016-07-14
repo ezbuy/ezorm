@@ -11,5 +11,5 @@ func Version() string {
 const (
 	vMajor = 0
 	vMinor = 0
-	vPatch = 1
+	vPatch = 2
 )
