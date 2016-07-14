@@ -102,6 +102,9 @@ func getIndexInfo(columns []*ColumnInfo) (multiColumnIndexes, multiColumnUniques
 
 	singleColumnIndexSet = make(map[int64]struct{})
 	singleColumnUniqueSet = make(map[int64]struct{})
+
+	multiColumnIndexNames := make(map[string]struct{})
+
 	for indexId, indexColums := range indexIdToColumns {
 		if len(indexColums) == 1 {
 			if indexColums[0].IsUnique.Bool {
@@ -115,6 +118,13 @@ func getIndexInfo(columns []*ColumnInfo) (multiColumnIndexes, multiColumnUniques
 			for _, c := range indexColums {
 				columnNames = append(columnNames, c.ColumnName)
 			}
+
+			indexName := strings.Join(columnNames, "")
+			if _, ok := multiColumnIndexNames[indexName]; ok {
+				continue
+			}
+
+			multiColumnIndexNames[indexName] = struct{}{}
 
 			if indexColums[0].IsUnique.Bool {
 				multiColumnUniques = append(multiColumnUniques, columnNames)
