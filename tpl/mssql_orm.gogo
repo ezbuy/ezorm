@@ -175,6 +175,19 @@ func (m *_{{$obj.Name}}Mgr) FindByID(id {{$idField.Type}}) (*{{$obj.Name}}, erro
 	return m.queryOne(query, id)
 }
 
+func (m *_{{$obj.Name}}Mgr) FindByIDs(ids []{{$idField.Type}}) ([]*{{$obj.Name}}, error) {
+	idsLen := len(ids)
+	placeHolders := make([]string, 0, idsLen)
+	args := make([]interface{}, 0, idsLen)
+	for _, id := range ids {
+		placeHolders = append(placeHolders, "?")
+		args = append(args, id)
+	}
+
+	query := fmt.Sprintf("SELECT {{$allFields}} FROM [dbo].[{{$obj.Name}}] WHERE {{$idFieldName}} IN (%s)", strings.Join(placeHolders, ","))
+	return m.query(query, args...)
+}
+
 {{range $index := $obj.Indexes}}
 {{if $index.IsUnique }}
 func (m *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (*{{$obj.Name}}, error) {
