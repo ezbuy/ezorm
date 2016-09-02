@@ -392,6 +392,38 @@ func TestFindByIndexAPart1IndexAPart2IndexAPart3(t *testing.T) {
 	assertPeopleEqual(p2, ps[0], t)
 }
 
+func TestFindByIDs(t *testing.T) {
+	_, err := PeopleMgr.Del("")
+	if err != nil {
+		t.Errorf("delete error:%s", err.Error())
+	}
+
+	rand.Seed(time.Now().UnixNano())
+
+	p1 := newUnsavedPeople()
+
+	_, err = PeopleMgr.Save(p1)
+	if err != nil {
+		t.Errorf("save error:%s", err.Error())
+	}
+
+	p2 := newUnsavedPeople()
+
+	_, err = PeopleMgr.Save(p2)
+	if err != nil {
+		t.Errorf("save error:%s", err.Error())
+	}
+
+	ids := []int32{p1.PeopleId, p2.PeopleId}
+
+	ps, err := PeopleMgr.FindByIDs(ids)
+	if err != nil {
+		t.Errorf("FindByIds err:%s", err.Error())
+	} else if len(ps) != 2 {
+		t.Errorf("FindByIds incorrect:len(ps)[%d]!=2", len(ps))
+	}
+}
+
 func TestInsertBatch(t *testing.T) {
 	_, err := PeopleMgr.Del("")
 	if err != nil {

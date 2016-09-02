@@ -110,6 +110,19 @@ func (m *_PeopleMgr) FindByID(id int32) (*People, error) {
 	return m.queryOne(query, id)
 }
 
+func (m *_PeopleMgr) FindByIDs(ids []int32) ([]*People, error) {
+	idsLen := len(ids)
+	placeHolders := make([]string, 0, idsLen)
+	args := make([]interface{}, 0, idsLen)
+	for _, id := range ids {
+		placeHolders = append(placeHolders, "?")
+		args = append(args, id)
+	}
+
+	query := fmt.Sprintf("SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate FROM [dbo].[People] WHERE PeopleId IN (%s)", strings.Join(placeHolders, ","))
+	return m.query(query, args...)
+}
+
 func (m *_PeopleMgr) FindByIndexAPart1IndexAPart2IndexAPart3(IndexAPart1 int64, IndexAPart2 int32, IndexAPart3 int32, offset int, limit int, sortFields ...string) ([]*People, error) {
 	orderBy := "ORDER BY %s"
 	if len(sortFields) != 0 {
