@@ -424,6 +424,43 @@ func TestFindByIDs(t *testing.T) {
 	}
 }
 
+func TestCount(t *testing.T) {
+	_, err := PeopleMgr.Del("")
+	if err != nil {
+		t.Errorf("delete error:%s", err.Error())
+	}
+
+	rand.Seed(time.Now().UnixNano())
+
+	p1 := newUnsavedPeople()
+
+	_, err = PeopleMgr.Save(p1)
+	if err != nil {
+		t.Errorf("save error:%s", err.Error())
+	}
+
+	p2 := newUnsavedPeople()
+
+	_, err = PeopleMgr.Save(p2)
+	if err != nil {
+		t.Errorf("save error:%s", err.Error())
+	}
+
+	count, err := PeopleMgr.Count("")
+	if err != nil {
+		t.Errorf("TestCount err:%s", err.Error())
+	} else if count != 2 {
+		t.Errorf("TestCount incorrect:count[%d]!=2", count)
+	}
+
+	count, err = PeopleMgr.Count("PeopleId=?", p1.PeopleId)
+	if err != nil {
+		t.Errorf("TestCount err:%s", err.Error())
+	} else if count != 1 {
+		t.Errorf("TestCount incorrect:count[%d]!=1", count)
+	}
+}
+
 func TestInsertBatch(t *testing.T) {
 	_, err := PeopleMgr.Del("")
 	if err != nil {
