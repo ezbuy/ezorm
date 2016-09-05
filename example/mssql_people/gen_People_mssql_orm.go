@@ -224,6 +224,18 @@ func (m *_PeopleMgr) Update(set, where string, params ...interface{}) (sql.Resul
 	return _db.Exec(query, params...)
 }
 
+func (m *_PeopleMgr) Count(where string, args ...interface{}) (int32, error) {
+	query := "SELECT COUNT(*) FROM [dbo].[People]"
+	if where != "" {
+		query = query + " WHERE " + where
+	}
+
+	var count int32
+	row := _db.QueryRow(query, args...)
+	err := row.Scan(&count)
+	return count, err
+}
+
 func (m *_PeopleMgr) timeConvToLocal(t *time.Time) *time.Time {
 	if t == nil {
 		return nil
