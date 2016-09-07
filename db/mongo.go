@@ -2,6 +2,7 @@ package db
 
 import (
 	"errors"
+	"sync"
 
 	"strings"
 
@@ -10,7 +11,8 @@ import (
 )
 
 var config *MongoConfig
-var ShareSession *mgo.Session
+var instance *mgo.Session
+var instanceOnce sync.Once
 
 type M bson.M
 
@@ -37,21 +39,32 @@ func SetOnFinishInit(f func()) {
 }
 
 func IsFinishInit() bool {
-	return ShareSession != nil
+	return instance != nil
 }
 
 func Setup(c *MongoConfig) {
 	config = c
-	session, err := mgo.Dial(config.MongoDB)
-	if err != nil {
-		panic(err)
-	}
-	// Optional. Switch the session to a monotonic behavior.
-	session.SetMode(mgo.Monotonic, true)
-	ShareSession = session
-	for _, f := range afterEvents {
-		f()
-	}
+}
+
+func ShareSession() *mgo.Session {
+	instanceOnce.Do(func() {
+		if instance == nil {
+			if config == nil {
+				panic(ErrOperaBeforeInit)
+			}
+			session, err := mgo.Dial(config.MongoDB)
+			if err != nil {
+				panic(err)
+			}
+			// Optional. Switch the session to a monotonic behavior.
+			session.SetMode(mgo.Monotonic, true)
+			instance = session
+			for _, f := range afterEvents {
+				f()
+			}
+		}
+	})
+	return instance
 }
 
 func InID(ids []string) (ret M) {
@@ -74,10 +87,7 @@ func ObjectIds(ids []string) (ret []bson.ObjectId) {
 }
 
 func NewSession() (session *mgo.Session) {
-	if ShareSession == nil {
-		panic(ErrOperaBeforeInit)
-	}
-	return ShareSession.Copy()
+	return ShareSession().Copy()
 }
 
 func NewCollection(session *mgo.Session, dbName, name string) *mgo.Collection {
