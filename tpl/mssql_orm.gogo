@@ -21,10 +21,11 @@ import (
 )
 
 func (m *_{{$obj.Name}}Mgr) query(query string, args ...interface{}) ([]*{{$obj.Name}}, error) {
-	rows, err := _db.Query(query, args...)
+	rows, err := mssqlQuery(query, args...)
 	if err != nil {
 		return nil, err
 	}
+
 	defer rows.Close()
 
 
@@ -79,45 +80,16 @@ func (m *_{{$obj.Name}}Mgr) query(query string, args ...interface{}) ([]*{{$obj.
 
 
 func (m *_{{$obj.Name}}Mgr) queryOne(query string, args ...interface{}) (*{{$obj.Name}}, error) {
-	row := _db.QueryRow(query, args...)
-
-	{{range $index, $field := $obj.Fields}}
-	{{- if $field.IsNullablePrimitive}}
-		var {{$field.Name}} sql.{{$field.GetNullSQLType}}
-	{{- end -}}
-	{{end}}
-
-
-	var result {{$obj.Name}}
-	err := row.Scan(
-	{{- range $index, $field := $obj.Fields -}}
-	{{- if $field.IsNullablePrimitive -}}
-		&{{$field.Name}},
-	{{- else -}}
-	&(result.{{$field.Name}}),
-	{{- end -}}
-	{{- end -}}
-	)
+	rows, err:=m.query(query, args...)
 	if err != nil {
+		return nil,err
+	}
+
+	if len(rows) == 0 {
 		return nil, err
 	}
 
-	{{range $index, $field := $obj.Fields}}
-	{{- if $field.IsNullablePrimitive}}
-		result.{{$field.Name}} =
-		{{- if $field.NullSQLTypeNeedCast -}}
-			{{$field.GetGoType}}({{$field.Name}}.{{$field.NullSQLTypeValue}})
-		{{- else -}}
-		{{$field.Name}}.{{$field.NullSQLTypeValue}}
-		{{- end -}}
-	{{end -}}
-	{{end}}
-
-	{{- range $field := $obj.GetTimeFields}}
-		result.{{$field.Name}} = m.timeConvToLocal(result.{{$field.Name}})
-	{{- end}}
-
-	return &result, nil
+	return rows[0], err
 }
 
 
@@ -134,7 +106,7 @@ func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
 	) VALUES (
 	{{- repeatJoin (len $obj.GetNonIdFieldNames) "?" ", " -}}
 	)"
-	result, err := _sqlServer.Exec(query, {{$nonIdFieldNames}})
+	result, err := mssqlExec(query, {{$nonIdFieldNames}})
 	if err != nil {
 		return result, err
 	}
@@ -152,7 +124,7 @@ func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
 func (m *_{{$obj.Name}}Mgr) saveUpdate(obj *{{$obj.Name}}) (sql.Result, error) {
 	query := "UPDATE [dbo].[{{$obj.Name}}] SET
 	{{- preSuffixJoin $obj.GetNonIdFieldNames " " "=?" "," }} WHERE {{$field.Name}}=?"
-	return _sqlServer.Exec(query, {{$nonIdFieldNames}}, obj.{{$field.Name}})
+	return mssqlExec(query, {{$nonIdFieldNames}}, obj.{{$field.Name}})
 }
 
 func (m *_{{$obj.Name}}Mgr) InsertBatch(objs []*{{$obj.Name}}) (sql.Result, error) {
@@ -167,7 +139,7 @@ func (m *_{{$obj.Name}}Mgr) InsertBatch(objs []*{{$obj.Name}}) (sql.Result, erro
 		params = append(params, {{$nonIdFieldNames}})
 	}
 	query := fmt.Sprintf("INSERT INTO [dbo].[{{$obj.Name}}] ({{- join $obj.GetNonIdFieldNames ", " -}}) VALUES %s", strings.Join(values, ","))
-	return _sqlServer.Exec(query, params...)
+	return mssqlExec(query, params...)
 }
 
 func (m *_{{$obj.Name}}Mgr) FindByID(id {{$idField.Type}}) (*{{$obj.Name}}, error) {
@@ -265,7 +237,7 @@ func (m *_{{$obj.Name}}Mgr) Del(where string, params ...interface{}) (sql.Result
 	if where != "" {
 		query = fmt.Sprintf("DELETE FROM {{$obj.Name}} WHERE " + where)
 	}
-	return _db.Exec(query, params...)
+	return mssqlExec(query, params...)
 }
 
 // argument example:
@@ -277,7 +249,7 @@ func (m *_{{$obj.Name}}Mgr) Update(set, where string, params ...interface{}) (sq
 	if where != "" {
 		query = fmt.Sprintf("UPDATE [dbo].[{{$obj.Name}}] SET %s WHERE %s", set, where)
 	}
-	return _db.Exec(query, params...)
+	return mssqlExec(query, params...)
 }
 
 func (m *_{{$obj.Name}}Mgr) Count(where string, args ...interface{}) (int32, error) {
@@ -286,9 +258,18 @@ func (m *_{{$obj.Name}}Mgr) Count(where string, args ...interface{}) (int32, err
 		query = query + " WHERE " + where
 	}
 
+	rows, err := mssqlQuery(query, args...)
+	if err != nil {
+		return 0, err
+	}
+
+	defer rows.Close()
+
 	var count int32
-	row := _db.QueryRow(query, args...)
-	err := row.Scan(&count)
+	if rows.Next() {
+		err = rows.Scan(&count)
+	}
+
 	return count, err
 }
 
