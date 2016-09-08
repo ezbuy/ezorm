@@ -8,30 +8,24 @@ import (
 	//Own libs
 	"github.com/ezbuy/ezorm/db"
 	. "github.com/ezbuy/ezorm/orm"
-
-	
 )
 
 func init() {
-	
+
 	db.SetOnFinishInit(initPageIndex)
-	
-	
+
 	RegisterEzOrmObjByID("example", "Page", newPageFindByID)
 	RegisterEzOrmObjRemove("example", "Page", PageMgr.RemoveByID)
-	
+
 }
-
-
-
 
 func initPageIndex() {
 	session, collection := PageMgr.GetCol()
 	defer session.Close()
-	
+
 reEnsureSlug:
 	if err := collection.EnsureIndex(mgo.Index{
-		Key: []string{"Slug"},
+		Key:    []string{"Slug"},
 		Unique: true,
 		Sparse: true,
 	}); err != nil {
@@ -43,15 +37,12 @@ reEnsureSlug:
 		goto reEnsureSlug
 
 	}
-	
-}
 
+}
 
 func newPageFindByID(id string) (result EzOrmObj, err error) {
 	return PageMgr.FindByID(id)
 }
-
-
 
 //mongo methods
 var (
@@ -77,24 +68,8 @@ func (o *Page) Save() (info *mgo.ChangeInfo, err error) {
 
 	isNew := o.isNew
 
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-
 	info, err = col.UpsertId(o.ID, o)
 	o.isNew = false
-
-	
 
 	if isNew {
 		PageInsertCallback(o)
@@ -135,27 +110,7 @@ func PageUpdateCallback(o *Page) {
 	}
 }
 
-
-
-
-
 //foreigh keys
-
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
 
 //Collection Manage methods
 
@@ -190,14 +145,32 @@ func (o *_PageMgr) Query(query interface{}, limit, offset int, sortFields []stri
 	if offset > 0 {
 		q.Skip(offset)
 	}
+
 	_PageSort(q, sortFields)
+	return session, q
+}
+
+func (o *_PageMgr) NQuery(query interface{}, limit, offset int, sortFields []string) (*mgo.Session, *mgo.Query) {
+	session, col := PageMgr.GetCol()
+	q := col.Find(query)
+	if limit > 0 {
+		q.Limit(limit)
+	}
+	if offset > 0 {
+		q.Skip(offset)
+	}
+
+	if sortFields = XSortFieldsFilter(sortFields); len(sortFields) > 0 {
+		q.Sort(sortFields...)
+	}
+
 	return session, q
 }
 func (o *_PageMgr) FindOneBySlug(Slug string) (result *Page, err error) {
 	query := db.M{
 		"Slug": Slug,
 	}
-	session, q := PageMgr.Query(query, 1, 0, nil)
+	session, q := PageMgr.NQuery(query, 1, 0, nil)
 	defer session.Close()
 	err = q.One(&result)
 	return
@@ -285,21 +258,15 @@ func (m *_PageMgr) RemoveByID(id string) (err error) {
 		return
 	}
 	err = col.RemoveId(bson.ObjectIdHex(id))
-	
+
 	return
 }
 
 func (m *_PageMgr) GetCol() (session *mgo.Session, col *mgo.Collection) {
-	return db.GetCol("example.Page")
+	return db.GetCol("", "example.Page")
 }
 
-
-
-
-
-
 //Search
-
 
 func (o *Page) IsSearchEnabled() bool {
 
@@ -308,5 +275,3 @@ func (o *Page) IsSearchEnabled() bool {
 }
 
 //end search
-
-
