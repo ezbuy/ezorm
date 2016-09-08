@@ -47,6 +47,7 @@ func Setup(c *MongoConfig) {
 }
 
 func ShareSession() *mgo.Session {
+	doInit := false
 	instanceOnce.Do(func() {
 		if instance == nil {
 			if config == nil {
@@ -59,11 +60,15 @@ func ShareSession() *mgo.Session {
 			// Optional. Switch the session to a monotonic behavior.
 			session.SetMode(mgo.Monotonic, true)
 			instance = session
-			for _, f := range afterEvents {
-				f()
-			}
+			doInit = true
 		}
 	})
+
+	if doInit {
+		for _, f := range afterEvents {
+			f()
+		}
+	}
 	return instance
 }
 
