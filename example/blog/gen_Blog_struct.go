@@ -1,26 +1,26 @@
 package blog
 
-
 import "gopkg.in/mgo.v2/bson"
 
+import "time"
 
+var _ time.Time
 
 type Blog struct {
+	ID bson.ObjectId `json:"id" bson:"_id,omitempty"`
 
-	ID         bson.ObjectId `bson:"_id,omitempty"`
+	Title string `bson:"title" json:"title"`
 
-	Title  string `bson:"title"`
+	Hits int32 `bson:"Hits" json:"Hits"`
 
-	Hits  int32 `bson:"Hits"`
+	Slug string `bson:"Slug" json:"Slug"`
 
-	Slug  string `bson:"Slug"`
+	Body string `bson:"Body" json:"Body"`
 
-	Body  string `bson:"Body"`
+	User int32 `bson:"User" json:"User"`
 
-	User  int32 `bson:"User"`
-
-	IsPublished  bool `bson:"IsPublished"`
-	isNew bool
+	IsPublished bool `bson:"IsPublished" json:"IsPublished"`
+	isNew       bool
 }
 
 func (p *Blog) GetNameSpace() string {

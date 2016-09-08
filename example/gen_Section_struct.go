@@ -1,15 +1,15 @@
 package example
 
+import "time"
 
-
+var _ time.Time
 
 type Section struct {
+	Key string `bson:"Key" json:"Key"`
 
-	Key  string `bson:"Key"`
+	Val int32 `bson:"Val" json:"Val"`
 
-	Val  int32 `bson:"Val"`
-
-	Data  map[string]string `bson:"Data"`
+	Data map[string]string `bson:"Data" json:"Data"`
 }
 
 func (p *Section) GetNameSpace() string {

@@ -8,30 +8,24 @@ import (
 	//Own libs
 	"github.com/ezbuy/ezorm/db"
 	. "github.com/ezbuy/ezorm/orm"
-
-	
 )
 
 func init() {
-	
+
 	db.SetOnFinishInit(initBlogIndex)
-	
-	
+
 	RegisterEzOrmObjByID("blog", "Blog", newBlogFindByID)
 	RegisterEzOrmObjRemove("blog", "Blog", BlogMgr.RemoveByID)
-	
+
 }
-
-
-
 
 func initBlogIndex() {
 	session, collection := BlogMgr.GetCol()
 	defer session.Close()
-	
+
 reEnsureUserIsPublished:
 	if err := collection.EnsureIndex(mgo.Index{
-		Key: []string{"User","IsPublished"},
+		Key:    []string{"User", "IsPublished"},
 		Sparse: true,
 	}); err != nil {
 		println("error ensureIndex Blog UserIsPublished", err.Error())
@@ -42,10 +36,10 @@ reEnsureUserIsPublished:
 		goto reEnsureUserIsPublished
 
 	}
-	
+
 reEnsureSlug:
 	if err := collection.EnsureIndex(mgo.Index{
-		Key: []string{"Slug"},
+		Key:    []string{"Slug"},
 		Unique: true,
 		Sparse: true,
 	}); err != nil {
@@ -57,10 +51,10 @@ reEnsureSlug:
 		goto reEnsureSlug
 
 	}
-	
+
 reEnsureIsPublished:
 	if err := collection.EnsureIndex(mgo.Index{
-		Key: []string{"IsPublished"},
+		Key:    []string{"IsPublished"},
 		Sparse: true,
 	}); err != nil {
 		println("error ensureIndex Blog IsPublished", err.Error())
@@ -71,15 +65,12 @@ reEnsureIsPublished:
 		goto reEnsureIsPublished
 
 	}
-	
-}
 
+}
 
 func newBlogFindByID(id string) (result EzOrmObj, err error) {
 	return BlogMgr.FindByID(id)
 }
-
-
 
 //mongo methods
 var (
@@ -105,26 +96,8 @@ func (o *Blog) Save() (info *mgo.ChangeInfo, err error) {
 
 	isNew := o.isNew
 
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-
 	info, err = col.UpsertId(o.ID, o)
 	o.isNew = false
-
-	
 
 	if isNew {
 		BlogInsertCallback(o)
@@ -165,29 +138,7 @@ func BlogUpdateCallback(o *Blog) {
 	}
 }
 
-
-
-
-
 //foreigh keys
-
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
 
 //Collection Manage methods
 
@@ -222,12 +173,30 @@ func (o *_BlogMgr) Query(query interface{}, limit, offset int, sortFields []stri
 	if offset > 0 {
 		q.Skip(offset)
 	}
+
 	_BlogSort(q, sortFields)
+	return session, q
+}
+
+func (o *_BlogMgr) NQuery(query interface{}, limit, offset int, sortFields []string) (*mgo.Session, *mgo.Query) {
+	session, col := BlogMgr.GetCol()
+	q := col.Find(query)
+	if limit > 0 {
+		q.Limit(limit)
+	}
+	if offset > 0 {
+		q.Skip(offset)
+	}
+
+	if sortFields = XSortFieldsFilter(sortFields); len(sortFields) > 0 {
+		q.Sort(sortFields...)
+	}
+
 	return session, q
 }
 func (o *_BlogMgr) FindByUserIsPublished(User int32, IsPublished bool, limit int, offset int, sortFields ...string) (result []*Blog, err error) {
 	query := db.M{
-		"User": User,
+		"User":        User,
 		"IsPublished": IsPublished,
 	}
 	session, q := BlogMgr.Query(query, limit, offset, sortFields)
@@ -239,7 +208,7 @@ func (o *_BlogMgr) FindOneBySlug(Slug string) (result *Blog, err error) {
 	query := db.M{
 		"Slug": Slug,
 	}
-	session, q := BlogMgr.Query(query, 1, 0, nil)
+	session, q := BlogMgr.NQuery(query, 1, 0, nil)
 	defer session.Close()
 	err = q.One(&result)
 	return
@@ -336,21 +305,15 @@ func (m *_BlogMgr) RemoveByID(id string) (err error) {
 		return
 	}
 	err = col.RemoveId(bson.ObjectIdHex(id))
-	
+
 	return
 }
 
 func (m *_BlogMgr) GetCol() (session *mgo.Session, col *mgo.Collection) {
-	return db.GetCol("test_blog")
+	return db.GetCol("test", "test_blog")
 }
 
-
-
-
-
-
 //Search
-
 
 func (o *Blog) IsSearchEnabled() bool {
 
@@ -359,5 +322,3 @@ func (o *Blog) IsSearchEnabled() bool {
 }
 
 //end search
-
-
