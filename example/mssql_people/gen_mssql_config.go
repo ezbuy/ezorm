@@ -34,6 +34,7 @@ func MssqlSetMaxIdleConns(maxIdleConns int) {
 }
 
 func MssqlAddQueryWrapper(r db.QueryWrapper) {
+	_sqlServer.AddQueryWrapper(r)
 	_queryWrappers = append(_queryWrappers, r)
 }
 
