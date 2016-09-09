@@ -10,8 +10,9 @@ import (
 )
 
 var (
-	_sqlServer *db.SqlServer
-	_db        *sql.DB
+	_sqlServer     *db.SqlServer
+	_db            *sql.DB
+	_queryWrappers []db.QueryWrapper
 )
 
 func MssqlSetUp(dataSourceName string) {
@@ -32,6 +33,58 @@ func MssqlSetMaxIdleConns(maxIdleConns int) {
 	_sqlServer.SetMaxIdleConns(maxIdleConns)
 }
 
+func MssqlAddQueryWrapper(r db.QueryWrapper) {
+	_queryWrappers = append(_queryWrappers, r)
+}
+
 func MssqlClose() error {
 	return _sqlServer.Close()
+}
+
+func mssqlUnwrappedQuery(query string, args ...interface{}) (interface{}, error) {
+	rows, err := _db.Query(query, args...)
+	return rows, err
+}
+
+func mssqlUnwrappedExec(query string, args ...interface{}) (interface{}, error) {
+	result, err := _db.Exec(query, args...)
+	return result, err
+}
+
+func mssqlQuery(query string, args ...interface{}) (*sql.Rows, error) {
+	if len(_queryWrappers) == 0 {
+		return _db.Query(query, args...)
+	}
+
+	queryer := mssqlUnwrappedQuery
+
+	for _, r := range _queryWrappers {
+		queryer = r(queryer, query, args...)
+	}
+
+	rowsItf, err := queryer(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	rows := rowsItf.(*sql.Rows)
+	return rows, err
+}
+
+func mssqlExec(query string, args ...interface{}) (sql.Result, error) {
+	if len(_queryWrappers) == 0 {
+		return _db.Exec(query, args...)
+	}
+
+	queryer := mssqlUnwrappedExec
+
+	for _, r := range _queryWrappers {
+		queryer = r(queryer, query, args...)
+	}
+
+	resultItf, err := queryer(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	result := resultItf.(sql.Result)
+	return result, err
 }

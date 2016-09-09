@@ -9,10 +9,11 @@ import (
 )
 
 func (m *_PeopleMgr) query(query string, args ...interface{}) ([]*People, error) {
-	rows, err := _db.Query(query, args...)
+	rows, err := mssqlQuery(query, args...)
 	if err != nil {
 		return nil, err
 	}
+
 	defer rows.Close()
 
 	var Age sql.NullInt64
@@ -42,23 +43,16 @@ func (m *_PeopleMgr) query(query string, args ...interface{}) ([]*People, error)
 }
 
 func (m *_PeopleMgr) queryOne(query string, args ...interface{}) (*People, error) {
-	row := _db.QueryRow(query, args...)
-
-	var Age sql.NullInt64
-	var IndexAPart2 sql.NullInt64
-
-	var result People
-	err := row.Scan(&(result.NonIndexA), &(result.NonIndexB), &(result.PeopleId), &Age, &(result.Name), &(result.IndexAPart1), &IndexAPart2, &(result.IndexAPart3), &(result.UniquePart1), &(result.UniquePart2), &(result.CreateDate), &(result.UpdateDate))
+	rows, err := m.query(query, args...)
 	if err != nil {
 		return nil, err
 	}
 
-	result.Age = int32(Age.Int64)
-	result.IndexAPart2 = int32(IndexAPart2.Int64)
-	result.CreateDate = m.timeConvToLocal(result.CreateDate)
-	result.UpdateDate = m.timeConvToLocal(result.UpdateDate)
+	if len(rows) == 0 {
+		return nil, err
+	}
 
-	return &result, nil
+	return rows[0], err
 }
 
 func (m *_PeopleMgr) Save(obj *People) (sql.Result, error) {
@@ -70,7 +64,7 @@ func (m *_PeopleMgr) Save(obj *People) (sql.Result, error) {
 
 func (m *_PeopleMgr) saveInsert(obj *People) (sql.Result, error) {
 	query := "INSERT INTO [dbo].[People] (NonIndexA, NonIndexB, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-	result, err := _sqlServer.Exec(query, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.UniquePart1, obj.UniquePart2, obj.CreateDate, obj.UpdateDate)
+	result, err := mssqlExec(query, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.UniquePart1, obj.UniquePart2, obj.CreateDate, obj.UpdateDate)
 	if err != nil {
 		return result, err
 	}
@@ -87,7 +81,7 @@ func (m *_PeopleMgr) saveInsert(obj *People) (sql.Result, error) {
 
 func (m *_PeopleMgr) saveUpdate(obj *People) (sql.Result, error) {
 	query := "UPDATE [dbo].[People] SET NonIndexA=?, NonIndexB=?, Age=?, Name=?, IndexAPart1=?, IndexAPart2=?, IndexAPart3=?, UniquePart1=?, UniquePart2=?, CreateDate=?, UpdateDate=? WHERE PeopleId=?"
-	return _sqlServer.Exec(query, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.UniquePart1, obj.UniquePart2, obj.CreateDate, obj.UpdateDate, obj.PeopleId)
+	return mssqlExec(query, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.UniquePart1, obj.UniquePart2, obj.CreateDate, obj.UpdateDate, obj.PeopleId)
 }
 
 func (m *_PeopleMgr) InsertBatch(objs []*People) (sql.Result, error) {
@@ -102,7 +96,7 @@ func (m *_PeopleMgr) InsertBatch(objs []*People) (sql.Result, error) {
 		params = append(params, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.UniquePart1, obj.UniquePart2, obj.CreateDate, obj.UpdateDate)
 	}
 	query := fmt.Sprintf("INSERT INTO [dbo].[People] (NonIndexA, NonIndexB, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate) VALUES %s", strings.Join(values, ","))
-	return _sqlServer.Exec(query, params...)
+	return mssqlExec(query, params...)
 }
 
 func (m *_PeopleMgr) FindByID(id int32) (*People, error) {
@@ -209,7 +203,7 @@ func (m *_PeopleMgr) Del(where string, params ...interface{}) (sql.Result, error
 	if where != "" {
 		query = fmt.Sprintf("DELETE FROM People WHERE " + where)
 	}
-	return _db.Exec(query, params...)
+	return mssqlExec(query, params...)
 }
 
 // argument example:
@@ -221,7 +215,7 @@ func (m *_PeopleMgr) Update(set, where string, params ...interface{}) (sql.Resul
 	if where != "" {
 		query = fmt.Sprintf("UPDATE [dbo].[People] SET %s WHERE %s", set, where)
 	}
-	return _db.Exec(query, params...)
+	return mssqlExec(query, params...)
 }
 
 func (m *_PeopleMgr) Count(where string, args ...interface{}) (int32, error) {
@@ -230,9 +224,18 @@ func (m *_PeopleMgr) Count(where string, args ...interface{}) (int32, error) {
 		query = query + " WHERE " + where
 	}
 
+	rows, err := mssqlQuery(query, args...)
+	if err != nil {
+		return 0, err
+	}
+
+	defer rows.Close()
+
 	var count int32
-	row := _db.QueryRow(query, args...)
-	err := row.Scan(&count)
+	if rows.Next() {
+		err = rows.Scan(&count)
+	}
+
 	return count, err
 }
 

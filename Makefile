@@ -19,12 +19,14 @@ debugTpl:
 buildTpl:
 	go-bindata -o tpl/bindata.go -ignore bindata.go -pkg tpl tpl
 
-test:
-	go install github.com/ezbuy/ezorm
-	ezorm gen -i example/example.yaml -o example
-	go test github.com/ezbuy/ezorm/example
+test: testmssql testmongo
 
-testmssql:buildTpl
+testmssql:
 	go install
 	ezorm gen -i ./example/mssql_people/people_mssql.yaml -o ./example/mssql_people -p people
-	go test ./example/mssql_people/...
+	go test -v ./example/mssql_people/...
+
+testmongo:
+	go install
+	ezorm gen -i ./example/blog/blog.yaml -o ./example/blog -p blog
+	go test -v ./example/blog/...

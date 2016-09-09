@@ -30,3 +30,7 @@ func (s *SqlServer) Query(dest interface{}, query string, args ...interface{}) e
 
 	return s.DB.Get(dest, query, args...)
 }
+
+type Queryer func(query string, args ...interface{}) (interface{}, error)
+
+type QueryWrapper func(queryer Queryer, query string, args ...interface{}) Queryer

@@ -5,7 +5,21 @@ import (
 	"math/rand"
 	"testing"
 	"time"
+
+	"github.com/ezbuy/ezorm/db"
 )
+
+func requestTimeLogger(queryer db.Queryer, query string, args ...interface{}) db.Queryer {
+	return func(query string, args ...interface{}) (interface{}, error) {
+		start := time.Now()
+		defer func() {
+			fmt.Printf("query time: %.6f seconds\n", time.Now().Sub(start).Seconds())
+		}()
+
+		time.Sleep(time.Millisecond * time.Duration(rand.Int31n(100)))
+		return queryer(query, args...)
+	}
+}
 
 func init() {
 	dsn := fmt.Sprintf("server=%s;user id=%s;password=%s;DATABASE=%s",
@@ -14,6 +28,8 @@ func init() {
 
 	MssqlSetMaxOpenConns(255)
 	MssqlSetMaxIdleConns(255)
+
+	MssqlAddQueryWrapper(requestTimeLogger)
 }
 
 func savePeople(name string) (*People, error) {
@@ -29,6 +45,29 @@ func savePeople(name string) (*People, error) {
 
 	_, err := PeopleMgr.Save(p)
 	return p, err
+}
+
+func assertPeopleEqual(a, b *People, t *testing.T) {
+	if a.Age != b.Age || a.Name != b.Name {
+		t.Errorf("%#v != %#v. people not equal", a, b)
+	}
+}
+
+func newUnsavedPeople() *People {
+	now := time.Now()
+	return &People{
+		Name:        fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
+		Age:         rand.Int31n(200),
+		NonIndexA:   fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
+		NonIndexB:   fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
+		IndexAPart1: rand.Int63n(1000000),
+		IndexAPart2: rand.Int31n(1000000),
+		IndexAPart3: rand.Int31n(1000000),
+		UniquePart1: rand.Int31n(1000000),
+		UniquePart2: rand.Int31n(1000000),
+		CreateDate:  &now,
+		UpdateDate:  &now,
+	}
 }
 
 func TestSaveInsert(t *testing.T) {
@@ -73,12 +112,6 @@ func TestSaveUpdate(t *testing.T) {
 		t.Errorf("find one error:%s", err.Error())
 	}
 	assertPeopleEqual(p, pFound, t)
-}
-
-func assertPeopleEqual(a, b *People, t *testing.T) {
-	if a.Age != b.Age || a.Name != b.Name {
-		t.Errorf("%#v != %#v. people not equal", a, b)
-	}
 }
 
 func TestFindOne(t *testing.T) {
@@ -290,23 +323,6 @@ func TestFindOneByName(t *testing.T) {
 		t.Errorf("FindOneByName err:%s", err.Error())
 	}
 	assertPeopleEqual(p1, p2, t)
-}
-
-func newUnsavedPeople() *People {
-	now := time.Now()
-	return &People{
-		Name:        fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
-		Age:         rand.Int31n(200),
-		NonIndexA:   fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
-		NonIndexB:   fmt.Sprintf("testname_%d", time.Now().Nanosecond()),
-		IndexAPart1: rand.Int63n(1000000),
-		IndexAPart2: rand.Int31n(1000000),
-		IndexAPart3: rand.Int31n(1000000),
-		UniquePart1: rand.Int31n(1000000),
-		UniquePart2: rand.Int31n(1000000),
-		CreateDate:  &now,
-		UpdateDate:  &now,
-	}
 }
 
 func TestFindByAge(t *testing.T) {
