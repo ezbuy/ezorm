@@ -49,7 +49,7 @@ func (m *_PeopleMgr) queryOne(query string, args ...interface{}) (*People, error
 	}
 
 	if len(rows) == 0 {
-		return nil, err
+		return nil, sql.ErrNoRows
 	}
 
 	return rows[0], err

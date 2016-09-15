@@ -86,7 +86,7 @@ func (m *_{{$obj.Name}}Mgr) queryOne(query string, args ...interface{}) (*{{$obj
 	}
 
 	if len(rows) == 0 {
-		return nil, err
+		return nil, sql.ErrNoRows
 	}
 
 	return rows[0], err
