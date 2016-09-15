@@ -1,6 +1,7 @@
 package people
 
 import (
+	"database/sql"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -490,5 +491,17 @@ func TestInsertBatch(t *testing.T) {
 	_, err = PeopleMgr.InsertBatch([]*People{p1, p2})
 	if err != nil {
 		t.Errorf("InsertBatch err:%v", err)
+	}
+}
+
+func TestErrNoRows(t *testing.T) {
+	_, err := PeopleMgr.Del("")
+	if err != nil {
+		t.Errorf("delete error:%s", err.Error())
+	}
+
+	_, err = PeopleMgr.FindByID(0)
+	if err != sql.ErrNoRows {
+		t.Errorf("error:[%v] not sql.ErrNoRows", err)
 	}
 }
