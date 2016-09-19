@@ -1,6 +1,6 @@
 {{define "mongo_orm"}}package {{.Package}}
 {{$obj := .}}
-import (	
+import (
 	//3rd party libs
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
