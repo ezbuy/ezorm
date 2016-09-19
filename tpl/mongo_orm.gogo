@@ -1,6 +1,8 @@
 {{define "mongo_orm"}}package {{.Package}}
 {{$obj := .}}
 import (
+	"log"
+	
 	//3rd party libs
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -13,6 +15,8 @@ import (
 	"{{.}}"
 	{{end}}
 )
+
+var _ = log.Println
 
 func init() {
 	{{if .NeedIndex}}
@@ -48,6 +52,7 @@ func init{{.Name}}Index() {
 	session, collection := {{.Name}}Mgr.GetCol()
 	defer session.Close()
 	{{range $index := $obj.Indexes}}
+	log.Println("ensureIndex {{$obj.DbName}}.{{$obj.Name}} {{$index.Name}}")
 	if err := collection.EnsureIndex(mgo.Index{
 		Key: []string{"{{$index.GetFieldList}}"},
 		{{- if $index.IsUnique }}

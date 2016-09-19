@@ -1,6 +1,8 @@
 package blog
 
 import (
+	"log"
+
 	//3rd party libs
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -9,6 +11,8 @@ import (
 	"github.com/ezbuy/ezorm/db"
 	. "github.com/ezbuy/ezorm/orm"
 )
+
+var _ = log.Println
 
 func init() {
 
@@ -23,6 +27,7 @@ func initBlogIndex() {
 	session, collection := BlogMgr.GetCol()
 	defer session.Close()
 
+	log.Println("ensureIndex test.Blog UserIsPublished")
 	if err := collection.EnsureIndex(mgo.Index{
 		Key:    []string{"User", "IsPublished"},
 		Sparse: true,
@@ -30,6 +35,7 @@ func initBlogIndex() {
 		panic("ensureIndex test.Blog UserIsPublished error:" + err.Error())
 	}
 
+	log.Println("ensureIndex test.Blog Slug")
 	if err := collection.EnsureIndex(mgo.Index{
 		Key:    []string{"Slug"},
 		Unique: true,
@@ -38,6 +44,7 @@ func initBlogIndex() {
 		panic("ensureIndex test.Blog Slug error:" + err.Error())
 	}
 
+	log.Println("ensureIndex test.Blog IsPublished")
 	if err := collection.EnsureIndex(mgo.Index{
 		Key:    []string{"IsPublished"},
 		Sparse: true,
