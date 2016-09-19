@@ -12,7 +12,7 @@ import (
 
 func init() {
 
-	db.SetOnFinishInit(initBlogIndex)
+	db.SetOnEnsureIndex(initBlogIndex)
 
 	RegisterEzOrmObjByID("blog", "Blog", newBlogFindByID)
 	RegisterEzOrmObjRemove("blog", "Blog", BlogMgr.RemoveByID)
@@ -23,47 +23,26 @@ func initBlogIndex() {
 	session, collection := BlogMgr.GetCol()
 	defer session.Close()
 
-reEnsureUserIsPublished:
 	if err := collection.EnsureIndex(mgo.Index{
 		Key:    []string{"User", "IsPublished"},
 		Sparse: true,
 	}); err != nil {
-		println("error ensureIndex Blog UserIsPublished", err.Error())
-		err = collection.DropIndex("UserIsPublished")
-		if err != nil {
-			panic(err)
-		}
-		goto reEnsureUserIsPublished
-
+		panic("ensureIndex test.Blog UserIsPublished error:" + err.Error())
 	}
 
-reEnsureSlug:
 	if err := collection.EnsureIndex(mgo.Index{
 		Key:    []string{"Slug"},
 		Unique: true,
 		Sparse: true,
 	}); err != nil {
-		println("error ensureIndex Blog Slug", err.Error())
-		err = collection.DropIndex("Slug")
-		if err != nil {
-			panic(err)
-		}
-		goto reEnsureSlug
-
+		panic("ensureIndex test.Blog Slug error:" + err.Error())
 	}
 
-reEnsureIsPublished:
 	if err := collection.EnsureIndex(mgo.Index{
 		Key:    []string{"IsPublished"},
 		Sparse: true,
 	}); err != nil {
-		println("error ensureIndex Blog IsPublished", err.Error())
-		err = collection.DropIndex("IsPublished")
-		if err != nil {
-			panic(err)
-		}
-		goto reEnsureIsPublished
-
+		panic("ensureIndex test.Blog IsPublished error:" + err.Error())
 	}
 
 }

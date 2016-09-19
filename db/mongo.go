@@ -29,6 +29,17 @@ var ErrOperaBeforeInit = errors.New("please set db.SetOnFinishInit when needed o
 
 // non-multhreads
 var afterEvents []func()
+var indexEvents []func()
+
+func EnsureAllIndex() {
+	for _, f := range indexEvents {
+		f()
+	}
+}
+
+func SetOnEnsureIndex(f func()) {
+	indexEvents = append(indexEvents, f)
+}
 
 func SetOnFinishInit(f func()) {
 	if IsFinishInit() {
@@ -92,7 +103,7 @@ func ObjectIds(ids []string) (ret []bson.ObjectId) {
 }
 
 func NewSession() (session *mgo.Session) {
-	return ShareSession().Copy()
+	return ShareSession().Clone()
 }
 
 func NewCollection(session *mgo.Session, dbName, name string) *mgo.Collection {
