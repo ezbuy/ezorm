@@ -1,0 +1,289 @@
+{{define "mysql_orm"}}package {{.Package}}
+
+{{$obj := .}}
+{{$idFieldName := printf "%sId" .Name}}
+{{/* Only generate source file for table with primary key */}}
+{{range $index, $field := $obj.Fields}}
+{{if eq $field.Name $idFieldName}}
+{{$idField := $field}}
+{{$allFields := join $obj.GetFieldNames "`, `"}}
+{{$allFields := printf "`%v`" $allFields}}
+{{$nonIdFieldNames := preSuffixJoin ($obj.GetFieldNamesAsArgs "obj.") "" "" ", "}}
+{{$tag := printf "%s.%s" $obj.DbName $obj.Name}}
+{{$tbl := printf "%s.%s" $obj.DbName $obj.Table}}
+
+import (
+	"database/sql"
+	"fmt"
+	"strings"
+	"github.com/ezbuy/ezorm/db"
+	"time"
+)
+var (
+	_ time.Time
+)
+
+
+// -----------------------------------------------------------------------------
+
+func (m *_{{$obj.Name}}Mgr) queryOne(query string, args ...interface{}) (*{{$obj.Name}}, error) {
+	ret, err := m.queryLimit(query, 1, args...)
+	if err != nil {
+		return nil, err
+	}
+	if len(ret) == 0 {
+		return nil, sql.ErrNoRows
+	}
+	return ret[0], nil
+}
+
+func (m *_{{$obj.Name}}Mgr) query(query string, args ...interface{}) (results []*{{$obj.Name}}, err error){
+	return m.queryLimit(query, -1, args...)
+}
+
+func (*_{{$obj.Name}}Mgr) queryLimit(query string, limit int, args ...interface{}) (results []*{{$obj.Name}}, err error){
+	rows, err := db.MysqlQuery(query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("{{$tag}} query error: %v", err)
+	}
+	defer rows.Close()
+
+	{{range $index, $field := $obj.Fields}}
+	{{- if $field.IsNullablePrimitive }}
+	var {{$field.Name}} sql.{{$field.GetNullSQLType}}
+	{{- else if $field.IsNeedTransform }}
+	var {{$field.Name}} {{$field.GetTransformType.TypeOrigin}}
+	{{- end -}}
+	{{- end }}
+
+	offset :=0
+	for rows.Next() {
+		if limit >= 0 && offset >= limit {
+			break
+		}
+		offset++
+		
+		var result {{$obj.Name}}
+		err := rows.Scan(
+		{{- range $index, $field := $obj.Fields -}}
+		{{- if or $field.IsNullablePrimitive $field.IsNeedTransform -}}
+			&{{$field.Name}},
+		{{- else -}}
+			&(result.{{$field.Name}}),
+		{{ end }}
+		{{- end -}}
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		{{range $index, $field := $obj.Fields}}
+		{{- if $field.IsNullablePrimitive}}
+			result.{{$field.Name}} =
+			{{- if $field.NullSQLTypeNeedCast -}}
+				{{$field.GetGoType}}({{$field.Name}}.{{$field.NullSQLTypeValue}})
+			{{- else -}}
+			{{$field.Name}}.{{$field.NullSQLTypeValue}}
+			{{- end -}}
+		{{ else if $field.IsNeedTransform }}
+		   result.{{$field.Name}} =
+		   {{- printf $field.GetTransformType.ConvertTo $field.Name}}
+		{{end -}}
+		{{end}}
+
+		results = append(results, &result)
+
+
+	}
+	if err := rows.Err() ;err != nil {
+		return nil, fmt.Errorf("{{$tag}} fetch result error: %v", err)
+	}
+
+	return
+}
+
+func (m *_{{$obj.Name}}Mgr) Save(obj *{{$obj.Name}}) (sql.Result, error) {
+	if obj.{{$idFieldName}} == 0 {
+		return m.saveInsert(obj)
+	}
+	return m.saveUpdate(obj)
+}
+
+func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
+	query := "INSERT INTO {{$tbl}} (`
+	{{- join $obj.GetNonIdFieldNames "`, `" -}}
+	`) VALUES (
+	{{- repeatJoin (len $obj.GetNonIdFieldNames) "?" ", " -}}
+	)"
+	result, err := db.MysqlExec(query, {{$nonIdFieldNames}})
+	if err != nil {
+		return result, err
+	}
+
+	lastInsertId, err := result.LastInsertId()
+	if err != nil {
+		return result, err
+	}
+
+	obj.{{$idFieldName}} = {{$idField.Type}}(lastInsertId)
+
+	return result, err
+}
+
+func (m *_{{$obj.Name}}Mgr) saveUpdate(obj *{{$obj.Name}}) (sql.Result, error) {
+	query := "UPDATE {{$tbl}} SET
+	{{- preSuffixJoin $obj.GetNonIdFieldNames " `" "`=?" "," }} WHERE `{{$field.Name}}`=?"
+	return db.MysqlExec(query, {{$nonIdFieldNames}}, obj.{{$field.Name}})
+}
+
+func (m *_{{$obj.Name}}Mgr) InsertBatch(objs []*{{$obj.Name}}) (sql.Result, error) {
+	if len(objs) == 0 {
+		return nil, fmt.Errorf("Empty insert")
+	}
+
+	values := make([]string, 0, len(objs))
+	params := make([]interface{}, 0, len(objs) * {{(len $obj.GetNonIdFieldNames)}})
+	for _, obj := range objs {
+		values = append(values, "({{- repeatJoin (len $obj.GetNonIdFieldNames) "?" ", " -}})")
+		params = append(params, {{$nonIdFieldNames}})
+	}
+	query := fmt.Sprintf("INSERT INTO {{$tbl}} ({{- join $obj.GetNonIdFieldNames ", " -}}) VALUES %s", strings.Join(values, ","))
+	return db.MysqlExec(query, params...)
+}
+
+func (m *_{{$obj.Name}}Mgr) FindByID(id {{$idField.Type}}) (*{{$obj.Name}}, error) {
+	query := "SELECT {{$allFields}} FROM {{$tbl}} WHERE {{$idFieldName}}=?"
+	return m.queryOne(query, id)
+}
+
+func (m *_{{$obj.Name}}Mgr) FindByIDs(ids []{{$idField.Type}}) ([]*{{$obj.Name}}, error) {
+	idsLen := len(ids)
+	placeHolders := make([]string, 0, idsLen)
+	args := make([]interface{}, 0, idsLen)
+	for _, id := range ids {
+		placeHolders = append(placeHolders, "?")
+		args = append(args, id)
+	}
+
+	query := fmt.Sprintf(
+		"SELECT {{$allFields}} FROM {{$tbl}} WHERE {{$idFieldName}} IN (%s)",
+		strings.Join(placeHolders, ","))
+	return m.query(query, args...)
+}
+
+{{range $index := $obj.Indexes}}
+{{if $index.IsUnique }}
+func (m *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (*{{$obj.Name}}, error) {
+	query := "SELECT {{$allFields}} FROM {{$tbl}} WHERE
+	{{- preSuffixJoin $index.FieldNames " " "=?" " AND" -}}"
+	return m.queryOne(query, {{$index.GetFuncParamNames}})
+}
+{{else}}
+func (m *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, offset int, limit int, sortFields ...string) ( []*{{$obj.Name}},  error) {
+	orderBy := "ORDER BY %s"
+	if len(sortFields) != 0 {
+		orderBy = fmt.Sprintf(orderBy, strings.Join(sortFields, ","))
+	} else {
+		orderBy = fmt.Sprintf(orderBy, "{{$idFieldName}}")
+	}
+
+	query := fmt.Sprintf("SELECT {{$allFields}} FROM {{$tbl}} WHERE
+	{{- preSuffixJoin $index.FieldNames " `" "`=? " "AND" -}}
+	%s LIMIT ?, ?", orderBy)
+
+	return m.query(query, {{$index.GetFuncParamNames}}, offset, limit)
+}
+{{end}}
+{{end}}
+
+func (m *_{{$obj.Name}}Mgr) FindOne(where string, args ...interface{}) (*{{$obj.Name}}, error) {
+	query := m.getQuerysql(true, where)
+	return m.queryOne(query, args...)
+}
+
+
+func (m *_{{$obj.Name}}Mgr) Find(where string, args ...interface{}) ([]*{{$obj.Name}}, error) {
+	query := m.getQuerysql(false, where)
+	return m.query(query, args...)
+}
+
+func (m *_{{$obj.Name}}Mgr) FindAll() (results []*{{$obj.Name}}, err error) {
+	return m.Find("")
+}
+
+func (m *_{{$obj.Name}}Mgr) FindWithOffset(where string, offset int, limit int, args ...interface{}) ([]*{{$obj.Name}}, error) {
+	query := m.getQuerysql(false, where)
+
+	query = query + " LIMIT ?, ?"
+
+	args = append(args, offset)
+	args = append(args, limit)
+
+	return m.query(query, args...)
+}
+
+
+func (m *_{{$obj.Name}}Mgr) getQuerysql(topOne bool, where string) string {
+	query := "SELECT {{$allFields}} FROM {{$tbl}}"
+
+	where = strings.TrimSpace(where)
+	if where != "" {
+		upwhere := strings.ToUpper(where)
+
+		if !strings.HasPrefix(upwhere, "WHERE") && !strings.HasPrefix(upwhere, "ORDER BY") {
+			where = " WHERE " + where
+		}
+
+		query = query + where
+	}
+	
+	if topOne {
+	   query += " LIMIT 1"
+	}
+	return query
+}
+
+func (m *_{{$obj.Name}}Mgr) Del(where string, params ...interface{}) (sql.Result, error) {
+	if where != "" {
+	   where = "WHERE " + where
+	}
+	query := "DELETE FROM {{$tbl}} " + where
+	return db.MysqlExec(query, params...)
+}
+
+// argument example:
+// set:"a=?, b=?"
+// where:"c=? and d=?"
+// params:[]interface{}{"a", "b", "c", "d"}...
+func (m *_{{$obj.Name}}Mgr) Update(set, where string, params ...interface{}) (sql.Result, error) {
+	query := fmt.Sprintf("UPDATE {{$tbl}} SET %s", set)
+	if where != "" {
+		query = fmt.Sprintf("UPDATE {{$tbl}} SET %s WHERE %s", set, where)
+	}
+	return db.MysqlExec(query, params...)
+}
+
+func (m *_{{$obj.Name}}Mgr) Count(where string, args ...interface{}) (int32, error) {
+	query := "SELECT COUNT(*) FROM {{$tbl}}"
+	if where != "" {
+		query = query + " WHERE " + where
+	}
+
+	rows, err := db.MysqlQuery(query, args...)
+	if err != nil {
+		return 0, err
+	}
+
+	var count int32
+	if rows.Next() {
+		err = rows.Scan(&count)
+	}
+
+	return count, err
+}
+
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+

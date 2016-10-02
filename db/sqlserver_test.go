@@ -3,6 +3,7 @@ package db
 import (
 	"fmt"
 	"math/rand"
+	"os"
 	"testing"
 	"time"
 )
@@ -20,6 +21,12 @@ func requestTimeLogger(queryer Queryer, query string, args ...interface{}) Query
 }
 
 var _testSqlSvr *SqlServer
+var (
+	host     = os.Getenv("host")
+	userId   = os.Getenv("userId")
+	password = os.Getenv("password")
+	database = os.Getenv("database")
+)
 
 func init() {
 	dsn := fmt.Sprintf("server=%s;user id=%s;password=%s;DATABASE=%s",
