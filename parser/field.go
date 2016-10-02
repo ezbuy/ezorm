@@ -2,6 +2,7 @@ package parser
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -85,6 +86,10 @@ func (f *Field) GetThriftType() string {
 }
 
 func (f *Field) getGoType(typestr string) string {
+	if transform := f.GetTransformType(); transform != nil {
+		return transform.TypeTarget
+	}
+
 	if typestr == "datetime" {
 		// Use pointer type to avoid null value panic
 		if f.Obj.Db == "mssql" {
@@ -229,6 +234,45 @@ func (f *Field) IsNullablePrimitive() bool {
 	return f.IsNullable() && nullablePrimitiveSet[f.GetGoType()]
 }
 
+type Transform struct {
+	TypeOrigin  string
+	ConvertTo   string
+	TypeTarget  string
+	ConvertBack string
+}
+
+// convert `TypeOrigin` in datebase to `TypeTarget` when quering
+// convert `TypeTarget` back to `TypeOrigin` when updating/inserting
+var transformMap = map[string]Transform{
+	"mysql_timestamp": {"int64", "time.Unix(%v, 0)", "time.Time", "%v.Unix()"},
+	"mysql_datetime": {
+		"string", "db.TimeParseLocalTime(%v)",
+		"time.Time", "db.TimeToLocalTime(%v)",
+	},
+}
+
+func (f *Field) AsArgName(prefix string) string {
+	t := f.GetTransformType()
+	if t == nil {
+		return prefix + f.Name
+	}
+	return fmt.Sprintf(t.ConvertBack, prefix+f.Name)
+}
+
+func (f *Field) IsNeedTransform() bool {
+	return f.GetTransformType() != nil
+}
+
+func (f *Field) GetTransformType() *Transform {
+	key := fmt.Sprintf("%v_%v", f.Obj.Db, f.Type)
+
+	t, ok := transformMap[key]
+	if !ok {
+		return nil
+	}
+	return &t
+}
+
 func (f *Field) HasIndex() bool {
 	return f.Flags.Contains("index") || f.Flags.Contains("sort") || f.IsUnique()
 }
@@ -257,6 +301,7 @@ func (f *Field) Read(data map[interface{}]interface{}) error {
 				} else if f.Type == "datetime" {
 					if f.Obj.Db == "mssql" {
 						f.Type = "*time.Time"
+					} else if f.Obj.Db == "mysql" {
 					} else {
 						f.Type = "int64"
 					}
