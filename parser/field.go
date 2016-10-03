@@ -244,8 +244,15 @@ type Transform struct {
 // convert `TypeOrigin` in datebase to `TypeTarget` when quering
 // convert `TypeTarget` back to `TypeOrigin` when updating/inserting
 var transformMap = map[string]Transform{
-	"mysql_timestamp": {"int64", "time.Unix(%v, 0)", "time.Time", "%v.Unix()"},
-	"mysql_datetime": {
+	"mysql_timestamp": { // TIMESTAMP (string, UTC)
+		"string", `db.TimeParse(%v)`,
+		"time.Time", `db.TimeFormat(%v)`,
+	},
+	"mysql_timeint": { // INT(11)
+		"int64", "time.Unix(%v, 0)",
+		"time.Time", "%v.Unix()",
+	},
+	"mysql_datetime": { // DATETIME (string, localtime)
 		"string", "db.TimeParseLocalTime(%v)",
 		"time.Time", "db.TimeToLocalTime(%v)",
 	},

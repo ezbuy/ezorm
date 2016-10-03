@@ -8,7 +8,7 @@ import (
 )
 
 func TestPeople(t *testing.T) {
-	db.InitMysql(&db.MysqlConfig{
+	db.MysqlInit(&db.MysqlConfig{
 		DataSource: "tcp(localhost:3306)/",
 	})
 
@@ -45,6 +45,7 @@ func TestPeople(t *testing.T) {
 		if blog.Slug != "blog-title" {
 			t.Fatal("not expected")
 		}
+
 		if blog.Create.Unix() != now.Unix() {
 			t.Fatal("not expected createtime")
 		}

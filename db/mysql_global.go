@@ -11,7 +11,7 @@ var (
 	mysqlConnOnce sync.Once
 )
 
-func InitMysql(cfg *MysqlConfig) {
+func MysqlInit(cfg *MysqlConfig) {
 	mysqlCfg = *cfg
 }
 

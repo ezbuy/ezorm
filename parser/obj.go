@@ -85,6 +85,9 @@ type Obj struct {
 
 func (o *Obj) init() {
 	o.FieldNameMap = make(map[string]*Field)
+	if o.Table == "" {
+		o.Table = o.Name
+	}
 }
 
 func (o *Obj) GetFieldNames() []string {

@@ -6,6 +6,15 @@ func TimeToLocalTime(c time.Time) string {
 	return c.Local().Format("2006-01-02 15:04:05")
 }
 
+func TimeParse(s string) time.Time {
+	t, _ := time.Parse("2006-01-02 15:04:05", s)
+	return t
+}
+
+func TimeFormat(t time.Time) string {
+	return t.UTC().Format("2006-01-02 15:04:05")
+}
+
 func TimeParseLocalTime(s string) time.Time {
 	t, err := time.Parse("2006-01-02 15:04:05", s)
 	if err != nil {
