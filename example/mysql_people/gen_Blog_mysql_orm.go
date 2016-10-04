@@ -37,7 +37,7 @@ func (*_BlogMgr) queryLimit(query string, limit int, args ...interface{}) (resul
 	defer rows.Close()
 
 	var Body sql.NullString
-	var Create int64
+	var Create string
 	var Update string
 
 	offset := 0
@@ -60,7 +60,7 @@ func (*_BlogMgr) queryLimit(query string, limit int, args ...interface{}) (resul
 		}
 
 		result.Body = Body.String
-		result.Create = time.Unix(Create, 0)
+		result.Create = db.TimeParse(Create)
 
 		result.Update = db.TimeParseLocalTime(Update)
 
@@ -83,7 +83,7 @@ func (m *_BlogMgr) Save(obj *Blog) (sql.Result, error) {
 
 func (m *_BlogMgr) saveInsert(obj *Blog) (sql.Result, error) {
 	query := "INSERT INTO test.Blog (`Title`, `Hits`, `Slug`, `Body`, `User`, `IsPublished`, `Create`, `Update`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-	result, err := db.MysqlExec(query, obj.Title, obj.Hits, obj.Slug, obj.Body, obj.User, obj.IsPublished, obj.Create.Unix(), db.TimeToLocalTime(obj.Update))
+	result, err := db.MysqlExec(query, obj.Title, obj.Hits, obj.Slug, obj.Body, obj.User, obj.IsPublished, db.TimeFormat(obj.Create), db.TimeToLocalTime(obj.Update))
 	if err != nil {
 		return result, err
 	}
@@ -100,7 +100,7 @@ func (m *_BlogMgr) saveInsert(obj *Blog) (sql.Result, error) {
 
 func (m *_BlogMgr) saveUpdate(obj *Blog) (sql.Result, error) {
 	query := "UPDATE test.Blog SET `Title`=?, `Hits`=?, `Slug`=?, `Body`=?, `User`=?, `IsPublished`=?, `Create`=?, `Update`=? WHERE `BlogId`=?"
-	return db.MysqlExec(query, obj.Title, obj.Hits, obj.Slug, obj.Body, obj.User, obj.IsPublished, obj.Create.Unix(), db.TimeToLocalTime(obj.Update), obj.BlogId)
+	return db.MysqlExec(query, obj.Title, obj.Hits, obj.Slug, obj.Body, obj.User, obj.IsPublished, db.TimeFormat(obj.Create), db.TimeToLocalTime(obj.Update), obj.BlogId)
 }
 
 func (m *_BlogMgr) InsertBatch(objs []*Blog) (sql.Result, error) {
@@ -112,7 +112,7 @@ func (m *_BlogMgr) InsertBatch(objs []*Blog) (sql.Result, error) {
 	params := make([]interface{}, 0, len(objs)*8)
 	for _, obj := range objs {
 		values = append(values, "(?, ?, ?, ?, ?, ?, ?, ?)")
-		params = append(params, obj.Title, obj.Hits, obj.Slug, obj.Body, obj.User, obj.IsPublished, obj.Create.Unix(), db.TimeToLocalTime(obj.Update))
+		params = append(params, obj.Title, obj.Hits, obj.Slug, obj.Body, obj.User, obj.IsPublished, db.TimeFormat(obj.Create), db.TimeToLocalTime(obj.Update))
 	}
 	query := fmt.Sprintf("INSERT INTO test.Blog (Title, Hits, Slug, Body, User, IsPublished, Create, Update) VALUES %s", strings.Join(values, ","))
 	return db.MysqlExec(query, params...)
@@ -179,7 +179,7 @@ func (m *_BlogMgr) FindByCreate(Create time.Time, offset int, limit int, sortFie
 
 	query := fmt.Sprintf("SELECT `BlogId`, `Title`, `Hits`, `Slug`, `Body`, `User`, `IsPublished`, `Create`, `Update` FROM test.Blog WHERE `Create`=? %s LIMIT ?, ?", orderBy)
 
-	return m.query(query, Create.Unix(), offset, limit)
+	return m.query(query, db.TimeFormat(Create), offset, limit)
 }
 
 func (m *_BlogMgr) FindByUpdate(Update time.Time, offset int, limit int, sortFields ...string) ([]*Blog, error) {
