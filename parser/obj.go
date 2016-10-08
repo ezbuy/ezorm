@@ -33,6 +33,7 @@ func init() {
 		"tpl/struct.gogo",
 		"tpl/mssql_orm.gogo",
 		"tpl/mssql_config.gogo",
+		"tpl/mysql_orm.gogo",
 	}
 	for _, fname := range files {
 		data, err := tpl.Asset(fname)
@@ -95,6 +96,17 @@ func (o *Obj) GetFieldNames() []string {
 	return fieldNames
 }
 
+func (o *Obj) GetFieldNamesAsArgs(prefix string) []string {
+	fieldNames := make([]string, 0, len(o.Fields))
+	idFieldName := o.Name + "Id"
+	for _, f := range o.Fields {
+		if f.Name != idFieldName {
+			fieldNames = append(fieldNames, f.AsArgName(prefix))
+		}
+	}
+	return fieldNames
+}
+
 func (o *Obj) GetNonIdFieldNames() []string {
 	fieldNames := make([]string, 0, len(o.Fields))
 	idFieldName := o.Name + "Id"
@@ -133,6 +145,8 @@ func (o *Obj) GetGenTypes() []string {
 		return []string{"enum"}
 	case "mssql":
 		return []string{"struct", "mssql_orm"}
+	case "mysql":
+		return []string{"struct", "mysql_orm"}
 	default:
 		return []string{"struct"}
 	}
