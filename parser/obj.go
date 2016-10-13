@@ -22,6 +22,9 @@ func init() {
 		"join":          strings.Join,
 		"preSuffixJoin": preSuffixJoin,
 		"repeatJoin":    repeatJoin,
+		"camel2list":    camel2list,
+		"camel2name":    camel2name,
+		"strDefault":    strDefault,
 	}
 	Tpl = template.New("ezorm").Funcs(funcMap)
 	files := []string{
