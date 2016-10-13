@@ -6,11 +6,11 @@
 {{range $index, $field := $obj.Fields}}
 {{if eq $field.Name $idFieldName}}
 {{$idField := $field}}
-{{$allFields := join $obj.GetFieldNames "`, `"}}
+{{$allFields := join (camel2list $obj.GetFieldNames) "`, `"}}
 {{$allFields := printf "`%v`" $allFields}}
 {{$nonIdFieldNames := preSuffixJoin ($obj.GetFieldNamesAsArgs "obj.") "" "" ", "}}
 {{$tag := printf "%s.%s" $obj.DbName $obj.Name}}
-{{$tbl := printf "%s.%s" $obj.DbName $obj.Table}}
+{{$tbl := printf "%s.%s" $obj.DbName (camel2name (strDefault $obj.Table $obj.Name))}}
 
 import (
 	"database/sql"
@@ -111,7 +111,7 @@ func (m *_{{$obj.Name}}Mgr) Save(obj *{{$obj.Name}}) (sql.Result, error) {
 
 func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
 	query := "INSERT INTO {{$tbl}} (`
-	{{- join $obj.GetNonIdFieldNames "`, `" -}}
+	{{- join (camel2list $obj.GetNonIdFieldNames) "`, `" -}}
 	`) VALUES (
 	{{- repeatJoin (len $obj.GetNonIdFieldNames) "?" ", " -}}
 	)"
@@ -132,7 +132,7 @@ func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
 
 func (m *_{{$obj.Name}}Mgr) saveUpdate(obj *{{$obj.Name}}) (sql.Result, error) {
 	query := "UPDATE {{$tbl}} SET
-	{{- preSuffixJoin $obj.GetNonIdFieldNames " `" "`=?" "," }} WHERE `{{$field.Name}}`=?"
+	{{- preSuffixJoin (camel2list $obj.GetNonIdFieldNames) " `" "`=?" "," }} WHERE `{{camel2name $field.Name}}`=?"
 	return db.MysqlExec(query, {{$nonIdFieldNames}}, obj.{{$field.Name}})
 }
 
@@ -147,12 +147,12 @@ func (m *_{{$obj.Name}}Mgr) InsertBatch(objs []*{{$obj.Name}}) (sql.Result, erro
 		values = append(values, "({{- repeatJoin (len $obj.GetNonIdFieldNames) "?" ", " -}})")
 		params = append(params, {{$nonIdFieldNames}})
 	}
-	query := fmt.Sprintf("INSERT INTO {{$tbl}} ({{- join $obj.GetNonIdFieldNames ", " -}}) VALUES %s", strings.Join(values, ","))
+	query := fmt.Sprintf("INSERT INTO {{$tbl}} ({{- join (camel2list $obj.GetNonIdFieldNames) ", " -}}) VALUES %s", strings.Join(values, ","))
 	return db.MysqlExec(query, params...)
 }
 
 func (m *_{{$obj.Name}}Mgr) FindByID(id {{$idField.Type}}) (*{{$obj.Name}}, error) {
-	query := "SELECT {{$allFields}} FROM {{$tbl}} WHERE {{$idFieldName}}=?"
+	query := "SELECT {{$allFields}} FROM {{$tbl}} WHERE {{camel2name $idFieldName}}=?"
 	return m.queryOne(query, id)
 }
 
@@ -166,7 +166,7 @@ func (m *_{{$obj.Name}}Mgr) FindByIDs(ids []{{$idField.Type}}) ([]*{{$obj.Name}}
 	}
 
 	query := fmt.Sprintf(
-		"SELECT {{$allFields}} FROM {{$tbl}} WHERE {{$idFieldName}} IN (%s)",
+		"SELECT {{$allFields}} FROM {{$tbl}} WHERE {{camel2name $idFieldName}} IN (%s)",
 		strings.Join(placeHolders, ","))
 	return m.query(query, args...)
 }
@@ -188,7 +188,7 @@ func (m *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, offse
 	}
 
 	query := fmt.Sprintf("SELECT {{$allFields}} FROM {{$tbl}} WHERE
-	{{- preSuffixJoin $index.FieldNames " `" "`=? " "AND" -}}
+	{{- preSuffixJoin (camel2list $index.FieldNames) " `" "`=? " "AND" -}}
 	%s LIMIT ?, ?", orderBy)
 
 	return m.query(query, {{$index.GetFuncParamNames}}, offset, limit)
