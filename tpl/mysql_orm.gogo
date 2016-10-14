@@ -41,6 +41,10 @@ func (m *_{{$obj.Name}}Mgr) query(query string, args ...interface{}) (results []
 	return m.queryLimit(query, -1, args...)
 }
 
+func (m *_{{$obj.Name}}Mgr) Query(query string, args ...interface{}) (results []*{{$obj.Name}}, err error) {
+	return m.queryLimit(query, -1, args...)
+}
+
 func (*_{{$obj.Name}}Mgr) queryLimit(query string, limit int, args ...interface{}) (results []*{{$obj.Name}}, err error){
 	rows, err := db.MysqlQuery(query, args...)
 	if err != nil {
