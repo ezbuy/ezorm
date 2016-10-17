@@ -1,6 +1,7 @@
 package people
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
 	"github.com/ezbuy/ezorm/db"
@@ -10,6 +11,7 @@ import (
 
 var (
 	_ time.Time
+	_ bytes.Buffer
 )
 
 // -----------------------------------------------------------------------------
@@ -26,6 +28,10 @@ func (m *_BlogMgr) queryOne(query string, args ...interface{}) (*Blog, error) {
 }
 
 func (m *_BlogMgr) query(query string, args ...interface{}) (results []*Blog, err error) {
+	return m.queryLimit(query, -1, args...)
+}
+
+func (m *_BlogMgr) Query(query string, args ...interface{}) (results []*Blog, err error) {
 	return m.queryLimit(query, -1, args...)
 }
 
@@ -82,7 +88,7 @@ func (m *_BlogMgr) Save(obj *Blog) (sql.Result, error) {
 }
 
 func (m *_BlogMgr) saveInsert(obj *Blog) (sql.Result, error) {
-	query := "INSERT INTO test.Blog (`Title`, `Hits`, `Slug`, `Body`, `User`, `IsPublished`, `Create`, `Update`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+	query := "INSERT INTO test.blog (`title`, `hits`, `slug`, `body`, `user`, `is_published`, `create`, `update`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
 	result, err := db.MysqlExec(query, obj.Title, obj.Hits, obj.Slug, obj.Body, obj.User, obj.IsPublished, db.TimeFormat(obj.Create), db.TimeToLocalTime(obj.Update))
 	if err != nil {
 		return result, err
@@ -99,7 +105,7 @@ func (m *_BlogMgr) saveInsert(obj *Blog) (sql.Result, error) {
 }
 
 func (m *_BlogMgr) saveUpdate(obj *Blog) (sql.Result, error) {
-	query := "UPDATE test.Blog SET `Title`=?, `Hits`=?, `Slug`=?, `Body`=?, `User`=?, `IsPublished`=?, `Create`=?, `Update`=? WHERE `BlogId`=?"
+	query := "UPDATE test.blog SET `title`=?, `hits`=?, `slug`=?, `body`=?, `user`=?, `is_published`=?, `create`=?, `update`=? WHERE `blog_id`=?"
 	return db.MysqlExec(query, obj.Title, obj.Hits, obj.Slug, obj.Body, obj.User, obj.IsPublished, db.TimeFormat(obj.Create), db.TimeToLocalTime(obj.Update), obj.BlogId)
 }
 
@@ -114,12 +120,12 @@ func (m *_BlogMgr) InsertBatch(objs []*Blog) (sql.Result, error) {
 		values = append(values, "(?, ?, ?, ?, ?, ?, ?, ?)")
 		params = append(params, obj.Title, obj.Hits, obj.Slug, obj.Body, obj.User, obj.IsPublished, db.TimeFormat(obj.Create), db.TimeToLocalTime(obj.Update))
 	}
-	query := fmt.Sprintf("INSERT INTO test.Blog (Title, Hits, Slug, Body, User, IsPublished, Create, Update) VALUES %s", strings.Join(values, ","))
+	query := fmt.Sprintf("INSERT INTO test.blog (title, hits, slug, body, user, is_published, create, update) VALUES %s", strings.Join(values, ","))
 	return db.MysqlExec(query, params...)
 }
 
 func (m *_BlogMgr) FindByID(id int32) (*Blog, error) {
-	query := "SELECT `BlogId`, `Title`, `Hits`, `Slug`, `Body`, `User`, `IsPublished`, `Create`, `Update` FROM test.Blog WHERE BlogId=?"
+	query := "SELECT `blog_id`, `title`, `hits`, `slug`, `body`, `user`, `is_published`, `create`, `update` FROM test.blog WHERE blog_id=?"
 	return m.queryOne(query, id)
 }
 
@@ -133,9 +139,17 @@ func (m *_BlogMgr) FindByIDs(ids []int32) ([]*Blog, error) {
 	}
 
 	query := fmt.Sprintf(
-		"SELECT `BlogId`, `Title`, `Hits`, `Slug`, `Body`, `User`, `IsPublished`, `Create`, `Update` FROM test.Blog WHERE BlogId IN (%s)",
+		"SELECT `blog_id`, `title`, `hits`, `slug`, `body`, `user`, `is_published`, `create`, `update` FROM test.blog WHERE blog_id IN (%s)",
 		strings.Join(placeHolders, ","))
 	return m.query(query, args...)
+}
+
+func (m *_BlogMgr) FindInBlogId(ids []int32) ([]*Blog, error) {
+	return m.FindByIDs(ids)
+}
+
+func (m *_BlogMgr) FindAllByUserIsPublished(User int32, IsPublished bool, sortFields ...string) ([]*Blog, error) {
+	return m.FindByUserIsPublished(User, IsPublished, -1, -1, sortFields...)
 }
 
 func (m *_BlogMgr) FindByUserIsPublished(User int32, IsPublished bool, offset int, limit int, sortFields ...string) ([]*Blog, error) {
@@ -146,14 +160,65 @@ func (m *_BlogMgr) FindByUserIsPublished(User int32, IsPublished bool, offset in
 		orderBy = fmt.Sprintf(orderBy, "BlogId")
 	}
 
-	query := fmt.Sprintf("SELECT `BlogId`, `Title`, `Hits`, `Slug`, `Body`, `User`, `IsPublished`, `Create`, `Update` FROM test.Blog WHERE `User`=? AND `IsPublished`=? %s LIMIT ?, ?", orderBy)
+	query := fmt.Sprintf("SELECT `blog_id`, `title`, `hits`, `slug`, `body`, `user`, `is_published`, `create`, `update` FROM test.blog WHERE `user`=? AND `is_published`=? %s LIMIT ?, ?", orderBy)
 
 	return m.query(query, User, IsPublished, offset, limit)
 }
 
+func (m *_BlogMgr) FindInSlug(Slug []string, sortFields ...string) ([]*Blog, error) {
+	orderBy := "ORDER BY %s"
+	if len(sortFields) != 0 {
+		orderBy = fmt.Sprintf(orderBy, strings.Join(sortFields, ","))
+	} else {
+		orderBy = fmt.Sprintf(orderBy, "blog_id")
+	}
+
+	buf := bytes.NewBuffer(nil)
+	buf.WriteString("SELECT `blog_id`, `title`, `hits`, `slug`, `body`, `user`, `is_published`, `create`, `update` FROM test.blog WHERE `slug` in ")
+	stringToIds(buf, Slug)
+	buf.WriteString(" " + orderBy)
+	return m.query(buf.String())
+}
+
 func (m *_BlogMgr) FindOneBySlug(Slug string) (*Blog, error) {
-	query := "SELECT `BlogId`, `Title`, `Hits`, `Slug`, `Body`, `User`, `IsPublished`, `Create`, `Update` FROM test.Blog WHERE Slug=?"
+	query := "SELECT `blog_id`, `title`, `hits`, `slug`, `body`, `user`, `is_published`, `create`, `update` FROM test.blog WHERE Slug=?"
 	return m.queryOne(query, Slug)
+}
+
+func (m *_BlogMgr) FindInUser(User []int32, sortFields ...string) ([]*Blog, error) {
+	orderBy := "ORDER BY %s"
+	if len(sortFields) != 0 {
+		orderBy = fmt.Sprintf(orderBy, strings.Join(sortFields, ","))
+	} else {
+		orderBy = fmt.Sprintf(orderBy, "blog_id")
+	}
+
+	buf := bytes.NewBuffer(nil)
+	buf.WriteString("SELECT `blog_id`, `title`, `hits`, `slug`, `body`, `user`, `is_published`, `create`, `update` FROM test.blog WHERE `user` in ")
+	int32ToIds(buf, User)
+	buf.WriteString(" " + orderBy)
+	return m.query(buf.String())
+}
+
+func (m *_BlogMgr) FindAllByUser(User int32, sortFields ...string) ([]*Blog, error) {
+	return m.FindByUser(User, -1, -1, sortFields...)
+}
+
+func (m *_BlogMgr) FindByUser(User int32, offset int, limit int, sortFields ...string) ([]*Blog, error) {
+	orderBy := "ORDER BY %s"
+	if len(sortFields) != 0 {
+		orderBy = fmt.Sprintf(orderBy, strings.Join(sortFields, ","))
+	} else {
+		orderBy = fmt.Sprintf(orderBy, "BlogId")
+	}
+
+	query := fmt.Sprintf("SELECT `blog_id`, `title`, `hits`, `slug`, `body`, `user`, `is_published`, `create`, `update` FROM test.blog WHERE `user`=? %s LIMIT ?, ?", orderBy)
+
+	return m.query(query, User, offset, limit)
+}
+
+func (m *_BlogMgr) FindAllByIsPublished(IsPublished bool, sortFields ...string) ([]*Blog, error) {
+	return m.FindByIsPublished(IsPublished, -1, -1, sortFields...)
 }
 
 func (m *_BlogMgr) FindByIsPublished(IsPublished bool, offset int, limit int, sortFields ...string) ([]*Blog, error) {
@@ -164,9 +229,13 @@ func (m *_BlogMgr) FindByIsPublished(IsPublished bool, offset int, limit int, so
 		orderBy = fmt.Sprintf(orderBy, "BlogId")
 	}
 
-	query := fmt.Sprintf("SELECT `BlogId`, `Title`, `Hits`, `Slug`, `Body`, `User`, `IsPublished`, `Create`, `Update` FROM test.Blog WHERE `IsPublished`=? %s LIMIT ?, ?", orderBy)
+	query := fmt.Sprintf("SELECT `blog_id`, `title`, `hits`, `slug`, `body`, `user`, `is_published`, `create`, `update` FROM test.blog WHERE `is_published`=? %s LIMIT ?, ?", orderBy)
 
 	return m.query(query, IsPublished, offset, limit)
+}
+
+func (m *_BlogMgr) FindAllByCreate(Create time.Time, sortFields ...string) ([]*Blog, error) {
+	return m.FindByCreate(Create, -1, -1, sortFields...)
 }
 
 func (m *_BlogMgr) FindByCreate(Create time.Time, offset int, limit int, sortFields ...string) ([]*Blog, error) {
@@ -177,9 +246,13 @@ func (m *_BlogMgr) FindByCreate(Create time.Time, offset int, limit int, sortFie
 		orderBy = fmt.Sprintf(orderBy, "BlogId")
 	}
 
-	query := fmt.Sprintf("SELECT `BlogId`, `Title`, `Hits`, `Slug`, `Body`, `User`, `IsPublished`, `Create`, `Update` FROM test.Blog WHERE `Create`=? %s LIMIT ?, ?", orderBy)
+	query := fmt.Sprintf("SELECT `blog_id`, `title`, `hits`, `slug`, `body`, `user`, `is_published`, `create`, `update` FROM test.blog WHERE `create`=? %s LIMIT ?, ?", orderBy)
 
 	return m.query(query, db.TimeFormat(Create), offset, limit)
+}
+
+func (m *_BlogMgr) FindAllByUpdate(Update time.Time, sortFields ...string) ([]*Blog, error) {
+	return m.FindByUpdate(Update, -1, -1, sortFields...)
 }
 
 func (m *_BlogMgr) FindByUpdate(Update time.Time, offset int, limit int, sortFields ...string) ([]*Blog, error) {
@@ -190,7 +263,7 @@ func (m *_BlogMgr) FindByUpdate(Update time.Time, offset int, limit int, sortFie
 		orderBy = fmt.Sprintf(orderBy, "BlogId")
 	}
 
-	query := fmt.Sprintf("SELECT `BlogId`, `Title`, `Hits`, `Slug`, `Body`, `User`, `IsPublished`, `Create`, `Update` FROM test.Blog WHERE `Update`=? %s LIMIT ?, ?", orderBy)
+	query := fmt.Sprintf("SELECT `blog_id`, `title`, `hits`, `slug`, `body`, `user`, `is_published`, `create`, `update` FROM test.blog WHERE `update`=? %s LIMIT ?, ?", orderBy)
 
 	return m.query(query, db.TimeToLocalTime(Update), offset, limit)
 }
@@ -221,7 +294,7 @@ func (m *_BlogMgr) FindWithOffset(where string, offset int, limit int, args ...i
 }
 
 func (m *_BlogMgr) getQuerysql(topOne bool, where string) string {
-	query := "SELECT `BlogId`, `Title`, `Hits`, `Slug`, `Body`, `User`, `IsPublished`, `Create`, `Update` FROM test.Blog"
+	query := "SELECT `blog_id`, `title`, `hits`, `slug`, `body`, `user`, `is_published`, `create`, `update` FROM test.blog"
 
 	where = strings.TrimSpace(where)
 	if where != "" {
@@ -244,7 +317,7 @@ func (m *_BlogMgr) Del(where string, params ...interface{}) (sql.Result, error) 
 	if where != "" {
 		where = "WHERE " + where
 	}
-	query := "DELETE FROM test.Blog " + where
+	query := "DELETE FROM test.blog " + where
 	return db.MysqlExec(query, params...)
 }
 
@@ -253,15 +326,15 @@ func (m *_BlogMgr) Del(where string, params ...interface{}) (sql.Result, error) 
 // where:"c=? and d=?"
 // params:[]interface{}{"a", "b", "c", "d"}...
 func (m *_BlogMgr) Update(set, where string, params ...interface{}) (sql.Result, error) {
-	query := fmt.Sprintf("UPDATE test.Blog SET %s", set)
+	query := fmt.Sprintf("UPDATE test.blog SET %s", set)
 	if where != "" {
-		query = fmt.Sprintf("UPDATE test.Blog SET %s WHERE %s", set, where)
+		query = fmt.Sprintf("UPDATE test.blog SET %s WHERE %s", set, where)
 	}
 	return db.MysqlExec(query, params...)
 }
 
 func (m *_BlogMgr) Count(where string, args ...interface{}) (int32, error) {
-	query := "SELECT COUNT(*) FROM test.Blog"
+	query := "SELECT COUNT(*) FROM test.blog"
 	if where != "" {
 		query = query + " WHERE " + where
 	}
@@ -277,4 +350,15 @@ func (m *_BlogMgr) Count(where string, args ...interface{}) (int32, error) {
 	}
 
 	return count, err
+}
+
+func (m *_BlogMgr) getLimitQuery(offset, limit int, sorts []string) string {
+	orderBy := ""
+	if len(sorts) != 0 {
+		orderBy = fmt.Sprintf("ORDER BY %s", strings.Join(sorts, ","))
+	}
+	if limit > 0 {
+		return orderBy + fmt.Sprintf(" LIMIT %d, %d", offset, limit)
+	}
+	return orderBy
 }

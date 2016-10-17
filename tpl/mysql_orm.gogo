@@ -18,9 +18,11 @@ import (
 	"strings"
 	"github.com/ezbuy/ezorm/db"
 	"time"
+	"bytes"
 )
 var (
 	_ time.Time
+	_ bytes.Buffer
 )
 
 
@@ -175,7 +177,31 @@ func (m *_{{$obj.Name}}Mgr) FindByIDs(ids []{{$idField.Type}}) ([]*{{$obj.Name}}
 	return m.query(query, args...)
 }
 
+func (m *_{{$obj.Name}}Mgr) FindIn{{$idField.Name}}(ids []{{$idField.Type}}) ([]*{{$obj.Name}}, error) {
+	return m.FindByIDs(ids)
+}
+
 {{range $index := $obj.Indexes}}
+
+{{if (and $index.CanUseFindIn (not (eq $index.Name $idField.Name)))}}
+func (m *_{{$obj.Name}}Mgr) FindIn{{$index.Name}}({{$index.GetFuncParamIn}}, sortFields ...string) ([]*{{$obj.Name}}, error) {
+ 	orderBy := "ORDER BY %s"
+	if len(sortFields) != 0 {
+		orderBy = fmt.Sprintf(orderBy, strings.Join(sortFields, ","))
+	} else {
+		orderBy = fmt.Sprintf(orderBy, "{{camel2name $idFieldName}}")
+	}
+
+	buf := bytes.NewBuffer(nil)
+	buf.WriteString("SELECT {{$allFields}} FROM {{$tbl}} WHERE
+	{{- preSuffixJoin (camel2list $index.FieldNames) " `" "` in " "AND" -}}")
+	{{$index.GetFindInIds "buf" $index.Name}}
+	buf.WriteString(" " + orderBy)
+	return m.query(buf.String())
+}
+{{end}}
+
+
 {{if $index.IsUnique }}
 func (m *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (*{{$obj.Name}}, error) {
 	query := "SELECT {{$allFields}} FROM {{$tbl}} WHERE
@@ -183,6 +209,10 @@ func (m *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (*
 	return m.queryOne(query, {{$index.GetFuncParamNames}})
 }
 {{else}}
+func (m *_{{$obj.Name}}Mgr) FindAllBy{{$index.Name}}({{$index.GetFuncParam}}, sortFields ...string) ( []*{{$obj.Name}}, error) {
+	 return m.FindBy{{$index.Name}}({{$index.GetFuncParamOriNames}}, -1, -1, sortFields...)
+}
+
 func (m *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, offset int, limit int, sortFields ...string) ( []*{{$obj.Name}},  error) {
 	orderBy := "ORDER BY %s"
 	if len(sortFields) != 0 {
@@ -284,6 +314,17 @@ func (m *_{{$obj.Name}}Mgr) Count(where string, args ...interface{}) (int32, err
 	}
 
 	return count, err
+}
+
+func (m *_{{$obj.Name}}Mgr) getLimitQuery(offset, limit int, sorts []string) string {
+	orderBy := ""
+	if len(sorts) != 0 {
+		orderBy = fmt.Sprintf("ORDER BY %s", strings.Join(sorts, ","))
+	}
+	if limit > 0 {
+		return orderBy + fmt.Sprintf(" LIMIT %d, %d", offset, limit)
+	}
+	return orderBy
 }
 
 {{- end -}}

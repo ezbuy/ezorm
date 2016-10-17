@@ -14,14 +14,48 @@ type Index struct {
 	IsSparse   bool
 }
 
+func (i *Index) GetFindInIds(bufName, name string) string {
+	field := i.Fields[0]
+	return toIds(bufName, field.Type, name)
+}
+
+func (i *Index) CanUseFindIn() bool {
+	if len(i.Fields) != 1 {
+		return false
+	}
+	field := i.Fields[0]
+	switch field.Type {
+	case "int", "int32", "string":
+		return true
+	default:
+		return false
+	}
+}
+
 func (i *Index) GetFieldList() string {
 	return strings.Join(i.FieldNames, `","`)
+}
+
+func (i *Index) GetFuncParamIn() string {
+	var params []string
+	for _, f := range i.Fields {
+		params = append(params, f.Name+" []"+f.GetGoType())
+	}
+	return strings.Join(params, ", ")
 }
 
 func (i *Index) GetFuncParam() string {
 	var params []string
 	for _, f := range i.Fields {
 		params = append(params, f.Name+" "+f.GetGoType())
+	}
+	return strings.Join(params, ", ")
+}
+
+func (i *Index) GetFuncParamOriNames() string {
+	var params []string
+	for _, f := range i.Fields {
+		params = append(params, f.Name)
 	}
 	return strings.Join(params, ", ")
 }

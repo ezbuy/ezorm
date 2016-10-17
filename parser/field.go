@@ -34,6 +34,7 @@ type Field struct {
 	Attrs        map[string]string
 	DefaultValue string
 	Flags        set.Set
+	Join         set.Set
 	Index        string
 	Key          string
 	Label        string
@@ -71,6 +72,11 @@ func isUpperCase(c string) bool {
 
 func (f *Field) init() {
 	f.Flags = set.NewStringSet()
+	f.Join = set.NewStringSet()
+}
+
+func (f *Field) ArgName() string {
+	return strings.ToLower(f.Name[:1]) + f.Name[1:]
 }
 
 func (f *Field) IsRequired() bool {
@@ -164,6 +170,13 @@ func (f *Field) HasRule() bool {
 
 func (f *Field) HasStringList() bool {
 	return false
+}
+
+func (f *Field) HasJoin() bool {
+	if f.Join == nil {
+		return false
+	}
+	return f.Join.Len() > 0
 }
 
 func (f *Field) HasForeign() bool {
@@ -338,6 +351,10 @@ func (f *Field) Read(data map[interface{}]interface{}) error {
 				for _, v := range val {
 					f.Flags.Add(v.(string))
 				}
+			case "joins":
+				for _, v := range val {
+					f.Join.Add(v.(string))
+				}
 			}
 		}
 
@@ -377,4 +394,23 @@ func DbToGoType(colType string) string {
 		typeStr = "[]byte"
 	}
 	return typeStr
+}
+
+// -----------------------------------------------------------------------------
+
+type JoinStruct struct {
+	Tbl   string
+	Field string
+}
+
+func (f *Field) JoinKeys() []*JoinStruct {
+	ret := make([]*JoinStruct, 0, f.Join.Len())
+	f.Join.Do(func(key string) {
+		sp := strings.Split(key, ".")
+		if len(sp) < 2 {
+			panic("invalid join key")
+		}
+		ret = append(ret, &JoinStruct{sp[0], sp[1]})
+	})
+	return ret
 }

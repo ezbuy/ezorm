@@ -1,6 +1,7 @@
 package people
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
 	"github.com/ezbuy/ezorm/db"
@@ -10,6 +11,7 @@ import (
 
 var (
 	_ time.Time
+	_ bytes.Buffer
 )
 
 // -----------------------------------------------------------------------------
@@ -26,6 +28,10 @@ func (m *_UserMgr) queryOne(query string, args ...interface{}) (*User, error) {
 }
 
 func (m *_UserMgr) query(query string, args ...interface{}) (results []*User, err error) {
+	return m.queryLimit(query, -1, args...)
+}
+
+func (m *_UserMgr) Query(query string, args ...interface{}) (results []*User, err error) {
 	return m.queryLimit(query, -1, args...)
 }
 
@@ -69,7 +75,7 @@ func (m *_UserMgr) Save(obj *User) (sql.Result, error) {
 }
 
 func (m *_UserMgr) saveInsert(obj *User) (sql.Result, error) {
-	query := "INSERT INTO test.test_blog (`Name`) VALUES (?)"
+	query := "INSERT INTO test.test_blog (`name`) VALUES (?)"
 	result, err := db.MysqlExec(query, obj.Name)
 	if err != nil {
 		return result, err
@@ -86,7 +92,7 @@ func (m *_UserMgr) saveInsert(obj *User) (sql.Result, error) {
 }
 
 func (m *_UserMgr) saveUpdate(obj *User) (sql.Result, error) {
-	query := "UPDATE test.test_blog SET `Name`=? WHERE `UserId`=?"
+	query := "UPDATE test.test_blog SET `name`=? WHERE `user_id`=?"
 	return db.MysqlExec(query, obj.Name, obj.UserId)
 }
 
@@ -101,12 +107,12 @@ func (m *_UserMgr) InsertBatch(objs []*User) (sql.Result, error) {
 		values = append(values, "(?)")
 		params = append(params, obj.Name)
 	}
-	query := fmt.Sprintf("INSERT INTO test.test_blog (Name) VALUES %s", strings.Join(values, ","))
+	query := fmt.Sprintf("INSERT INTO test.test_blog (name) VALUES %s", strings.Join(values, ","))
 	return db.MysqlExec(query, params...)
 }
 
 func (m *_UserMgr) FindByID(id int32) (*User, error) {
-	query := "SELECT `UserId`, `Name` FROM test.test_blog WHERE UserId=?"
+	query := "SELECT `user_id`, `name` FROM test.test_blog WHERE user_id=?"
 	return m.queryOne(query, id)
 }
 
@@ -120,9 +126,49 @@ func (m *_UserMgr) FindByIDs(ids []int32) ([]*User, error) {
 	}
 
 	query := fmt.Sprintf(
-		"SELECT `UserId`, `Name` FROM test.test_blog WHERE UserId IN (%s)",
+		"SELECT `user_id`, `name` FROM test.test_blog WHERE user_id IN (%s)",
 		strings.Join(placeHolders, ","))
 	return m.query(query, args...)
+}
+
+func (m *_UserMgr) FindInUserId(ids []int32) ([]*User, error) {
+	return m.FindByIDs(ids)
+}
+
+func (m *_UserMgr) FindAllByUserId(UserId int32, sortFields ...string) ([]*User, error) {
+	return m.FindByUserId(UserId, -1, -1, sortFields...)
+}
+
+func (m *_UserMgr) FindByUserId(UserId int32, offset int, limit int, sortFields ...string) ([]*User, error) {
+	orderBy := "ORDER BY %s"
+	if len(sortFields) != 0 {
+		orderBy = fmt.Sprintf(orderBy, strings.Join(sortFields, ","))
+	} else {
+		orderBy = fmt.Sprintf(orderBy, "UserId")
+	}
+
+	query := fmt.Sprintf("SELECT `user_id`, `name` FROM test.test_blog WHERE `user_id`=? %s LIMIT ?, ?", orderBy)
+
+	return m.query(query, UserId, offset, limit)
+}
+
+func (m *_UserMgr) FindInName(Name []string, sortFields ...string) ([]*User, error) {
+	orderBy := "ORDER BY %s"
+	if len(sortFields) != 0 {
+		orderBy = fmt.Sprintf(orderBy, strings.Join(sortFields, ","))
+	} else {
+		orderBy = fmt.Sprintf(orderBy, "user_id")
+	}
+
+	buf := bytes.NewBuffer(nil)
+	buf.WriteString("SELECT `user_id`, `name` FROM test.test_blog WHERE `name` in ")
+	stringToIds(buf, Name)
+	buf.WriteString(" " + orderBy)
+	return m.query(buf.String())
+}
+
+func (m *_UserMgr) FindAllByName(Name string, sortFields ...string) ([]*User, error) {
+	return m.FindByName(Name, -1, -1, sortFields...)
 }
 
 func (m *_UserMgr) FindByName(Name string, offset int, limit int, sortFields ...string) ([]*User, error) {
@@ -133,7 +179,7 @@ func (m *_UserMgr) FindByName(Name string, offset int, limit int, sortFields ...
 		orderBy = fmt.Sprintf(orderBy, "UserId")
 	}
 
-	query := fmt.Sprintf("SELECT `UserId`, `Name` FROM test.test_blog WHERE `Name`=? %s LIMIT ?, ?", orderBy)
+	query := fmt.Sprintf("SELECT `user_id`, `name` FROM test.test_blog WHERE `name`=? %s LIMIT ?, ?", orderBy)
 
 	return m.query(query, Name, offset, limit)
 }
@@ -164,7 +210,7 @@ func (m *_UserMgr) FindWithOffset(where string, offset int, limit int, args ...i
 }
 
 func (m *_UserMgr) getQuerysql(topOne bool, where string) string {
-	query := "SELECT `UserId`, `Name` FROM test.test_blog"
+	query := "SELECT `user_id`, `name` FROM test.test_blog"
 
 	where = strings.TrimSpace(where)
 	if where != "" {
@@ -220,4 +266,15 @@ func (m *_UserMgr) Count(where string, args ...interface{}) (int32, error) {
 	}
 
 	return count, err
+}
+
+func (m *_UserMgr) getLimitQuery(offset, limit int, sorts []string) string {
+	orderBy := ""
+	if len(sorts) != 0 {
+		orderBy = fmt.Sprintf("ORDER BY %s", strings.Join(sorts, ","))
+	}
+	if limit > 0 {
+		return orderBy + fmt.Sprintf(" LIMIT %d, %d", offset, limit)
+	}
+	return orderBy
 }

@@ -32,6 +32,25 @@ func camel2list(s []string) []string {
 	return s2
 }
 
+func toIds(bufName, typeName, name string) string {
+	switch typeName {
+	case "int":
+		return "intToIds(" + bufName + "," + name + ")"
+	case "int32":
+		return "int32ToIds(" + bufName + "," + name + ")"
+	case "string":
+		return "stringToIds(" + bufName + "," + name + ")"
+	}
+	return name
+}
+
+func strif(a bool, b, c string) string {
+	if a {
+		return b
+	}
+	return c
+}
+
 func strDefault(a, b string) string {
 	if a == "" {
 		return b

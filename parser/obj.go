@@ -25,6 +25,8 @@ func init() {
 		"camel2list":    camel2list,
 		"camel2name":    camel2name,
 		"strDefault":    strDefault,
+		"strif":         strif,
+		"toids":         toIds,
 	}
 	Tpl = template.New("ezorm").Funcs(funcMap)
 	files := []string{
@@ -36,7 +38,10 @@ func init() {
 		"tpl/struct.gogo",
 		"tpl/mssql_orm.gogo",
 		"tpl/mssql_config.gogo",
+		"tpl/mysql_config.gogo",
 		"tpl/mysql_orm.gogo",
+		"tpl/mysql_join.gogo",
+		"tpl/mysql_group.gogo",
 	}
 	for _, fname := range files {
 		data, err := tpl.Asset(fname)
@@ -84,10 +89,35 @@ type Obj struct {
 	Table        string
 	TplWriter    io.Writer
 	DbName       string
+	GroupBy      map[string]*GroupByItem
 }
 
 func (o *Obj) init() {
 	o.FieldNameMap = make(map[string]*Field)
+}
+
+func (o *Obj) GetByFields(f []*Field) []string {
+	newFields := make([]string, 0, len(f))
+	for _, ff := range f {
+		if ff == nil {
+			continue
+		}
+		newFields = append(newFields, ff.Name)
+	}
+	return newFields
+}
+
+func (o *Obj) GetJoinFields() []*Field {
+	newFields := make([]*Field, 0, len(o.Fields))
+	for _, f := range o.Fields {
+		if f.HasJoin() {
+			newFields = append(newFields, f)
+		}
+	}
+	if len(newFields) == 0 {
+		return nil
+	}
+	return newFields
 }
 
 func (o *Obj) GetFieldNames() []string {
@@ -149,7 +179,7 @@ func (o *Obj) GetGenTypes() []string {
 	case "mssql":
 		return []string{"struct", "mssql_orm"}
 	case "mysql":
-		return []string{"struct", "mysql_orm"}
+		return []string{"struct", "mysql_orm", "mysql_join", "mysql_group"}
 	default:
 		return []string{"struct"}
 	}
@@ -159,6 +189,8 @@ func (o *Obj) GetConfigTemplate() (string, bool) {
 	switch o.Db {
 	case "mssql":
 		return "mssql_config", true
+	case "mysql":
+		return "mysql_config", true
 	default:
 		return "", false
 	}
@@ -308,6 +340,7 @@ func (o *Obj) Read(data map[string]interface{}) error {
 				index.IsUnique = true
 				o.Indexes = append(o.Indexes, index)
 			}
+		case "groupby":
 		case "extend":
 			o.Extend = val.(string)
 		case "table":
@@ -348,6 +381,47 @@ func (o *Obj) Read(data map[string]interface{}) error {
 			}
 		default:
 			return errors.New(o.Name + " has invalid obj property: " + key)
+		}
+	}
+	for key, val := range data {
+		switch key {
+		case "groupby":
+			keys, ok := val.([]interface{})
+			if !ok {
+				return fmt.Errorf("[%v] invalid groupBy %T(%+v)",
+					o.Name, val, val)
+			}
+			o.GroupBy = make(map[string]*GroupByItem)
+			for _, groupKey := range keys {
+				var gi GroupByItem
+				for name, list := range groupKey.(map[interface{}]interface{}) {
+					name := name.(string)
+
+					switch name {
+					case "fromIds":
+						fkName := list.(string)
+						f, ok := o.FieldNameMap[fkName]
+						if !ok {
+							return fmt.Errorf(
+								"field from groupBy is not found: %v", fkName)
+						}
+						gi.FromField = f
+					default:
+						o.GroupBy[name] = &gi
+						if list, ok := list.([]interface{}); ok {
+							for _, fieldName := range list {
+								fn := fieldName.(string)
+								gi.Add(fn, o.FieldNameMap[fn])
+							}
+						}
+					}
+				}
+			}
+			for key, v := range o.GroupBy {
+				if v.FromField == nil {
+					panic(fmt.Errorf("groupBy %v missing fromField", key).Error())
+				}
+			}
 		}
 	}
 	o.setIndexes()

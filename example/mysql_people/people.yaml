@@ -9,6 +9,8 @@ Blog:
     - Body: string
       flags: [nullable]
     - User: int32
+      joins: [User.UserId]
+      flags: [index]
     - IsPublished: bool
       flags: [index]
     - Create: timestamp
@@ -16,6 +18,10 @@ Blog:
     - Update: datetime
       flags: [index]
   indexes: [[User, IsPublished]]
+  groupby:
+    - UnAssigned: [COUNT(*), Hits, IsPublished]
+      fromIds: User
+
   table: Blog
   dbname: test
 
@@ -23,6 +29,8 @@ User:
   db: mysql
   fields:
     - UserId: int32
+      flags: [index]
+      joins: [Blog.User]
     - Name: string
       flags: [index]
   table: test_blog
