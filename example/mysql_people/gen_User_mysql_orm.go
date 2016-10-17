@@ -107,7 +107,7 @@ func (m *_UserMgr) InsertBatch(objs []*User) (sql.Result, error) {
 		values = append(values, "(?)")
 		params = append(params, obj.Name)
 	}
-	query := fmt.Sprintf("INSERT INTO test.test_blog (name) VALUES %s", strings.Join(values, ","))
+	query := fmt.Sprintf("INSERT INTO test.test_blog (`name`) VALUES %s", strings.Join(values, ","))
 	return db.MysqlExec(query, params...)
 }
 
@@ -144,7 +144,7 @@ func (m *_UserMgr) FindByUserId(UserId int32, offset int, limit int, sortFields 
 	if len(sortFields) != 0 {
 		orderBy = fmt.Sprintf(orderBy, strings.Join(sortFields, ","))
 	} else {
-		orderBy = fmt.Sprintf(orderBy, "UserId")
+		orderBy = fmt.Sprintf(orderBy, "user_id")
 	}
 
 	query := fmt.Sprintf("SELECT `user_id`, `name` FROM test.test_blog WHERE `user_id`=? %s LIMIT ?, ?", orderBy)
@@ -176,7 +176,7 @@ func (m *_UserMgr) FindByName(Name string, offset int, limit int, sortFields ...
 	if len(sortFields) != 0 {
 		orderBy = fmt.Sprintf(orderBy, strings.Join(sortFields, ","))
 	} else {
-		orderBy = fmt.Sprintf(orderBy, "UserId")
+		orderBy = fmt.Sprintf(orderBy, "user_id")
 	}
 
 	query := fmt.Sprintf("SELECT `user_id`, `name` FROM test.test_blog WHERE `name`=? %s LIMIT ?, ?", orderBy)

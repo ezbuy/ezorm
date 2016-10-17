@@ -153,7 +153,7 @@ func (m *_{{$obj.Name}}Mgr) InsertBatch(objs []*{{$obj.Name}}) (sql.Result, erro
 		values = append(values, "({{- repeatJoin (len $obj.GetNonIdFieldNames) "?" ", " -}})")
 		params = append(params, {{$nonIdFieldNames}})
 	}
-	query := fmt.Sprintf("INSERT INTO {{$tbl}} ({{- join (camel2list $obj.GetNonIdFieldNames) ", " -}}) VALUES %s", strings.Join(values, ","))
+	query := fmt.Sprintf("INSERT INTO {{$tbl}} (`{{- join (camel2list $obj.GetNonIdFieldNames) "`, `" -}}`) VALUES %s", strings.Join(values, ","))
 	return db.MysqlExec(query, params...)
 }
 
@@ -205,7 +205,7 @@ func (m *_{{$obj.Name}}Mgr) FindIn{{$index.Name}}({{$index.GetFuncParamIn}}, sor
 {{if $index.IsUnique }}
 func (m *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (*{{$obj.Name}}, error) {
 	query := "SELECT {{$allFields}} FROM {{$tbl}} WHERE
-	{{- preSuffixJoin $index.FieldNames " " "=?" " AND" -}}"
+	{{- preSuffixJoin (camel2list $index.FieldNames) " " "=?" " AND" -}}"
 	return m.queryOne(query, {{$index.GetFuncParamNames}})
 }
 {{else}}
@@ -218,7 +218,7 @@ func (m *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, offse
 	if len(sortFields) != 0 {
 		orderBy = fmt.Sprintf(orderBy, strings.Join(sortFields, ","))
 	} else {
-		orderBy = fmt.Sprintf(orderBy, "{{$idFieldName}}")
+		orderBy = fmt.Sprintf(orderBy, "{{camel2name $idFieldName}}")
 	}
 
 	query := fmt.Sprintf("SELECT {{$allFields}} FROM {{$tbl}} WHERE
