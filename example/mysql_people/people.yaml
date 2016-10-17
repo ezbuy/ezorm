@@ -9,8 +9,8 @@ Blog:
     - Body: string
       flags: [nullable]
     - User: int32
-      joins: [User.UserId]
       flags: [index]
+      fk: User.UserNumber
     - IsPublished: bool
       flags: [index]
     - Create: timestamp
@@ -29,9 +29,9 @@ User:
   db: mysql
   fields:
     - UserId: int32
-      flags: [index]
-      joins: [Blog.User]
+    - UserNumber: int32
+      flags: [unique]
     - Name: string
       flags: [index]
-  table: test_blog
+  table: test_user
   dbname: test

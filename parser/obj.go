@@ -40,7 +40,7 @@ func init() {
 		"tpl/mssql_config.gogo",
 		"tpl/mysql_config.gogo",
 		"tpl/mysql_orm.gogo",
-		"tpl/mysql_join.gogo",
+		"tpl/mysql_fk.gogo",
 		"tpl/mysql_group.gogo",
 	}
 	for _, fname := range files {
@@ -107,10 +107,10 @@ func (o *Obj) GetByFields(f []*Field) []string {
 	return newFields
 }
 
-func (o *Obj) GetJoinFields() []*Field {
+func (o *Obj) GetForeignKeys() []*Field {
 	newFields := make([]*Field, 0, len(o.Fields))
 	for _, f := range o.Fields {
-		if f.HasJoin() {
+		if f.HasForeign() {
 			newFields = append(newFields, f)
 		}
 	}
@@ -179,7 +179,7 @@ func (o *Obj) GetGenTypes() []string {
 	case "mssql":
 		return []string{"struct", "mssql_orm"}
 	case "mysql":
-		return []string{"struct", "mysql_orm", "mysql_join", "mysql_group"}
+		return []string{"struct", "mysql_orm", "mysql_fk", "mysql_group"}
 	default:
 		return []string{"struct"}
 	}
@@ -213,17 +213,8 @@ func (o *Obj) GetFormImports() (imports []string) {
 }
 
 func (o *Obj) GetOrmImports() (imports []string) {
-	data := set.NewStringSet()
-	for _, f := range o.Fields {
-		if f.FK != "" {
-			tmp := strings.SplitN(f.FK, ".", 2)
-			if len(tmp) == 2 {
-				packageName := tmp[0]
-				data.Add(packageName)
-			}
-		}
-	}
-	return data.ToArray()
+	// gen import for across packages foreign keys
+	return nil
 }
 
 func (o *Obj) NeedOrm() bool {

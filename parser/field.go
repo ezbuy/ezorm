@@ -34,7 +34,6 @@ type Field struct {
 	Attrs        map[string]string
 	DefaultValue string
 	Flags        set.Set
-	Join         set.Set
 	Index        string
 	Key          string
 	Label        string
@@ -45,7 +44,7 @@ type Field struct {
 	Type         string
 	Widget       string
 	Remark       string
-	FK           string
+	FK           *ForeignKey
 	Obj          *Obj
 }
 
@@ -72,7 +71,6 @@ func isUpperCase(c string) bool {
 
 func (f *Field) init() {
 	f.Flags = set.NewStringSet()
-	f.Join = set.NewStringSet()
 }
 
 func (f *Field) ArgName() string {
@@ -172,13 +170,6 @@ func (f *Field) HasStringList() bool {
 	return false
 }
 
-func (f *Field) HasJoin() bool {
-	if f.Join == nil {
-		return false
-	}
-	return f.Join.Len() > 0
-}
-
 func (f *Field) HasForeign() bool {
 	if f.Name == "ID" {
 		return false
@@ -187,7 +178,7 @@ func (f *Field) HasForeign() bool {
 		return true
 	}
 
-	if f.FK != "" {
+	if f.FK != nil {
 		return true
 	}
 	return false
@@ -210,9 +201,7 @@ func (f *Field) ForeignType() string {
 		return f.Name[:len(f.Name)-2]
 	}
 
-	tmp := strings.Split(f.FK, "/")
-
-	return tmp[len(tmp)-1]
+	return f.FK.Field
 }
 
 func (f *Field) HasBindData() bool {
@@ -334,7 +323,7 @@ func (f *Field) Read(data map[interface{}]interface{}) error {
 			case "label":
 				f.Label = val
 			case "fk":
-				f.FK = val
+				f.FK = NewForeignKey(val)
 			case "widget":
 				f.Widget = val
 			case "remark":
@@ -350,10 +339,6 @@ func (f *Field) Read(data map[interface{}]interface{}) error {
 			case "flags":
 				for _, v := range val {
 					f.Flags.Add(v.(string))
-				}
-			case "joins":
-				for _, v := range val {
-					f.Join.Add(v.(string))
 				}
 			}
 		}
@@ -398,19 +383,15 @@ func DbToGoType(colType string) string {
 
 // -----------------------------------------------------------------------------
 
-type JoinStruct struct {
+type ForeignKey struct {
 	Tbl   string
 	Field string
 }
 
-func (f *Field) JoinKeys() []*JoinStruct {
-	ret := make([]*JoinStruct, 0, f.Join.Len())
-	f.Join.Do(func(key string) {
-		sp := strings.Split(key, ".")
-		if len(sp) < 2 {
-			panic("invalid join key")
-		}
-		ret = append(ret, &JoinStruct{sp[0], sp[1]})
-	})
-	return ret
+func NewForeignKey(name string) *ForeignKey {
+	sp := strings.Split(name, ".")
+	return &ForeignKey{
+		Tbl:   sp[0],
+		Field: sp[1],
+	}
 }

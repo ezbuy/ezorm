@@ -144,8 +144,32 @@ func (m *_BlogMgr) FindByIDs(ids []int32) ([]*Blog, error) {
 	return m.query(query, args...)
 }
 
-func (m *_BlogMgr) FindInBlogId(ids []int32) ([]*Blog, error) {
+func (m *_BlogMgr) FindInBlogId(ids []int32, sortFields ...string) ([]*Blog, error) {
 	return m.FindByIDs(ids)
+}
+
+func (m *_BlogMgr) FindListBlogId(BlogId []int32) ([]*Blog, error) {
+	retmap, err := m.FindMapBlogId(BlogId)
+	if err != nil {
+		return nil, err
+	}
+	ret := make([]*Blog, len(BlogId))
+	for idx, key := range BlogId {
+		ret[idx] = retmap[key]
+	}
+	return ret, nil
+}
+
+func (m *_BlogMgr) FindMapBlogId(BlogId []int32, sortFields ...string) (map[int32]*Blog, error) {
+	ret, err := m.FindInBlogId(BlogId, sortFields...)
+	if err != nil {
+		return nil, err
+	}
+	retmap := make(map[int32]*Blog, len(ret))
+	for _, n := range ret {
+		retmap[n.BlogId] = n
+	}
+	return retmap, nil
 }
 
 func (m *_BlogMgr) FindAllByUserIsPublished(User int32, IsPublished bool, sortFields ...string) ([]*Blog, error) {
@@ -165,18 +189,36 @@ func (m *_BlogMgr) FindByUserIsPublished(User int32, IsPublished bool, offset in
 	return m.query(query, User, IsPublished, offset, limit)
 }
 
-func (m *_BlogMgr) FindInSlug(Slug []string, sortFields ...string) ([]*Blog, error) {
-	orderBy := "ORDER BY %s"
-	if len(sortFields) != 0 {
-		orderBy = fmt.Sprintf(orderBy, strings.Join(sortFields, ","))
-	} else {
-		orderBy = fmt.Sprintf(orderBy, "blog_id")
+func (m *_BlogMgr) FindListSlug(Slug []string) ([]*Blog, error) {
+	retmap, err := m.FindMapSlug(Slug)
+	if err != nil {
+		return nil, err
 	}
+	ret := make([]*Blog, len(Slug))
+	for idx, key := range Slug {
+		ret[idx] = retmap[key]
+	}
+	return ret, nil
+}
 
+func (m *_BlogMgr) FindMapSlug(Slug []string) (map[string]*Blog, error) {
+	ret, err := m.FindInSlug(Slug)
+	if err != nil {
+		return nil, err
+	}
+	retmap := make(map[string]*Blog, len(ret))
+	for _, n := range ret {
+		retmap[n.Slug] = n
+	}
+	return retmap, nil
+}
+
+func (m *_BlogMgr) FindInSlug(Slug []string, sortFields ...string) ([]*Blog, error) {
 	buf := bytes.NewBuffer(nil)
-	buf.WriteString("SELECT `blog_id`, `title`, `hits`, `slug`, `body`, `user`, `is_published`, `create`, `update` FROM test.blog WHERE `slug` in ")
+	buf.WriteString("SELECT `blog_id`, `title`, `hits`, `slug`, `body`, `user`, `is_published`, `create`, `update` FROM test.blog WHERE ")
+
+	buf.WriteString("`slug` in ")
 	stringToIds(buf, Slug)
-	buf.WriteString(" " + orderBy)
 	return m.query(buf.String())
 }
 
@@ -185,18 +227,36 @@ func (m *_BlogMgr) FindOneBySlug(Slug string) (*Blog, error) {
 	return m.queryOne(query, Slug)
 }
 
-func (m *_BlogMgr) FindInUser(User []int32, sortFields ...string) ([]*Blog, error) {
-	orderBy := "ORDER BY %s"
-	if len(sortFields) != 0 {
-		orderBy = fmt.Sprintf(orderBy, strings.Join(sortFields, ","))
-	} else {
-		orderBy = fmt.Sprintf(orderBy, "blog_id")
+func (m *_BlogMgr) FindListUser(User []int32) ([]*Blog, error) {
+	retmap, err := m.FindMapUser(User)
+	if err != nil {
+		return nil, err
 	}
+	ret := make([]*Blog, len(User))
+	for idx, key := range User {
+		ret[idx] = retmap[key]
+	}
+	return ret, nil
+}
 
+func (m *_BlogMgr) FindMapUser(User []int32) (map[int32]*Blog, error) {
+	ret, err := m.FindInUser(User)
+	if err != nil {
+		return nil, err
+	}
+	retmap := make(map[int32]*Blog, len(ret))
+	for _, n := range ret {
+		retmap[n.User] = n
+	}
+	return retmap, nil
+}
+
+func (m *_BlogMgr) FindInUser(User []int32, sortFields ...string) ([]*Blog, error) {
 	buf := bytes.NewBuffer(nil)
-	buf.WriteString("SELECT `blog_id`, `title`, `hits`, `slug`, `body`, `user`, `is_published`, `create`, `update` FROM test.blog WHERE `user` in ")
+	buf.WriteString("SELECT `blog_id`, `title`, `hits`, `slug`, `body`, `user`, `is_published`, `create`, `update` FROM test.blog WHERE ")
+
+	buf.WriteString("`user` in ")
 	int32ToIds(buf, User)
-	buf.WriteString(" " + orderBy)
 	return m.query(buf.String())
 }
 

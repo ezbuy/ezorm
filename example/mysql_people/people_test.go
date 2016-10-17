@@ -1,6 +1,7 @@
 package people
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -94,15 +95,41 @@ func TestPeople(t *testing.T) {
 			t.Fatal("not expected updatetime")
 		}
 	}
-	testJoin(t)
+	testForeignKey(t)
 }
 
-func testJoin(t *testing.T) {
-	blogs, err := UserMgr.LeftJoinBlog([]int32{1, 2})
+func testForeignKey(t *testing.T) {
+	if _, err := UserMgr.Del("1=1"); err != nil {
+		t.Fatal(err)
+	}
+
+	user1 := &User{
+		UserNumber: 1,
+		Name:       "user1",
+	}
+	user2 := &User{
+		UserNumber: 2,
+		Name:       "user2",
+	}
+	if _, err := UserMgr.Save(user1); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := UserMgr.Save(user2); err != nil {
+		t.Fatal(err)
+	}
+
+	blogs, err := BlogMgr.FindAll()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(blogs) != 2 {
-		t.Fatal("result not expected")
+	userNumbers := BlogMgr.ToUser(blogs)
+	users, err := UserMgr.FindListUserNumber(userNumbers)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for idx, b := range blogs {
+		if b.User != users[idx].UserNumber {
+			t.Fatal(fmt.Sprintf("result not expected: %v", idx))
+		}
 	}
 }

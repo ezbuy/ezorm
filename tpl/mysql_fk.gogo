@@ -1,0 +1,30 @@
+{{define "mysql_fk"}}package {{.Package}}
+import (
+	"fmt"
+	"strings"
+	"bytes"
+)
+
+var (
+	_ = fmt.Println
+	_ = strings.Index
+	_ bytes.Buffer
+)
+
+{{$obj := .}}
+{{$baseType := printf "[]*%v" $obj.Name}}
+
+{{$fields := $obj.GetForeignKeys}}
+
+{{range $field := $fields}}
+
+func (m *_{{$obj.Name}}Mgr) To{{$field.Name}}(base {{$baseType}}) []{{$field.Type}} {
+	ids := make([]{{$field.Type}}, len(base))
+	for idx, b := range base {
+		ids[idx] = b.{{$field.Name}}
+	}
+	return ids
+}
+
+{{end}}
+{{end}}

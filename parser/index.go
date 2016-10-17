@@ -14,22 +14,30 @@ type Index struct {
 	IsSparse   bool
 }
 
-func (i *Index) GetFindInIds(bufName, name string) string {
-	field := i.Fields[0]
-	return toIds(bufName, field.Type, name)
+func (i *Index) GetFindInIds(idx int, bufName, name string) string {
+	return toIds(bufName, i.Fields[idx].Type, name)
 }
 
-func (i *Index) CanUseFindIn() bool {
-	if len(i.Fields) != 1 {
-		return false
-	}
-	field := i.Fields[0]
+func (i *Index) GetFirstField() *Field {
+	return i.Fields[0]
+}
+
+func (i *Index) IsFindInType(field *Field) bool {
 	switch field.Type {
 	case "int", "int32", "string":
 		return true
 	default:
 		return false
 	}
+}
+
+func (i *Index) CanUseFindIn() bool {
+	for _, field := range i.Fields {
+		if !i.IsFindInType(field) {
+			return false
+		}
+	}
+	return true
 }
 
 func (i *Index) GetFieldList() string {

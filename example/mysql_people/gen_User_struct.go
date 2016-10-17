@@ -5,9 +5,10 @@ import "time"
 var _ time.Time
 
 type User struct {
-	UserId int32  `db:"UserId"`
-	Name   string `db:"Name"`
-	isNew  bool
+	UserId     int32  `db:"UserId"`
+	UserNumber int32  `db:"UserNumber"`
+	Name       string `db:"Name"`
+	isNew      bool
 }
 
 func (p *User) GetNameSpace() string {

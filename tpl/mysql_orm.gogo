@@ -177,29 +177,81 @@ func (m *_{{$obj.Name}}Mgr) FindByIDs(ids []{{$idField.Type}}) ([]*{{$obj.Name}}
 	return m.query(query, args...)
 }
 
-func (m *_{{$obj.Name}}Mgr) FindIn{{$idField.Name}}(ids []{{$idField.Type}}) ([]*{{$obj.Name}}, error) {
+func (m *_{{$obj.Name}}Mgr) FindIn{{$idField.Name}}(ids []{{$idField.Type}}, sortFields ...string) ([]*{{$obj.Name}}, error) {
 	return m.FindByIDs(ids)
 }
 
+func (m *_{{$obj.Name}}Mgr) FindList{{$idField.Name}}({{$idField.Name}} []{{$idField.Type}}) ([]*{{$obj.Name}}, error) {
+	 retmap, err := m.FindMap{{$idField.Name}}({{$idField.Name}})
+	 if err != nil {
+	 	return nil, err
+	 }
+	 ret := make([]*{{$obj.Name}}, len({{$idField.Name}}))
+	 for idx, key := range {{$idField.Name}} {
+	 	 ret[idx] = retmap[key]
+	 }
+	 return ret, nil
+}
+
+func (m *_{{$obj.Name}}Mgr) FindMap{{$idField.Name}}({{$idField.Name}} []{{$idField.Type}}, sortFields ...string) (map[{{$idField.Type}}]*{{$obj.Name}}, error) {
+	ret, err := m.FindIn{{$idField.Name}}({{$idField.Name}}, sortFields...)
+	if err != nil {
+	   return nil, err
+	}
+	retmap := make(map[{{$idField.Type}}]*{{$obj.Name}}, len(ret))
+	for _, n := range ret {
+		retmap[n.{{$idField.Name}}] = n
+	}
+	return retmap, nil
+}
+
+
 {{range $index := $obj.Indexes}}
 
-{{if (and $index.CanUseFindIn (not (eq $index.Name $idField.Name)))}}
-func (m *_{{$obj.Name}}Mgr) FindIn{{$index.Name}}({{$index.GetFuncParamIn}}, sortFields ...string) ([]*{{$obj.Name}}, error) {
- 	orderBy := "ORDER BY %s"
-	if len(sortFields) != 0 {
-		orderBy = fmt.Sprintf(orderBy, strings.Join(sortFields, ","))
-	} else {
-		orderBy = fmt.Sprintf(orderBy, "{{camel2name $idFieldName}}")
-	}
+{{if $index.CanUseFindIn}}
+{{$field := $index.GetFirstField}}
 
-	buf := bytes.NewBuffer(nil)
-	buf.WriteString("SELECT {{$allFields}} FROM {{$tbl}} WHERE
-	{{- preSuffixJoin (camel2list $index.FieldNames) " `" "` in " "AND" -}}")
-	{{$index.GetFindInIds "buf" $index.Name}}
-	buf.WriteString(" " + orderBy)
-	return m.query(buf.String())
+func (m *_{{$obj.Name}}Mgr) FindList{{$index.Name}}({{$index.GetFuncParamIn}}) ([]*{{$obj.Name}}, error) {
+	 retmap, err := m.FindMap{{$index.Name}}({{$field.Name}})
+	 if err != nil {
+	 	return nil, err
+	 }
+	 ret := make([]*{{$obj.Name}}, len({{$index.Name}}))
+	 for idx, key := range {{$index.Name}} {
+	 	 ret[idx] = retmap[key]
+	 }
+	 return ret, nil
+}
+
+func (m *_{{$obj.Name}}Mgr) FindMap{{$index.Name}}({{$index.GetFuncParamIn}}) (map[{{$field.Type}}]*{{$obj.Name}}, error) {
+	ret, err := m.FindIn{{$index.Name}}({{$index.GetFuncParamOriNames}})
+	if err != nil {
+	   return nil, err
+	}
+	retmap := make(map[{{$field.Type}}]*{{$obj.Name}}, len(ret))
+	for _, n := range ret {
+		retmap[n.{{$field.Name}}] = n
+	}
+	return retmap, nil
 }
 {{end}}
+
+{{if $index.CanUseFindIn }}
+func (m *_{{$obj.Name}}Mgr) FindIn{{$index.Name}}({{$index.GetFuncParamIn}}, sortFields ...string) ( []*{{$obj.Name}},  error) {
+	buf := bytes.NewBuffer(nil)
+	buf.WriteString("SELECT {{$allFields}} FROM {{$tbl}} WHERE ")
+	{{- range $idx, $field := $index.Fields}}
+	
+	buf.WriteString("`{{camel2name $field.Name}}` in ")
+	{{$index.GetFindInIds $idx "buf" $field.Name}}
+	{{- if (lt $idx (minus (len $index.Fields) 1)) }}
+	buf.WriteString(" AND ")
+	{{- end -}}
+	
+	{{end}}
+	return m.query(buf.String())
+}
+{{ end }}
 
 
 {{if $index.IsUnique }}
