@@ -25,6 +25,8 @@ func init() {
 		"camel2list":    camel2list,
 		"camel2name":    camel2name,
 		"strDefault":    strDefault,
+		"strif":         strif,
+		"toids":         toIds,
 	}
 	Tpl = template.New("ezorm").Funcs(funcMap)
 	files := []string{
@@ -36,7 +38,9 @@ func init() {
 		"tpl/struct.gogo",
 		"tpl/mssql_orm.gogo",
 		"tpl/mssql_config.gogo",
+		"tpl/mysql_config.gogo",
 		"tpl/mysql_orm.gogo",
+		"tpl/mysql_fk.gogo",
 	}
 	for _, fname := range files {
 		data, err := tpl.Asset(fname)
@@ -88,6 +92,30 @@ type Obj struct {
 
 func (o *Obj) init() {
 	o.FieldNameMap = make(map[string]*Field)
+}
+
+func (o *Obj) GetByFields(f []*Field) []string {
+	newFields := make([]string, 0, len(f))
+	for _, ff := range f {
+		if ff == nil {
+			continue
+		}
+		newFields = append(newFields, ff.Name)
+	}
+	return newFields
+}
+
+func (o *Obj) GetForeignKeys() []*Field {
+	newFields := make([]*Field, 0, len(o.Fields))
+	for _, f := range o.Fields {
+		if f.HasForeign() {
+			newFields = append(newFields, f)
+		}
+	}
+	if len(newFields) == 0 {
+		return nil
+	}
+	return newFields
 }
 
 func (o *Obj) GetFieldNames() []string {
@@ -149,7 +177,7 @@ func (o *Obj) GetGenTypes() []string {
 	case "mssql":
 		return []string{"struct", "mssql_orm"}
 	case "mysql":
-		return []string{"struct", "mysql_orm"}
+		return []string{"struct", "mysql_orm", "mysql_fk"}
 	default:
 		return []string{"struct"}
 	}
@@ -159,6 +187,8 @@ func (o *Obj) GetConfigTemplate() (string, bool) {
 	switch o.Db {
 	case "mssql":
 		return "mssql_config", true
+	case "mysql":
+		return "mysql_config", true
 	default:
 		return "", false
 	}
@@ -181,17 +211,8 @@ func (o *Obj) GetFormImports() (imports []string) {
 }
 
 func (o *Obj) GetOrmImports() (imports []string) {
-	data := set.NewStringSet()
-	for _, f := range o.Fields {
-		if f.FK != "" {
-			tmp := strings.SplitN(f.FK, ".", 2)
-			if len(tmp) == 2 {
-				packageName := tmp[0]
-				data.Add(packageName)
-			}
-		}
-	}
-	return data.ToArray()
+	// gen import for across packages foreign keys
+	return nil
 }
 
 func (o *Obj) NeedOrm() bool {
@@ -350,6 +371,7 @@ func (o *Obj) Read(data map[string]interface{}) error {
 			return errors.New(o.Name + " has invalid obj property: " + key)
 		}
 	}
+
 	o.setIndexes()
 	return nil
 }

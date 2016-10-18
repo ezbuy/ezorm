@@ -44,7 +44,7 @@ type Field struct {
 	Type         string
 	Widget       string
 	Remark       string
-	FK           string
+	FK           *ForeignKey
 	Obj          *Obj
 }
 
@@ -71,6 +71,10 @@ func isUpperCase(c string) bool {
 
 func (f *Field) init() {
 	f.Flags = set.NewStringSet()
+}
+
+func (f *Field) ArgName() string {
+	return strings.ToLower(f.Name[:1]) + f.Name[1:]
 }
 
 func (f *Field) IsRequired() bool {
@@ -174,7 +178,7 @@ func (f *Field) HasForeign() bool {
 		return true
 	}
 
-	if f.FK != "" {
+	if f.FK != nil {
 		return true
 	}
 	return false
@@ -197,9 +201,7 @@ func (f *Field) ForeignType() string {
 		return f.Name[:len(f.Name)-2]
 	}
 
-	tmp := strings.Split(f.FK, "/")
-
-	return tmp[len(tmp)-1]
+	return f.FK.Field
 }
 
 func (f *Field) HasBindData() bool {
@@ -321,7 +323,7 @@ func (f *Field) Read(data map[interface{}]interface{}) error {
 			case "label":
 				f.Label = val
 			case "fk":
-				f.FK = val
+				f.FK = NewForeignKey(val)
 			case "widget":
 				f.Widget = val
 			case "remark":
@@ -377,4 +379,19 @@ func DbToGoType(colType string) string {
 		typeStr = "[]byte"
 	}
 	return typeStr
+}
+
+// -----------------------------------------------------------------------------
+
+type ForeignKey struct {
+	Tbl   string
+	Field string
+}
+
+func NewForeignKey(name string) *ForeignKey {
+	sp := strings.Split(name, ".")
+	return &ForeignKey{
+		Tbl:   sp[0],
+		Field: sp[1],
+	}
 }
