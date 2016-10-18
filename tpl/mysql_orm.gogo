@@ -208,7 +208,7 @@ func (m *_{{$obj.Name}}Mgr) FindMap{{$idField.Name}}({{$idField.Name}} []{{$idFi
 
 {{range $index := $obj.Indexes}}
 
-{{if $index.CanUseFindIn}}
+{{if $index.CanUseFindList }}
 {{$field := $index.GetFirstField}}
 
 func (m *_{{$obj.Name}}Mgr) FindList{{$index.Name}}({{$index.GetFuncParamIn}}) ([]*{{$obj.Name}}, error) {

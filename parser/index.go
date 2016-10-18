@@ -31,6 +31,10 @@ func (i *Index) IsFindInType(field *Field) bool {
 	}
 }
 
+func (i *Index) CanUseFindList() bool {
+	return len(i.Fields) == 1 && i.CanUseFindIn()
+}
+
 func (i *Index) CanUseFindIn() bool {
 	for _, field := range i.Fields {
 		if !i.IsFindInType(field) {
