@@ -18,9 +18,6 @@ Blog:
     - Update: datetime
       flags: [index]
   indexes: [[User, IsPublished]]
-  groupby:
-    - UnAssigned: [COUNT(*), Hits, IsPublished]
-      fromIds: User
 
   table: Blog
   dbname: test

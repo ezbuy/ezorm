@@ -41,7 +41,6 @@ func init() {
 		"tpl/mysql_config.gogo",
 		"tpl/mysql_orm.gogo",
 		"tpl/mysql_fk.gogo",
-		"tpl/mysql_group.gogo",
 	}
 	for _, fname := range files {
 		data, err := tpl.Asset(fname)
@@ -89,7 +88,6 @@ type Obj struct {
 	Table        string
 	TplWriter    io.Writer
 	DbName       string
-	GroupBy      map[string]*GroupByItem
 }
 
 func (o *Obj) init() {
@@ -179,7 +177,7 @@ func (o *Obj) GetGenTypes() []string {
 	case "mssql":
 		return []string{"struct", "mssql_orm"}
 	case "mysql":
-		return []string{"struct", "mysql_orm", "mysql_fk", "mysql_group"}
+		return []string{"struct", "mysql_orm", "mysql_fk"}
 	default:
 		return []string{"struct"}
 	}
@@ -331,7 +329,6 @@ func (o *Obj) Read(data map[string]interface{}) error {
 				index.IsUnique = true
 				o.Indexes = append(o.Indexes, index)
 			}
-		case "groupby":
 		case "extend":
 			o.Extend = val.(string)
 		case "table":
@@ -374,56 +371,7 @@ func (o *Obj) Read(data map[string]interface{}) error {
 			return errors.New(o.Name + " has invalid obj property: " + key)
 		}
 	}
-	if err := o.processGroupBy(data); err != nil {
-		return err
-	}
 
 	o.setIndexes()
-	return nil
-}
-
-func (o *Obj) processGroupBy(data map[string]interface{}) error {
-	val, ok := data["groupby"]
-	if !ok {
-		return nil
-	}
-
-	keys, ok := val.([]interface{})
-	if !ok {
-		return fmt.Errorf("[%v] invalid groupBy %T(%+v)",
-			o.Name, val, val)
-	}
-	o.GroupBy = make(map[string]*GroupByItem)
-	for _, groupKey := range keys {
-		var gi GroupByItem
-		for name, list := range groupKey.(map[interface{}]interface{}) {
-			name := name.(string)
-
-			switch name {
-			case "fromIds":
-				fkName := list.(string)
-				f, ok := o.FieldNameMap[fkName]
-				if !ok {
-					return fmt.Errorf(
-						"field from groupBy is not found: %v", fkName)
-				}
-				gi.FromField = f
-			default:
-				o.GroupBy[name] = &gi
-				if list, ok := list.([]interface{}); ok {
-					for _, fieldName := range list {
-						fn := fieldName.(string)
-						gi.Add(fn, o.FieldNameMap[fn])
-					}
-				}
-			}
-		}
-	}
-	for key, v := range o.GroupBy {
-		if v.FromField == nil {
-			panic(fmt.Errorf("groupBy %v missing fromField", key).Error())
-		}
-	}
-
 	return nil
 }
