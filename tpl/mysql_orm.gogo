@@ -18,9 +18,11 @@ import (
 	"strings"
 	"github.com/ezbuy/ezorm/db"
 	"time"
+	"bytes"
 )
 var (
 	_ time.Time
+	_ bytes.Buffer
 )
 
 
@@ -151,7 +153,7 @@ func (m *_{{$obj.Name}}Mgr) InsertBatch(objs []*{{$obj.Name}}) (sql.Result, erro
 		values = append(values, "({{- repeatJoin (len $obj.GetNonIdFieldNames) "?" ", " -}})")
 		params = append(params, {{$nonIdFieldNames}})
 	}
-	query := fmt.Sprintf("INSERT INTO {{$tbl}} ({{- join (camel2list $obj.GetNonIdFieldNames) ", " -}}) VALUES %s", strings.Join(values, ","))
+	query := fmt.Sprintf("INSERT INTO {{$tbl}} (`{{- join (camel2list $obj.GetNonIdFieldNames) "`, `" -}}`) VALUES %s", strings.Join(values, ","))
 	return db.MysqlExec(query, params...)
 }
 
@@ -175,20 +177,100 @@ func (m *_{{$obj.Name}}Mgr) FindByIDs(ids []{{$idField.Type}}) ([]*{{$obj.Name}}
 	return m.query(query, args...)
 }
 
+func (m *_{{$obj.Name}}Mgr) FindIn{{$idField.Name}}(ids []{{$idField.Type}}, sortFields ...string) ([]*{{$obj.Name}}, error) {
+	return m.FindByIDs(ids)
+}
+
+func (m *_{{$obj.Name}}Mgr) FindList{{$idField.Name}}({{$idField.Name}} []{{$idField.Type}}) ([]*{{$obj.Name}}, error) {
+	 retmap, err := m.FindMap{{$idField.Name}}({{$idField.Name}})
+	 if err != nil {
+	 	return nil, err
+	 }
+	 ret := make([]*{{$obj.Name}}, len({{$idField.Name}}))
+	 for idx, key := range {{$idField.Name}} {
+	 	 ret[idx] = retmap[key]
+	 }
+	 return ret, nil
+}
+
+func (m *_{{$obj.Name}}Mgr) FindMap{{$idField.Name}}({{$idField.Name}} []{{$idField.Type}}, sortFields ...string) (map[{{$idField.Type}}]*{{$obj.Name}}, error) {
+	ret, err := m.FindIn{{$idField.Name}}({{$idField.Name}}, sortFields...)
+	if err != nil {
+	   return nil, err
+	}
+	retmap := make(map[{{$idField.Type}}]*{{$obj.Name}}, len(ret))
+	for _, n := range ret {
+		retmap[n.{{$idField.Name}}] = n
+	}
+	return retmap, nil
+}
+
+
 {{range $index := $obj.Indexes}}
+
+{{if $index.CanUseFindIn}}
+{{$field := $index.GetFirstField}}
+
+func (m *_{{$obj.Name}}Mgr) FindList{{$index.Name}}({{$index.GetFuncParamIn}}) ([]*{{$obj.Name}}, error) {
+	 retmap, err := m.FindMap{{$index.Name}}({{$field.Name}})
+	 if err != nil {
+	 	return nil, err
+	 }
+	 ret := make([]*{{$obj.Name}}, len({{$index.Name}}))
+	 for idx, key := range {{$index.Name}} {
+	 	 ret[idx] = retmap[key]
+	 }
+	 return ret, nil
+}
+
+func (m *_{{$obj.Name}}Mgr) FindMap{{$index.Name}}({{$index.GetFuncParamIn}}) (map[{{$field.Type}}]*{{$obj.Name}}, error) {
+	ret, err := m.FindIn{{$index.Name}}({{$index.GetFuncParamOriNames}})
+	if err != nil {
+	   return nil, err
+	}
+	retmap := make(map[{{$field.Type}}]*{{$obj.Name}}, len(ret))
+	for _, n := range ret {
+		retmap[n.{{$field.Name}}] = n
+	}
+	return retmap, nil
+}
+{{end}}
+
+{{if $index.CanUseFindIn }}
+func (m *_{{$obj.Name}}Mgr) FindIn{{$index.Name}}({{$index.GetFuncParamIn}}, sortFields ...string) ( []*{{$obj.Name}},  error) {
+	buf := bytes.NewBuffer(nil)
+	buf.WriteString("SELECT {{$allFields}} FROM {{$tbl}} WHERE ")
+	{{- range $idx, $field := $index.Fields}}
+	
+	buf.WriteString("`{{camel2name $field.Name}}` in ")
+	{{$index.GetFindInIds $idx "buf" $field.Name}}
+	{{- if (lt $idx (minus (len $index.Fields) 1)) }}
+	buf.WriteString(" AND ")
+	{{- end -}}
+	
+	{{end}}
+	return m.query(buf.String())
+}
+{{ end }}
+
+
 {{if $index.IsUnique }}
 func (m *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (*{{$obj.Name}}, error) {
 	query := "SELECT {{$allFields}} FROM {{$tbl}} WHERE
-	{{- preSuffixJoin $index.FieldNames " " "=?" " AND" -}}"
+	{{- preSuffixJoin (camel2list $index.FieldNames) " " "=?" " AND" -}}"
 	return m.queryOne(query, {{$index.GetFuncParamNames}})
 }
 {{else}}
+func (m *_{{$obj.Name}}Mgr) FindAllBy{{$index.Name}}({{$index.GetFuncParam}}, sortFields ...string) ( []*{{$obj.Name}}, error) {
+	 return m.FindBy{{$index.Name}}({{$index.GetFuncParamOriNames}}, -1, -1, sortFields...)
+}
+
 func (m *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, offset int, limit int, sortFields ...string) ( []*{{$obj.Name}},  error) {
 	orderBy := "ORDER BY %s"
 	if len(sortFields) != 0 {
 		orderBy = fmt.Sprintf(orderBy, strings.Join(sortFields, ","))
 	} else {
-		orderBy = fmt.Sprintf(orderBy, "{{$idFieldName}}")
+		orderBy = fmt.Sprintf(orderBy, "{{camel2name $idFieldName}}")
 	}
 
 	query := fmt.Sprintf("SELECT {{$allFields}} FROM {{$tbl}} WHERE
@@ -284,6 +366,17 @@ func (m *_{{$obj.Name}}Mgr) Count(where string, args ...interface{}) (int32, err
 	}
 
 	return count, err
+}
+
+func (m *_{{$obj.Name}}Mgr) getLimitQuery(offset, limit int, sorts []string) string {
+	orderBy := ""
+	if len(sorts) != 0 {
+		orderBy = fmt.Sprintf("ORDER BY %s", strings.Join(sorts, ","))
+	}
+	if limit > 0 {
+		return orderBy + fmt.Sprintf(" LIMIT %d, %d", offset, limit)
+	}
+	return orderBy
 }
 
 {{- end -}}
