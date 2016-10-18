@@ -18,7 +18,7 @@ var (
 
 {{range $field := $fields}}
 
-func (m *_{{$obj.Name}}Mgr) To{{$field.Name}}(base {{$baseType}}) []{{$field.Type}} {
+func (m *_{{$obj.Name}}Mgr) ToField{{$field.Name}}(base {{$baseType}}) []{{$field.Type}} {
 	ids := make([]{{$field.Type}}, len(base))
 	for idx, b := range base {
 		ids[idx] = b.{{$field.Name}}

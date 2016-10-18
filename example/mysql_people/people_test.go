@@ -122,7 +122,7 @@ func testForeignKey(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	userNumbers := BlogMgr.ToUser(blogs)
+	userNumbers := BlogMgr.ToFieldUser(blogs)
 	users, err := UserMgr.FindListUserNumber(userNumbers)
 	if err != nil {
 		t.Fatal(err)

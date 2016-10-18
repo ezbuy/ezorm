@@ -94,7 +94,7 @@ func tplMongo_collectionGogo() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "tpl/mongo_collection.gogo", size: 5638, mode: os.FileMode(420), modTime: time.Unix(1476021213, 0)}
+	info := bindataFileInfo{name: "tpl/mongo_collection.gogo", size: 5638, mode: os.FileMode(420), modTime: time.Unix(1476756347, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -114,7 +114,7 @@ func tplMongo_foreign_keyGogo() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "tpl/mongo_foreign_key.gogo", size: 1061, mode: os.FileMode(420), modTime: time.Unix(1476021213, 0)}
+	info := bindataFileInfo{name: "tpl/mongo_foreign_key.gogo", size: 1061, mode: os.FileMode(420), modTime: time.Unix(1476756347, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -134,7 +134,7 @@ func tplMongo_mongoGogo() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "tpl/mongo_mongo.gogo", size: 1700, mode: os.FileMode(420), modTime: time.Unix(1476021213, 0)}
+	info := bindataFileInfo{name: "tpl/mongo_mongo.gogo", size: 1700, mode: os.FileMode(420), modTime: time.Unix(1476756347, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -154,7 +154,7 @@ func tplMongo_ormGogo() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "tpl/mongo_orm.gogo", size: 1769, mode: os.FileMode(420), modTime: time.Unix(1476021213, 0)}
+	info := bindataFileInfo{name: "tpl/mongo_orm.gogo", size: 1769, mode: os.FileMode(420), modTime: time.Unix(1476756347, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -174,7 +174,7 @@ func tplMongo_searchGogo() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "tpl/mongo_search.gogo", size: 3667, mode: os.FileMode(420), modTime: time.Unix(1476021213, 0)}
+	info := bindataFileInfo{name: "tpl/mongo_search.gogo", size: 3667, mode: os.FileMode(420), modTime: time.Unix(1476756347, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -194,7 +194,7 @@ func tplMssql_configGogo() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "tpl/mssql_config.gogo", size: 1955, mode: os.FileMode(420), modTime: time.Unix(1476021213, 0)}
+	info := bindataFileInfo{name: "tpl/mssql_config.gogo", size: 1955, mode: os.FileMode(420), modTime: time.Unix(1476756347, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -214,7 +214,7 @@ func tplMssql_ormGogo() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "tpl/mssql_orm.gogo", size: 7808, mode: os.FileMode(420), modTime: time.Unix(1476709182, 0)}
+	info := bindataFileInfo{name: "tpl/mssql_orm.gogo", size: 7808, mode: os.FileMode(420), modTime: time.Unix(1476756347, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -234,12 +234,12 @@ func tplMysql_configGogo() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "tpl/mysql_config.gogo", size: 1400, mode: os.FileMode(420), modTime: time.Unix(1476725536, 0)}
+	info := bindataFileInfo{name: "tpl/mysql_config.gogo", size: 1400, mode: os.FileMode(420), modTime: time.Unix(1476756347, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
 
-var _tplMysql_fkGogo = []byte("\x1f\x8b\x08\x00\x00\x09\x6e\x88\x00\xff\x64\x90\x41\x6b\xe3\x30\x10\x85\xcf\xd6\xaf\x18\xc4\x2e\xd8\x21\xe8\x07\x2c\xe4\xb2\x87\x96\x52\x5a\x72\xc8\x2d\x84\x20\x47\x23\xa3\xc6\x92\x5d\x49\x09\x31\x42\xff\xbd\x8c\x94\x96\xd2\x9e\x3c\x7e\xf3\xbd\xa7\x27\xa5\xa4\x50\x1b\x87\xc0\xed\x12\xde\xc7\xa3\x3e\xf3\x9c\x67\x79\x3a\xcb\x01\x21\x25\xb1\xad\x63\xce\xcc\xd8\x79\xf2\x11\x5a\xd6\x70\x6d\x23\x67\x0d\x0f\xd1\x1b\x37\x04\x1a\xfb\x25\x62\xe0\xac\x63\xec\x2a\x3d\x31\x47\xd8\x80\xb6\x51\x6c\xbd\x71\x71\x74\x55\xb8\x1b\xc4\x93\x53\x78\x23\xa9\xd8\xc4\xff\x8b\xd6\xe8\xc9\x9c\xd2\x9f\xa9\x7f\x83\x7f\x1b\x10\x39\xd3\x5f\x2f\x03\xee\x96\x19\x49\x9a\x29\x4a\x03\xdf\x1f\x56\x7f\xaf\x1c\x88\x14\xaf\xd2\x52\x37\x42\xb5\xc1\x51\x05\x02\xcb\xe6\x11\xe3\xc3\xe4\xd1\x0c\xee\x19\x97\x50\x19\x2f\xdd\x80\x50\xc9\x02\x56\x0f\x2d\xf5\xc5\x9d\xa0\xb5\xb0\x3a\xd6\x0e\xf7\xe4\x97\xc1\x77\xb0\x9b\x3e\xe3\xef\x6a\x4b\xb5\xe0\x5b\xbd\x9c\x3b\xd8\x1f\xbe\xa8\x2a\x41\x62\x8d\xa9\x8d\xac\x3c\x63\xfb\x0b\x58\xc3\x88\xae\x64\x75\x1d\x6b\xf4\xe4\xc1\xa8\xdb\x1a\x7a\x72\xd4\xaa\xf5\x1c\xd6\x50\xce\xde\xa8\xdb\x01\x36\xd0\x8b\x1f\x6d\x58\x93\x59\xe3\x31\x5e\xbc\x03\xa3\x02\x2b\x57\x45\xa7\xca\x0b\x96\xef\x47\x00\x00\x00\xff\xff\x33\x99\x18\x2d\xe5\x01\x00\x00")
+var _tplMysql_fkGogo = []byte("\x1f\x8b\x08\x00\x00\x09\x6e\x88\x00\xff\x64\x90\x41\x6b\xe3\x30\x10\x85\xcf\xd6\xaf\x18\xc4\x2e\xd8\x21\xe8\x07\x2c\xe4\xb2\x87\x2c\x4b\x69\xc9\x21\xb7\x10\x82\x1c\x8d\x8c\x1a\x4b\x76\x25\x25\xc4\x08\xfd\xf7\x32\x52\x5a\x4a\x7b\xf2\xf8\xcd\xf7\xde\x3c\x3b\x25\x85\xda\x38\x04\x6e\x97\xf0\x36\x9e\xf4\x85\xe7\x3c\xcb\xf3\x45\x0e\x08\x29\x89\x5d\x1d\x73\x66\xc6\xce\x93\x8f\xd0\xb2\x86\x6b\x1b\x39\x6b\x78\x88\xde\xb8\x21\xd0\xd8\x2f\x11\x03\x67\x1d\x63\x37\xe9\x89\x39\xc1\x06\xb4\x8d\x62\xe7\x8d\x8b\xa3\xab\xc2\xc3\x20\xfe\x3b\x85\x77\x92\x8a\x4d\xfc\xbd\x6a\x8d\x9e\xcc\x29\xfd\x9a\xfa\x57\xf8\xb3\x01\x91\x33\xbd\xf5\x32\xe0\x7e\x99\x91\xa4\x99\xa2\x34\xf0\xc3\x71\xf5\xfb\xc6\x81\x48\xf1\x22\x2d\x75\x23\x54\x1b\x1c\x55\x20\xb0\x6c\xfe\x61\xdc\x4e\x1e\xcd\xe0\x9e\x70\x09\x95\xf1\xd2\x0d\x08\x95\x2c\x60\xf5\xd0\x52\x5f\xdd\x19\x5a\x0b\xab\x53\xed\xf0\x48\x7e\x1e\x7c\x07\xfb\x69\x4b\xdc\xc7\x8d\xc7\xaa\xa5\x6e\xf0\xa5\x63\xce\x1d\x1c\x8e\x9f\x54\x95\x20\xb1\xc6\xd4\x5a\x56\x5e\xb0\xfd\x01\xac\x61\x44\x57\xb2\xba\x8e\x35\x7a\xf2\x60\xd4\x7d\x0d\x3d\x39\x6a\xdf\x7a\x87\x35\x94\x73\x30\xea\x7e\x84\x0d\xf4\xe2\x5b\x1b\xd6\x64\xd6\x78\x8c\x57\xef\xc0\xa8\xc0\xca\xf7\xa2\x53\xe5\x37\x96\xe7\x7b\x00\x00\x00\xff\xff\x21\x85\x6d\xe7\xea\x01\x00\x00")
 
 func tplMysql_fkGogoBytes() ([]byte, error) {
 	return bindataRead(
@@ -254,7 +254,7 @@ func tplMysql_fkGogo() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "tpl/mysql_fk.gogo", size: 485, mode: os.FileMode(420), modTime: time.Unix(1476723529, 0)}
+	info := bindataFileInfo{name: "tpl/mysql_fk.gogo", size: 490, mode: os.FileMode(420), modTime: time.Unix(1476756347, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -274,7 +274,7 @@ func tplMysql_groupGogo() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "tpl/mysql_group.gogo", size: 1903, mode: os.FileMode(420), modTime: time.Unix(1476708999, 0)}
+	info := bindataFileInfo{name: "tpl/mysql_group.gogo", size: 1903, mode: os.FileMode(420), modTime: time.Unix(1476756347, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -294,7 +294,7 @@ func tplMysql_ormGogo() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "tpl/mysql_orm.gogo", size: 11086, mode: os.FileMode(420), modTime: time.Unix(1476725483, 0)}
+	info := bindataFileInfo{name: "tpl/mysql_orm.gogo", size: 11086, mode: os.FileMode(420), modTime: time.Unix(1476756347, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -314,7 +314,7 @@ func tplStructGogo() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "tpl/struct.gogo", size: 1134, mode: os.FileMode(420), modTime: time.Unix(1476021213, 0)}
+	info := bindataFileInfo{name: "tpl/struct.gogo", size: 1134, mode: os.FileMode(420), modTime: time.Unix(1476756347, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
