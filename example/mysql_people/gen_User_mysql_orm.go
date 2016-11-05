@@ -190,7 +190,7 @@ func (m *_UserMgr) FindInUserNumber(UserNumber []int32, sortFields ...string) ([
 
 	buf.WriteString("`user_number` in ")
 	int32ToIds(buf, UserNumber)
-	return m.query(buf.String())
+	return m.query(buf.String() + m.GetSort(sortFields))
 }
 
 func (m *_UserMgr) FindOneByUserNumber(UserNumber int32) (*User, error) {
@@ -228,7 +228,7 @@ func (m *_UserMgr) FindInName(Name []string, sortFields ...string) ([]*User, err
 
 	buf.WriteString("`name` in ")
 	stringToIds(buf, Name)
-	return m.query(buf.String())
+	return m.query(buf.String() + m.GetSort(sortFields))
 }
 
 func (m *_UserMgr) FindAllByName(Name string, sortFields ...string) ([]*User, error) {
@@ -236,25 +236,18 @@ func (m *_UserMgr) FindAllByName(Name string, sortFields ...string) ([]*User, er
 }
 
 func (m *_UserMgr) FindByName(Name string, offset int, limit int, sortFields ...string) ([]*User, error) {
-	orderBy := "ORDER BY %s"
-	if len(sortFields) != 0 {
-		orderBy = fmt.Sprintf(orderBy, strings.Join(sortFields, ","))
-	} else {
-		orderBy = fmt.Sprintf(orderBy, "user_id")
-	}
+	query := fmt.Sprintf("SELECT `user_id`, `user_number`, `name` FROM test.test_user WHERE `name`=? %s%s", m.GetSort(sortFields), m.GetLimit(offset, limit))
 
-	query := fmt.Sprintf("SELECT `user_id`, `user_number`, `name` FROM test.test_user WHERE `name`=? %s LIMIT ?, ?", orderBy)
-
-	return m.query(query, Name, offset, limit)
+	return m.query(query, Name)
 }
 
 func (m *_UserMgr) FindOne(where string, args ...interface{}) (*User, error) {
-	query := m.getQuerysql(true, where)
+	query := m.GetQuerysql(where) + m.GetLimit(0, 1)
 	return m.queryOne(query, args...)
 }
 
 func (m *_UserMgr) Find(where string, args ...interface{}) ([]*User, error) {
-	query := m.getQuerysql(false, where)
+	query := m.GetQuerysql(where)
 	return m.query(query, args...)
 }
 
@@ -263,7 +256,7 @@ func (m *_UserMgr) FindAll() (results []*User, err error) {
 }
 
 func (m *_UserMgr) FindWithOffset(where string, offset int, limit int, args ...interface{}) ([]*User, error) {
-	query := m.getQuerysql(false, where)
+	query := m.GetQuerysql(where)
 
 	query = query + " LIMIT ?, ?"
 
@@ -273,7 +266,7 @@ func (m *_UserMgr) FindWithOffset(where string, offset int, limit int, args ...i
 	return m.query(query, args...)
 }
 
-func (m *_UserMgr) getQuerysql(topOne bool, where string) string {
+func (m *_UserMgr) GetQuerysql(where string) string {
 	query := "SELECT `user_id`, `user_number`, `name` FROM test.test_user"
 
 	where = strings.TrimSpace(where)
@@ -287,9 +280,6 @@ func (m *_UserMgr) getQuerysql(topOne bool, where string) string {
 		query = query + where
 	}
 
-	if topOne {
-		query += " LIMIT 1"
-	}
 	return query
 }
 
@@ -332,13 +322,35 @@ func (m *_UserMgr) Count(where string, args ...interface{}) (int32, error) {
 	return count, err
 }
 
-func (m *_UserMgr) getLimitQuery(offset, limit int, sorts []string) string {
-	orderBy := ""
-	if len(sorts) != 0 {
-		orderBy = fmt.Sprintf("ORDER BY %s", strings.Join(sorts, ","))
+func (m *_UserMgr) GetSort(sorts []string) string {
+	if len(sorts) == 0 {
+		return ""
 	}
-	if limit > 0 {
-		return orderBy + fmt.Sprintf(" LIMIT %d, %d", offset, limit)
+	buf := bytes.NewBuffer(nil)
+	buf.WriteString(" ORDER BY ")
+	for idx, s := range sorts {
+		if len(s) == 0 {
+			continue
+		}
+		if s[0] == '-' {
+			buf.WriteString(s[1:] + " DESC")
+		} else {
+			buf.WriteString(s)
+		}
+		if idx == len(sorts)-1 {
+			break
+		}
+		buf.WriteString(",")
 	}
-	return orderBy
+	return buf.String()
+}
+
+func (m *_UserMgr) GetLimit(offset, limit int) string {
+	if limit <= 0 {
+		return ""
+	}
+	if offset <= 0 {
+		return fmt.Sprintf(" LIMIT %d", limit)
+	}
+	return fmt.Sprintf(" LIMIT %d, %d", offset, limit)
 }
