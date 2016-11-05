@@ -249,7 +249,7 @@ func (m *_{{$obj.Name}}Mgr) FindIn{{$index.Name}}({{$index.GetFuncParamIn}}, sor
 	{{- end -}}
 	
 	{{end}}
-	return m.query(buf.String())
+	return m.query(buf.String() + m.GetSort(sortFields))
 }
 {{ end }}
 
@@ -266,30 +266,23 @@ func (m *_{{$obj.Name}}Mgr) FindAllBy{{$index.Name}}({{$index.GetFuncParam}}, so
 }
 
 func (m *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, offset int, limit int, sortFields ...string) ( []*{{$obj.Name}},  error) {
-	orderBy := "ORDER BY %s"
-	if len(sortFields) != 0 {
-		orderBy = fmt.Sprintf(orderBy, strings.Join(sortFields, ","))
-	} else {
-		orderBy = fmt.Sprintf(orderBy, "{{camel2name $idFieldName}}")
-	}
-
 	query := fmt.Sprintf("SELECT {{$allFields}} FROM {{$tbl}} WHERE
 	{{- preSuffixJoin (camel2list $index.FieldNames) " `" "`=? " "AND" -}}
-	%s LIMIT ?, ?", orderBy)
+	%s%s", m.GetSort(sortFields), m.GetLimit(offset, limit))
 
-	return m.query(query, {{$index.GetFuncParamNames}}, offset, limit)
+	return m.query(query, {{$index.GetFuncParamNames}})
 }
 {{end}}
 {{end}}
 
 func (m *_{{$obj.Name}}Mgr) FindOne(where string, args ...interface{}) (*{{$obj.Name}}, error) {
-	query := m.getQuerysql(true, where)
+	query := m.GetQuerysql(where) + m.GetLimit(0, 1)
 	return m.queryOne(query, args...)
 }
 
 
 func (m *_{{$obj.Name}}Mgr) Find(where string, args ...interface{}) ([]*{{$obj.Name}}, error) {
-	query := m.getQuerysql(false, where)
+	query := m.GetQuerysql(where)
 	return m.query(query, args...)
 }
 
@@ -298,7 +291,7 @@ func (m *_{{$obj.Name}}Mgr) FindAll() (results []*{{$obj.Name}}, err error) {
 }
 
 func (m *_{{$obj.Name}}Mgr) FindWithOffset(where string, offset int, limit int, args ...interface{}) ([]*{{$obj.Name}}, error) {
-	query := m.getQuerysql(false, where)
+	query := m.GetQuerysql(where)
 
 	query = query + " LIMIT ?, ?"
 
@@ -309,7 +302,7 @@ func (m *_{{$obj.Name}}Mgr) FindWithOffset(where string, offset int, limit int, 
 }
 
 
-func (m *_{{$obj.Name}}Mgr) getQuerysql(topOne bool, where string) string {
+func (m *_{{$obj.Name}}Mgr) GetQuerysql(where string) string {
 	query := "SELECT {{$allFields}} FROM {{$tbl}}"
 
 	where = strings.TrimSpace(where)
@@ -322,10 +315,7 @@ func (m *_{{$obj.Name}}Mgr) getQuerysql(topOne bool, where string) string {
 
 		query = query + where
 	}
-	
-	if topOne {
-	   query += " LIMIT 1"
-	}
+
 	return query
 }
 
@@ -368,15 +358,37 @@ func (m *_{{$obj.Name}}Mgr) Count(where string, args ...interface{}) (int32, err
 	return count, err
 }
 
-func (m *_{{$obj.Name}}Mgr) getLimitQuery(offset, limit int, sorts []string) string {
-	orderBy := ""
-	if len(sorts) != 0 {
-		orderBy = fmt.Sprintf("ORDER BY %s", strings.Join(sorts, ","))
-	}
-	if limit > 0 {
-		return orderBy + fmt.Sprintf(" LIMIT %d, %d", offset, limit)
-	}
-	return orderBy
+func (m *_{{$obj.Name}}Mgr) GetSort(sorts []string) string {
+	 if len(sorts) == 0 {
+	 	return ""
+	 }
+	 buf := bytes.NewBuffer(nil)
+	 buf.WriteString(" ORDER BY ")
+	 for idx, s := range sorts {
+	 	 if len(s) == 0 {
+		 	continue
+		 }
+		 if s[0] == '-' {
+		 	 buf.WriteString(s[1:] + " DESC")
+		 } else {
+		 	 buf.WriteString(s)
+		 }
+		 if idx == len(sorts) - 1 {
+		 	break
+		 }
+		 buf.WriteString(",")
+	 }
+	 return buf.String()
+}
+
+func (m *_{{$obj.Name}}Mgr) GetLimit(offset, limit int) string {
+	 if limit <= 0 {
+	 	return ""
+	 }
+	 if offset <= 0 {
+	 	return fmt.Sprintf(" LIMIT %d", limit)
+	 }
+	 return fmt.Sprintf(" LIMIT %d, %d", offset, limit)
 }
 
 {{- end -}}
