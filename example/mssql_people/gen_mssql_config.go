@@ -3,6 +3,9 @@ package people
 import (
 	"database/sql"
 	"fmt"
+	"os"
+	"path"
+	"strings"
 
 	_ "github.com/denisenkom/go-mssqldb"
 	"github.com/ezbuy/ezorm/db"
@@ -16,6 +19,25 @@ var (
 )
 
 func MssqlSetUp(dataSourceName string) {
+	// Use commandline args as default app name
+	if !strings.Contains(dataSourceName, "app name") {
+		var commandArgs []string
+		// Add all commandline args until options with "-" prefix
+		for _, each := range os.Args {
+			if strings.HasPrefix(each, "-") {
+				break
+			}
+
+			_, filename := path.Split(each)
+
+			commandArgs = append(commandArgs, filename)
+		}
+
+		dataSourceName = fmt.Sprintf("%s;app name=%s",
+			strings.TrimRight(dataSourceName, " ;"),
+			strings.Join(commandArgs, " "))
+	}
+
 	conn, err := sqlx.Connect("mssql", dataSourceName)
 	if err != nil {
 		panic(fmt.Sprintf("[db.GetSqlServer] open sql fail:%s", err.Error()))
