@@ -365,13 +365,17 @@ func (m *_BlogMgr) Count(where string, args ...interface{}) (int32, error) {
 	if err != nil {
 		return 0, err
 	}
+	defer rows.Close()
 
 	var count int32
 	if rows.Next() {
 		err = rows.Scan(&count)
 	}
+	if err := rows.Err(); err != nil {
+		return 0, err
+	}
 
-	return count, err
+	return count, nil
 }
 
 func (m *_BlogMgr) GetSort(sorts []string) string {
