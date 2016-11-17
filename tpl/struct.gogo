@@ -1,4 +1,4 @@
-{{define "struct"}}package {{.Package}}
+{{define "struct"}}package {{.GoPackage}}
 {{$obj := .}}
 {{if eq .Db "mongo"}}
 import "gopkg.in/mgo.v2/bson"
