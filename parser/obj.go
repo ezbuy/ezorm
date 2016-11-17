@@ -83,6 +83,7 @@ type Obj struct {
 	Indexes      []*Index
 	Name         string
 	Package      string
+	GoPackage    string
 	SearchIndex  string
 	SearchType   string
 	Table        string

@@ -1,4 +1,4 @@
-{{define "mongo_orm"}}package {{.Package}}
+{{define "mongo_orm"}}package {{.GoPackage}}
 {{$obj := .}}
 import (
 	//3rd party libs
