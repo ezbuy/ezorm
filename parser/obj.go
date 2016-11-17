@@ -92,6 +92,9 @@ type Obj struct {
 }
 
 func (o *Obj) init() {
+	if o.GoPackage == "" {
+		o.GoPackage = o.Package
+	}
 	o.FieldNameMap = make(map[string]*Field)
 }
 
