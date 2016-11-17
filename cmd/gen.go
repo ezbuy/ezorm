@@ -49,12 +49,16 @@ var genCmd = &cobra.Command{
 		if genPackageName == "" {
 			genPackageName = strings.Split(stat.Name(), ".")[0]
 		}
+		if genGoPackageName == "" {
+			genGoPackageName = genPackageName
+		}
 
 		databases := make(map[string]*parser.Obj)
 
 		for key, obj := range objs {
 			xwMetaObj := new(parser.Obj)
 			xwMetaObj.Package = genPackageName
+			xwMetaObj.GoPackage = genGoPackageName
 			xwMetaObj.Name = key
 			err := xwMetaObj.Read(obj)
 			if err != nil {
@@ -98,6 +102,7 @@ func executeTpl(fileAbsPath, tplName string, xwMetaObj *parser.Obj) {
 var input string
 var output string
 var genPackageName string
+var genGoPackageName string
 
 func init() {
 	RootCmd.AddCommand(genCmd)
@@ -109,6 +114,7 @@ func init() {
 	genCmd.PersistentFlags().StringVarP(&input, "input", "i", "", "input file")
 	genCmd.PersistentFlags().StringVarP(&output, "output", "o", "", "output path")
 	genCmd.PersistentFlags().StringVarP(&genPackageName, "package name", "p", "", "package name")
+	genCmd.PersistentFlags().StringVar(&genGoPackageName, "goPackage", "", "go package name")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
