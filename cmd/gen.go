@@ -81,7 +81,6 @@ var genCmd = &cobra.Command{
 
 		oscmd := exec.Command("gofmt", "-w", output)
 		oscmd.Run()
-		fmt.Println("gen called")
 	},
 }
 
