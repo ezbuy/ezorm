@@ -63,6 +63,7 @@ var genCmd = &cobra.Command{
 			err := xwMetaObj.Read(obj)
 			if err != nil {
 				println(err.Error())
+				return
 			}
 
 			databases[xwMetaObj.Db] = xwMetaObj
