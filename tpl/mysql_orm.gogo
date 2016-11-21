@@ -132,9 +132,7 @@ func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
 		return result, err
 	}
 
-	{{ if $idFieldName }}
 	obj.{{$idFieldName}} = {{$idField.Type}}(lastInsertId)
-	{{ end }}
 
 	return result, err
 }
