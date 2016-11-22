@@ -98,6 +98,38 @@ func (o *Obj) init() {
 	o.FieldNameMap = make(map[string]*Field)
 }
 
+func (o *Obj) GetFieldNameWithDB(name string) string {
+	if o.DbName != "" {
+		return fmt.Sprintf("%s.%s", o.DbName, name)
+	}
+	return name
+}
+
+func (o *Obj) GetPrimaryKeyName() string {
+	k := o.GetPrimaryKey()
+	if k != nil {
+		return k.Name
+	}
+	return ""
+}
+
+func (o *Obj) GetPrimaryKey() *Field {
+	for _, f := range o.Fields {
+		if f.Name == o.Name+"Id" {
+			return f
+		}
+	}
+	for _, f := range o.Fields {
+		if !strings.HasPrefix(f.Type, "int") {
+			continue
+		}
+		if f.Flags.Contains("unique") || f.Flags.Contains("primary") {
+			return f
+		}
+	}
+	return nil
+}
+
 func (o *Obj) GetByFields(f []*Field) []string {
 	newFields := make([]string, 0, len(f))
 	for _, ff := range f {
@@ -133,9 +165,9 @@ func (o *Obj) GetFieldNames() []string {
 
 func (o *Obj) GetFieldNamesAsArgs(prefix string) []string {
 	fieldNames := make([]string, 0, len(o.Fields))
-	idFieldName := o.Name + "Id"
+	pf := o.GetPrimaryKey()
 	for _, f := range o.Fields {
-		if f.Name != idFieldName {
+		if pf == nil || f.Name != pf.Name {
 			fieldNames = append(fieldNames, f.AsArgName(prefix))
 		}
 	}
@@ -143,10 +175,10 @@ func (o *Obj) GetFieldNamesAsArgs(prefix string) []string {
 }
 
 func (o *Obj) GetNonIdFieldNames() []string {
+	pf := o.GetPrimaryKey()
 	fieldNames := make([]string, 0, len(o.Fields))
-	idFieldName := o.Name + "Id"
 	for _, f := range o.Fields {
-		if f.Name != idFieldName {
+		if pf == nil || f.Name != pf.Name {
 			fieldNames = append(fieldNames, f.Name)
 		}
 	}
@@ -374,6 +406,11 @@ func (o *Obj) Read(data map[string]interface{}) error {
 		default:
 			return errors.New(o.Name + " has invalid obj property: " + key)
 		}
+	}
+
+	// all mysql dbs share the same connection pool
+	if strings.EqualFold(o.Db, "mysql") && o.DbName == "" {
+		return errors.New("please specify `dbname` to " + o.Name)
 	}
 
 	o.setIndexes()

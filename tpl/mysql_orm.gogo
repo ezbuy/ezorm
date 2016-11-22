@@ -1,16 +1,17 @@
 {{define "mysql_orm"}}package {{.Package}}
 
 {{$obj := .}}
-{{$idFieldName := printf "%sId" .Name}}
 {{/* Only generate source file for table with primary key */}}
-{{range $index, $field := $obj.Fields}}
-{{if eq $field.Name $idFieldName}}
-{{$idField := $field}}
+{{$idFieldName := $obj.GetPrimaryKeyName}}
+{{$idField := $obj.GetPrimaryKey}}
+{{$field := $obj.GetPrimaryKey}}
+{{ if $field }}
+
 {{$allFields := join (camel2list $obj.GetFieldNames) "`, `"}}
 {{$allFields := printf "`%v`" $allFields}}
 {{$nonIdFieldNames := preSuffixJoin ($obj.GetFieldNamesAsArgs "obj.") "" "" ", "}}
-{{$tag := printf "%s.%s" $obj.DbName $obj.Name}}
-{{$tbl := printf "%s.%s" $obj.DbName (camel2name (strDefault $obj.Table $obj.Name))}}
+{{$tag := $obj.GetFieldNameWithDB $obj.Name}}
+{{$tbl := $obj.GetFieldNameWithDB (camel2name (strDefault $obj.Table $obj.Name))}}
 
 import (
 	"database/sql"
@@ -397,6 +398,4 @@ func (m *_{{$obj.Name}}Mgr) GetLimit(offset, limit int) string {
 
 {{- end -}}
 {{- end -}}
-{{- end -}}
-
 

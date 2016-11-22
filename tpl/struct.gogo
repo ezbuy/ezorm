@@ -9,8 +9,10 @@ var _ time.Time
 
 type {{.Name}} struct {
 {{- range $field := .Fields}}
-{{- if or (eq $obj.Db "mssql") (eq $obj.Db "mysql")}}
+{{- if or (eq $obj.Db "mssql") }}
 {{$field.Name}}  {{$field.GetGoType}} `db:"{{$field.Name}}"`
+{{- else if (eq $obj.Db "mysql") }}
+{{$field.Name}}  {{$field.GetGoType}} `db:"{{camel2name $field.Name}}"`
 {{- else}}
 	{{- if and (eq $obj.Db "mongo") (eq $field.Name "ID")}}
 	ID         bson.ObjectId `json:"id" bson:"_id,omitempty"`
