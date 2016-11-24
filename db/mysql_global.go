@@ -27,6 +27,10 @@ func getMysqlInstance() *Mysql {
 	return mysqlInstance
 }
 
+func GetMysql() *Mysql {
+	return getMysqlInstance()
+}
+
 func MysqlQuery(query string, args ...interface{}) (*sql.Rows, error) {
 	return getMysqlInstance().Query(query, args...)
 }
