@@ -10,6 +10,7 @@
 {{$allFields := join (camel2list $obj.GetFieldNames) "`, `"}}
 {{$allFields := printf "`%v`" $allFields}}
 {{$nonIdFieldNames := preSuffixJoin ($obj.GetFieldNamesAsArgs "obj.") "" "" ", "}}
+{{$idFieldNames := preSuffixJoin ($obj.GetAllNamesAsArgs "obj.") "" "" ", "}}
 {{$tag := $obj.GetFieldNameWithDB $obj.Name}}
 {{$tbl := $obj.GetFieldNameWithDB (camel2name (strDefault $obj.Table $obj.Name))}}
 
@@ -109,14 +110,57 @@ func (*_{{$obj.Name}}Mgr) queryLimit(query string, limit int, args ...interface{
 	return
 }
 
+{{- if $idField.DisableAutoInc}}
+func (m *_{{$obj.Name}}Mgr) Insert(obj *{{$obj.Name}}) (sql.Result, error) {
+	 return m.saveInsert(obj)
+}
+
+func (m *_{{$obj.Name}}Mgr) UpdateObj(obj *{{$obj.Name}}) (sql.Result, error) {
+	 return m.saveUpdate(obj)
+}
+
+{{end}}
+
 func (m *_{{$obj.Name}}Mgr) Save(obj *{{$obj.Name}}) (sql.Result, error) {
+	{{- if $idField.DisableAutoInc}}
+	// upsert
+	result, err := m.saveUpdate(obj)
+	if err != nil {
+		return nil, err
+	}
+	n, err := result.RowsAffected()
+	if err != nil {
+		return nil, err
+	}
+	if n != 0 {
+	   return result, nil
+	}
+	return m.saveInsert(obj)
+	{{ else }}
 	if obj.{{$idFieldName}} == 0 {
 		return m.saveInsert(obj)
 	}
 	return m.saveUpdate(obj)
+	{{- end }}
 }
 
 func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
+	{{- if $idField.DisableAutoInc}}
+	if obj.{{$idFieldName}} == 0 {
+	   return nil, fmt.Errorf("missing Id: {{$idFieldName}}")
+	}
+
+	query := "INSERT INTO {{$tbl}} (`
+	{{- join (camel2list $obj.GetFieldNames) "`, `" -}}
+	`) VALUES (
+	{{- repeatJoin (len $obj.GetFieldNames) "?" ", " -}}
+	)"
+	result, err := db.MysqlExec(query, {{$idFieldNames}})
+	if err != nil {
+		return result, err
+	}
+
+	{{else}}
 	query := "INSERT INTO {{$tbl}} (`
 	{{- join (camel2list $obj.GetNonIdFieldNames) "`, `" -}}
 	`) VALUES (
@@ -133,6 +177,7 @@ func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
 	}
 
 	obj.{{$idFieldName}} = {{$idField.Type}}(lastInsertId)
+	{{ end }}
 
 	return result, err
 }

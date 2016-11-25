@@ -79,27 +79,41 @@ func (*_BlogMgr) queryLimit(query string, limit int, args ...interface{}) (resul
 
 	return
 }
+func (m *_BlogMgr) Insert(obj *Blog) (sql.Result, error) {
+	return m.saveInsert(obj)
+}
 
-func (m *_BlogMgr) Save(obj *Blog) (sql.Result, error) {
-	if obj.BlogId == 0 {
-		return m.saveInsert(obj)
-	}
+func (m *_BlogMgr) UpdateObj(obj *Blog) (sql.Result, error) {
 	return m.saveUpdate(obj)
 }
 
+func (m *_BlogMgr) Save(obj *Blog) (sql.Result, error) {
+	// upsert
+	result, err := m.saveUpdate(obj)
+	if err != nil {
+		return nil, err
+	}
+	n, err := result.RowsAffected()
+	if err != nil {
+		return nil, err
+	}
+	if n != 0 {
+		return result, nil
+	}
+	return m.saveInsert(obj)
+
+}
+
 func (m *_BlogMgr) saveInsert(obj *Blog) (sql.Result, error) {
-	query := "INSERT INTO test.blog (`title`, `hits`, `slug`, `body`, `user`, `is_published`, `create`, `update`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-	result, err := db.MysqlExec(query, obj.Title, obj.Hits, obj.Slug, obj.Body, obj.User, obj.IsPublished, db.TimeFormat(obj.Create), db.TimeToLocalTime(obj.Update))
+	if obj.BlogId == 0 {
+		return nil, fmt.Errorf("missing Id: BlogId")
+	}
+
+	query := "INSERT INTO test.blog (`blog_id`, `title`, `hits`, `slug`, `body`, `user`, `is_published`, `create`, `update`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	result, err := db.MysqlExec(query, obj.BlogId, obj.Title, obj.Hits, obj.Slug, obj.Body, obj.User, obj.IsPublished, db.TimeFormat(obj.Create), db.TimeToLocalTime(obj.Update))
 	if err != nil {
 		return result, err
 	}
-
-	lastInsertId, err := result.LastInsertId()
-	if err != nil {
-		return result, err
-	}
-
-	obj.BlogId = int32(lastInsertId)
 
 	return result, err
 }

@@ -24,6 +24,7 @@ func TestPeople(t *testing.T) {
 	now := time.Now()
 
 	blog := Blog{
+		BlogId:      1,
 		Title:       "BlogTitle1",
 		Slug:        "blog-title",
 		Body:        "hello! everybody!!!",
@@ -40,6 +41,7 @@ func TestPeople(t *testing.T) {
 
 	{
 		blog2 := &Blog{
+			BlogId:      2,
 			Title:       "BlogTitile2",
 			Slug:        "blog-title-2",
 			User:        2,
@@ -52,6 +54,7 @@ func TestPeople(t *testing.T) {
 	}
 	{
 		blog3 := &Blog{
+			BlogId:      3,
 			Title:       "BlogTitle3",
 			Slug:        "blog-title-3",
 			User:        1,

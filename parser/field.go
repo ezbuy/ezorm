@@ -354,6 +354,10 @@ func (f *Field) Read(data map[interface{}]interface{}) error {
 	return nil
 }
 
+func (f *Field) DisableAutoInc() bool {
+	return f.Flags.Contains("noinc")
+}
+
 func DbToGoType(colType string) string {
 	var typeStr string
 	switch colType {

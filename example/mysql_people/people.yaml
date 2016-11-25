@@ -2,6 +2,7 @@ Blog:
   db: mysql
   fields:
     - BlogId: int32
+      flags: [noinc]
     - Title: string
     - Hits: int32
     - Slug: string
@@ -20,7 +21,7 @@ Blog:
   indexes: [[User, IsPublished]]
 
   table: Blog
-  dbname: test
+  dbname: Test
 
 User:
   db: mysql
