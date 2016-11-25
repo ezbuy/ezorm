@@ -2,6 +2,7 @@ Blog:
   db: mysql
   fields:
     - BlogId: int32
+      flags: [noinc]
     - Title: string
     - Hits: int32
     - Slug: string

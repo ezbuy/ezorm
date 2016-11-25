@@ -100,7 +100,7 @@ func (o *Obj) init() {
 
 func (o *Obj) GetFieldNameWithDB(name string) string {
 	if o.DbName != "" {
-		return fmt.Sprintf("%s.%s", o.DbName, name)
+		return fmt.Sprintf("%s.%s", camel2name(o.DbName), name)
 	}
 	return name
 }
@@ -158,6 +158,15 @@ func (o *Obj) GetFieldNames() []string {
 	fieldNames := make([]string, 0, len(o.Fields))
 	for _, f := range o.Fields {
 		fieldNames = append(fieldNames, f.Name)
+	}
+
+	return fieldNames
+}
+
+func (o *Obj) GetAllNamesAsArgs(prefix string) []string {
+	fieldNames := make([]string, 0, len(o.Fields))
+	for _, f := range o.Fields {
+		fieldNames = append(fieldNames, f.AsArgName(prefix))
 	}
 
 	return fieldNames
