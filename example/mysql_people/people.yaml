@@ -21,7 +21,7 @@ Blog:
   indexes: [[User, IsPublished]]
 
   table: Blog
-  dbname: test
+  dbname: Test
 
 User:
   db: mysql

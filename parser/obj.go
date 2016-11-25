@@ -100,7 +100,11 @@ func (o *Obj) init() {
 
 func (o *Obj) GetFieldNameWithDB(name string) string {
 	if o.DbName != "" {
-		return fmt.Sprintf("%s.%s", camel2name(o.DbName), name)
+		dbname := o.DbName
+		if o.Db == "mysql" {
+			dbname = camel2name(o.DbName)
+		}
+		return fmt.Sprintf("%s.%s", dbname, name)
 	}
 	return name
 }
