@@ -1,4 +1,4 @@
-package blog
+package test
 
 import (
 	//3rd party libs

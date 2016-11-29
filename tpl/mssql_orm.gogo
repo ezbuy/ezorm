@@ -1,4 +1,4 @@
-{{define "mssql_orm"}}package {{.Package}}
+{{define "mssql_orm"}}package {{.GoPackage}}
 {{$obj := .}}
 {{$idFieldName := printf "%sId" .Name}}
 {{/* Only generate source file for table with primary key */}}

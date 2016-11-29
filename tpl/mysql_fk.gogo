@@ -1,4 +1,4 @@
-{{define "mysql_fk"}}package {{.Package}}
+{{define "mysql_fk"}}package {{.GoPackage}}
 import (
 	"fmt"
 	"strings"

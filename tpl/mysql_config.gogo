@@ -1,4 +1,4 @@
-{{define "mysql_config"}}package {{.Package}}
+{{define "mysql_config"}}package {{.GoPackage}}
 
 import (
 	   "fmt"

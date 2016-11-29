@@ -1,4 +1,4 @@
-{{define "mssql_config"}}package {{.Package}}
+{{define "mssql_config"}}package {{.GoPackage}}
 {{$obj := .}}
 import (
 	"database/sql"

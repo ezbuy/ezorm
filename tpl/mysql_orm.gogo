@@ -1,4 +1,4 @@
-{{define "mysql_orm"}}package {{.Package}}
+{{define "mysql_orm"}}package {{.GoPackage}}
 
 {{$obj := .}}
 {{/* Only generate source file for table with primary key */}}
