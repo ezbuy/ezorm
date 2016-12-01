@@ -1,0 +1,24 @@
+People:
+  db: mssql
+  fields:
+  - NonIndexA: string
+  - NonIndexB: string
+  - PeopleId: int32
+  - Age: int32
+    flags:
+    - index
+    - nullable
+  - Name: string
+    flags:
+    - unique
+  - IndexAPart1: int64
+  - IndexAPart2: int32
+    flags:
+    - nullable
+  - IndexAPart3: int32
+  - UniquePart1: int32
+  - UniquePart2: int32
+  - CreateDate: datetime
+  - UpdateDate: datetime
+  indexes: [[IndexAPart1, IndexAPart2, IndexAPart3]]
+  uniques: [[UniquePart1, UniquePart2]]

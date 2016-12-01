@@ -1,17 +1,24 @@
-SHELL := /bin/bash
-export GOPATH := $(shell pwd)
-export PATH := ${PATH}:${GOPATH}/bin
-export GOBIN := ${GOPATH}/bin
-
 all:
-
-init:
-	go get gopkg.in/yaml.v2
-	go get github.com/spf13/cobra/cobra
-	go get -u github.com/jteeuwen/go-bindata/...
 
 debugTpl:
 	go-bindata -o tpl/bindata.go -ignore bindata.go -pkg tpl -debug tpl
 
 buildTpl:
 	go-bindata -o tpl/bindata.go -ignore bindata.go -pkg tpl tpl
+
+test: testmssql testmongo testmysql
+
+testmssql:
+	go install
+	ezorm gen -i ./example/mssql_people/people_mssql.yaml -o ./example/mssql_people -p people --goPackage test
+	go test -v ./example/mssql_people/...
+
+testmongo:
+	go install
+	ezorm gen -i ./example/blog/blog.yaml -o ./example/blog -p blog --goPackage test
+	go test -v ./example/blog/...
+
+testmysql:
+	go install
+	ezorm gen -i ./example/mysql_people/people.yaml -o ./example/mysql_people -p people --goPackage test
+	go test -v ./example/mysql_people/...

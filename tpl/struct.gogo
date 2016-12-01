@@ -1,0 +1,56 @@
+{{define "struct"}}package {{.GoPackage}}
+{{$obj := .}}
+{{if eq .Db "mongo"}}
+import "gopkg.in/mgo.v2/bson"
+{{end}}
+import "time"
+
+var _ time.Time
+
+type {{.Name}} struct {
+{{- range $field := .Fields}}
+{{- if or (eq $obj.Db "mssql") }}
+{{$field.Name}}  {{$field.GetGoType}} `db:"{{$field.Name}}"`
+{{- else if (eq $obj.Db "mysql") }}
+{{$field.Name}}  {{$field.GetGoType}} `db:"{{camel2name $field.Name}}"`
+{{- else}}
+	{{- if and (eq $obj.Db "mongo") (eq $field.Name "ID")}}
+	ID         bson.ObjectId `json:"id" bson:"_id,omitempty"`
+	{{- else}}
+	{{$field.Name}}  {{$field.GetGoType}} {{$field.BJTag}}
+	{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- if and (ne .Db "") (ne .Db "mssql")}}
+	isNew bool
+{{- end}}
+}
+
+func (p *{{.Name}}) GetNameSpace() string {
+	return "{{.Package}}"
+}
+
+func (p *{{.Name}}) GetClassName() string {
+	return "{{.Name}}"
+}
+
+type _{{.Name}}Mgr struct {
+}
+
+var {{.Name}}Mgr *_{{.Name}}Mgr
+
+func (m *_{{.Name}}Mgr) New{{.Name}}() *{{.Name}} {
+	rval := new({{.Name}})
+{{- if eq .Db "mongo"}}
+	rval.isNew = true
+	rval.ID = bson.NewObjectId()
+{{end -}}
+
+{{- range $field := .Fields}}
+	{{- if $field.HasDefaultValue}}
+	rval.{{$field.Name}} = "{{$field.DefaultValue}}"
+	{{- end -}}
+{{- end}}
+	return rval
+}
+{{end}}

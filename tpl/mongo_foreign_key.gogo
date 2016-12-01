@@ -1,0 +1,32 @@
+{{define "mongo_foreign_key"}}
+{{$obj := .}}
+//foreigh keys
+
+{{range $field := $obj.Fields}}
+	{{if $field.HasForeign}}
+func (p *{{$obj.Name}}) Get{{$field.Foreign}}() (result *{{$field.ForeignType}}, err error) {
+	return {{$field.ForeignType}}Mgr.FindByID(p.{{$field.Name}})
+}
+
+func (p *{{$obj.Name}}) Set{{$field.Foreign}}(obj *{{$field.ForeignType}}) {
+	p.{{$field.Name}} = obj.ID.Hex()
+}
+{{if eq $field.Foreign $field.ForeignType}}
+func (o *{{$field.Foreign}}) GetAll{{$obj.Name}}() (result []*{{$obj.Name}}, err error) {
+	query := bson.M{"{{$field.Foreign}}ID": o.ID.Hex()}
+	return {{$obj.Name}}Mgr.FindAll(query)
+}
+
+func (o *{{$field.Foreign}}) Count{{$obj.Name}}() (count int) {
+	query := bson.M{"{{$field.Foreign}}ID": o.ID.Hex()}
+	return {{$obj.Name}}Mgr.Count(query)
+}
+
+func (o *{{$field.Foreign}}) Find{{$obj.Name}}(limit, offset int, sortFields ...string) (result []*{{$obj.Name}}, err error) {
+	query := bson.M{"{{$field.Foreign}}ID": o.ID.Hex()}
+	return {{$obj.Name}}Mgr.Find(query, limit, offset, sortFields...)
+}
+{{end}}
+	{{end}}
+{{end}}
+{{end}}

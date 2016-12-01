@@ -18,9 +18,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/ezbuy/ezorm/parser"
 	"github.com/spf13/cobra"
 )
 
@@ -31,6 +34,11 @@ var genCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		var objs map[string]map[string]interface{}
 		data, _ := ioutil.ReadFile(input)
+		stat, err := os.Stat(input)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 		err = yaml.Unmarshal([]byte(data), &objs)
 
 		if err != nil {
@@ -38,35 +46,63 @@ var genCmd = &cobra.Command{
 			return
 		}
 
+		if genPackageName == "" {
+			genPackageName = strings.Split(stat.Name(), ".")[0]
+		}
+		if genGoPackageName == "" {
+			genGoPackageName = genPackageName
+		}
+
+		databases := make(map[string]*parser.Obj)
+
 		for key, obj := range objs {
 			xwMetaObj := new(parser.Obj)
-			xwMetaObj.Package = packageName
+			xwMetaObj.Package = genPackageName
+			xwMetaObj.GoPackage = genGoPackageName
 			xwMetaObj.Name = key
 			err := xwMetaObj.Read(obj)
 			if err != nil {
 				println(err.Error())
+				return
 			}
 
-			for _, genType = range xwMetaObj.GetGenTypes() {
-				file, err := os.OpenFile(output+"/gen_"+xwMetaObj.Name+"_"+genType+".go", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-				xwMetaObj.TplWriter = file
-				if err != nil {
-					panic(err)
-				}
-
-				err = parser.Tpl.ExecuteTemplate(file, genType, xwMetaObj)
-				file.Close()
-				if err != nil {
-					println(err.Error())
-				}
+			databases[xwMetaObj.Db] = xwMetaObj
+			for _, genType := range xwMetaObj.GetGenTypes() {
+				fileAbsPath := output + "/gen_" + xwMetaObj.Name + "_" + genType + ".go"
+				executeTpl(fileAbsPath, genType, xwMetaObj)
 			}
 		}
 
-		fmt.Println("gen called")
+		for db, obj := range databases {
+			if tpl, ok := obj.GetConfigTemplate(); ok {
+				fileAbsPath := output + "/gen_" + db + "_config.go"
+				executeTpl(fileAbsPath, tpl, obj)
+			}
+		}
+
+		oscmd := exec.Command("gofmt", "-w", output)
+		oscmd.Run()
 	},
 }
 
+func executeTpl(fileAbsPath, tplName string, xwMetaObj *parser.Obj) {
+	file, err := os.OpenFile(fileAbsPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		panic(err)
+	}
+	xwMetaObj.TplWriter = file
+
+	err = parser.Tpl.ExecuteTemplate(file, tplName, xwMetaObj)
+	file.Close()
+	if err != nil {
+		panic(err)
+	}
+}
+
 var input string
+var output string
+var genPackageName string
+var genGoPackageName string
 
 func init() {
 	RootCmd.AddCommand(genCmd)
@@ -76,6 +112,9 @@ func init() {
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
 	genCmd.PersistentFlags().StringVarP(&input, "input", "i", "", "input file")
+	genCmd.PersistentFlags().StringVarP(&output, "output", "o", "", "output path")
+	genCmd.PersistentFlags().StringVarP(&genPackageName, "package name", "p", "", "package name")
+	genCmd.PersistentFlags().StringVar(&genGoPackageName, "goPackage", "", "go package name")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
