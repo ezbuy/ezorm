@@ -1,10 +1,10 @@
 all:
 
 debugTpl:
-	go-bindata -o tpl/bindata.go -ignore bindata.go -pkg tpl -debug tpl
+	go-bindata -nometadata -o tpl/bindata.go -ignore bindata.go -pkg tpl -debug tpl
 
 buildTpl:
-	go-bindata -o tpl/bindata.go -ignore bindata.go -pkg tpl tpl
+	go-bindata -nometadata -o tpl/bindata.go -ignore bindata.go -pkg tpl tpl
 
 test: testmssql testmongo testmysql
 

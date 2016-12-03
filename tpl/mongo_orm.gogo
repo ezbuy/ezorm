@@ -53,6 +53,7 @@ func init{{.Name}}Index() {
 		{{- if $index.IsUnique }}
 		Unique: true,
 		{{- end}}
+		Background: true,
 		{{- if $index.IsSparse }}
 		Sparse: true,
 		{{- end}}
