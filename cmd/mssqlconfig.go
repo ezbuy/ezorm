@@ -27,8 +27,8 @@ import (
 // mssqlconfigCmd represents the genmssqlconfig command
 var mssqlconfigCmd = &cobra.Command{
 	Use:   "mssqlconfig",
-	Short: "generate mssql config code",
-	Long:  `generate mssql config code`,
+	Short: "Generate mssql config code",
+	Long:  `Generate mssql config code`,
 	Run: func(cmd *cobra.Command, args []string) {
 		genPackageName = strings.TrimSpace(genPackageName)
 

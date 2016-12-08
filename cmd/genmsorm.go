@@ -22,16 +22,18 @@ import (
 	"os/exec"
 	"strings"
 
+	yaml "gopkg.in/yaml.v1"
+
 	"github.com/ezbuy/ezorm/db"
 	"github.com/ezbuy/ezorm/parser"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
 )
 
 // genmsormCmd represents the genmsorm command
 var genmsormCmd = &cobra.Command{
 	Use:   "genmsorm",
 	Short: "Generate sql server orm code",
+	Long:  "dbConfig eg: -d=\"server=...;user id=...;password=...;DATABASE=...\"",
 	Run: func(cmd *cobra.Command, args []string) {
 		sqlServer := db.GetSqlServer(dbConfig)
 		if table != "all" {
@@ -282,7 +284,6 @@ func init() {
 	// genmsormCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	genmsormCmd.PersistentFlags().StringVarP(&table, "table", "t", "all", "table name, 'all' meaning all tables")
 	genmsormCmd.PersistentFlags().StringVarP(&output, "output", "o", "", "output path")
-	genmsormCmd.PersistentFlags().StringVarP(&outputYaml, "output yaml", "y", "", "output *.yaml path")
 	genmsormCmd.PersistentFlags().StringVarP(&dbConfig, "db config", "d", "", "database configuration")
 	genmsormCmd.PersistentFlags().StringVarP(&packageName, "package name", "p", "", "package name")
 }
