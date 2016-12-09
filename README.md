@@ -37,7 +37,7 @@ to initialize the dependencies & link tpl for debug usages.
 # Usage
 
 	go install github.com/ezbuy/ezorm
-	ezorm gen -i blog.yaml -o . 
+	ezorm gen -i blog.yaml -o .
 
 To generate codes, for model like `Blog`, a blog manager will be generated, supporting ActiveRecord like:
 
@@ -66,5 +66,5 @@ for more help
 to generate yaml file
   ezorm genmsorm -d="server=...;user id=...;password=...;DATABASE=..." -t=...  -o=...  -p=...
 to generate orm go file directly
-  
+
 
