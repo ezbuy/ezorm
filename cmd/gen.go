@@ -30,7 +30,7 @@ import (
 // genCmd represents the gen command
 var genCmd = &cobra.Command{
 	Use:   "gen",
-	Short: "Generate orm code",
+	Short: "Generate orm code from yaml file",
 	Run: func(cmd *cobra.Command, args []string) {
 		var objs map[string]map[string]interface{}
 		data, _ := ioutil.ReadFile(input)
