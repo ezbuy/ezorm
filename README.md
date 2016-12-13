@@ -1,6 +1,6 @@
 # ezorm
 
-ezorm is an code-generation based ORM lib for golang, supporting mongodb/sql server/mysql.
+ezorm is an code-generation based ORM lib for golang, supporting mongodb/sql server/mysql/redis.
 
 data model is defined with YAML file like:
 
