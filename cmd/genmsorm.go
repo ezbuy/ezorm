@@ -22,7 +22,7 @@ import (
 	"os/exec"
 	"strings"
 
-	yaml "gopkg.in/yaml.v1"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/ezbuy/ezorm/db"
 	"github.com/ezbuy/ezorm/parser"
@@ -283,6 +283,7 @@ func init() {
 	// is called directly, e.g.:
 	// genmsormCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	genmsormCmd.PersistentFlags().StringVarP(&table, "table", "t", "all", "table name, 'all' meaning all tables")
+	genmsormCmd.PersistentFlags().StringVarP(&outputYaml, "output yaml", "y", "", "output *.yaml path")
 	genmsormCmd.PersistentFlags().StringVarP(&output, "output", "o", "", "output path")
 	genmsormCmd.PersistentFlags().StringVarP(&dbConfig, "db config", "d", "", "database configuration")
 	genmsormCmd.PersistentFlags().StringVarP(&packageName, "package name", "p", "", "package name")
