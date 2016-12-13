@@ -349,7 +349,7 @@ func (m *_{{$obj.Name}}Mgr) FindWithOffset(where string, offset int, limit int, 
 
 
 func (m *_{{$obj.Name}}Mgr) GetQuerysql(where string) string {
-	query := "SELECT {{$allFields}} FROM {{$tbl}}"
+	query := "SELECT {{$allFields}} FROM {{$tbl}} "
 
 	where = strings.TrimSpace(where)
 	if where != "" {
