@@ -34,6 +34,24 @@ func (p *{{.Name}}) GetClassName() string {
 	return "{{.Name}}"
 }
 
+func (p *{{.Name}}) GetStoreType() string {
+	return "{{$obj.StoreType}}"
+}
+
+func (p *{{.Name}}) GetPrimaryKey() string {
+	return "{{.GetPrimaryKeyName}}"
+}
+
+func (p *{{.Name}}) GetIndexes() []string {
+	idx := []string{}
+	{{- range $field := .Fields}}
+	{{- if $field.HasIndex}}
+	idx = append(idx, "{{$field.Name}}")
+	{{- end}}
+	{{- end}}
+	return idx
+}
+
 type _{{.Name}}Mgr struct {
 }
 

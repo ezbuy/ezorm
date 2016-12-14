@@ -254,9 +254,11 @@ func generate(table string) {
 
 		if !genConfigDone {
 			if tpl, ok := metaObj.GetConfigTemplate(); ok {
-				fileAbsPath := output + "/gen_" + metaObj.Db + "_config.go"
-				executeTpl(fileAbsPath, tpl, metaObj)
-				genConfigDone = true
+				for _, t := range tpl {
+					fileAbsPath := output + "/gen_" + metaObj.Db + "_config.go"
+					executeTpl(fileAbsPath, t, metaObj)
+					genConfigDone = true
+				}
 			}
 		}
 
