@@ -41,6 +41,8 @@ func init() {
 		"tpl/mysql_config.gogo",
 		"tpl/mysql_orm.gogo",
 		"tpl/mysql_fk.gogo",
+		"tpl/redis_config.gogo",
+		"tpl/redis_orm.gogo",
 	}
 	for _, fname := range files {
 		data, err := tpl.Asset(fname)
@@ -89,6 +91,7 @@ type Obj struct {
 	Table        string
 	TplWriter    io.Writer
 	DbName       string
+	StoreType    string
 }
 
 func (o *Obj) init() {
@@ -101,7 +104,7 @@ func (o *Obj) init() {
 func (o *Obj) GetFieldNameWithDB(name string) string {
 	if o.DbName != "" {
 		dbname := o.DbName
-		if o.Db == "mysql" {
+		if o.Db == "mysql" || o.Db == "mysql-redis" {
 			dbname = camel2name(o.DbName)
 		}
 		return fmt.Sprintf("%s.%s", dbname, name)
@@ -227,19 +230,27 @@ func (o *Obj) GetGenTypes() []string {
 		return []string{"struct", "mssql_orm"}
 	case "mysql":
 		return []string{"struct", "mysql_orm", "mysql_fk"}
+	case "mysql-redis":
+		return []string{"struct", "mysql_orm", "mysql_fk", "redis_orm"}
+	case "redis":
+		return []string{"struct", "redis_orm"}
 	default:
 		return []string{"struct"}
 	}
 }
 
-func (o *Obj) GetConfigTemplate() (string, bool) {
+func (o *Obj) GetConfigTemplate() ([]string, bool) {
 	switch o.Db {
 	case "mssql":
-		return "mssql_config", true
+		return []string{"mssql_config"}, true
 	case "mysql":
-		return "mysql_config", true
+		return []string{"mysql_config"}, true
+	case "mysql-redis":
+		return []string{"mysql_config", "redis_config"}, true
+	case "redis":
+		return []string{"redis_config"}, true
 	default:
-		return "", false
+		return []string{""}, false
 	}
 }
 
@@ -384,6 +395,8 @@ func (o *Obj) Read(data map[string]interface{}) error {
 			o.Table = val.(string)
 		case "dbname":
 			o.DbName = val.(string)
+		case "storetype":
+			o.StoreType = val.(string)
 		case "filterFields":
 			o.FilterFields = ToStringSlice(val.([]interface{}))
 		case "fields":

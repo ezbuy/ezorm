@@ -25,7 +25,7 @@ import (
 	"github.com/ezbuy/ezorm/db"
 	"github.com/ezbuy/ezorm/parser"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 )
 
 // genmsormCmd represents the genmsorm command
@@ -252,9 +252,11 @@ func generate(table string) {
 
 		if !genConfigDone {
 			if tpl, ok := metaObj.GetConfigTemplate(); ok {
-				fileAbsPath := output + "/gen_" + metaObj.Db + "_config.go"
-				executeTpl(fileAbsPath, tpl, metaObj)
-				genConfigDone = true
+				for _, t := range tpl {
+					fileAbsPath := output + "/gen_" + metaObj.Db + "_config.go"
+					executeTpl(fileAbsPath, t, metaObj)
+					genConfigDone = true
+				}
 			}
 		}
 

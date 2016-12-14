@@ -1,5 +1,5 @@
 Blog:
-  db: mysql
+  db: mysql-redis
   fields:
     - BlogId: int32
       flags: [noinc]
@@ -22,9 +22,10 @@ Blog:
 
   table: Blog
   dbname: Test
+  storetype: hash
 
 User:
-  db: mysql
+  db: mysql-redis
   fields:
     - UserId: int32
     - UserNumber: int32
@@ -33,3 +34,4 @@ User:
       flags: [index]
   table: test_user
   dbname: test
+  storetype: hash

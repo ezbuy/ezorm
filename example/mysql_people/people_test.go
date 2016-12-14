@@ -2,12 +2,79 @@ package test
 
 import (
 	"fmt"
+	"log"
 	"testing"
 	"time"
 
 	"github.com/ezbuy/ezorm/db"
 )
 
+func TestPeopleObject(t *testing.T) {
+	RedisSetUp(&RedisConfig{
+		Host: "127.0.0.1",
+		Port: 6379,
+		DB:   1,
+	})
+
+	now := time.Now()
+
+	blog := Blog{
+		BlogId:      1,
+		Title:       "BlogTitle1",
+		Slug:        "blog-title",
+		Body:        "hello! everybody!!!",
+		User:        1,
+		IsPublished: true,
+		Create:      now,
+		Update:      now,
+	}
+
+	if err := BlogMgr.SetBlog(&blog); err != nil {
+		t.Fatal(err)
+		return
+	}
+
+	{
+		blog2 := Blog{
+			BlogId:      2,
+			Title:       "BlogTitile2",
+			Slug:        "blog-title-2",
+			User:        2,
+			IsPublished: false,
+			Create:      now,
+			Update:      now,
+		}
+		if err := BlogMgr.SetBlog(&blog2); err != nil {
+			t.Fatal(err)
+			return
+		}
+	}
+	{
+		blog3 := Blog{
+			BlogId:      3,
+			Title:       "BlogTitle3",
+			Slug:        "blog-title-3",
+			User:        1,
+			IsPublished: true,
+			Create:      now,
+			Update:      now,
+		}
+		if err := BlogMgr.SetBlog(&blog3); err != nil {
+			t.Fatal(err)
+			return
+		}
+	}
+
+	b := BlogMgr.NewBlog()
+	b.BlogId = 2
+
+	if err := BlogMgr.GetBlog(b); err != nil {
+		t.Fatal(err)
+		return
+	}
+
+	log.Println("get blog =>", b)
+}
 func TestPeople(t *testing.T) {
 	db.MysqlInit(&db.MysqlConfig{
 		DataSource: "tcp(localhost:3306)/",

@@ -21,7 +21,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/ezbuy/ezorm/parser"
 	"github.com/spf13/cobra"
@@ -73,10 +73,12 @@ var genCmd = &cobra.Command{
 			}
 		}
 
-		for db, obj := range databases {
-			if tpl, ok := obj.GetConfigTemplate(); ok {
-				fileAbsPath := output + "/gen_" + db + "_config.go"
-				executeTpl(fileAbsPath, tpl, obj)
+		for _, obj := range databases {
+			if tpls, ok := obj.GetConfigTemplate(); ok {
+				for _, t := range tpls {
+					fileAbsPath := output + "/gen_" + t + ".go"
+					executeTpl(fileAbsPath, t, obj)
+				}
 			}
 		}
 
@@ -91,7 +93,6 @@ func executeTpl(fileAbsPath, tplName string, xwMetaObj *parser.Obj) {
 		panic(err)
 	}
 	xwMetaObj.TplWriter = file
-
 	err = parser.Tpl.ExecuteTemplate(file, tplName, xwMetaObj)
 	file.Close()
 	if err != nil {

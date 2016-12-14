@@ -1,0 +1,21 @@
+{{define "redis_orm"}}package {{.GoPackage}}
+
+{{$obj := .}}
+{{$idFieldName := $obj.GetPrimaryKeyName}}
+{{$idField := $obj.GetPrimaryKey}}
+
+///////redis_orm//////
+
+func (m *_{{$obj.Name}}Mgr) Set{{$obj.Name}}(obj *{{$obj.Name}}) error {
+	return redisSetObject(obj)	
+}
+
+func (m *_{{$obj.Name}}Mgr) Get{{$obj.Name}}(obj *{{$obj.Name}}) error {
+	return redisGetObject(obj)
+}
+
+func (m *_{{$obj.Name}}Mgr) Del{{$obj.Name}}(obj *{{$obj.Name}}) error {
+	return redisDelObject(obj)
+}
+
+{{end}}
