@@ -210,7 +210,6 @@ func (r *RedisStore) SetObject(obj Object) error {
 		//! object indexs
 		for _, idx := range obj.GetIndexes() {
 			if key_of_index, err := KeyOfObjectIndex(obj, idx); err == nil {
-				fmt.Println("key of object index =>", key_of_index)
 				_, err := r.SADD(key_of_index, primary_key)
 				if err != nil {
 					r.DEL(key_of_obj)
@@ -227,7 +226,6 @@ func (r *RedisStore) SetObject(obj Object) error {
 		}
 		return nil
 	case SET:
-		fmt.Println("set field num=>", v.NumField())
 		if FieldNum(v) != 2 {
 			return errors.New("set struct only support 2 fields <set-key, value>")
 		}
@@ -322,7 +320,6 @@ func (r *RedisStore) GetObject(obj Object) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("key_of_obj=>", key_of_obj)
 	switch obj.GetStoreType() {
 	case JSON:
 		data, err := r.Bytes(r.GET(key_of_obj))
