@@ -130,3 +130,7 @@ func (r *RedisStore) ZRANGE(key string, min, max int64, withScores bool) (interf
 		return r.do("ZRANGE", key, min, max)
 	}
 }
+
+func (r *RedisStore) GEOADD(key string, longitude float64, latitude float64, value interface{}) (int64, error) {
+	return r.Int64(r.do("GEOADD", key, longitude, latitude, value))
+}

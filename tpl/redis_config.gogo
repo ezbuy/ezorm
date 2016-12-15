@@ -1,7 +1,4 @@
 {{define "redis_config"}}package {{.GoPackage}}
-
-///////redis_config//////
-
 import (
 	"github.com/ezbuy/ezorm/db"
 )

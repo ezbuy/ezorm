@@ -1,7 +1,5 @@
 package test
 
-///////redis_config//////
-
 import (
 	"github.com/ezbuy/ezorm/db"
 )

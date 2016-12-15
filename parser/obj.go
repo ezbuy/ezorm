@@ -439,6 +439,10 @@ func (o *Obj) Read(data map[string]interface{}) error {
 		return errors.New("please specify `dbname` to " + o.Name)
 	}
 
+	if strings.Contains(o.Db, "redis") && o.StoreType == "" {
+		return errors.New("please specify `storetype` to " + o.Name)
+	}
+
 	o.setIndexes()
 	return nil
 }

@@ -5,15 +5,15 @@ import "time"
 var _ time.Time
 
 type Blog struct {
-	BlogId      int32     `bson:"BlogId" json:"BlogId"`
-	Title       string    `bson:"Title" json:"Title"`
-	Hits        int32     `bson:"Hits" json:"Hits"`
-	Slug        string    `bson:"Slug" json:"Slug"`
-	Body        string    `bson:"Body" json:"Body"`
-	User        int32     `bson:"User" json:"User"`
-	IsPublished bool      `bson:"IsPublished" json:"IsPublished"`
-	Create      time.Time `bson:"Create" json:"Create"`
-	Update      time.Time `bson:"Update" json:"Update"`
+	BlogId      int32     `db:"blog_id"`
+	Title       string    `db:"title"`
+	Hits        int32     `db:"hits"`
+	Slug        string    `db:"slug"`
+	Body        string    `db:"body"`
+	User        int32     `db:"user"`
+	IsPublished bool      `db:"is_published"`
+	Create      time.Time `db:"create"`
+	Update      time.Time `db:"update"`
 	isNew       bool
 }
 
@@ -23,14 +23,6 @@ func (p *Blog) GetNameSpace() string {
 
 func (p *Blog) GetClassName() string {
 	return "Blog"
-}
-
-func (p *Blog) GetStoreType() string {
-	return "hash"
-}
-
-func (p *Blog) GetPrimaryKey() string {
-	return "BlogId"
 }
 
 func (p *Blog) GetIndexes() []string {
