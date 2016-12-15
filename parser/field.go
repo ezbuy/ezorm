@@ -270,6 +270,18 @@ var transformMap = map[string]Transform{
 		"string", "db.TimeParseLocalTime(%v)",
 		"time.Time", "db.TimeToLocalTime(%v)",
 	},
+	"redis_timestamp": { // TIMESTAMP (string, UTC)
+		"string", `db.TimeParse(%v)`,
+		"time.Time", `db.TimeFormat(%v)`,
+	},
+	"redis_timeint": { // INT(11)
+		"int64", "time.Unix(%v, 0)",
+		"time.Time", "%v.Unix()",
+	},
+	"redis_datetime": { // DATETIME (string, localtime)
+		"string", "db.TimeParseLocalTime(%v)",
+		"time.Time", "db.TimeToLocalTime(%v)",
+	},
 }
 
 func (f *Field) AsArgName(prefix string) string {
@@ -321,7 +333,7 @@ func (f *Field) Read(data map[interface{}]interface{}) error {
 				} else if f.Type == "datetime" {
 					if f.Obj.Db == "mssql" {
 						f.Type = "*time.Time"
-					} else if f.Obj.Db == "mysql" || f.Obj.Db == "mysql-redis" {
+					} else if f.Obj.Db == "mysql" || f.Obj.Db == "mysql-redis" || f.Obj.Db == "redis" {
 					} else {
 						f.Type = "int64"
 					}
