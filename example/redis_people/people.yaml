@@ -32,6 +32,10 @@ User:
       flags: [unique]
     - Name: string
       flags: [index]
+    - Create: timestamp
+      flags: [index]
+    - Update: datetime
+      flags: [index]
   table: test_user
   dbname: test
   storetype: hash

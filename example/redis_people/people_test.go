@@ -70,6 +70,8 @@ func TestPeopleObject(t *testing.T) {
 	user.UserId = 101
 	user.Name = "username"
 	user.UserNumber = 9527
+	user.Create = now
+	user.Update = now
 	assert.Equal(t, UserMgr.DelUser(user), nil)
 	assert.Equal(t, UserMgr.SetUser(user), nil)
 
@@ -77,7 +79,11 @@ func TestPeopleObject(t *testing.T) {
 	u2.UserId = 101
 
 	assert.Equal(t, UserMgr.GetUser(u2), nil)
-	assert.Equal(t, user, u2)
+	assert.Equal(t, user.UserId, u2.UserId)
+	assert.Equal(t, user.Name, u2.Name)
+	assert.Equal(t, user.UserNumber, u2.UserNumber)
+	assert.Equal(t, user.Create.Unix(), u2.Create.Unix())
+	assert.Equal(t, user.Update.Unix(), u2.Update.Unix())
 
 	r := UserBlogsMgr.NewUserBlogs()
 	r.UserId = 101
