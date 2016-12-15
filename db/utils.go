@@ -15,11 +15,11 @@ func TimeParse(s string) time.Time {
 	// 可能遇到多种情况
 	if strings.HasSuffix(s, "Z") {
 		if s != "0000-00-00T00:00:00Z" {
-			ret, err = time.Parse("2006-01-02T15:04:05Z", s)
+			ret, err = time.ParseInLocation("2006-01-02T15:04:05Z", s, time.Local)
 		}
 	} else {
 		if s != "0000-00-00 00:00:00" {
-			ret, err = time.Parse("2006-01-02 15:04:05", s)
+			ret, err = time.ParseInLocation("2006-01-02 15:04:05", s, time.Local)
 		}
 	}
 	if s != "" && err != nil {
@@ -29,7 +29,7 @@ func TimeParse(s string) time.Time {
 }
 
 func TimeFormat(t time.Time) string {
-	return t.UTC().Format("2006-01-02 15:04:05")
+	return t.Format("2006-01-02 15:04:05")
 }
 
 func TimeParseLocalTime(s string) time.Time {
