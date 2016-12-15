@@ -22,3 +22,8 @@ testmysql:
 	go install
 	ezorm gen -i ./example/mysql_people/people.yaml -o ./example/mysql_people -p people --goPackage test
 	go test -v ./example/mysql_people/...
+
+testredis:
+	go install
+	ezorm gen -i ./example/redis_people/people.yaml -o ./example/redis_people -p people --goPackage test
+	go test -v ./example/redis_people/...

@@ -1,7 +1,5 @@
 package test
 
-///////redis_orm//////
-
 func (m *_UserMgr) SetUser(obj *User) error {
 	return redisSetObject(obj)
 }

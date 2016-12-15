@@ -21,7 +21,7 @@ type {{.Name}} struct {
 	{{- end -}}
 {{- end -}}
 {{- end -}}
-{{- if and (ne .Db "") (ne .Db "mssql")}}
+{{- if and (ne .Db "") (ne .Db "mssql") (ne .Db "redis")}}
 	isNew bool
 {{- end}}
 }
@@ -33,7 +33,7 @@ func (p *{{.Name}}) GetNameSpace() string {
 func (p *{{.Name}}) GetClassName() string {
 	return "{{.Name}}"
 }
-
+{{- if or (eq $obj.Db "mysql-redis") (eq $obj.Db "redis")}}
 func (p *{{.Name}}) GetStoreType() string {
 	return "{{$obj.StoreType}}"
 }
@@ -41,6 +41,7 @@ func (p *{{.Name}}) GetStoreType() string {
 func (p *{{.Name}}) GetPrimaryKey() string {
 	return "{{.GetPrimaryKeyName}}"
 }
+{{- end}}
 
 func (p *{{.Name}}) GetIndexes() []string {
 	idx := []string{}

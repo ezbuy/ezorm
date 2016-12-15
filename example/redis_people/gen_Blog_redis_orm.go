@@ -1,7 +1,5 @@
 package test
 
-///////redis_orm//////
-
 func (m *_BlogMgr) SetBlog(obj *Blog) error {
 	return redisSetObject(obj)
 }
