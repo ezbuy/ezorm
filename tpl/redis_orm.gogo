@@ -1,7 +1,5 @@
 {{define "redis_orm"}}package {{.GoPackage}}
 {{- $obj := .}}
-{{- $idFieldName := $obj.GetPrimaryKeyName}}
-{{- $idField := $obj.GetPrimaryKey}}
 func (m *_{{$obj.Name}}Mgr) Set{{$obj.Name}}(obj *{{$obj.Name}}) error {
 	return redisSetObject(obj)	
 }
