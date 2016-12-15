@@ -14,6 +14,7 @@ type Blog struct {
 	IsPublished bool      `bson:"IsPublished" json:"IsPublished"`
 	Create      time.Time `bson:"Create" json:"Create"`
 	Update      time.Time `bson:"Update" json:"Update"`
+	isNew       bool
 }
 
 func (p *Blog) GetNameSpace() string {
