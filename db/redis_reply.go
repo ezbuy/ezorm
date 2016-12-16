@@ -102,3 +102,14 @@ func (r *RedisStore) Values(reply interface{}, err error) ([]interface{}, error)
 	}
 	return res, err
 }
+
+func (r *RedisStore) Ints(reply interface{}, err error) ([]int, error) {
+	if err != nil {
+		return nil, err
+	}
+	res, err := redis.Ints(reply, err)
+	if err == redis.ErrNil {
+		return nil, ErrNil
+	}
+	return res, err
+}

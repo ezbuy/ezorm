@@ -1,8 +1,6 @@
 package test
 
-import (
-	"github.com/ezbuy/ezorm/db"
-)
+import "github.com/ezbuy/ezorm/db"
 
 var (
 	_store *db.RedisStore
@@ -32,4 +30,12 @@ func redisGetObject(obj db.Object) error {
 
 func redisDelObject(obj db.Object) error {
 	return _store.DelObject(obj)
+}
+
+func redisSMEMBERSInts(key string) ([]int, error) {
+	return _store.Ints(_store.SMEMBERS(key))
+}
+
+func redisSINTERInts(keys ...interface{}) ([]int, error) {
+	return _store.Ints(_store.SINTER(keys...))
 }

@@ -23,7 +23,7 @@ func TestPeopleObject(t *testing.T) {
 		Slug:        "blog-title",
 		Body:        "hello! everybody!!!",
 		User:        1,
-		IsPublished: true,
+		IsPublished: false,
 		Create:      now,
 		Update:      now,
 	}
@@ -65,6 +65,17 @@ func TestPeopleObject(t *testing.T) {
 	assert.Equal(t, blog2.Update.Unix(), b.Update.Unix())
 
 	log.Println("get blog =>", b)
+
+	blogs, err := BlogMgr.GetBlogsByUser(1)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(blogs), 2)
+
+	blogs2, err := BlogMgr.GetBlogsByIndexes(map[string]interface{}{
+		"User":        1,
+		"IsPublished": false,
+	})
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(blogs2), 1)
 
 	user := UserMgr.NewUser()
 	user.UserId = 101

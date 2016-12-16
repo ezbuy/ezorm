@@ -1,15 +1,101 @@
 {{define "redis_orm"}}package {{.GoPackage}}
-{{- $obj := .}}
+{{$obj := .}}
+{{$idFieldName := $obj.GetPrimaryKeyName}}
+{{$idField := $obj.GetPrimaryKey}}
+
+import (
+	"github.com/ezbuy/ezorm/db"
+	"time"
+)
+
+
 func (m *_{{$obj.Name}}Mgr) Set{{$obj.Name}}(obj *{{$obj.Name}}) error {
 	return redisSetObject(obj)	
-}
-
-func (m *_{{$obj.Name}}Mgr) Get{{$obj.Name}}(obj *{{$obj.Name}}) error {
-	return redisGetObject(obj)
 }
 
 func (m *_{{$obj.Name}}Mgr) Del{{$obj.Name}}(obj *{{$obj.Name}}) error {
 	return redisDelObject(obj)
 }
+{{if or (eq $obj.StoreType "set")}}
+///////////// SET /////////////////////////////////////////////////////
+{{end}}
 
+{{if or (eq $obj.StoreType "zset")}}
+///////////// ZSET /////////////////////////////////////////////////////
+{{end}}
+
+{{if or (eq $obj.StoreType "geo")}}
+///////////// GEO /////////////////////////////////////////////////////
+{{end}}
+
+{{if or (eq $obj.StoreType "json") (eq $obj.StoreType "hash")}}
+///////////// JSON & HASH /////////////////////////////////////////////////////
+func (m *_{{$obj.Name}}Mgr) Get{{$obj.Name}}(obj *{{$obj.Name}}) error {
+	return redisGetObject(obj)
+}
+
+func (m *_{{$obj.Name}}Mgr) Get{{$obj.Name}}sByIds(ids []{{$idField.GetGoType}}) ([]*{{$obj.Name}}, error) {
+	objs := []*{{$obj.Name}}{}
+	for _, id := range ids {
+		obj := m.New{{$obj.Name}}()
+		obj.{{$idFieldName}} = id
+		if err := redisGetObject(obj); err != nil {
+			return objs, err
+		}
+		objs = append(objs, obj)
+	} 
+	return objs, nil
+}
+{{- range $field := .Fields}} 
+{{- if $field.HasIndex}}
+
+func (m *_{{$obj.Name}}Mgr) Get{{$obj.Name}}sBy{{$field.Name}}(val {{$field.GetGoType}}) ([]*{{$obj.Name}}, error) {
+	obj := m.New{{$obj.Name}}()
+	obj.{{$field.Name}} = val
+
+	key_of_index, err := db.KeyOfIndexByObject(obj, "{{$field.Name}}")
+	if err != nil {
+		return nil, err
+	}
+
+	ids, err := redisSMEMBERSInts(key_of_index)
+	if err != nil {
+		return nil, err
+	}
+
+	keys := []{{$idField.GetGoType}}{}
+	for _, id := range ids {
+		keys = append(keys, {{$idField.GetGoType}}(id))
+	}
+
+	return m.Get{{$obj.Name}}sByIds(keys)
+}
+{{- end}}
+{{- end}}
+
+{{if gt (len $obj.Indexes) 0}}
+func (m *_{{$obj.Name}}Mgr) Get{{$obj.Name}}sByIndexes(indexes map[string]interface{}) ([]*{{$obj.Name}}, error) {
+	obj := m.New{{$obj.Name}}()
+
+	index_keys := []interface{}{}
+	for k,v := range indexes {
+		if idx, err := db.KeyOfIndexByClass(obj.GetClassName(), k, v); err == nil {
+			index_keys = append(index_keys, idx)
+		}
+	}
+
+	ids, err := redisSINTERInts(index_keys...)
+	if err != nil {
+		return nil, err
+	}
+
+	keys := []{{$idField.GetGoType}}{}
+	for _, id := range ids {
+		keys = append(keys, {{$idField.GetGoType}}(id))
+	}
+	return m.Get{{$obj.Name}}sByIds(keys)	
+} 
+{{end}}
+
+{{end}}
 {{end}}
