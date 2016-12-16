@@ -49,7 +49,11 @@ func KeyOfClass(obj Object) (string, error) {
 	return fmt.Sprintf("%s:%s:%s", ZSET, obj.GetClassName(), obj.GetPrimaryKey()), nil
 }
 
-func KeyOfObjectIndex(obj Object, index string) (string, error) {
+func KeyOfIndexByClass(class string, indexName string, indexValue interface{}) (string, error) {
+	return fmt.Sprintf("%s:%s:%s:%v", SET, class, indexName, indexValue), nil
+}
+
+func KeyOfIndexByObject(obj Object, index string) (string, error) {
 	t := reflect.TypeOf(obj)
 	v := reflect.ValueOf(obj)
 	if t.Kind() == reflect.Ptr {
@@ -64,10 +68,7 @@ func KeyOfObjectIndex(obj Object, index string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if val != nil {
-		return fmt.Sprintf("%s:%s:%s:%v", SET, obj.GetClassName(), index, val), nil
-	}
-	return "", errors.New("object index invalid")
+	return KeyOfIndexByClass(obj.GetClassName(), index, val)
 }
 
 func FieldEncode(fv reflect.Value) (interface{}, error) {
@@ -191,7 +192,29 @@ func (r *RedisStore) SetObject(obj Object) error {
 		if err != nil {
 			return err
 		}
-		return r.SET(key_of_obj, bytes)
+		if err := r.SET(key_of_obj, bytes); err != nil {
+			return err
+		}
+
+		//! object indexs
+		for _, idx := range obj.GetIndexes() {
+			if key_of_index, err := KeyOfIndexByObject(obj, idx); err == nil {
+				_, err := r.SADD(key_of_index, primary_key)
+				if err != nil {
+					r.DEL(key_of_obj)
+					return err
+				}
+			}
+		}
+
+		//! object primary key
+		_, err = r.ZADD(key_of_cls, primary_key, primary_key)
+		if err != nil {
+			r.DEL(key_of_obj)
+			return err
+		}
+
+		return nil
 	case HASH:
 		//! object fields
 		for i := 0; i < v.NumField(); i++ {
@@ -209,7 +232,7 @@ func (r *RedisStore) SetObject(obj Object) error {
 
 		//! object indexs
 		for _, idx := range obj.GetIndexes() {
-			if key_of_index, err := KeyOfObjectIndex(obj, idx); err == nil {
+			if key_of_index, err := KeyOfIndexByObject(obj, idx); err == nil {
 				_, err := r.SADD(key_of_index, primary_key)
 				if err != nil {
 					r.DEL(key_of_obj)

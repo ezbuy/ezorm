@@ -98,6 +98,17 @@ func (r *RedisStore) SADD(key string, members ...interface{}) (int64, error) {
 	return r.Int64(r.do("SADD", args...))
 }
 
+func (r *RedisStore) SMEMBERS(key string) (interface{}, error) {
+	return r.do("SMEMBERS", key)
+}
+
+func (r *RedisStore) SINTER(keys ...interface{}) (interface{}, error) {
+	if len(keys) == 0 {
+		return nil, errors.New("absent keys")
+	}
+	return r.do("SINTER", keys...)
+}
+
 func (r *RedisStore) ZADD(key string, kvs ...interface{}) (int64, error) {
 	if len(kvs) == 0 {
 		return 0, nil
@@ -112,6 +123,10 @@ func (r *RedisStore) ZADD(key string, kvs ...interface{}) (int64, error) {
 		args[i+2] = kvs[i+1]
 	}
 	return r.Int64(r.do("ZADD", args...))
+}
+
+func (r *RedisStore) ZCOUNT(key string) (int64, error) {
+	return r.Int64(r.do("ZCOUNT", key))
 }
 
 func (r *RedisStore) ZREM(key string, members ...string) (int64, error) {
