@@ -10,13 +10,14 @@ var (
 )
 
 type RedisConfig struct{
-	Host string
-	Port int
-	DB 	 int
+	Host 	 	string
+	Port 		int
+	Password 	string
+	DB 	 		int
 }
 
 func RedisSetUp(cf *RedisConfig) {
-	store, err := db.NewRedisStore(cf.Host, cf.Port, cf.DB)
+	store, err := db.NewRedisStore(cf.Host, cf.Port, cf.Password, cf.DB)
 	if err != nil {
 		panic(err)
 	}
@@ -31,16 +32,20 @@ func redisGetObject(obj db.Object) error {
 	return _store.GetObject(obj)
 }
 
+func redisGetObjectById(obj db.Object, id string) error {
+	return _store.GetObjectById(obj, id)
+}
+
 func redisDelObject(obj db.Object) error {
 	return _store.DelObject(obj)
 }
 
-func redisSMEMBERSInts(key string) ([]int, error) {
-	return _store.Ints(_store.SMEMBERS(key))
+func redisSMEMBERIds(key string) ([]string, error) {
+	return _store.SMembersIds(key)
 }
 
-func redisSINTERInts(keys ...interface{}) ([]int, error) {
-	return _store.Ints(_store.SINTER(keys...))
+func redisSINTERIds(keys ...string) ([]string, error) {
+	return _store.SInterIds(keys...)
 }
 
 {{end}}

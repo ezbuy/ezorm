@@ -19,12 +19,15 @@ func (m *_UserMgr) GetUser(obj *User) error {
 	return redisGetObject(obj)
 }
 
-func (m *_UserMgr) GetUsersByIds(ids []int32) ([]*User, error) {
+func (m *_UserMgr) GetUserById(obj *User, id string) error {
+	return redisGetObjectById(obj, id)
+}
+
+func (m *_UserMgr) GetUsersByIds(ids []string) ([]*User, error) {
 	objs := []*User{}
 	for _, id := range ids {
 		obj := m.NewUser()
-		obj.UserId = id
-		if err := redisGetObject(obj); err != nil {
+		if err := redisGetObjectById(obj, id); err != nil {
 			return objs, err
 		}
 		objs = append(objs, obj)
@@ -41,17 +44,11 @@ func (m *_UserMgr) GetUsersByUserNumber(val int32) ([]*User, error) {
 		return nil, err
 	}
 
-	ids, err := redisSMEMBERSInts(key_of_index)
+	ids, err := redisSMEMBERIds(key_of_index)
 	if err != nil {
 		return nil, err
 	}
-
-	keys := []int32{}
-	for _, id := range ids {
-		keys = append(keys, int32(id))
-	}
-
-	return m.GetUsersByIds(keys)
+	return m.GetUsersByIds(ids)
 }
 
 func (m *_UserMgr) GetUsersByName(val string) ([]*User, error) {
@@ -63,17 +60,11 @@ func (m *_UserMgr) GetUsersByName(val string) ([]*User, error) {
 		return nil, err
 	}
 
-	ids, err := redisSMEMBERSInts(key_of_index)
+	ids, err := redisSMEMBERIds(key_of_index)
 	if err != nil {
 		return nil, err
 	}
-
-	keys := []int32{}
-	for _, id := range ids {
-		keys = append(keys, int32(id))
-	}
-
-	return m.GetUsersByIds(keys)
+	return m.GetUsersByIds(ids)
 }
 
 func (m *_UserMgr) GetUsersByCreate(val time.Time) ([]*User, error) {
@@ -85,17 +76,11 @@ func (m *_UserMgr) GetUsersByCreate(val time.Time) ([]*User, error) {
 		return nil, err
 	}
 
-	ids, err := redisSMEMBERSInts(key_of_index)
+	ids, err := redisSMEMBERIds(key_of_index)
 	if err != nil {
 		return nil, err
 	}
-
-	keys := []int32{}
-	for _, id := range ids {
-		keys = append(keys, int32(id))
-	}
-
-	return m.GetUsersByIds(keys)
+	return m.GetUsersByIds(ids)
 }
 
 func (m *_UserMgr) GetUsersByUpdate(val time.Time) ([]*User, error) {
@@ -107,37 +92,26 @@ func (m *_UserMgr) GetUsersByUpdate(val time.Time) ([]*User, error) {
 		return nil, err
 	}
 
-	ids, err := redisSMEMBERSInts(key_of_index)
+	ids, err := redisSMEMBERIds(key_of_index)
 	if err != nil {
 		return nil, err
 	}
-
-	keys := []int32{}
-	for _, id := range ids {
-		keys = append(keys, int32(id))
-	}
-
-	return m.GetUsersByIds(keys)
+	return m.GetUsersByIds(ids)
 }
 
 func (m *_UserMgr) GetUsersByIndexes(indexes map[string]interface{}) ([]*User, error) {
 	obj := m.NewUser()
 
-	index_keys := []interface{}{}
+	index_keys := []string{}
 	for k, v := range indexes {
 		if idx, err := db.KeyOfIndexByClass(obj.GetClassName(), k, v); err == nil {
 			index_keys = append(index_keys, idx)
 		}
 	}
 
-	ids, err := redisSINTERInts(index_keys...)
+	ids, err := redisSINTERIds(index_keys...)
 	if err != nil {
 		return nil, err
 	}
-
-	keys := []int32{}
-	for _, id := range ids {
-		keys = append(keys, int32(id))
-	}
-	return m.GetUsersByIds(keys)
+	return m.GetUsersByIds(ids)
 }

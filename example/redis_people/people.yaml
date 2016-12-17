@@ -53,7 +53,7 @@ SortUserBlogs:
   fields:
     - UserId: int32
       flags: [noinc, primary]
-    - Score: int32
+    - Score: float64
     - BlogId: int32
   storetype: zset
 
@@ -64,5 +64,4 @@ UserLocation:
       flags: [noinc, primary]
     - Longitude: float64
     - Latitude: float64
-    - UserId: int32
   storetype: geo

@@ -19,12 +19,15 @@ func (m *_BlogMgr) GetBlog(obj *Blog) error {
 	return redisGetObject(obj)
 }
 
-func (m *_BlogMgr) GetBlogsByIds(ids []int32) ([]*Blog, error) {
+func (m *_BlogMgr) GetBlogById(obj *Blog, id string) error {
+	return redisGetObjectById(obj, id)
+}
+
+func (m *_BlogMgr) GetBlogsByIds(ids []string) ([]*Blog, error) {
 	objs := []*Blog{}
 	for _, id := range ids {
 		obj := m.NewBlog()
-		obj.BlogId = id
-		if err := redisGetObject(obj); err != nil {
+		if err := redisGetObjectById(obj, id); err != nil {
 			return objs, err
 		}
 		objs = append(objs, obj)
@@ -41,17 +44,11 @@ func (m *_BlogMgr) GetBlogsBySlug(val string) ([]*Blog, error) {
 		return nil, err
 	}
 
-	ids, err := redisSMEMBERSInts(key_of_index)
+	ids, err := redisSMEMBERIds(key_of_index)
 	if err != nil {
 		return nil, err
 	}
-
-	keys := []int32{}
-	for _, id := range ids {
-		keys = append(keys, int32(id))
-	}
-
-	return m.GetBlogsByIds(keys)
+	return m.GetBlogsByIds(ids)
 }
 
 func (m *_BlogMgr) GetBlogsByUser(val int32) ([]*Blog, error) {
@@ -63,17 +60,11 @@ func (m *_BlogMgr) GetBlogsByUser(val int32) ([]*Blog, error) {
 		return nil, err
 	}
 
-	ids, err := redisSMEMBERSInts(key_of_index)
+	ids, err := redisSMEMBERIds(key_of_index)
 	if err != nil {
 		return nil, err
 	}
-
-	keys := []int32{}
-	for _, id := range ids {
-		keys = append(keys, int32(id))
-	}
-
-	return m.GetBlogsByIds(keys)
+	return m.GetBlogsByIds(ids)
 }
 
 func (m *_BlogMgr) GetBlogsByIsPublished(val bool) ([]*Blog, error) {
@@ -85,17 +76,11 @@ func (m *_BlogMgr) GetBlogsByIsPublished(val bool) ([]*Blog, error) {
 		return nil, err
 	}
 
-	ids, err := redisSMEMBERSInts(key_of_index)
+	ids, err := redisSMEMBERIds(key_of_index)
 	if err != nil {
 		return nil, err
 	}
-
-	keys := []int32{}
-	for _, id := range ids {
-		keys = append(keys, int32(id))
-	}
-
-	return m.GetBlogsByIds(keys)
+	return m.GetBlogsByIds(ids)
 }
 
 func (m *_BlogMgr) GetBlogsByCreate(val time.Time) ([]*Blog, error) {
@@ -107,17 +92,11 @@ func (m *_BlogMgr) GetBlogsByCreate(val time.Time) ([]*Blog, error) {
 		return nil, err
 	}
 
-	ids, err := redisSMEMBERSInts(key_of_index)
+	ids, err := redisSMEMBERIds(key_of_index)
 	if err != nil {
 		return nil, err
 	}
-
-	keys := []int32{}
-	for _, id := range ids {
-		keys = append(keys, int32(id))
-	}
-
-	return m.GetBlogsByIds(keys)
+	return m.GetBlogsByIds(ids)
 }
 
 func (m *_BlogMgr) GetBlogsByUpdate(val time.Time) ([]*Blog, error) {
@@ -129,37 +108,26 @@ func (m *_BlogMgr) GetBlogsByUpdate(val time.Time) ([]*Blog, error) {
 		return nil, err
 	}
 
-	ids, err := redisSMEMBERSInts(key_of_index)
+	ids, err := redisSMEMBERIds(key_of_index)
 	if err != nil {
 		return nil, err
 	}
-
-	keys := []int32{}
-	for _, id := range ids {
-		keys = append(keys, int32(id))
-	}
-
-	return m.GetBlogsByIds(keys)
+	return m.GetBlogsByIds(ids)
 }
 
 func (m *_BlogMgr) GetBlogsByIndexes(indexes map[string]interface{}) ([]*Blog, error) {
 	obj := m.NewBlog()
 
-	index_keys := []interface{}{}
+	index_keys := []string{}
 	for k, v := range indexes {
 		if idx, err := db.KeyOfIndexByClass(obj.GetClassName(), k, v); err == nil {
 			index_keys = append(index_keys, idx)
 		}
 	}
 
-	ids, err := redisSINTERInts(index_keys...)
+	ids, err := redisSINTERIds(index_keys...)
 	if err != nil {
 		return nil, err
 	}
-
-	keys := []int32{}
-	for _, id := range ids {
-		keys = append(keys, int32(id))
-	}
-	return m.GetBlogsByIds(keys)
+	return m.GetBlogsByIds(ids)
 }

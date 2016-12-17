@@ -1,69 +1,44 @@
 package db
 
 import (
-	"errors"
 	"fmt"
-	"time"
 
-	"github.com/garyburd/redigo/redis"
+	redis "gopkg.in/redis.v5"
 )
 
-var ErrNil = errors.New("nil return")
-var ErrWrongType = errors.New("wrong type")
-var ErrWrongArgsNum = errors.New("args num error")
-
-const redisMaxIdleConn = 64
-const redisMaxActive = 128
-
 type RedisStore struct {
-	pool        *redis.Pool
-	host        string
-	port        int
-	db          int
-	withTimeout bool
+	conn redis.Cmdable
 }
 
-func newRedisStore(host string, port int, db int, withTimeout bool) (*RedisStore, error) {
-	f := func() (redis.Conn, error) {
-		var c redis.Conn
-		var err error
-		if withTimeout {
-			c, err = redis.DialTimeout("tcp", fmt.Sprintf("%s:%d", host, port), time.Second*10, time.Second*3, time.Second*3)
-		} else {
-			c, err = redis.Dial("tcp", fmt.Sprintf("%s:%d", host, port))
-		}
-		if err != nil {
-			return nil, err
-		}
-		if _, err := c.Do("SELECT", db); err != nil {
-			return nil, err
-		}
-		return c, err
+func NewRedisStore(host string, port int, password string, db int) (*RedisStore, error) {
+	client := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%d", host, port),
+		Password: password,
+		DB:       db,
+	})
+
+	//! ping the redis-server
+	_, err := client.Ping().Result()
+	if err != nil {
+		return nil, err
 	}
-	pool := redis.NewPool(f, redisMaxIdleConn)
-	pool.MaxActive = redisMaxActive
-	pool.Wait = true
 
-	store := &RedisStore{pool: pool, host: host, port: port, db: db, withTimeout: withTimeout}
-	return store, nil
+	return &RedisStore{
+		conn: client,
+	}, nil
 }
 
-func NewRedisStore(host string, port int, db int) (*RedisStore, error) {
-	return newRedisStore(host, port, db, true)
+func ZValue(score float64, member interface{}) redis.Z {
+	return redis.Z{
+		Score:  score,
+		Member: member,
+	}
 }
 
-func NewRedisStoreWithoutTimeout(host string, port int, db int) (*RedisStore, error) {
-	return newRedisStore(host, port, db, false)
-}
-
-func (r *RedisStore) SetMaxIdle(maxIdle int) {
-	r.pool.MaxIdle = maxIdle
-}
-
-func (r *RedisStore) SetMaxActive(maxActive int) {
-	r.pool.MaxActive = maxActive
-}
-
-func (r *RedisStore) GetPool() *redis.Pool {
-	return r.pool
+func NewGeoLocation(name string, longitude, latitude float64) *redis.GeoLocation {
+	return &redis.GeoLocation{
+		Name:      name,
+		Longitude: longitude,
+		Latitude:  latitude,
+	}
 }

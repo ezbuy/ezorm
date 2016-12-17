@@ -7,6 +7,8 @@ import (
 	"reflect"
 	"strings"
 	"time"
+
+	redis "gopkg.in/redis.v5"
 )
 
 const (
@@ -35,7 +37,21 @@ func KeyOfObject(obj Object) (string, error) {
 		return "", errors.New("object unsupport type")
 	}
 
-	return fmt.Sprintf("%s:%s:%s:%d", obj.GetStoreType(), obj.GetClassName(), obj.GetPrimaryKey(), v.FieldByName(obj.GetPrimaryKey()).Int()), nil
+	return fmt.Sprintf("%s:%s:%s:%v", obj.GetStoreType(), obj.GetClassName(), obj.GetPrimaryKey(), v.FieldByName(obj.GetPrimaryKey()).Interface()), nil
+}
+
+func KeyOfObjectById(obj Object, id string) (string, error) {
+	t := reflect.TypeOf(obj)
+	v := reflect.ValueOf(obj)
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+		v = v.Elem()
+	}
+	if t.Kind() != reflect.Struct {
+		return "", errors.New("object unsupport type")
+	}
+
+	return fmt.Sprintf("%s:%s:%s:%s", obj.GetStoreType(), obj.GetClassName(), obj.GetPrimaryKey(), id), nil
 }
 
 func KeyOfClass(obj Object) (string, error) {
@@ -87,7 +103,7 @@ func FieldEncode(fv reflect.Value) (interface{}, error) {
 		}
 		return val, nil
 	}
-	return nil, nil
+	return nil, errors.New("field unexport")
 }
 
 func FieldDecode(fv reflect.Value, val interface{}) (interface{}, error) {
@@ -115,44 +131,40 @@ func FieldNum(v reflect.Value) int {
 	return num
 }
 
-func (r *RedisStore) setFieldValue(field reflect.Value, val interface{}) error {
+func (r *RedisStore) setFieldValue(field reflect.Value, stringCmd *redis.StringCmd) error {
 	switch field.Kind() {
 	case reflect.String:
-		valueAsString, err := r.String(val, nil)
-		if err != nil {
-			return err
-		}
-		field.SetString(valueAsString)
+		field.SetString(stringCmd.Val())
 	case reflect.Uint64, reflect.Uint32, reflect.Uint16, reflect.Uint8, reflect.Uint, reflect.Uintptr:
-		valueAsUint, err := r.Uint64(val, nil)
+		v, err := stringCmd.Uint64()
 		if err != nil {
 			return err
 		}
-		field.SetUint(valueAsUint)
+		field.SetUint(v)
 	case reflect.Int64, reflect.Int32, reflect.Int16, reflect.Int8, reflect.Int:
-		valueAsInt, err := r.Int64(val, nil)
+		v, err := stringCmd.Int64()
 		if err != nil {
 			return err
 		}
-		field.SetInt(valueAsInt)
+		field.SetInt(v)
 	case reflect.Float32, reflect.Float64:
-		valueAsFloat, err := r.Float64(val, nil)
+		v, err := stringCmd.Float64()
 		if err != nil {
 			return err
 		}
-		field.SetFloat(valueAsFloat)
+		field.SetFloat(v)
 	case reflect.Bool:
-		boolValue, err := r.Bool(val, nil)
-		if err != nil {
+		var b bool
+		if err := stringCmd.Scan(&b); err != nil {
 			return err
 		}
-		field.SetBool(boolValue)
+		field.SetBool(b)
 	case reflect.Struct, reflect.Ptr:
-		valueAsInt, err := r.Int64(val, nil)
+		v, err := stringCmd.Int64()
 		if err != nil {
 			return err
 		}
-		valuleDecode, err := FieldDecode(field, valueAsInt)
+		valuleDecode, err := FieldDecode(field, v)
 		if err != nil {
 			return err
 		}
@@ -184,7 +196,8 @@ func (r *RedisStore) SetObject(obj Object) error {
 		return err
 	}
 
-	primary_key := v.FieldByName(obj.GetPrimaryKey()).Int()
+	primary_key_str := fmt.Sprint(v.FieldByName(obj.GetPrimaryKey()).Interface())
+	primary_key_num := float64(v.FieldByName(obj.GetPrimaryKey()).Int())
 
 	switch obj.GetStoreType() {
 	case JSON:
@@ -192,25 +205,25 @@ func (r *RedisStore) SetObject(obj Object) error {
 		if err != nil {
 			return err
 		}
-		if err := r.SET(key_of_obj, bytes); err != nil {
+
+		if err := r.conn.Set(key_of_obj, bytes, time.Duration(0)).Err(); err != nil {
 			return err
 		}
 
 		//! object indexs
 		for _, idx := range obj.GetIndexes() {
 			if key_of_index, err := KeyOfIndexByObject(obj, idx); err == nil {
-				_, err := r.SADD(key_of_index, primary_key)
-				if err != nil {
-					r.DEL(key_of_obj)
+
+				if err := r.conn.SAdd(key_of_index, primary_key_str).Err(); err != nil {
+					r.conn.Del(key_of_index)
 					return err
 				}
 			}
 		}
 
 		//! object primary key
-		_, err = r.ZADD(key_of_cls, primary_key, primary_key)
-		if err != nil {
-			r.DEL(key_of_obj)
+		if err = r.conn.ZAdd(key_of_cls, ZValue(primary_key_num, primary_key_str)).Err(); err != nil {
+			r.conn.Del(key_of_obj)
 			return err
 		}
 
@@ -222,9 +235,12 @@ func (r *RedisStore) SetObject(obj Object) error {
 			fv := v.Field(i)
 
 			if fv.CanInterface() {
-				val, _ := FieldEncode(fv)
-				if err := r.HSET(key_of_obj, ft.Name, val); err != nil {
-					r.DEL(key_of_obj)
+				val, err := FieldEncode(fv)
+				if err != nil {
+					return err
+				}
+				if err := r.conn.HSet(key_of_obj, ft.Name, fmt.Sprint(val)).Err(); err != nil {
+					r.conn.Del(key_of_obj)
 					return err
 				}
 			}
@@ -233,18 +249,17 @@ func (r *RedisStore) SetObject(obj Object) error {
 		//! object indexs
 		for _, idx := range obj.GetIndexes() {
 			if key_of_index, err := KeyOfIndexByObject(obj, idx); err == nil {
-				_, err := r.SADD(key_of_index, primary_key)
-				if err != nil {
-					r.DEL(key_of_obj)
+
+				if err := r.conn.SAdd(key_of_index, primary_key_str).Err(); err != nil {
+					r.conn.Del(key_of_index)
 					return err
 				}
 			}
 		}
 
 		//! object primary key
-		_, err := r.ZADD(key_of_cls, primary_key, primary_key)
-		if err != nil {
-			r.DEL(key_of_obj)
+		if err = r.conn.ZAdd(key_of_cls, ZValue(primary_key_num, primary_key_str)).Err(); err != nil {
+			r.conn.Del(key_of_obj)
 			return err
 		}
 		return nil
@@ -262,8 +277,7 @@ func (r *RedisStore) SetObject(obj Object) error {
 		if err != nil {
 			return err
 		}
-		_, err = r.SADD(key_of_obj, v1)
-		return err
+		return r.conn.SAdd(key_of_obj, v1).Err()
 	case ZSET:
 		if FieldNum(v) != 3 {
 			return errors.New("zset struct only support 3 fields <zset-key, score, value>")
@@ -277,25 +291,27 @@ func (r *RedisStore) SetObject(obj Object) error {
 			return errors.New("zset struct second field should be score")
 		}
 		switch v.Field(1).Kind() {
-		case reflect.Int64, reflect.Int32, reflect.Int16, reflect.Int8, reflect.Int:
+		case reflect.Float32, reflect.Float64:
 		default:
-			return errors.New("zset struct score field should be number type")
+			return errors.New("zset struct score field should be float type")
 		}
 
 		val, err := FieldEncode(v.Field(2))
 		if err != nil {
 			return err
 		}
-
-		_, err = r.ZADD(key_of_obj, v.Field(1).Int(), val)
-		return err
+		return r.conn.ZAdd(key_of_obj, ZValue(v.Field(1).Float(), val)).Err()
 	case GEO:
-		if FieldNum(v) != 4 {
+		if FieldNum(v) != 3 {
 			return errors.New("geo struct only support 4 fields <geo-key, longitude, latitude, value>")
 		}
 		//field 0 should be primary key
 		if t.Field(0).Name != obj.GetPrimaryKey() {
 			return errors.New("zset struct first field should be primary key")
+		}
+		v0, err := FieldEncode(v.Field(0))
+		if err != nil {
+			return err
 		}
 
 		//field 1 should be longitude key
@@ -317,18 +333,13 @@ func (r *RedisStore) SetObject(obj Object) error {
 		default:
 			return errors.New("zset struct latitude field should be float type")
 		}
-		val, err := FieldEncode(v.Field(3))
-		if err != nil {
-			return err
-		}
 
-		_, err = r.GEOADD(key_of_obj, v.Field(1).Float(), v.Field(2).Float(), val)
-		return err
+		return r.conn.GeoAdd(key_of_cls, NewGeoLocation(fmt.Sprint(v0), v.Field(1).Float(), v.Field(2).Float())).Err()
 	}
 	return errors.New("store unsupport type")
 }
 
-func (r *RedisStore) GetObject(obj Object) error {
+func (r *RedisStore) GetObjectById(obj Object, id string) error {
 	t := reflect.TypeOf(obj)
 	if t.Kind() != reflect.Ptr {
 		return errors.New("object unsupport type")
@@ -339,28 +350,26 @@ func (r *RedisStore) GetObject(obj Object) error {
 		return errors.New("object unsupport type")
 	}
 
-	key_of_obj, err := KeyOfObject(obj)
+	key_of_obj, err := KeyOfObjectById(obj, id)
 	if err != nil {
 		return err
 	}
 	switch obj.GetStoreType() {
 	case JSON:
-		data, err := r.Bytes(r.GET(key_of_obj))
+		data, err := r.conn.Get(key_of_obj).Bytes()
 		if err != nil {
 			return err
 		}
 		if err := json.Unmarshal(data, obj); err != nil {
 			return err
 		}
-		return nil
 	case HASH:
 		for i := 0; i < v.NumField(); i++ {
-			if v.Field(i).CanInterface() {
-				val, err := r.HGET(key_of_obj, t.Field(i).Name)
-				if err != nil {
-					return err
-				}
-				if err := r.setFieldValue(v.Field(i), val); err != nil {
+			fv := v.Field(i)
+			if fv.CanInterface() {
+				cmd := r.conn.HGet(key_of_obj, t.Field(i).Name)
+
+				if err := r.setFieldValue(fv, cmd); err != nil {
 					return err
 				}
 			}
@@ -371,11 +380,29 @@ func (r *RedisStore) GetObject(obj Object) error {
 	return nil
 }
 
+func (r *RedisStore) GetObject(obj Object) error {
+	t := reflect.TypeOf(obj)
+	if t.Kind() != reflect.Ptr {
+		return errors.New("object unsupport type")
+	}
+	v := reflect.ValueOf(obj).Elem()
+
+	return r.GetObjectById(obj, fmt.Sprint(v.FieldByName(obj.GetPrimaryKey()).Interface()))
+}
+
 func (r *RedisStore) DelObject(obj Object) error {
 	key_of_obj, err := KeyOfObject(obj)
 	if err != nil {
 		return err
 	}
-	_, err = r.DEL(key_of_obj)
-	return err
+	return r.conn.Del(key_of_obj).Err()
+}
+
+//redisSMEMBERSInts(key string) ([]int, error) {
+func (r *RedisStore) SMembersIds(key string) ([]string, error) {
+	return r.conn.SMembers(key).Result()
+}
+
+func (r *RedisStore) SInterIds(keys ...string) ([]string, error) {
+	return r.conn.SInter(keys...).Result()
 }

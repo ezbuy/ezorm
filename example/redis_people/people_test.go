@@ -1,14 +1,29 @@
 package test
 
 import (
+	"fmt"
 	"log"
 	"testing"
 	"time"
 
 	"github.com/bmizerany/assert"
+
+	redis "gopkg.in/redis.v5"
 )
 
 func TestPeopleObject(t *testing.T) {
+
+	var cmd redis.Cmdable
+
+	cmd = redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+
+	pong, err := cmd.Ping().Result()
+	fmt.Println(pong, err)
+
 	RedisSetUp(&RedisConfig{
 		Host: "127.0.0.1",
 		Port: 6379,
@@ -114,9 +129,8 @@ func TestPeopleObject(t *testing.T) {
 	pos.RegionId = 100000000
 	pos.Longitude = 103.0232
 	pos.Latitude = 30.0343
-	pos.UserId = 100
 	for i := 1; i <= 3; i++ {
-		pos.UserId++
+		pos.RegionId++
 		assert.Equal(t, UserLocationMgr.SetUserLocation(pos), nil)
 	}
 }

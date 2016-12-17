@@ -334,7 +334,7 @@ func (m *_BlogMgr) FindWithOffset(where string, offset int, limit int, args ...i
 }
 
 func (m *_BlogMgr) GetQuerysql(where string) string {
-	query := "SELECT `blog_id`, `title`, `hits`, `slug`, `body`, `user`, `is_published`, `create`, `update` FROM test.blog"
+	query := "SELECT `blog_id`, `title`, `hits`, `slug`, `body`, `user`, `is_published`, `create`, `update` FROM test.blog "
 
 	where = strings.TrimSpace(where)
 	if where != "" {

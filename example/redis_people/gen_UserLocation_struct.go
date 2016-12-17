@@ -8,7 +8,6 @@ type UserLocation struct {
 	RegionId  int32   `bson:"RegionId" json:"RegionId"`
 	Longitude float64 `bson:"Longitude" json:"Longitude"`
 	Latitude  float64 `bson:"Latitude" json:"Latitude"`
-	UserId    int32   `bson:"UserId" json:"UserId"`
 }
 
 func (p *UserLocation) GetNameSpace() string {
