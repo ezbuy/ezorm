@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
-	"github.com/ezbuy/ezorm/db"
 	"strings"
 	"time"
+
+	"github.com/ezbuy/ezorm/db"
 )
 
 var (
@@ -267,7 +268,7 @@ func (m *_UserMgr) FindWithOffset(where string, offset int, limit int, args ...i
 }
 
 func (m *_UserMgr) GetQuerysql(where string) string {
-	query := "SELECT `user_id`, `user_number`, `name` FROM test.test_user"
+	query := "SELECT `user_id`, `user_number`, `name` FROM test.test_user "
 
 	where = strings.TrimSpace(where)
 	if where != "" {

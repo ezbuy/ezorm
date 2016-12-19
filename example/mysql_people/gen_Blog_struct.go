@@ -5,15 +5,15 @@ import "time"
 var _ time.Time
 
 type Blog struct {
-	BlogId      int32     `db:"blog_id"`
-	Title       string    `db:"title"`
-	Hits        int32     `db:"hits"`
-	Slug        string    `db:"slug"`
-	Body        string    `db:"body"`
-	User        int32     `db:"user"`
-	IsPublished bool      `db:"is_published"`
-	Create      time.Time `db:"create"`
-	Update      time.Time `db:"update"`
+	BlogId      int32     `db:"blog_id" json:"blog_id"`
+	Title       string    `db:"title" json:"title"`
+	Hits        int32     `db:"hits" json:"hits"`
+	Slug        string    `db:"slug" json:"slug"`
+	Body        string    `db:"body" json:"body"`
+	User        int32     `db:"user" json:"user"`
+	IsPublished bool      `db:"is_published" json:"is_published"`
+	Create      time.Time `db:"create" json:"create"`
+	Update      time.Time `db:"update" json:"update"`
 	isNew       bool
 }
 
@@ -26,12 +26,13 @@ func (p *Blog) GetClassName() string {
 }
 
 func (p *Blog) GetIndexes() []string {
-	idx := []string{}
-	idx = append(idx, "Slug")
-	idx = append(idx, "User")
-	idx = append(idx, "IsPublished")
-	idx = append(idx, "Create")
-	idx = append(idx, "Update")
+	idx := []string{
+		"Slug",
+		"User",
+		"IsPublished",
+		"Create",
+		"Update",
+	}
 	return idx
 }
 

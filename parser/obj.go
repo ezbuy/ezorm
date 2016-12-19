@@ -78,6 +78,7 @@ func (f *Field) BJTag() string {
 
 type Obj struct {
 	Db           string
+	Dbs          []string
 	Extend       string
 	Fields       []*Field
 	FieldNameMap map[string]*Field
@@ -104,7 +105,7 @@ func (o *Obj) init() {
 func (o *Obj) GetFieldNameWithDB(name string) string {
 	if o.DbName != "" {
 		dbname := o.DbName
-		if o.Db == "mysql" || o.Db == "mysql-redis" {
+		if o.DbContains("mysql") {
 			dbname = camel2name(o.DbName)
 		}
 		return fmt.Sprintf("%s.%s", dbname, name)
@@ -221,37 +222,48 @@ func (o *Obj) LoadField(f *Field) string {
 }
 
 func (o *Obj) GetGenTypes() []string {
-	switch o.Db {
-	case "mongo":
-		return []string{"struct", "mongo_orm"}
-	case "enum":
-		return []string{"enum"}
-	case "mssql":
-		return []string{"struct", "mssql_orm"}
-	case "mysql":
-		return []string{"struct", "mysql_orm", "mysql_fk"}
-	case "mysql-redis":
-		return []string{"struct", "mysql_orm", "mysql_fk", "redis_orm"}
-	case "redis":
-		return []string{"struct", "redis_orm"}
-	default:
-		return []string{"struct"}
+	gens := map[string]bool{}
+	for _, db := range o.Dbs {
+		switch db {
+		case "mongo":
+			gens["struct"] = true
+			gens["mongo_orm"] = true
+		case "enum":
+			gens["enum"] = true
+		case "mssql":
+			gens["struct"] = true
+			gens["mssql_orm"] = true
+		case "mysql":
+			gens["struct"] = true
+			gens["mysql_orm"] = true
+			gens["mysql_fk"] = true
+		case "redis":
+			gens["struct"] = true
+			gens["redis_orm"] = true
+		default:
+			gens["struct"] = true
+		}
 	}
+	result := []string{}
+	for k, _ := range gens {
+		result = append(result, k)
+	}
+	return result
 }
 
-func (o *Obj) GetConfigTemplate() ([]string, bool) {
-	switch o.Db {
-	case "mssql":
-		return []string{"mssql_config"}, true
-	case "mysql":
-		return []string{"mysql_config"}, true
-	case "mysql-redis":
-		return []string{"mysql_config", "redis_config"}, true
-	case "redis":
-		return []string{"redis_config"}, true
-	default:
-		return []string{""}, false
+func (o *Obj) GetConfigTemplates() []string {
+	tpls := []string{}
+	for _, db := range o.Dbs {
+		switch db {
+		case "mssql":
+			tpls = append(tpls, "mssql_config")
+		case "mysql":
+			tpls = append(tpls, "mysql_config")
+		case "redis":
+			tpls = append(tpls, "redis_config")
+		}
 	}
+	return tpls
 }
 
 func (o *Obj) GetFormImports() (imports []string) {
@@ -354,6 +366,26 @@ func (o *Obj) setIndexes() {
 	}
 }
 
+func (o *Obj) DbContains(db string) bool {
+	for _, v := range o.Dbs {
+		if strings.ToLower(v) == strings.ToLower(db) {
+			return true
+		}
+	}
+	return false
+}
+
+//! for the multiple dbs support struct template switch
+func (o *Obj) DbSwitch(db string) bool {
+	for _, v := range o.Dbs {
+		if strings.ToLower(v) == strings.ToLower(db) {
+			o.Db = db
+			return true
+		}
+	}
+	return false
+}
+
 func (o *Obj) Read(data map[string]interface{}) error {
 	o.init()
 	hasType := false
@@ -361,13 +393,17 @@ func (o *Obj) Read(data map[string]interface{}) error {
 		switch key {
 		case "db":
 			o.Db = val.(string)
+			o.Dbs = append(o.Dbs, o.Db)
 			hasType = true
-			break
+		case "dbs":
+			o.Dbs = ToStringSlice(val.([]interface{}))
+			hasType = true
 		}
 	}
 
 	if hasType {
 		delete(data, "db")
+		delete(data, "dbs")
 	}
 
 	for key, val := range data {
@@ -433,13 +469,12 @@ func (o *Obj) Read(data map[string]interface{}) error {
 			return errors.New(o.Name + " has invalid obj property: " + key)
 		}
 	}
-
 	// all mysql dbs share the same connection pool
-	if strings.EqualFold(o.Db, "mysql") && o.DbName == "" {
+	if o.DbContains("mysql") && o.DbName == "" {
 		return errors.New("please specify `dbname` to " + o.Name)
 	}
 
-	if strings.Contains(o.Db, "redis") && o.StoreType == "" {
+	if o.DbContains("redis") && o.StoreType == "" {
 		return errors.New("please specify `storetype` to " + o.Name)
 	}
 

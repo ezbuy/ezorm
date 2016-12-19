@@ -5,15 +5,15 @@ import "time"
 var _ time.Time
 
 type Blog struct {
-	BlogId      int32     `bson:"BlogId" json:"BlogId"`
-	Title       string    `bson:"Title" json:"Title"`
-	Hits        int32     `bson:"Hits" json:"Hits"`
-	Slug        string    `bson:"Slug" json:"Slug"`
-	Body        string    `bson:"Body" json:"Body"`
-	User        int32     `bson:"User" json:"User"`
-	IsPublished bool      `bson:"IsPublished" json:"IsPublished"`
-	Create      time.Time `bson:"Create" json:"Create"`
-	Update      time.Time `bson:"Update" json:"Update"`
+	BlogId      int32     `db:"blog_id" json:"blog_id"`
+	Title       string    `db:"title" json:"title"`
+	Hits        int32     `db:"hits" json:"hits"`
+	Slug        string    `db:"slug" json:"slug"`
+	Body        string    `db:"body" json:"body"`
+	User        int32     `db:"user" json:"user"`
+	IsPublished bool      `db:"is_published" json:"is_published"`
+	Create      time.Time `db:"create" json:"create"`
+	Update      time.Time `db:"update" json:"update"`
 	isNew       bool
 }
 
@@ -33,12 +33,13 @@ func (p *Blog) GetPrimaryKey() string {
 }
 
 func (p *Blog) GetIndexes() []string {
-	idx := []string{}
-	idx = append(idx, "Slug")
-	idx = append(idx, "User")
-	idx = append(idx, "IsPublished")
-	idx = append(idx, "Create")
-	idx = append(idx, "Update")
+	idx := []string{
+		"Slug",
+		"User",
+		"IsPublished",
+		"Create",
+		"Update",
+	}
 	return idx
 }
 

@@ -1,6 +1,7 @@
 {{define "mysql_orm"}}package {{.GoPackage}}
 
 {{$obj := .}}
+{{if ($obj.DbSwitch "mysql")}}
 {{/* Only generate source file for table with primary key */}}
 {{$idFieldName := $obj.GetPrimaryKeyName}}
 {{$idField := $obj.GetPrimaryKey}}
@@ -441,6 +442,7 @@ func (m *_{{$obj.Name}}Mgr) GetLimit(offset, limit int) string {
 	 return fmt.Sprintf(" LIMIT %d, %d", offset, limit)
 }
 
+{{- end -}}
 {{- end -}}
 {{- end -}}
 

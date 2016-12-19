@@ -1,5 +1,7 @@
 {{define "redis_orm"}}package {{.GoPackage}}
 {{$obj := .}}
+{{if ($obj.DbSwitch "redis")}}
+
 {{$idFieldName := $obj.GetPrimaryKeyName}}
 {{$idField := $obj.GetPrimaryKey}}
 
@@ -89,5 +91,6 @@ func (m *_{{$obj.Name}}Mgr) Get{{$obj.Name}}sByIndexes(indexes map[string]interf
 } 
 {{end}}
 
+{{end}}
 {{end}}
 {{end}}

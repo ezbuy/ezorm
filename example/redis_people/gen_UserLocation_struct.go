@@ -5,9 +5,10 @@ import "time"
 var _ time.Time
 
 type UserLocation struct {
-	RegionId  int32   `bson:"RegionId" json:"RegionId"`
-	Longitude float64 `bson:"Longitude" json:"Longitude"`
-	Latitude  float64 `bson:"Latitude" json:"Latitude"`
+	RegionId  int32   `json:"region_id"`
+	Longitude float64 `json:"longitude"`
+	Latitude  float64 `json:"latitude"`
+	isNew     bool
 }
 
 func (p *UserLocation) GetNameSpace() string {

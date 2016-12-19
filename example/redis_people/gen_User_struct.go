@@ -5,11 +5,12 @@ import "time"
 var _ time.Time
 
 type User struct {
-	UserId     int32     `bson:"UserId" json:"UserId"`
-	UserNumber int32     `bson:"UserNumber" json:"UserNumber"`
-	Name       string    `bson:"Name" json:"Name"`
-	Create     time.Time `bson:"Create" json:"Create"`
-	Update     time.Time `bson:"Update" json:"Update"`
+	UserId     int32     `json:"user_id"`
+	UserNumber int32     `json:"user_number"`
+	Name       string    `json:"name"`
+	Create     time.Time `json:"create"`
+	Update     time.Time `json:"update"`
+	isNew      bool
 }
 
 func (p *User) GetNameSpace() string {
@@ -28,11 +29,12 @@ func (p *User) GetPrimaryKey() string {
 }
 
 func (p *User) GetIndexes() []string {
-	idx := []string{}
-	idx = append(idx, "UserNumber")
-	idx = append(idx, "Name")
-	idx = append(idx, "Create")
-	idx = append(idx, "Update")
+	idx := []string{
+		"UserNumber",
+		"Name",
+		"Create",
+		"Update",
+	}
 	return idx
 }
 

@@ -1,5 +1,6 @@
 {{define "mssql_config"}}package {{.GoPackage}}
 {{$obj := .}}
+{{if ($obj.DbSwitch "mssql")}}
 import (
 	"database/sql"
 	"fmt"
@@ -111,5 +112,5 @@ func mssqlExec(query string, args ...interface{}) (sql.Result, error) {
 	result := resultItf.(sql.Result)
 	return result, err
 }
-
+{{end}}
 {{end}}

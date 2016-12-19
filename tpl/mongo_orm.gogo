@@ -1,5 +1,6 @@
 {{define "mongo_orm"}}package {{.GoPackage}}
 {{$obj := .}}
+{{if ($obj.DbSwitch "mongo")}}
 import (
 	//3rd party libs
 	"gopkg.in/mgo.v2"
@@ -75,4 +76,5 @@ func new{{.Name}}FindByID(id string) (result EzOrmObj, err error) {
 {{ .LoadTpl "mongo_collection" }}
 
 {{ .LoadTpl "mongo_search" }}
+{{end}}
 {{end}}

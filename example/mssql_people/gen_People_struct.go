@@ -27,6 +27,14 @@ func (p *People) GetClassName() string {
 	return "People"
 }
 
+func (p *People) GetIndexes() []string {
+	idx := []string{
+		"Age",
+		"Name",
+	}
+	return idx
+}
+
 type _PeopleMgr struct {
 }
 

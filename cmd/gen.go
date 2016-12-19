@@ -74,11 +74,9 @@ var genCmd = &cobra.Command{
 		}
 
 		for _, obj := range databases {
-			if tpls, ok := obj.GetConfigTemplate(); ok {
-				for _, t := range tpls {
-					fileAbsPath := output + "/gen_" + t + ".go"
-					executeTpl(fileAbsPath, t, obj)
-				}
+			for _, t := range obj.GetConfigTemplates() {
+				fileAbsPath := output + "/gen_" + t + ".go"
+				executeTpl(fileAbsPath, t, obj)
 			}
 		}
 		goimports := exec.Command("goimports", "-w", output)

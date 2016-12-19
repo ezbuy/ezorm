@@ -5,9 +5,9 @@ import "time"
 var _ time.Time
 
 type User struct {
-	UserId     int32  `db:"user_id"`
-	UserNumber int32  `db:"user_number"`
-	Name       string `db:"name"`
+	UserId     int32  `db:"user_id" json:"user_id"`
+	UserNumber int32  `db:"user_number" json:"user_number"`
+	Name       string `db:"name" json:"name"`
 	isNew      bool
 }
 
@@ -20,9 +20,10 @@ func (p *User) GetClassName() string {
 }
 
 func (p *User) GetIndexes() []string {
-	idx := []string{}
-	idx = append(idx, "UserNumber")
-	idx = append(idx, "Name")
+	idx := []string{
+		"UserNumber",
+		"Name",
+	}
 	return idx
 }
 
