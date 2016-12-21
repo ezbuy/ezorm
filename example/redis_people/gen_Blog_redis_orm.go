@@ -1,33 +1,140 @@
 package test
 
+///////////// JSON & HASH /////////////////////////////////////////////////////
 import (
-	"time"
-
+	"fmt"
 	"github.com/ezbuy/ezorm/db"
+	"time"
+)
+
+var (
+	_ time.Time
 )
 
 func (m *_BlogMgr) SetBlog(obj *Blog) error {
-	return redisSetObject(obj)
+	//! object field set
+	if err := redisFieldSet(obj, "BlogId", obj.BlogId); err != nil {
+		return err
+	}
+	if err := redisFieldSet(obj, "Title", obj.Title); err != nil {
+		return err
+	}
+	if err := redisFieldSet(obj, "Hits", obj.Hits); err != nil {
+		return err
+	}
+	if err := redisFieldSet(obj, "Slug", obj.Slug); err != nil {
+		return err
+	}
+	if err := redisFieldSet(obj, "Body", obj.Body); err != nil {
+		return err
+	}
+	if err := redisFieldSet(obj, "User", obj.User); err != nil {
+		return err
+	}
+	if err := redisFieldSet(obj, "IsPublished", obj.IsPublished); err != nil {
+		return err
+	}
+	transformed_Create_field := db.TimeFormat(obj.Create)
+	if err := redisFieldSet(obj, "Create", transformed_Create_field); err != nil {
+		return err
+	}
+	transformed_Update_field := db.TimeToLocalTime(obj.Update)
+	if err := redisFieldSet(obj, "Update", transformed_Update_field); err != nil {
+		return err
+	}
+	//! object index set
+	if err := redisIndexSet(obj, "Slug", obj.Slug, obj.BlogId); err != nil {
+		return err
+	}
+	if err := redisIndexSet(obj, "User", obj.User, obj.BlogId); err != nil {
+		return err
+	}
+	if err := redisIndexSet(obj, "IsPublished", obj.IsPublished, obj.BlogId); err != nil {
+		return err
+	}
+	if err := redisIndexSet(obj, "Create", obj.Create, obj.BlogId); err != nil {
+		return err
+	}
+	if err := redisIndexSet(obj, "Update", obj.Update, obj.BlogId); err != nil {
+		return err
+	}
+	//! object primary key set
+	_, err := redisListRPush(obj, "BlogId", obj.BlogId)
+	return err
 }
 
 func (m *_BlogMgr) DelBlog(obj *Blog) error {
-	return redisDelObject(obj)
+	if err := redisDel(obj); err != nil {
+		return err
+	}
+	if err := redisIndexRemove(obj, "Slug", obj.Slug, obj.BlogId); err != nil {
+		return err
+	}
+	if err := redisIndexRemove(obj, "User", obj.User, obj.BlogId); err != nil {
+		return err
+	}
+	if err := redisIndexRemove(obj, "IsPublished", obj.IsPublished, obj.BlogId); err != nil {
+		return err
+	}
+	if err := redisIndexRemove(obj, "Create", obj.Create, obj.BlogId); err != nil {
+		return err
+	}
+	if err := redisIndexRemove(obj, "Update", obj.Update, obj.BlogId); err != nil {
+		return err
+	}
+	return redisListRemove(obj, "BlogId", obj.BlogId)
 }
 
-///////////// JSON & HASH /////////////////////////////////////////////////////
 func (m *_BlogMgr) GetBlog(obj *Blog) error {
-	return redisGetObject(obj)
+	//! object field get
+	if err := redisFieldGet(obj, "BlogId", &obj.BlogId); err != nil {
+		return err
+	}
+	if err := redisFieldGet(obj, "Title", &obj.Title); err != nil {
+		return err
+	}
+	if err := redisFieldGet(obj, "Hits", &obj.Hits); err != nil {
+		return err
+	}
+	if err := redisFieldGet(obj, "Slug", &obj.Slug); err != nil {
+		return err
+	}
+	if err := redisFieldGet(obj, "Body", &obj.Body); err != nil {
+		return err
+	}
+	if err := redisFieldGet(obj, "User", &obj.User); err != nil {
+		return err
+	}
+	if err := redisFieldGet(obj, "IsPublished", &obj.IsPublished); err != nil {
+		return err
+	}
+	var Create string
+	if err := redisFieldGet(obj, "Create", &Create); err != nil {
+		return err
+	}
+	obj.Create = db.TimeParse(Create)
+	var Update string
+	if err := redisFieldGet(obj, "Update", &Update); err != nil {
+		return err
+	}
+	obj.Update = db.TimeParseLocalTime(Update)
+	return nil
 }
 
-func (m *_BlogMgr) GetBlogById(obj *Blog, id string) error {
-	return redisGetObjectById(obj, id)
+func (m *_BlogMgr) GetBlogById(id int32) (*Blog, error) {
+	obj := m.NewBlog()
+	obj.BlogId = id
+	if err := m.GetBlog(obj); err != nil {
+		return nil, err
+	}
+	return obj, nil
 }
 
-func (m *_BlogMgr) GetBlogsByIds(ids []string) ([]*Blog, error) {
+func (m *_BlogMgr) GetBlogsByIds(ids []int32) ([]*Blog, error) {
 	objs := []*Blog{}
 	for _, id := range ids {
-		obj := m.NewBlog()
-		if err := redisGetObjectById(obj, id); err != nil {
+		obj, err := m.GetBlogById(id)
+		if err != nil {
 			return objs, err
 		}
 		objs = append(objs, obj)
@@ -36,98 +143,153 @@ func (m *_BlogMgr) GetBlogsByIds(ids []string) ([]*Blog, error) {
 }
 
 func (m *_BlogMgr) GetBlogsBySlug(val string) ([]*Blog, error) {
-	obj := m.NewBlog()
-	obj.Slug = val
-
-	key_of_index, err := db.KeyOfIndexByObject(obj, "Slug")
+	strs, err := redisIndexGet(m.NewBlog(), "Slug", val)
 	if err != nil {
 		return nil, err
 	}
+	objs := []*Blog{}
+	for _, str := range strs {
+		var id int32
+		if err := redisStringScan(str, &id); err != nil {
+			return nil, err
+		}
 
-	ids, err := redisSMEMBERIds(key_of_index)
-	if err != nil {
-		return nil, err
+		obj, err := m.GetBlogById(id)
+		if err != nil {
+			return nil, err
+		}
+
+		objs = append(objs, obj)
 	}
-	return m.GetBlogsByIds(ids)
+	return objs, nil
 }
 
 func (m *_BlogMgr) GetBlogsByUser(val int32) ([]*Blog, error) {
-	obj := m.NewBlog()
-	obj.User = val
-
-	key_of_index, err := db.KeyOfIndexByObject(obj, "User")
+	strs, err := redisIndexGet(m.NewBlog(), "User", val)
 	if err != nil {
 		return nil, err
 	}
+	objs := []*Blog{}
+	for _, str := range strs {
+		var id int32
+		if err := redisStringScan(str, &id); err != nil {
+			return nil, err
+		}
 
-	ids, err := redisSMEMBERIds(key_of_index)
-	if err != nil {
-		return nil, err
+		obj, err := m.GetBlogById(id)
+		if err != nil {
+			return nil, err
+		}
+
+		objs = append(objs, obj)
 	}
-	return m.GetBlogsByIds(ids)
+	return objs, nil
 }
 
 func (m *_BlogMgr) GetBlogsByIsPublished(val bool) ([]*Blog, error) {
-	obj := m.NewBlog()
-	obj.IsPublished = val
-
-	key_of_index, err := db.KeyOfIndexByObject(obj, "IsPublished")
+	strs, err := redisIndexGet(m.NewBlog(), "IsPublished", val)
 	if err != nil {
 		return nil, err
 	}
+	objs := []*Blog{}
+	for _, str := range strs {
+		var id int32
+		if err := redisStringScan(str, &id); err != nil {
+			return nil, err
+		}
 
-	ids, err := redisSMEMBERIds(key_of_index)
-	if err != nil {
-		return nil, err
+		obj, err := m.GetBlogById(id)
+		if err != nil {
+			return nil, err
+		}
+
+		objs = append(objs, obj)
 	}
-	return m.GetBlogsByIds(ids)
+	return objs, nil
 }
 
 func (m *_BlogMgr) GetBlogsByCreate(val time.Time) ([]*Blog, error) {
-	obj := m.NewBlog()
-	obj.Create = val
-
-	key_of_index, err := db.KeyOfIndexByObject(obj, "Create")
+	strs, err := redisIndexGet(m.NewBlog(), "Create", val)
 	if err != nil {
 		return nil, err
 	}
+	objs := []*Blog{}
+	for _, str := range strs {
+		var id int32
+		if err := redisStringScan(str, &id); err != nil {
+			return nil, err
+		}
 
-	ids, err := redisSMEMBERIds(key_of_index)
-	if err != nil {
-		return nil, err
+		obj, err := m.GetBlogById(id)
+		if err != nil {
+			return nil, err
+		}
+
+		objs = append(objs, obj)
 	}
-	return m.GetBlogsByIds(ids)
+	return objs, nil
 }
 
 func (m *_BlogMgr) GetBlogsByUpdate(val time.Time) ([]*Blog, error) {
-	obj := m.NewBlog()
-	obj.Update = val
-
-	key_of_index, err := db.KeyOfIndexByObject(obj, "Update")
+	strs, err := redisIndexGet(m.NewBlog(), "Update", val)
 	if err != nil {
 		return nil, err
 	}
+	objs := []*Blog{}
+	for _, str := range strs {
+		var id int32
+		if err := redisStringScan(str, &id); err != nil {
+			return nil, err
+		}
 
-	ids, err := redisSMEMBERIds(key_of_index)
-	if err != nil {
-		return nil, err
+		obj, err := m.GetBlogById(id)
+		if err != nil {
+			return nil, err
+		}
+
+		objs = append(objs, obj)
 	}
-	return m.GetBlogsByIds(ids)
+	return objs, nil
 }
 
 func (m *_BlogMgr) GetBlogsByIndexes(indexes map[string]interface{}) ([]*Blog, error) {
-	obj := m.NewBlog()
-
 	index_keys := []string{}
-	for k, v := range indexes {
-		if idx, err := db.KeyOfIndexByClass(obj.GetClassName(), k, v); err == nil {
-			index_keys = append(index_keys, idx)
-		}
+	if val, ok := indexes["Slug"]; ok {
+		index_keys = append(index_keys, fmt.Sprintf("Slug:%v", val))
+	}
+	if val, ok := indexes["User"]; ok {
+		index_keys = append(index_keys, fmt.Sprintf("User:%v", val))
+	}
+	if val, ok := indexes["IsPublished"]; ok {
+		index_keys = append(index_keys, fmt.Sprintf("IsPublished:%v", val))
+	}
+	if val, ok := indexes["Create"]; ok {
+		transformed_Create_field := db.TimeFormat(val.(time.Time))
+		index_keys = append(index_keys, fmt.Sprintf("Create:%v", transformed_Create_field))
+	}
+	if val, ok := indexes["Update"]; ok {
+		transformed_Update_field := db.TimeToLocalTime(val.(time.Time))
+		index_keys = append(index_keys, fmt.Sprintf("Update:%v", transformed_Update_field))
 	}
 
-	ids, err := redisSINTERIds(index_keys...)
+	strs, err := redisMultiIndexesGet(m.NewBlog(), index_keys...)
 	if err != nil {
 		return nil, err
 	}
-	return m.GetBlogsByIds(ids)
+
+	objs := []*Blog{}
+	for _, str := range strs {
+		var id int32
+		if err := redisStringScan(str, &id); err != nil {
+			return nil, err
+		}
+
+		obj, err := m.GetBlogById(id)
+		if err != nil {
+			return nil, err
+		}
+
+		objs = append(objs, obj)
+	}
+	return objs, nil
 }

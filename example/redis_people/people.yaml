@@ -40,28 +40,23 @@ User:
   dbname: test
   storetype: hash
 
-UserBlogs:
+UserBlog:
   db: redis
-  fields:
-    - UserId: int32
-      flags: [noinc, primary]
-    - BlogId: int32
   storetype: set
+  valuetype: int32
 
-SortUserBlogs:
+SortUserBlog:
   db: redis
-  fields:
-    - UserId: int32
-      flags: [noinc, primary]
-    - Score: float64
-    - BlogId: int32
   storetype: zset
+  valuetype: int32
 
 UserLocation:
   db: redis
-  fields:
-    - RegionId: int32
-      flags: [noinc, primary]
-    - Longitude: float64
-    - Latitude: float64
   storetype: geo
+  valuetype: int32
+
+UserId:
+  db: redis
+  storetype: list
+  valuetype: int32
+

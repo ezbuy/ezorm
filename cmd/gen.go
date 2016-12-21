@@ -79,8 +79,6 @@ var genCmd = &cobra.Command{
 				executeTpl(fileAbsPath, t, obj)
 			}
 		}
-		goimports := exec.Command("goimports", "-w", output)
-		goimports.Run()
 
 		oscmd := exec.Command("gofmt", "-w", output)
 		oscmd.Run()

@@ -392,6 +392,7 @@ func DbToGoType(colType string) string {
 		typeStr = "bool"
 	case "image":
 		typeStr = "[]byte"
+
 	}
 	return typeStr
 }

@@ -1,8 +1,7 @@
 {{define "redis_config"}}package {{.GoPackage}}
 import (
-	"errors"
-
 	"github.com/ezbuy/ezorm/db"
+	redis "gopkg.in/redis.v5"
 )
 
 var (
@@ -24,28 +23,137 @@ func RedisSetUp(cf *RedisConfig) {
 	_store = store
 }
 
-func redisSetObject(obj db.Object) error {
-	return _store.SetObject(obj)
+func redisStringScan(str string, val interface{}) error {
+	return _store.StringScan(str, val)
 }
 
-func redisGetObject(obj db.Object) error {
-	return _store.GetObject(obj)
+func redisDel(obj db.Object) error {
+	return _store.Del(obj)
+}
+//! json
+func redisJsonSet(obj db.Object) error {
+	return _store.JsonSet(obj)
+}
+func redisJsonGet(obj db.Object) error {
+	return _store.JsonGet(obj)
+}
+//! field
+func redisFieldSet(obj db.Object, field string, value interface{}) error {
+	return _store.FieldSet(obj, field, value)
 }
 
-func redisGetObjectById(obj db.Object, id string) error {
-	return _store.GetObjectById(obj, id)
+func redisFieldGet(obj db.Object, field string, value interface{}) error {
+	return _store.FieldGet(obj, field, value)
+}
+//! index set
+func redisIndexSet(obj db.Object, indexName string, indexValue interface{}, value interface{}) error {
+	return _store.IndexAdd(obj, indexName, indexValue, value)
 }
 
-func redisDelObject(obj db.Object) error {
-	return _store.DelObject(obj)
+func redisIndexGet(obj db.Object, indexName string, indexValue interface{}) ([]string, error) {
+	return _store.IndexGet(obj, indexName, indexValue)
 }
 
-func redisSMEMBERIds(key string) ([]string, error) {
-	return _store.SMembersIds(key)
+func redisIndexDel(obj db.Object, indexName string, indexValue interface{}) error {
+	return _store.IndexDel(obj, indexName, indexValue)
 }
 
-func redisSINTERIds(keys ...string) ([]string, error) {
-	return _store.SInterIds(keys...)
+func redisIndexRemove(obj db.Object, indexName string, indexValue interface{}, value interface{}) error {
+	return _store.IndexRem(obj, indexName, indexValue, value)
 }
+
+func redisMultiIndexesGet(obj db.Object, indexes ...string) ([]string, error) {
+	return _store.MultiIndexesGet(obj, indexes...)
+}
+//! set
+func redisSetAdd(obj db.Object, key string, value interface{}) error {
+	return _store.SetAdd(obj, key, value)
+}
+
+func redisSetGet(obj db.Object, key string) ([]string, error) {
+	return _store.SetGet(obj, key)
+}
+
+func redisSetDel(obj db.Object, key string) error {
+	return _store.SetDel(obj, key)
+}
+
+func redisSetRem(obj db.Object, key string, value interface{}) error {
+	return _store.SetRem(obj,key, value)
+}
+//! zset
+func redisZSetAdd(obj db.Object, key string, score float64, value interface{}) error {
+	return _store.ZSetAdd(obj, key, score, value)
+}
+
+func redisZSetRangeByScore(obj db.Object, key string, min, max int64) ([]string, error) {
+	return _store.ZSetRangeByScore(obj, key, min, max)
+}
+
+func redisZSetDel(obj db.Object, key string) error {
+	return _store.ZSetDel(obj, key)
+}
+
+func redisZSetRem(obj db.Object, key string, value interface{}) error {
+	return _store.ZSetRem(obj, key, value)
+}
+//! list
+func redisListLPush(obj db.Object, listName string, value interface{}) (int64, error) {
+	return _store.ListLPush(obj, listName, value)
+}
+
+func redisListRPush(obj db.Object, listName string, value interface{}) (int64, error) {
+	return _store.ListRPush(obj, listName, value)
+}
+
+func redisListLPop(obj db.Object, listName string, value interface{}) error {
+	return _store.ListLPop(obj, listName, value)
+}
+
+func redisListRPop(obj db.Object, listName string, value interface{}) error {
+	return _store.ListRPop(obj, listName, value)
+}
+
+func redisListInsertBefore(obj db.Object, listName string, pivot, value interface{}) (int64, error) {
+	return _store.ListInsertBefore(obj, listName, pivot, value)
+}
+
+func redisListInsertAfter(obj db.Object, listName string, pivot, value interface{}) (int64, error) {
+	return _store.ListInsertAfter(obj, listName, pivot, value)
+}
+
+func redisListLength(obj db.Object, listName string) (int64, error) {
+	return _store.ListLength(obj, listName)
+}
+
+func redisListRange(obj db.Object, listName string, start, stop int64) ([]string, error) {
+	return _store.ListRange(obj, listName, start, stop)
+}
+
+func redisListRemove(obj db.Object, listName string, value interface{}) error {
+	return _store.ListRem(obj, listName, value)
+}
+
+func redisListCount(obj db.Object, listName string) (int64, error) {
+	return _store.ListCount(obj, listName)
+}
+
+func redisListDel(obj db.Object, listName string) error {
+	return _store.ListDel(obj, listName)
+}
+
+func redisGeoAdd(obj db.Object, key string, longitude float64, latitude float64, value interface{}) error {
+	return _store.GeoAdd(obj, key, longitude, latitude, value)
+}
+
+func redisGeoRadius(obj db.Object, key string, longitude float64, latitude float64, query *redis.GeoRadiusQuery) ([]string, error) {
+	return _store.GeoRadius(obj, key, longitude, latitude, query)
+}
+
+func redisGeoDel(obj db.Object, key string) error {
+	return _store.GeoDel(obj, key)
+}
+
+
 
 {{end}}

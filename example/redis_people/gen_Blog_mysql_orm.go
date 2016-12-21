@@ -4,10 +4,9 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
+	"github.com/ezbuy/ezorm/db"
 	"strings"
 	"time"
-
-	"github.com/ezbuy/ezorm/db"
 )
 
 var (

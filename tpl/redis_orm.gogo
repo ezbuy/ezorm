@@ -5,89 +5,528 @@
 {{$idFieldName := $obj.GetPrimaryKeyName}}
 {{$idField := $obj.GetPrimaryKey}}
 
+{{if or (eq $obj.StoreType "set")}}
 import (
+	{{- if $obj.ValueField.IsNeedTransform}}
 	"github.com/ezbuy/ezorm/db"
+	{{- end}}
 	"time"
 )
-
-
-func (m *_{{$obj.Name}}Mgr) Set{{$obj.Name}}(obj *{{$obj.Name}}) error {
-	return redisSetObject(obj)	
-}
-
-func (m *_{{$obj.Name}}Mgr) Del{{$obj.Name}}(obj *{{$obj.Name}}) error {
-	return redisDelObject(obj)
-}
-{{if or (eq $obj.StoreType "set")}}
+var (
+	_ time.Time
+)
 ///////////// SET /////////////////////////////////////////////////////
+func (m *_{{$obj.Name}}Mgr) RelationSet(key string, obj *{{$obj.Name}}) error {
+	{{- if $obj.ValueField.IsNeedTransform}}
+		transformed_{{$obj.ValueField.Name}} := {{- printf $obj.ValueField.GetTransformType.ConvertBack (printf "obj.%s" $obj.ValueField.Name)}}
+		return redisSetAdd(obj, key, transformed_{{$obj.ValueField.Name}})
+	{{- else}}
+		return redisSetAdd(obj, key, obj.Value)
+	{{- end}}
+}
+
+func (m *_{{$obj.Name}}Mgr) RelationGet(key string) ([]*{{$obj.Name}}, error) {
+	strs, err := redisSetGet(m.New{{$obj.Name}}(), key)
+	if err != nil {
+		return nil, err
+	}
+
+	objs := []*{{$obj.Name}}{}
+	for _, str := range strs {
+		obj := m.New{{$obj.Name}}()
+		{{- if $obj.ValueField.IsNeedTransform}}
+			var val {{$obj.ValueField.GetTransformType.TypeOrigin}}
+			if err := redisStringScan(str, &val); err != nil {
+				return nil, err
+			}
+			obj.{{$obj.ValueField.Name}} = {{- printf $obj.ValueField.GetTransformType.ConvertTo "val"}}
+		{{- else}}
+		if err := redisStringScan(str, &obj.Value); err != nil {
+			return nil, err
+		}
+		{{- end}}
+		objs = append(objs, obj)
+	}
+	return objs, nil
+}
+
+func (m *_{{$obj.Name}}Mgr) RelationRem(key string, obj *{{$obj.Name}}) error {
+	{{- if $obj.ValueField.IsNeedTransform}}
+		transformed_{{$obj.ValueField.Name}} := {{- printf $obj.ValueField.GetTransformType.ConvertBack (printf "obj.%s" $obj.ValueField.Name)}}
+		return redisSetRem(obj, key, transformed_{{$obj.ValueField.Name}})
+	{{- else}}
+		return redisSetRem(obj, key, obj.Value)
+	{{- end}}
+}
+
+func (m *_{{$obj.Name}}Mgr) RelationDel(key string) error {
+	return redisSetDel(m.New{{$obj.Name}}(), key)
+}
 {{end}}
 
 {{if or (eq $obj.StoreType "zset")}}
+import (
+	{{- if $obj.ValueField.IsNeedTransform}}
+	"github.com/ezbuy/ezorm/db"
+	{{- end}}
+	"time"
+)
+var (
+	_ time.Time
+)
 ///////////// ZSET /////////////////////////////////////////////////////
+func (m *_{{$obj.Name}}Mgr) ZRelationSet(key string, score float64, obj *{{$obj.Name}}) error {
+	{{- if $obj.ValueField.IsNeedTransform}}
+		transformed_{{$obj.ValueField.Name}} := {{- printf $obj.ValueField.GetTransformType.ConvertBack (printf "obj.%s" $obj.ValueField.Name)}}
+		return redisZSetAdd(obj, key, score, transformed_{{$obj.ValueField.Name}})
+	{{- else}}
+		return redisZSetAdd(obj, key, score, obj.Value)
+	{{- end}}
+}
+
+func (m *_{{$obj.Name}}Mgr) ZRelationRangeByScore(key string, min, max int64) ([]*{{$obj.Name}}, error) {
+	strs, err := redisZSetRangeByScore(m.New{{$obj.Name}}(), key, min, max)
+	if err != nil {
+		return nil, err
+	}
+
+	objs := []*{{$obj.Name}}{}
+	for _, str := range strs {
+		obj := m.New{{$obj.Name}}()
+		{{- if $obj.ValueField.IsNeedTransform}}
+			var val {{$obj.ValueField.GetTransformType.TypeOrigin}}
+			if err := redisStringScan(str, &val); err != nil {
+				return nil, err
+			}
+			obj.{{$obj.ValueField.Name}} = {{- printf $obj.ValueField.GetTransformType.ConvertTo "val"}}
+		{{- else}}
+		if err := redisStringScan(str, &obj.Value); err != nil {
+			return nil, err
+		}
+		{{- end}}
+		objs = append(objs, obj)
+	}
+	return objs, nil
+}
+
+func (m *_{{$obj.Name}}Mgr) ZRelationRem(key string, obj *{{$obj.Name}}) error {
+	{{- if $obj.ValueField.IsNeedTransform}}
+		transformed_{{$obj.ValueField.Name}} := {{- printf $obj.ValueField.GetTransformType.ConvertBack (printf "obj.%s" $obj.ValueField.Name)}}
+		return redisZSetRem(obj, key, transformed_{{$obj.ValueField.Name}})
+	{{- else}}
+		return redisZSetRem(obj, key, obj.Value)
+	{{- end}}
+}
+
+func (m *_{{$obj.Name}}Mgr) ZRelationDel(key string) error {
+	return redisZSetDel(m.New{{$obj.Name}}(), key)
+}
 {{end}}
 
 {{if or (eq $obj.StoreType "geo")}}
+import (
+	{{- if $obj.ValueField.IsNeedTransform}}
+	"github.com/ezbuy/ezorm/db"
+	{{- end}}
+	"time"
+	redis "gopkg.in/redis.v5"
+)
+var (
+	_ time.Time
+)
 ///////////// GEO /////////////////////////////////////////////////////
+func (m *_{{$obj.Name}}Mgr) GeoAdd(key string, longitude float64, latitude float64, obj *{{$obj.Name}}) error {
+	{{- if $obj.ValueField.IsNeedTransform}}
+		transformed_{{$obj.ValueField.Name}} := {{- printf $obj.ValueField.GetTransformType.ConvertBack (printf "obj.%s" $obj.ValueField.Name)}}
+		return redisGeoAdd(obj, key, longitude, latitude, transformed_{{$obj.ValueField.Name}})
+	{{- else}}
+		return redisGeoAdd(obj, key, longitude, latitude, obj.Value)
+	{{- end}}
+}
+
+func (m *_{{$obj.Name}}Mgr) GeoRadius(key string, longitude float64, latitude float64, query *redis.GeoRadiusQuery) ([]*{{$obj.Name}}, error) {
+	strs, err := redisGeoRadius(m.New{{$obj.Name}}(), key, longitude, latitude, query)
+	if err != nil {
+		return nil, err
+	}
+
+	objs := []*{{$obj.Name}}{}
+	for _, str := range strs {
+		obj := m.New{{$obj.Name}}()
+		{{- if $obj.ValueField.IsNeedTransform}}
+			var val {{$obj.ValueField.GetTransformType.TypeOrigin}}
+			if err := redisStringScan(str, &val); err != nil {
+				return nil, err
+			}
+			obj.{{$obj.ValueField.Name}} = {{- printf $obj.ValueField.GetTransformType.ConvertTo "val"}}
+		{{- else}}
+		if err := redisStringScan(str, &obj.Value); err != nil {
+			return nil, err
+		}
+		{{- end}}
+		objs = append(objs, obj)
+	}
+	return objs, nil
+}
+
+func (m *_{{$obj.Name}}Mgr) GeoDel(key string) error {
+	return redisGeoDel(m.New{{$obj.Name}}(), key)
+}
+{{end}}
+
+{{if or (eq $obj.StoreType "list")}}
+import (
+	{{- if $obj.ValueField.IsNeedTransform}}
+	"github.com/ezbuy/ezorm/db"
+	{{- end}}
+	"time"
+)
+var (
+	_ time.Time
+)
+///////////// LIST /////////////////////////////////////////////////////
+func (m *_{{$obj.Name}}Mgr) ListLPush(key string, obj *{{$obj.Name}}) (int64, error) {
+	{{- if $obj.ValueField.IsNeedTransform}}
+		transformed_{{$obj.ValueField.Name}} := {{- printf $obj.ValueField.GetTransformType.ConvertBack (printf "obj.%s" $obj.ValueField.Name)}}
+		return redisListLPush(obj, key, transformed_{{$obj.ValueField.Name}})
+	{{- else}}
+		return redisListLPush(obj, key, obj.Value)
+	{{- end}}
+}
+
+func (m *_{{$obj.Name}}Mgr) ListRPush(key string, obj *{{$obj.Name}}) (int64, error) {
+	{{- if $obj.ValueField.IsNeedTransform}}
+		transformed_{{$obj.ValueField.Name}} := {{- printf $obj.ValueField.GetTransformType.ConvertBack (printf "obj.%s" $obj.ValueField.Name)}}
+		return redisListRPush(obj, key, transformed_{{$obj.ValueField.Name}})
+	{{- else}}
+		return redisListRPush(obj, key, obj.Value)
+	{{- end}}
+}
+
+func (m *_{{$obj.Name}}Mgr) ListLPop(key string, obj *{{$obj.Name}}) (error) {
+	{{- if $obj.ValueField.IsNeedTransform}}
+		var val {{$obj.ValueField.GetTransformType.TypeOrigin}}
+		if err := redisListLPop(obj, key, &val); err != nil {
+			return err
+		}
+		obj.{{$obj.ValueField.Name}} = {{- printf $obj.ValueField.GetTransformType.ConvertTo "val"}}
+		return nil
+	{{- else}}
+		return redisListLPop(obj, key, &obj.{{$obj.ValueField.Name}})
+	{{- end}}
+}
+
+func (m *_{{$obj.Name}}Mgr) ListRPop(key string, obj *{{$obj.Name}}) (error) {
+	{{- if $obj.ValueField.IsNeedTransform}}
+		var val {{$obj.ValueField.GetTransformType.TypeOrigin}}
+		if err := redisListRPop(obj, key, &val); err != nil {
+			return err
+		}
+		obj.{{$obj.ValueField.Name}} = {{- printf $obj.ValueField.GetTransformType.ConvertTo "val"}}
+		return nil
+	{{- else}}
+		return redisListRPop(obj, key, &obj.{{$obj.ValueField.Name}})
+	{{- end}}
+}
+
+func (m *_{{$obj.Name}}Mgr) ListInsertBefore(key string, pivot, obj *{{$obj.Name}}) (int64, error) {
+	{{- if $obj.ValueField.IsNeedTransform}}
+		transformed_{{$obj.ValueField.Name}}_pivot := {{- printf $obj.ValueField.GetTransformType.ConvertBack (printf "pivot.%s" $obj.ValueField.Name)}}
+		transformed_{{$obj.ValueField.Name}}_obj := {{- printf $obj.ValueField.GetTransformType.ConvertBack (printf "obj.%s" $obj.ValueField.Name)}}
+		return redisListInsertBefore(obj, key, transformed_{{$obj.ValueField.Name}}_pivot, transformed_{{$obj.ValueField.Name}}_obj)
+	{{- else}}
+		return redisListInsertBefore(obj, key, pivot.{{$obj.ValueField.Name}}, obj.{{$obj.ValueField.Name}})
+	{{- end}}
+}
+
+func (m *_{{$obj.Name}}Mgr) ListInsertAfter(key string, pivot, obj *{{$obj.Name}}) (int64, error) {
+	{{- if $obj.ValueField.IsNeedTransform}}
+		transformed_{{$obj.ValueField.Name}}_pivot := {{- printf $obj.ValueField.GetTransformType.ConvertBack (printf "pivot.%s" $obj.ValueField.Name)}}
+		transformed_{{$obj.ValueField.Name}}_obj := {{- printf $obj.ValueField.GetTransformType.ConvertBack (printf "obj.%s" $obj.ValueField.Name)}}
+		return redisListInsertAfter(obj, key, transformed_{{$obj.ValueField.Name}}_pivot, transformed_{{$obj.ValueField.Name}}_obj)
+	{{- else}}
+		return redisListInsertAfter(obj, key, pivot.{{$obj.ValueField.Name}}, obj.{{$obj.ValueField.Name}})
+	{{- end}}
+}
+
+func (m *_{{$obj.Name}}Mgr) ListRange(key string, start, stop int64) ([]*{{$obj.Name}}, error) {
+	strs, err := redisListRange(m.New{{$obj.Name}}(), key, start, stop)
+	if err != nil {
+		return nil, err
+	}
+
+	objs := []*{{$obj.Name}}{}
+	for _, str := range strs {
+		obj := m.New{{$obj.Name}}()
+		{{- if $obj.ValueField.IsNeedTransform}}
+			var val {{$obj.ValueField.GetTransformType.TypeOrigin}}
+			if err := redisStringScan(str, &val); err != nil {
+				return nil, err
+			}
+			obj.{{$obj.ValueField.Name}} = {{- printf $obj.ValueField.GetTransformType.ConvertTo "val"}}
+		{{- else}}
+		if err := redisStringScan(str, &obj.Value); err != nil {
+			return nil, err
+		}
+		{{- end}}
+		objs = append(objs, obj)
+	}
+	return objs, nil	
+}
+
+func (m *_{{$obj.Name}}Mgr) ListCount(key string) (int64, error) {
+	return redisListCount(m.New{{$obj.Name}}(), key)
+}
+
+func (m *_{{$obj.Name}}Mgr) ListDel(key string) error {
+	return redisListDel(m.New{{$obj.Name}}(), key)
+}
 {{end}}
 
 {{if or (eq $obj.StoreType "json") (eq $obj.StoreType "hash")}}
 ///////////// JSON & HASH /////////////////////////////////////////////////////
+import (
+	"github.com/ezbuy/ezorm/db"
+	"time"
+	"fmt"
+)
+var (
+	_ time.Time
+)
+
+
+func (m *_{{$obj.Name}}Mgr) Set{{$obj.Name}}(obj *{{$obj.Name}}) error {
+	{{- if eq $obj.StoreType "json"}}
+	if err := redisJsonSet(obj); err != nil {
+	 	return err
+	}
+	//! object index set
+		{{- range $index, $field := $obj.Fields}}
+		{{- if $field.HasIndex}}
+		{{- if $idField.IsNeedTransform}}
+			transformed_{{$idFieldName.Name}}_primary := {{- printf $idField.GetTransformType.ConvertBack (printf "obj.%s" $idField.Name)}}
+			if err := redisIndexSet(obj, "{{$field.Name}}", transformed_{{$idFieldName.Name}}_primary); err != nil {
+				return err
+			}
+		{{else}}
+			if err := redisIndexSet(obj, "{{$field.Name}}", obj.{{$field.Name}}, obj.{{$idFieldName}}); err != nil {
+				return err
+			}
+		{{- end}}
+		{{- end}}
+		{{- end}}
+	//! object primary key set
+		{{- if $idField.IsNeedTransform}}
+			transformed_{{$idFieldName.Name}}_primary := {{- printf $idField.GetTransformType.ConvertBack (printf "obj.%s" $idField.Name)}}
+			_, err := redisListRPush(obj, "{{$idFieldName}}", transformed_{{$idFieldName.Name}}_primary)
+			return err
+		{{else}}
+			_, err := redisListRPush(obj, "{{$idFieldName}}", obj.{{$idFieldName}})
+			return err
+		{{- end}}
+	{{- else if eq $obj.StoreType "hash"}}
+	//! object field set
+		{{- range $index, $field := $obj.Fields}}
+		{{- if $field.IsNeedTransform}}
+			transformed_{{$field.Name}}_field := {{- printf $field.GetTransformType.ConvertBack (printf "obj.%s" $field.Name)}}
+			if err := redisFieldSet(obj, "{{$field.Name}}", transformed_{{$field.Name}}_field); err != nil {
+				return err
+			}
+		{{- else}}
+			if err := redisFieldSet(obj, "{{$field.Name}}", obj.{{$field.Name}}); err != nil {
+				return err
+			}
+		{{- end}}
+		{{- end}}
+	//! object index set
+		{{- range $index, $field := $obj.Fields}}
+		{{- if $field.HasIndex}}
+
+		{{- if $idField.IsNeedTransform}}
+			transformed_{{$idFieldName.Name}}_primary := {{- printf $idField.GetTransformType.ConvertBack (printf "obj.%s" $idField.Name)}}
+			if err := redisIndexSet(obj, "{{$field.Name}}", obj.{{$field.Name}}, transformed_{{$idFieldName.Name}}_primary); err != nil {
+				return err
+			}
+		{{else}}
+			if err := redisIndexSet(obj, "{{$field.Name}}", obj.{{$field.Name}}, obj.{{$idFieldName}}); err != nil {
+				return err
+			}
+		{{- end}}
+
+		{{- end}}
+		{{- end}}
+	//! object primary key set
+		{{- if $idField.IsNeedTransform}}
+			transformed_{{$idFieldName.Name}}_primary := {{- printf $idField.GetTransformType.ConvertBack (printf "obj.%s" $idField.Name)}}
+			_, err := redisListRPush(obj, "{{$idFieldName}}", transformed_{{$idFieldName.Name}}_primary)
+			return err
+		{{else}}
+			_, err := redisListRPush(obj, "{{$idFieldName}}", obj.{{$idFieldName}})
+			return err
+		{{- end}}	
+	{{- else if eq $obj.StoreType "set"}}	
+		if err := redisCheck(obj); err != nil {
+			return err
+		}
+		return nil
+	{{- else if eq $obj.StoreType "zset"}}	
+		if err := redisCheck(obj); err != nil {
+			return err
+		}
+		return nil
+	{{- else if eq $obj.StoreType "list"}}
+		if err := redisCheck(obj); err != nil {
+			return err
+		}
+		return nil
+	{{- else if eq $obj.StoreType "geo"}}
+		if err := redisCheck(obj); err != nil {
+			return err
+		}
+		return nil
+	{{- else}}
+	return errors.New("unsupport object store type")	
+	{{- end}}
+}
+
+func (m *_{{$obj.Name}}Mgr) Del{{$obj.Name}}(obj *{{$obj.Name}}) error {
+	{{- if or (eq $obj.StoreType "json") (eq $obj.StoreType "hash")}}
+		if err := redisDel(obj); err != nil {
+			return err
+		}
+		{{- range $index, $field := $obj.Fields}}
+			{{- if $field.HasIndex}}
+			if err := redisIndexRemove(obj, "{{$field.Name}}", obj.{{$field.Name}}, obj.{{$idField.Name}}); err != nil {
+				return err
+			}
+			{{- end}}
+		{{- end}}
+		return redisListRemove(obj, "{{$idFieldName}}", obj.{{$idField.Name}})
+	{{- else if eq $obj.StoreType "set"}}
+		return nil
+	{{- else if eq $obj.StoreType "zset"}}
+		return nil
+	{{- else if eq $obj.StoreType "geo"}}
+		return nil	
+	{{- else if eq $obj.StoreType "list"}}
+		return nil
+	{{- else}}
+		return errors.New("unsupport object store type")	
+	{{- end}}
+}
+
 func (m *_{{$obj.Name}}Mgr) Get{{$obj.Name}}(obj *{{$obj.Name}}) error {
-	return redisGetObject(obj)
+	{{- if eq $obj.StoreType "json"}}
+	return redisJsonGet(obj)
+	{{- else}}
+	//! object field get
+		{{- range $index, $field := $obj.Fields}}
+		{{- if $field.IsNeedTransform}}
+			var {{$field.Name}} {{$field.GetTransformType.TypeOrigin}}
+			if err := redisFieldGet(obj, "{{$field.Name}}", &{{$field.Name}}); err != nil {
+				return err
+			}
+			obj.{{$field.Name}} = {{- printf $field.GetTransformType.ConvertTo $field.Name}}
+		{{- else}}
+			if err := redisFieldGet(obj, "{{$field.Name}}", &obj.{{$field.Name}}); err != nil {
+				return err
+			}
+		{{- end}}
+		{{- end}}
+		return nil
+	{{- end}}
 }
 
-func (m *_{{$obj.Name}}Mgr) Get{{$obj.Name}}ById(obj *{{$obj.Name}}, id string) error {
-	return redisGetObjectById(obj, id)
+func (m *_{{$obj.Name}}Mgr) Get{{$obj.Name}}ById(id {{$idField.Type}}) (*{{$obj.Name}}, error) {
+	obj := m.New{{$obj.Name}}()
+	obj.{{$idFieldName}} = id
+	if err := m.Get{{$obj.Name}}(obj); err != nil {
+		return nil, err
+	}
+	return obj, nil
 }
 
-func (m *_{{$obj.Name}}Mgr) Get{{$obj.Name}}sByIds(ids []string) ([]*{{$obj.Name}}, error) {
+func (m *_{{$obj.Name}}Mgr) Get{{$obj.Name}}sByIds(ids []{{$idField.Type}}) ([]*{{$obj.Name}}, error) {
 	objs := []*{{$obj.Name}}{}
 	for _, id := range ids {
-		obj := m.New{{$obj.Name}}()
-		if err := redisGetObjectById(obj, id); err != nil {
+		obj, err := m.Get{{$obj.Name}}ById(id)
+		if err != nil {
 			return objs, err
 		}
 		objs = append(objs, obj)
 	} 
 	return objs, nil
 }
+
+
 {{- range $field := .Fields}} 
 {{- if $field.HasIndex}}
 
 func (m *_{{$obj.Name}}Mgr) Get{{$obj.Name}}sBy{{$field.Name}}(val {{$field.GetGoType}}) ([]*{{$obj.Name}}, error) {
-	obj := m.New{{$obj.Name}}()
-	obj.{{$field.Name}} = val
-
-	key_of_index, err := db.KeyOfIndexByObject(obj, "{{$field.Name}}")
+	strs, err := redisIndexGet(m.New{{$obj.Name}}(), "{{$field.Name}}", val)
 	if err != nil {
 		return nil, err
 	}
+	objs := []*{{$obj.Name}}{}
+	for _, str := range strs {
+		var id {{$idField.Type}}
+		if err := redisStringScan(str, &id); err != nil {
+			return nil, err
+		}
 
-	ids, err := redisSMEMBERIds(key_of_index)
-	if err != nil {
-		return nil, err
+		obj, err := m.Get{{$obj.Name}}ById(id)
+		if err != nil {
+			return nil, err
+		}
+
+		objs = append(objs, obj)
 	}
-	return m.Get{{$obj.Name}}sByIds(ids)
+	return objs, nil
 }
 {{- end}}
 {{- end}}
 
+
+
 {{if gt (len $obj.Indexes) 0}}
 func (m *_{{$obj.Name}}Mgr) Get{{$obj.Name}}sByIndexes(indexes map[string]interface{}) ([]*{{$obj.Name}}, error) {
-	obj := m.New{{$obj.Name}}()
-
 	index_keys := []string{}
-	for k,v := range indexes {
-		if idx, err := db.KeyOfIndexByClass(obj.GetClassName(), k, v); err == nil {
-			index_keys = append(index_keys, idx)
-		}
-	}
+	{{- range $index, $field := $obj.Fields}}
+	{{- if $field.HasIndex}}	
+		{{- if $field.IsNeedTransform}}
+			if val, ok := indexes["{{$field.Name}}"]; ok {
+				transformed_{{$field.Name}}_field := {{- printf $field.GetTransformType.ConvertBack (printf "val.(%s)" $field.GetTransformType.TypeTarget)}}
+				index_keys = append(index_keys, fmt.Sprintf("{{$field.Name}}:%v", transformed_{{$field.Name}}_field))
+			}
+		{{- else}}
+			if val, ok := indexes["{{$field.Name}}"]; ok {
+				index_keys = append(index_keys, fmt.Sprintf("{{$field.Name}}:%v", val))
+			}
+		{{- end}}
+	{{- end}}
+	{{- end}}
 
-	ids, err := redisSINTERIds(index_keys...)
+	
+	strs, err :=  redisMultiIndexesGet(m.New{{$obj.Name}}(), index_keys...)
 	if err != nil {
 		return nil, err
 	}
-	return m.Get{{$obj.Name}}sByIds(ids)	
+
+	objs := []*{{$obj.Name}}{}
+	for _, str := range strs {
+		var id {{$idField.Type}}
+		if err := redisStringScan(str, &id); err != nil {
+			return nil, err
+		}
+
+		obj, err := m.Get{{$obj.Name}}ById(id)
+		if err != nil {
+			return nil, err
+		}
+
+		objs = append(objs, obj)
+	}
+	return objs, nil
 } 
 {{end}}
 

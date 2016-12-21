@@ -51,6 +51,7 @@ func init() {
 		}
 		_, err = Tpl.Parse(string(data))
 		if err != nil {
+			fmt.Println(fname)
 			panic(err)
 		}
 	}
@@ -93,6 +94,8 @@ type Obj struct {
 	TplWriter    io.Writer
 	DbName       string
 	StoreType    string
+	ValueType    string
+	ValueField   *Field
 }
 
 func (o *Obj) init() {
@@ -433,6 +436,17 @@ func (o *Obj) Read(data map[string]interface{}) error {
 			o.DbName = val.(string)
 		case "storetype":
 			o.StoreType = val.(string)
+		case "valuetype":
+			o.ValueType = val.(string)
+			if o.ValueType != "" {
+				f := new(Field)
+				f.init()
+				f.Obj = o
+				f.Name = "Value"
+				f.Tag = "1"
+				f.Type = o.ValueType
+				o.ValueField = f
+			}
 		case "filterFields":
 			o.FilterFields = ToStringSlice(val.([]interface{}))
 		case "fields":
@@ -476,6 +490,13 @@ func (o *Obj) Read(data map[string]interface{}) error {
 
 	if o.DbContains("redis") && o.StoreType == "" {
 		return errors.New("please specify `storetype` to " + o.Name)
+	}
+
+	if (o.StoreType == "set" ||
+		o.StoreType == "zset" ||
+		o.StoreType == "geo" ||
+		o.StoreType == "list") && o.ValueField == nil {
+		return errors.New("please specify `valuetype` to " + o.Name)
 	}
 
 	o.setIndexes()

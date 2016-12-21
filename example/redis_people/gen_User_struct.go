@@ -10,7 +10,6 @@ type User struct {
 	Name       string    `json:"name"`
 	Create     time.Time `json:"create"`
 	Update     time.Time `json:"update"`
-	isNew      bool
 }
 
 func (p *User) GetNameSpace() string {
