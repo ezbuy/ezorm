@@ -96,6 +96,7 @@ type Obj struct {
 	StoreType    string
 	ValueType    string
 	ValueField   *Field
+	ModelType    string
 }
 
 func (o *Obj) init() {
@@ -248,7 +249,7 @@ func (o *Obj) GetGenTypes() []string {
 		}
 	}
 	result := []string{}
-	for k, _ := range gens {
+	for k := range gens {
 		result = append(result, k)
 	}
 	return result
@@ -447,6 +448,9 @@ func (o *Obj) Read(data map[string]interface{}) error {
 				f.Type = o.ValueType
 				o.ValueField = f
 			}
+		case "modeltype":
+			fmt.Println("modeltype!!")
+			o.ModelType = val.(string)
 		case "filterFields":
 			o.FilterFields = ToStringSlice(val.([]interface{}))
 		case "fields":
@@ -498,7 +502,7 @@ func (o *Obj) Read(data map[string]interface{}) error {
 		o.StoreType == "list") && o.ValueField == nil {
 		return errors.New("please specify `valuetype` to " + o.Name)
 	}
-
+	fmt.Println("ModelType =>", o.ModelType)
 	o.setIndexes()
 	return nil
 }

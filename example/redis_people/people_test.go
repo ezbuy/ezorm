@@ -135,24 +135,29 @@ func TestPeopleObject(t *testing.T) {
 	for i := 1; i < 5; i++ {
 		ub := UserBlogMgr.NewUserBlog()
 		ub.Value = int32(i)
-		err := UserBlogMgr.RelationSet(fmt.Sprint(1), ub)
+		err := UserBlogMgr.SetAdd(fmt.Sprint(1), ub)
 		assert.Equal(t, err, nil)
 	}
 
-	relations, err := UserBlogMgr.RelationGet(fmt.Sprint(1))
+	relations, err := UserBlogMgr.SetGet(fmt.Sprint(1))
 	assert.Equal(t, err, nil)
 	assert.Equal(t, len(relations), 4)
 
+	relatedblogs, err := UserBlogMgr.RelatedBlogs(fmt.Sprint(1))
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(relatedblogs), 4)
+	log.Println("relatedblogs =>", relatedblogs)
+
 	urm := UserBlogMgr.NewUserBlog()
 	urm.Value = int32(1)
-	assert.Equal(t, UserBlogMgr.RelationRem(fmt.Sprint(1), urm), nil)
+	assert.Equal(t, UserBlogMgr.SetRem(fmt.Sprint(1), urm), nil)
 
-	relations, err = UserBlogMgr.RelationGet(fmt.Sprint(1))
+	relations, err = UserBlogMgr.SetGet(fmt.Sprint(1))
 	assert.Equal(t, err, nil)
 	assert.Equal(t, len(relations), 3)
 
-	assert.Equal(t, UserBlogMgr.RelationDel(fmt.Sprint(1)), nil)
-	relations, err = UserBlogMgr.RelationGet(fmt.Sprint(1))
+	assert.Equal(t, UserBlogMgr.SetDel(fmt.Sprint(1)), nil)
+	relations, err = UserBlogMgr.SetGet(fmt.Sprint(1))
 	assert.Equal(t, err, nil)
 	assert.Equal(t, len(relations), 0)
 
@@ -162,21 +167,21 @@ func TestPeopleObject(t *testing.T) {
 		ub.Value = int32(i)
 		switch i {
 		case 1:
-			err := SortUserBlogMgr.ZRelationSet(fmt.Sprint(1), 0.1, ub)
+			err := SortUserBlogMgr.ZAdd(fmt.Sprint(1), 0.1, ub)
 			assert.Equal(t, err, nil)
 		case 2:
-			err := SortUserBlogMgr.ZRelationSet(fmt.Sprint(1), 1.1, ub)
+			err := SortUserBlogMgr.ZAdd(fmt.Sprint(1), 1.1, ub)
 			assert.Equal(t, err, nil)
 		case 3:
-			err := SortUserBlogMgr.ZRelationSet(fmt.Sprint(1), 2.1, ub)
+			err := SortUserBlogMgr.ZAdd(fmt.Sprint(1), 2.1, ub)
 			assert.Equal(t, err, nil)
 		case 4:
-			err := SortUserBlogMgr.ZRelationSet(fmt.Sprint(1), 3.1, ub)
+			err := SortUserBlogMgr.ZAdd(fmt.Sprint(1), 3.1, ub)
 			assert.Equal(t, err, nil)
 		}
 	}
 
-	zrelations, err := SortUserBlogMgr.ZRelationRangeByScore(fmt.Sprint(1), 2, 5)
+	zrelations, err := SortUserBlogMgr.ZRangeByScore(fmt.Sprint(1), 2, 5)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, len(zrelations), 2)
 

@@ -30,6 +30,24 @@ func (m *_UserLocationMgr) GeoRadius(key string, longitude float64, latitude flo
 	}
 	return objs, nil
 }
+func (m *_UserLocationMgr) GeoRadiusRelatedUsers(key string, longitude float64, latitude float64, query *redis.GeoRadiusQuery) ([]*User, error) {
+	strs, err := redisGeoRadius(m.NewUserLocation(), key, longitude, latitude, query)
+	if err != nil {
+		return nil, err
+	}
+
+	objs := []*User{}
+	for _, str := range strs {
+		var val int32
+		if err := redisStringScan(str, &val); err != nil {
+			return nil, err
+		}
+		if obj, err := UserMgr.GetUserById(val); err == nil {
+			objs = append(objs, obj)
+		}
+	}
+	return objs, nil
+}
 
 func (m *_UserLocationMgr) GeoDel(key string) error {
 	return redisGeoDel(m.NewUserLocation(), key)

@@ -9,11 +9,11 @@ var (
 )
 
 ///////////// ZSET /////////////////////////////////////////////////////
-func (m *_SortUserBlogMgr) ZRelationSet(key string, score float64, obj *SortUserBlog) error {
+func (m *_SortUserBlogMgr) ZAdd(key string, score float64, obj *SortUserBlog) error {
 	return redisZSetAdd(obj, key, score, obj.Value)
 }
 
-func (m *_SortUserBlogMgr) ZRelationRangeByScore(key string, min, max int64) ([]*SortUserBlog, error) {
+func (m *_SortUserBlogMgr) ZRangeByScore(key string, min, max int64) ([]*SortUserBlog, error) {
 	strs, err := redisZSetRangeByScore(m.NewSortUserBlog(), key, min, max)
 	if err != nil {
 		return nil, err
@@ -30,10 +30,28 @@ func (m *_SortUserBlogMgr) ZRelationRangeByScore(key string, min, max int64) ([]
 	return objs, nil
 }
 
-func (m *_SortUserBlogMgr) ZRelationRem(key string, obj *SortUserBlog) error {
+func (m *_SortUserBlogMgr) ZRem(key string, obj *SortUserBlog) error {
 	return redisZSetRem(obj, key, obj.Value)
 }
 
-func (m *_SortUserBlogMgr) ZRelationDel(key string) error {
+func (m *_SortUserBlogMgr) ZDel(key string) error {
 	return redisZSetDel(m.NewSortUserBlog(), key)
+}
+func (m *_SortUserBlogMgr) ZRangeRelatedBlog(key string, min, max int64) ([]*Blog, error) {
+	strs, err := redisZSetRangeByScore(m.NewSortUserBlog(), key, min, max)
+	if err != nil {
+		return nil, err
+	}
+
+	objs := []*Blog{}
+	for _, str := range strs {
+		var val int32
+		if err := redisStringScan(str, &val); err != nil {
+			return nil, err
+		}
+		if obj, err := BlogMgr.GetBlogById(val); err == nil {
+			objs = append(objs, obj)
+		}
+	}
+	return objs, nil
 }

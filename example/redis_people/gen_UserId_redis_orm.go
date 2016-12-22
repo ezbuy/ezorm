@@ -49,6 +49,24 @@ func (m *_UserIdMgr) ListRange(key string, start, stop int64) ([]*UserId, error)
 	}
 	return objs, nil
 }
+func (m *_UserIdMgr) ListRangeRelatedUsers(key string, start, stop int64) ([]*User, error) {
+	strs, err := redisListRange(m.NewUserId(), key, start, stop)
+	if err != nil {
+		return nil, err
+	}
+
+	objs := []*User{}
+	for _, str := range strs {
+		var val int32
+		if err := redisStringScan(str, &val); err != nil {
+			return nil, err
+		}
+		if obj, err := UserMgr.GetUserById(val); err == nil {
+			objs = append(objs, obj)
+		}
+	}
+	return objs, nil
+}
 
 func (m *_UserIdMgr) ListCount(key string) (int64, error) {
 	return redisListCount(m.NewUserId(), key)

@@ -44,19 +44,22 @@ UserBlog:
   db: redis
   storetype: set
   valuetype: int32
+  modeltype: Blog
 
 SortUserBlog:
   db: redis
   storetype: zset
   valuetype: int32
+  modeltype: Blog
 
 UserLocation:
   db: redis
   storetype: geo
   valuetype: int32
+  modeltype: User
 
 UserId:
   db: redis
   storetype: list
   valuetype: int32
-
+  modeltype: User
