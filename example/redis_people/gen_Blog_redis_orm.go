@@ -293,3 +293,30 @@ func (m *_BlogMgr) GetBlogsByIndexes(indexes map[string]interface{}) ([]*Blog, e
 	}
 	return objs, nil
 }
+
+func (m *_BlogMgr) ListRange(start, stop int64) ([]*Blog, error) {
+	strs, err := redisListRange(m.NewBlog(), "BlogId", start, stop)
+	if err != nil {
+		return nil, err
+	}
+
+	objs := []*Blog{}
+	for _, str := range strs {
+		var id int32
+		if err := redisStringScan(str, &id); err != nil {
+			return nil, err
+		}
+
+		obj, err := m.GetBlogById(id)
+		if err != nil {
+			return nil, err
+		}
+
+		objs = append(objs, obj)
+	}
+	return objs, nil
+}
+
+func (m *_BlogMgr) ListCount() (int64, error) {
+	return redisListCount(m.NewBlog(), "BlogId")
+}

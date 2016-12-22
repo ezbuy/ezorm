@@ -105,6 +105,13 @@ func TestPeopleObject(t *testing.T) {
 	log.Println("get blogs =>", blogs2)
 	assert.Equal(t, len(blogs2), 2)
 
+	allblogs, err := BlogMgr.ListRange(0, -1)
+	assert.Equal(t, err, nil)
+	log.Println("all blogs =>", allblogs)
+	count, err := BlogMgr.ListCount()
+	assert.Equal(t, err, nil)
+	assert.Equal(t, int64(4), count)
+
 	user := UserMgr.NewUser()
 	user.UserId = 101
 	user.Name = "username"

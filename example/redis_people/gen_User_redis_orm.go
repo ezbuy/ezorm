@@ -238,3 +238,30 @@ func (m *_UserMgr) GetUsersByIndexes(indexes map[string]interface{}) ([]*User, e
 	}
 	return objs, nil
 }
+
+func (m *_UserMgr) ListRange(start, stop int64) ([]*User, error) {
+	strs, err := redisListRange(m.NewUser(), "UserId", start, stop)
+	if err != nil {
+		return nil, err
+	}
+
+	objs := []*User{}
+	for _, str := range strs {
+		var id int32
+		if err := redisStringScan(str, &id); err != nil {
+			return nil, err
+		}
+
+		obj, err := m.GetUserById(id)
+		if err != nil {
+			return nil, err
+		}
+
+		objs = append(objs, obj)
+	}
+	return objs, nil
+}
+
+func (m *_UserMgr) ListCount() (int64, error) {
+	return redisListCount(m.NewUser(), "UserId")
+}

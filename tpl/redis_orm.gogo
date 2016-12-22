@@ -364,26 +364,6 @@ func (m *_{{$obj.Name}}Mgr) Set{{$obj.Name}}(obj *{{$obj.Name}}) error {
 			_, err := redisListRPush(obj, "{{$idFieldName}}", obj.{{$idFieldName}})
 			return err
 		{{- end}}	
-	{{- else if eq $obj.StoreType "set"}}	
-		if err := redisCheck(obj); err != nil {
-			return err
-		}
-		return nil
-	{{- else if eq $obj.StoreType "zset"}}	
-		if err := redisCheck(obj); err != nil {
-			return err
-		}
-		return nil
-	{{- else if eq $obj.StoreType "list"}}
-		if err := redisCheck(obj); err != nil {
-			return err
-		}
-		return nil
-	{{- else if eq $obj.StoreType "geo"}}
-		if err := redisCheck(obj); err != nil {
-			return err
-		}
-		return nil
 	{{- else}}
 	return errors.New("unsupport object store type")	
 	{{- end}}
@@ -402,14 +382,6 @@ func (m *_{{$obj.Name}}Mgr) Del{{$obj.Name}}(obj *{{$obj.Name}}) error {
 			{{- end}}
 		{{- end}}
 		return redisListRemove(obj, "{{$idFieldName}}", obj.{{$idField.Name}})
-	{{- else if eq $obj.StoreType "set"}}
-		return nil
-	{{- else if eq $obj.StoreType "zset"}}
-		return nil
-	{{- else if eq $obj.StoreType "geo"}}
-		return nil	
-	{{- else if eq $obj.StoreType "list"}}
-		return nil
 	{{- else}}
 		return errors.New("unsupport object store type")	
 	{{- end}}
@@ -529,6 +501,33 @@ func (m *_{{$obj.Name}}Mgr) Get{{$obj.Name}}sByIndexes(indexes map[string]interf
 	return objs, nil
 } 
 {{end}}
+
+func (m *_{{$obj.Name}}Mgr) ListRange(start, stop int64) ([]*{{$obj.Name}}, error) {
+	strs, err := redisListRange(m.New{{$obj.Name}}(), "{{$idFieldName}}", start, stop)
+	if err != nil {
+		return nil, err
+	}
+
+	objs := []*{{$obj.Name}}{}
+	for _, str := range strs {
+		var id {{$idField.Type}}
+		if err := redisStringScan(str, &id); err != nil {
+			return nil, err
+		}
+
+		obj, err := m.Get{{$obj.Name}}ById(id)
+		if err != nil {
+			return nil, err
+		}
+
+		objs = append(objs, obj)
+	}
+	return objs, nil	
+}
+
+func (m *_{{$obj.Name}}Mgr) ListCount() (int64, error) {
+	return redisListCount(m.New{{$obj.Name}}(), "{{$idFieldName}}")
+}
 
 {{end}}
 {{end}}
