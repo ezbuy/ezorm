@@ -44,12 +44,12 @@ func (m *_UserMgr) SetUser(obj *User) error {
 		return err
 	}
 	//! object primary key set
-	_, err := redisListRPush(obj, "UserId", obj.UserId)
+	_, err := redisListLPush(obj, "UserId", obj.UserId)
 	return err
 }
 
 func (m *_UserMgr) DelUser(obj *User) error {
-	if err := redisDel(obj); err != nil {
+	if err := redisDelObject(obj); err != nil {
 		return err
 	}
 	if err := redisIndexRemove(obj, "UserNumber", obj.UserNumber, obj.UserId); err != nil {

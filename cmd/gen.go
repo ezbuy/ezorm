@@ -69,6 +69,7 @@ var genCmd = &cobra.Command{
 			databases[xwMetaObj.Db] = xwMetaObj
 			for _, genType := range xwMetaObj.GetGenTypes() {
 				fileAbsPath := output + "/gen_" + xwMetaObj.Name + "_" + genType + ".go"
+				fmt.Println("genType =>", fileAbsPath)
 				executeTpl(fileAbsPath, genType, xwMetaObj)
 			}
 		}
@@ -76,6 +77,7 @@ var genCmd = &cobra.Command{
 		for _, obj := range databases {
 			for _, t := range obj.GetConfigTemplates() {
 				fileAbsPath := output + "/gen_" + t + ".go"
+				fmt.Println("config =>", fileAbsPath)
 				executeTpl(fileAbsPath, t, obj)
 			}
 		}

@@ -167,16 +167,20 @@ func TestPeopleObject(t *testing.T) {
 		ub.Value = int32(i)
 		switch i {
 		case 1:
-			err := SortUserBlogMgr.ZAdd(fmt.Sprint(1), 0.1, ub)
+			ub.Score = 0.1
+			err := SortUserBlogMgr.ZAdd(fmt.Sprint(1), ub)
 			assert.Equal(t, err, nil)
 		case 2:
-			err := SortUserBlogMgr.ZAdd(fmt.Sprint(1), 1.1, ub)
+			ub.Score = 1.1
+			err := SortUserBlogMgr.ZAdd(fmt.Sprint(1), ub)
 			assert.Equal(t, err, nil)
 		case 3:
-			err := SortUserBlogMgr.ZAdd(fmt.Sprint(1), 2.1, ub)
+			ub.Score = 2.1
+			err := SortUserBlogMgr.ZAdd(fmt.Sprint(1), ub)
 			assert.Equal(t, err, nil)
 		case 4:
-			err := SortUserBlogMgr.ZAdd(fmt.Sprint(1), 3.1, ub)
+			ub.Score = 3.1
+			err := SortUserBlogMgr.ZAdd(fmt.Sprint(1), ub)
 			assert.Equal(t, err, nil)
 		}
 	}

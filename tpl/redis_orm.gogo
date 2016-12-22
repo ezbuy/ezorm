@@ -15,6 +15,31 @@ import (
 var (
 	_ time.Time
 )
+
+{{- if ne $obj.ImportSQL ""}}
+func (m *_{{$obj.Name}}Mgr) SetAddBySQLs(sqls ...string) error {
+	querys := []string{}
+	if len(sqls) > 0 {
+		querys = append(querys, sqls...)
+	} else {
+		querys = append(querys, "{{$obj.ImportSQL}}")
+	}
+	for _, sql := range querys {
+		objs, err := m.Query(sql)
+		if err != nil {
+			return err
+		}
+
+		for _, obj := range objs {
+			if err := m.SetAdd(obj.Key, obj); err != nil {
+				return err
+			}
+		}	
+	}
+	return nil
+}
+{{- end}}
+
 ///////////// SET /////////////////////////////////////////////////////
 func (m *_{{$obj.Name}}Mgr) SetAdd(key string, obj *{{$obj.Name}}) error {
 	{{- if $obj.ValueField.IsNeedTransform}}
@@ -34,6 +59,7 @@ func (m *_{{$obj.Name}}Mgr) SetGet(key string) ([]*{{$obj.Name}}, error) {
 	objs := []*{{$obj.Name}}{}
 	for _, str := range strs {
 		obj := m.New{{$obj.Name}}()
+		obj.Key = key
 		{{- if $obj.ValueField.IsNeedTransform}}
 			var val {{$obj.ValueField.GetTransformType.TypeOrigin}}
 			if err := redisStringScan(str, &val); err != nil {
@@ -109,13 +135,38 @@ import (
 var (
 	_ time.Time
 )
+
+{{- if ne $obj.ImportSQL ""}}
+func (m *_{{$obj.Name}}Mgr) ZAddBySQLs(sqls ...string) error {
+	querys := []string{}
+	if len(sqls) > 0 {
+		querys = append(querys, sqls...)
+	} else {
+		querys = append(querys, "{{$obj.ImportSQL}}")
+	}
+	for _, sql := range querys {
+		objs, err := m.Query(sql)
+		if err != nil {
+			return err
+		}
+
+		for _, obj := range objs {
+			if err := m.ZAdd(obj.Key, obj); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+{{- end}}
+
 ///////////// ZSET /////////////////////////////////////////////////////
-func (m *_{{$obj.Name}}Mgr) ZAdd(key string, score float64, obj *{{$obj.Name}}) error {
+func (m *_{{$obj.Name}}Mgr) ZAdd(key string, obj *{{$obj.Name}}) error {
 	{{- if $obj.ValueField.IsNeedTransform}}
 		transformed_{{$obj.ValueField.Name}} := {{- printf $obj.ValueField.GetTransformType.ConvertBack (printf "obj.%s" $obj.ValueField.Name)}}
-		return redisZSetAdd(obj, key, score, transformed_{{$obj.ValueField.Name}})
+		return redisZSetAdd(obj, key, obj.Score, transformed_{{$obj.ValueField.Name}})
 	{{- else}}
-		return redisZSetAdd(obj, key, score, obj.Value)
+		return redisZSetAdd(obj, key, obj.Score, obj.Value)
 	{{- end}}
 }
 
@@ -128,6 +179,7 @@ func (m *_{{$obj.Name}}Mgr) ZRangeByScore(key string, min, max int64) ([]*{{$obj
 	objs := []*{{$obj.Name}}{}
 	for _, str := range strs {
 		obj := m.New{{$obj.Name}}()
+		obj.Key = key
 		{{- if $obj.ValueField.IsNeedTransform}}
 			var val {{$obj.ValueField.GetTransformType.TypeOrigin}}
 			if err := redisStringScan(str, &val); err != nil {
@@ -204,13 +256,38 @@ import (
 var (
 	_ time.Time
 )
+
+{{- if ne $obj.ImportSQL ""}}
+func (m *_{{$obj.Name}}Mgr) GeoAddBySQLs(sqls ...string) error {
+	querys := []string{}
+	if len(sqls) > 0 {
+		querys = append(querys, sqls...)
+	} else {
+		querys = append(querys, "{{$obj.ImportSQL}}")
+	}
+	for _, sql := range querys {
+		objs, err := m.Query(sql)
+		if err != nil {
+			return err
+		}
+
+		for _, obj := range objs {
+			if err := m.GeoAdd(obj.Key, obj); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+{{- end}}
+
 ///////////// GEO /////////////////////////////////////////////////////
-func (m *_{{$obj.Name}}Mgr) GeoAdd(key string, longitude float64, latitude float64, obj *{{$obj.Name}}) error {
+func (m *_{{$obj.Name}}Mgr) GeoAdd(key string, obj *{{$obj.Name}}) error {
 	{{- if $obj.ValueField.IsNeedTransform}}
 		transformed_{{$obj.ValueField.Name}} := {{- printf $obj.ValueField.GetTransformType.ConvertBack (printf "obj.%s" $obj.ValueField.Name)}}
-		return redisGeoAdd(obj, key, longitude, latitude, transformed_{{$obj.ValueField.Name}})
+		return redisGeoAdd(obj, key, obj.Longitude, obj.Latitude, transformed_{{$obj.ValueField.Name}})
 	{{- else}}
-		return redisGeoAdd(obj, key, longitude, latitude, obj.Value)
+		return redisGeoAdd(obj, key, obj.Longitude, obj.Latitude, obj.Value)
 	{{- end}}
 }
 
@@ -223,6 +300,7 @@ func (m *_{{$obj.Name}}Mgr) GeoRadius(key string, longitude float64, latitude fl
 	objs := []*{{$obj.Name}}{}
 	for _, str := range strs {
 		obj := m.New{{$obj.Name}}()
+		obj.Key = key
 		{{- if $obj.ValueField.IsNeedTransform}}
 			var val {{$obj.ValueField.GetTransformType.TypeOrigin}}
 			if err := redisStringScan(str, &val); err != nil {
@@ -289,6 +367,51 @@ import (
 var (
 	_ time.Time
 )
+{{- if ne $obj.ImportSQL ""}}
+func (m *_{{$obj.Name}}Mgr) ListLPushBySQLs(sqls ...string) error {
+	querys := []string{}
+	if len(sqls) > 0 {
+		querys = append(querys, sqls...)
+	} else {
+		querys = append(querys, "{{$obj.ImportSQL}}")
+	}
+	for _, sql := range querys {
+		objs, err := m.Query(sql)
+		if err != nil {
+			return err
+		}
+
+		for _, obj := range objs {
+			if _, err := m.ListLPush(obj.Key, obj); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (m *_{{$obj.Name}}Mgr) ListRPushBySQLs(sqls ...string) error {
+	querys := []string{}
+	if len(sqls) > 0 {
+		querys = append(querys, sqls...)
+	} else {
+		querys = append(querys, "{{$obj.ImportSQL}}")
+	}
+	for _, sql := range querys {
+		objs, err := m.Query(sql)
+		if err != nil {
+			return err
+		}
+
+		for _, obj := range objs {
+			if _, err := m.ListRPush(obj.Key, obj); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+{{- end}}
 ///////////// LIST /////////////////////////////////////////////////////
 func (m *_{{$obj.Name}}Mgr) ListLPush(key string, obj *{{$obj.Name}}) (int64, error) {
 	{{- if $obj.ValueField.IsNeedTransform}}
@@ -309,6 +432,7 @@ func (m *_{{$obj.Name}}Mgr) ListRPush(key string, obj *{{$obj.Name}}) (int64, er
 }
 
 func (m *_{{$obj.Name}}Mgr) ListLPop(key string, obj *{{$obj.Name}}) (error) {
+	obj.Key = key
 	{{- if $obj.ValueField.IsNeedTransform}}
 		var val {{$obj.ValueField.GetTransformType.TypeOrigin}}
 		if err := redisListLPop(obj, key, &val); err != nil {
@@ -322,6 +446,7 @@ func (m *_{{$obj.Name}}Mgr) ListLPop(key string, obj *{{$obj.Name}}) (error) {
 }
 
 func (m *_{{$obj.Name}}Mgr) ListRPop(key string, obj *{{$obj.Name}}) (error) {
+	obj.Key = key
 	{{- if $obj.ValueField.IsNeedTransform}}
 		var val {{$obj.ValueField.GetTransformType.TypeOrigin}}
 		if err := redisListRPop(obj, key, &val); err != nil {
@@ -363,6 +488,7 @@ func (m *_{{$obj.Name}}Mgr) ListRange(key string, start, stop int64) ([]*{{$obj.
 	objs := []*{{$obj.Name}}{}
 	for _, str := range strs {
 		obj := m.New{{$obj.Name}}()
+		obj.Key = key
 		{{- if $obj.ValueField.IsNeedTransform}}
 			var val {{$obj.ValueField.GetTransformType.TypeOrigin}}
 			if err := redisStringScan(str, &val); err != nil {
@@ -457,10 +583,10 @@ func (m *_{{$obj.Name}}Mgr) Set{{$obj.Name}}(obj *{{$obj.Name}}) error {
 	//! object primary key set
 		{{- if $idField.IsNeedTransform}}
 			transformed_{{$idFieldName.Name}}_primary := {{- printf $idField.GetTransformType.ConvertBack (printf "obj.%s" $idField.Name)}}
-			_, err := redisListRPush(obj, "{{$idFieldName}}", transformed_{{$idFieldName.Name}}_primary)
+			_, err := redisListLPush(obj, "{{$idFieldName}}", transformed_{{$idFieldName.Name}}_primary)
 			return err
 		{{else}}
-			_, err := redisListRPush(obj, "{{$idFieldName}}", obj.{{$idFieldName}})
+			_, err := redisListLPush(obj, "{{$idFieldName}}", obj.{{$idFieldName}})
 			return err
 		{{- end}}
 	{{- else if eq $obj.StoreType "hash"}}
@@ -497,10 +623,10 @@ func (m *_{{$obj.Name}}Mgr) Set{{$obj.Name}}(obj *{{$obj.Name}}) error {
 	//! object primary key set
 		{{- if $idField.IsNeedTransform}}
 			transformed_{{$idFieldName.Name}}_primary := {{- printf $idField.GetTransformType.ConvertBack (printf "obj.%s" $idField.Name)}}
-			_, err := redisListRPush(obj, "{{$idFieldName}}", transformed_{{$idFieldName.Name}}_primary)
+			_, err := redisListLPush(obj, "{{$idFieldName}}", transformed_{{$idFieldName.Name}}_primary)
 			return err
 		{{else}}
-			_, err := redisListRPush(obj, "{{$idFieldName}}", obj.{{$idFieldName}})
+			_, err := redisListLPush(obj, "{{$idFieldName}}", obj.{{$idFieldName}})
 			return err
 		{{- end}}	
 	{{- else}}
@@ -510,7 +636,7 @@ func (m *_{{$obj.Name}}Mgr) Set{{$obj.Name}}(obj *{{$obj.Name}}) error {
 
 func (m *_{{$obj.Name}}Mgr) Del{{$obj.Name}}(obj *{{$obj.Name}}) error {
 	{{- if or (eq $obj.StoreType "json") (eq $obj.StoreType "hash")}}
-		if err := redisDel(obj); err != nil {
+		if err := redisDelObject(obj); err != nil {
 			return err
 		}
 		{{- range $index, $field := $obj.Fields}}

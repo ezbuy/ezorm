@@ -75,7 +75,11 @@ func (r *RedisStore) StringScan(str string, val interface{}) error {
 	return redis.NewStringResult(str, nil).Scan(val)
 }
 
-func (r *RedisStore) Del(obj Object) error {
+func (r *RedisStore) Rename(obj Object, oldkey, newkey string) error {
+	return r.conn.Rename(keyOfClass(obj, oldkey), keyOfClass(obj, newkey)).Err()
+}
+
+func (r *RedisStore) DelObject(obj Object) error {
 	return r.conn.Del(keyOfObject(obj)).Err()
 }
 
@@ -85,6 +89,10 @@ func (r *RedisStore) DelIndex(obj Object, index string) error {
 
 func (r *RedisStore) DelList(obj Object, list string) error {
 	return r.conn.Del(listOfObject(obj, list)).Err()
+}
+
+func (r *RedisStore) DelKey(obj Object, key string) error {
+	return r.conn.Del(keyOfClass(obj, key)).Err()
 }
 
 func (r *RedisStore) JsonSet(obj Object) error {

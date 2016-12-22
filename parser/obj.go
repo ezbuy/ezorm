@@ -97,6 +97,7 @@ type Obj struct {
 	ValueType    string
 	ValueField   *Field
 	ModelType    string
+	ImportSQL    string
 }
 
 func (o *Obj) init() {
@@ -439,18 +440,10 @@ func (o *Obj) Read(data map[string]interface{}) error {
 			o.StoreType = val.(string)
 		case "valuetype":
 			o.ValueType = val.(string)
-			if o.ValueType != "" {
-				f := new(Field)
-				f.init()
-				f.Obj = o
-				f.Name = "Value"
-				f.Tag = "1"
-				f.Type = o.ValueType
-				o.ValueField = f
-			}
 		case "modeltype":
-			fmt.Println("modeltype!!")
 			o.ModelType = val.(string)
+		case "importSQL":
+			o.ImportSQL = val.(string)
 		case "filterFields":
 			o.FilterFields = ToStringSlice(val.([]interface{}))
 		case "fields":
@@ -487,6 +480,90 @@ func (o *Obj) Read(data map[string]interface{}) error {
 			return errors.New(o.Name + " has invalid obj property: " + key)
 		}
 	}
+	if o.ValueType != "" {
+		switch strings.ToLower(o.StoreType) {
+		case "set", "list":
+			o.Fields = make([]*Field, 2)
+			f1 := new(Field)
+			f1.init()
+			f1.Obj = o
+			f1.Name = "Key"
+			f1.Tag = "1"
+			f1.Type = "string"
+			o.Fields[0] = f1
+
+			f2 := new(Field)
+			f2.init()
+			f2.Obj = o
+			f2.Name = "Value"
+			f2.Tag = "2"
+			f2.Type = o.ValueType
+			o.Fields[1] = f2
+			o.ValueField = f2
+		case "zset":
+			o.Fields = make([]*Field, 3)
+			f1 := new(Field)
+			f1.init()
+			f1.Obj = o
+			f1.Name = "Key"
+			f1.Tag = "1"
+			f1.Type = "string"
+			o.Fields[0] = f1
+
+			f2 := new(Field)
+			f2.init()
+			f2.Obj = o
+			f2.Name = "Score"
+			f2.Tag = "2"
+			f2.Type = "float64"
+			o.Fields[1] = f2
+
+			f3 := new(Field)
+			f3.init()
+			f3.Obj = o
+			f3.Name = "Value"
+			f3.Tag = "3"
+			f3.Type = o.ValueType
+			o.Fields[2] = f3
+			o.ValueField = f3
+		case "geo":
+			o.Fields = make([]*Field, 4)
+			f1 := new(Field)
+			f1.init()
+			f1.Obj = o
+			f1.Name = "Key"
+			f1.Tag = "1"
+			f1.Type = "string"
+			o.Fields[0] = f1
+
+			f2 := new(Field)
+			f2.init()
+			f2.Obj = o
+			f2.Name = "Longitude"
+			f2.Tag = "2"
+			f2.Type = "float64"
+			o.Fields[1] = f2
+
+			f3 := new(Field)
+			f3.init()
+			f3.Obj = o
+			f3.Name = "Latitude"
+			f3.Tag = "3"
+			f3.Type = "float64"
+			o.Fields[2] = f3
+
+			f4 := new(Field)
+			f4.init()
+			f4.Obj = o
+			f4.Name = "Value"
+			f4.Tag = "4"
+			f4.Type = o.ValueType
+			o.Fields[3] = f4
+			o.ValueField = f4
+		default:
+			return errors.New("please specify `storetype` to " + o.Name)
+		}
+	}
 	// all mysql dbs share the same connection pool
 	if o.DbContains("mysql") && o.DbName == "" {
 		return errors.New("please specify `dbname` to " + o.Name)
@@ -495,14 +572,6 @@ func (o *Obj) Read(data map[string]interface{}) error {
 	if o.DbContains("redis") && o.StoreType == "" {
 		return errors.New("please specify `storetype` to " + o.Name)
 	}
-
-	if (o.StoreType == "set" ||
-		o.StoreType == "zset" ||
-		o.StoreType == "geo" ||
-		o.StoreType == "list") && o.ValueField == nil {
-		return errors.New("please specify `valuetype` to " + o.Name)
-	}
-	fmt.Println("ModelType =>", o.ModelType)
 	o.setIndexes()
 	return nil
 }

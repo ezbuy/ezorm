@@ -5,11 +5,12 @@ import "time"
 var _ time.Time
 
 type User struct {
-	UserId     int32     `json:"user_id"`
-	UserNumber int32     `json:"user_number"`
-	Name       string    `json:"name"`
-	Create     time.Time `json:"create"`
-	Update     time.Time `json:"update"`
+	UserId     int32     `db:"user_id" json:"user_id"`
+	UserNumber int32     `db:"user_number" json:"user_number"`
+	Name       string    `db:"name" json:"name"`
+	Create     time.Time `db:"create" json:"create"`
+	Update     time.Time `db:"update" json:"update"`
+	isNew      bool
 }
 
 func (p *User) GetNameSpace() string {

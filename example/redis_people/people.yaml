@@ -25,7 +25,7 @@ Blog:
   storetype: hash
 
 User:
-  db: redis
+  dbs: [mysql, redis]
   fields:
     - UserId: int32
     - UserNumber: int32
@@ -41,25 +41,33 @@ User:
   storetype: hash
 
 UserBlog:
-  db: redis
+  dbs: [redis, mysql]
   storetype: set
   valuetype: int32
   modeltype: Blog
-
+  dbname: Test
+  importSQL: "SELECT CONCAT('UserId:', UserId) AS k, ID AS v FROM BLOGS"
+  
 SortUserBlog:
-  db: redis
+  dbs: [redis, mysql]
   storetype: zset
   valuetype: int32
   modeltype: Blog
+  dbname: Test
+  importSQL: "SELECT CONCAT('UserId:', UserId) AS k, SCORE, ID AS v FROM BLOGS"
 
 UserLocation:
-  db: redis
+  dbs: [redis, mysql]
   storetype: geo
   valuetype: int32
   modeltype: User
+  dbname: Test
+  importSQL: "SELECT CONCAT('UserId:', UserId) AS k, Longitude, Latitude, ID AS v FROM BLOGS"
 
 UserId:
-  db: redis
+  dbs: [redis, mysql]
   storetype: list
   valuetype: int32
   modeltype: User
+  dbname: Test
+  importSQL: "SELECT CONCAT('UserId:', UserId) AS k, ID AS v FROM BLOGS"

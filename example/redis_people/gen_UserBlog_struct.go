@@ -5,7 +5,9 @@ import "time"
 var _ time.Time
 
 type UserBlog struct {
-	Value int32
+	Key   string `db:"key" json:"key"`
+	Value int32  `db:"value" json:"value"`
+	isNew bool
 }
 
 func (p *UserBlog) GetNameSpace() string {

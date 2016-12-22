@@ -8,6 +8,28 @@ var (
 	_ time.Time
 )
 
+func (m *_UserBlogMgr) SetAddBySQLs(sqls ...string) error {
+	querys := []string{}
+	if len(sqls) > 0 {
+		querys = append(querys, sqls...)
+	} else {
+		querys = append(querys, "SELECT CONCAT('UserId:', UserId) AS k, ID AS v FROM BLOGS")
+	}
+	for _, sql := range querys {
+		objs, err := m.Query(sql)
+		if err != nil {
+			return err
+		}
+
+		for _, obj := range objs {
+			if err := m.SetAdd(obj.Key, obj); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 ///////////// SET /////////////////////////////////////////////////////
 func (m *_UserBlogMgr) SetAdd(key string, obj *UserBlog) error {
 	return redisSetAdd(obj, key, obj.Value)
@@ -22,6 +44,7 @@ func (m *_UserBlogMgr) SetGet(key string) ([]*UserBlog, error) {
 	objs := []*UserBlog{}
 	for _, str := range strs {
 		obj := m.NewUserBlog()
+		obj.Key = key
 		if err := redisStringScan(str, &obj.Value); err != nil {
 			return nil, err
 		}

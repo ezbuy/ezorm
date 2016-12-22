@@ -12,6 +12,7 @@ import (
 var (
 	_ time.Time
 	_ bytes.Buffer
+	_ = strings.Index
 )
 
 // -----------------------------------------------------------------------------
@@ -71,7 +72,6 @@ func (*_BlogMgr) queryLimit(query string, limit int, args ...interface{}) (resul
 		result.Update = db.TimeParseLocalTime(Update)
 
 		results = append(results, &result)
-
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("test.Blog fetch result error: %v", err)
@@ -79,6 +79,8 @@ func (*_BlogMgr) queryLimit(query string, limit int, args ...interface{}) (resul
 
 	return
 }
+
+//! begin of TABLE functions
 func (m *_BlogMgr) Insert(obj *Blog) (sql.Result, error) {
 	return m.saveInsert(obj)
 }
@@ -391,6 +393,8 @@ func (m *_BlogMgr) Count(where string, args ...interface{}) (int32, error) {
 
 	return count, nil
 }
+
+//! end of TABLE functions
 
 func (m *_BlogMgr) GetSort(sorts []string) string {
 	if len(sorts) == 0 {

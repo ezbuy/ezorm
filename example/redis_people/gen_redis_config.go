@@ -28,8 +28,21 @@ func redisStringScan(str string, val interface{}) error {
 	return _store.StringScan(str, val)
 }
 
-func redisDel(obj db.Object) error {
-	return _store.Del(obj)
+func redisRename(obj db.Object, oldkey, newkey string) error {
+	return _store.Rename(obj, oldkey, newkey)
+}
+
+func redisDelObject(obj db.Object) error {
+	return _store.DelObject(obj)
+}
+func redisDelIndex(obj db.Object, index string) error {
+	return _store.DelIndex(obj, index)
+}
+func redisDelList(obj db.Object, list string) error {
+	return _store.DelList(obj, list)
+}
+func redisDelKey(obj db.Object, key string) error {
+	return _store.DelKey(obj, key)
 }
 
 //! json

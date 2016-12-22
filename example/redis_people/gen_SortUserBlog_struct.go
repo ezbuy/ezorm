@@ -5,7 +5,10 @@ import "time"
 var _ time.Time
 
 type SortUserBlog struct {
-	Value int32
+	Key   string  `db:"key" json:"key"`
+	Score float64 `db:"score" json:"score"`
+	Value int32   `db:"value" json:"value"`
+	isNew bool
 }
 
 func (p *SortUserBlog) GetNameSpace() string {

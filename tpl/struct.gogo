@@ -8,9 +8,6 @@ import "time"
 var _ time.Time
 
 type {{.Name}} struct {
-{{- if $obj.ValueField}}
-	{{$obj.ValueField.Name}}  {{$obj.ValueField.GetGoType}} 
-{{- else}}
 	{{- range $field := .Fields}}
 	{{- if or ($obj.DbContains "mssql") }}
 	{{- if ($obj.DbSwitch "mssql")}}
@@ -37,7 +34,6 @@ type {{.Name}} struct {
 	{{- if ($obj.DbContains "mysql")}}
 		isNew bool
 	{{- end}}
-{{- end}}
 }
 
 func (p *{{.Name}}) GetNameSpace() string {

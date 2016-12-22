@@ -59,12 +59,12 @@ func (m *_BlogMgr) SetBlog(obj *Blog) error {
 		return err
 	}
 	//! object primary key set
-	_, err := redisListRPush(obj, "BlogId", obj.BlogId)
+	_, err := redisListLPush(obj, "BlogId", obj.BlogId)
 	return err
 }
 
 func (m *_BlogMgr) DelBlog(obj *Blog) error {
-	if err := redisDel(obj); err != nil {
+	if err := redisDelObject(obj); err != nil {
 		return err
 	}
 	if err := redisIndexRemove(obj, "Slug", obj.Slug, obj.BlogId); err != nil {
