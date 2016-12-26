@@ -140,23 +140,23 @@ func (f *Field) GetTag() string {
 	for _, db := range f.Obj.Dbs {
 		switch db {
 		case "mongo":
-			tags["bson"] = false
-			tags["json"] = false
-		case "redis":
+			tags["bson"] = true
 			tags["json"] = true
+		case "redis":
+			tags["json"] = false
 		case "mysql":
-			tags["db"] = true
-		case "mssql":
 			tags["db"] = false
+		case "mssql":
+			tags["db"] = true
 		}
 	}
 
 	tagstr := []string{}
-	for tag, noCamel := range tags {
+	for tag, camel := range tags {
 		if val, ok := f.Attrs[tag+"Tag"]; ok {
 			tagstr = append(tagstr, fmt.Sprintf("%s:\"%s\"", tag, val))
 		} else {
-			if noCamel {
+			if camel {
 				tagstr = append(tagstr, fmt.Sprintf("%s:\"%s\"", tag, f.Name))
 			} else {
 				tagstr = append(tagstr, fmt.Sprintf("%s:\"%s\"", tag, camel2name(f.Name)))
