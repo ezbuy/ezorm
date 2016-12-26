@@ -5,9 +5,9 @@ import "time"
 var _ time.Time
 
 type User struct {
-	UserId     int32  `db:"UserId"`
-	UserNumber int32  `db:"UserNumber"`
-	Name       string `db:"Name"`
+	UserId     int32  `db:"user_id"`
+	UserNumber int32  `db:"user_number"`
+	Name       string `db:"name"`
 	isNew      bool
 }
 

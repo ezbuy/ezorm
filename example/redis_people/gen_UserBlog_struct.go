@@ -5,8 +5,8 @@ import "time"
 var _ time.Time
 
 type UserBlog struct {
-	Key   string `db:"Key"	json:"Key"`
-	Value int32  `db:"Value"	json:"Value"`
+	Key   string `db:"key"	json:"key"`
+	Value int32  `db:"value"	json:"value"`
 	isNew bool
 }
 

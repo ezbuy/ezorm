@@ -5,15 +5,15 @@ import "time"
 var _ time.Time
 
 type Blog struct {
-	BlogId      int32     `db:"BlogId"`
-	Title       string    `db:"Title"`
-	Hits        int32     `db:"Hits"`
-	Slug        string    `db:"Slug"`
-	Body        string    `db:"Body"`
-	User        int32     `db:"User"`
-	IsPublished bool      `db:"IsPublished"`
-	Create      time.Time `db:"Create"`
-	Update      time.Time `db:"Update"`
+	BlogId      int32     `db:"blog_id"`
+	Title       string    `db:"title"`
+	Hits        int32     `db:"hits"`
+	Slug        string    `db:"slug"`
+	Body        string    `db:"body"`
+	User        int32     `db:"user"`
+	IsPublished bool      `db:"is_published"`
+	Create      time.Time `db:"create"`
+	Update      time.Time `db:"update"`
 	isNew       bool
 }
 
