@@ -8,26 +8,35 @@ var (
 	_ time.Time
 )
 
-func (m *_UserBlogMgr) SetAddBySQLs(sqls ...string) error {
-	querys := []string{}
-	if len(sqls) > 0 {
-		querys = append(querys, sqls...)
-	} else {
-		querys = append(querys, "SELECT CONCAT('UserId:', UserId) AS k, ID AS v FROM BLOGS")
+func (m *_UserBlogMgr) AddBySQL(sql string, args ...interface{}) error {
+	objs, err := m.Query(sql)
+	if err != nil {
+		return err
 	}
-	for _, sql := range querys {
-		objs, err := m.Query(sql)
-		if err != nil {
-			return err
-		}
 
-		for _, obj := range objs {
-			if err := m.SetAdd(obj.Key, obj); err != nil {
-				return err
-			}
+	for _, obj := range objs {
+		if err := m.SetAdd(obj.Key, obj); err != nil {
+			return err
 		}
 	}
 	return nil
+}
+
+func (m *_UserBlogMgr) DelBySQL(sql string, args ...interface{}) error {
+	objs, err := m.Query(sql)
+	if err != nil {
+		return err
+	}
+
+	for _, obj := range objs {
+		if err := m.SetRem(obj.Key, obj); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (m *_UserBlogMgr) Import() error {
+	return m.AddBySQL("SELECT CONCAT('UserId:', UserId) AS k, ID AS v FROM BLOGS")
 }
 
 ///////////// SET /////////////////////////////////////////////////////

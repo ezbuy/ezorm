@@ -16,29 +16,43 @@ var (
 	_ time.Time
 )
 
-{{- if ne $obj.ImportSQL ""}}
-func (m *_{{$obj.Name}}Mgr) SetAddBySQLs(sqls ...string) error {
-	querys := []string{}
-	if len(sqls) > 0 {
-		querys = append(querys, sqls...)
-	} else {
-		querys = append(querys, "{{$obj.ImportSQL}}")
+{{- if or ($obj.DbContains "mysql") ($obj.DbContains "mssql")}}
+func (m *_{{$obj.Name}}Mgr) AddBySQL(sql string, args ...interface{}) error {
+	objs, err := m.Query(sql)
+	if err != nil {
+		return err
 	}
-	for _, sql := range querys {
-		objs, err := m.Query(sql)
-		if err != nil {
+
+	for _, obj := range objs {
+		if err := m.SetAdd(obj.Key, obj); err != nil {
 			return err
 		}
-
-		for _, obj := range objs {
-			if err := m.SetAdd(obj.Key, obj); err != nil {
-				return err
-			}
-		}	
-	}
+	}	
 	return nil
 }
+
+func (m *_{{$obj.Name}}Mgr) DelBySQL(sql string, args ...interface{}) error {
+	objs, err := m.Query(sql)
+	if err != nil {
+		return err
+	}
+
+	for _, obj := range objs {
+		if err := m.SetRem(obj.Key, obj); err != nil {
+			return err
+		}
+	}	
+	return nil
+}
+
+{{- if ne $obj.ImportSQL ""}}
+func (m *_{{$obj.Name}}Mgr) Import() error {	
+	return m.AddBySQL("{{$obj.ImportSQL}}")
+}
 {{- end}}
+
+{{- end}}
+
 
 ///////////// SET /////////////////////////////////////////////////////
 func (m *_{{$obj.Name}}Mgr) SetAdd(key string, obj *{{$obj.Name}}) error {
@@ -136,29 +150,43 @@ var (
 	_ time.Time
 )
 
-{{- if ne $obj.ImportSQL ""}}
-func (m *_{{$obj.Name}}Mgr) ZAddBySQLs(sqls ...string) error {
-	querys := []string{}
-	if len(sqls) > 0 {
-		querys = append(querys, sqls...)
-	} else {
-		querys = append(querys, "{{$obj.ImportSQL}}")
+{{- if or ($obj.DbContains "mysql") ($obj.DbContains "mssql")}}
+func (m *_{{$obj.Name}}Mgr) AddBySQL(sql string, args ...interface{}) error {
+	objs, err := m.Query(sql)
+	if err != nil {
+		return err
 	}
-	for _, sql := range querys {
-		objs, err := m.Query(sql)
-		if err != nil {
+	
+	for _, obj := range objs {
+		if err := m.ZAdd(obj.Key, obj); err != nil {
 			return err
-		}
-
-		for _, obj := range objs {
-			if err := m.ZAdd(obj.Key, obj); err != nil {
-				return err
-			}
 		}
 	}
 	return nil
 }
+
+func (m *_{{$obj.Name}}Mgr) DelBySQL(sql string, args ...interface{}) error {
+	objs, err := m.Query(sql)
+	if err != nil {
+		return err
+	}
+
+	for _, obj := range objs {
+		if err := m.ZRem(obj.Key, obj); err != nil {
+			return err
+		}
+	}	
+	return nil
+}
+
+{{- if ne $obj.ImportSQL ""}}
+func (m *_{{$obj.Name}}Mgr) Import() error {	
+	return m.AddBySQL("{{$obj.ImportSQL}}")
+}
 {{- end}}
+
+{{- end}}
+
 
 ///////////// ZSET /////////////////////////////////////////////////////
 func (m *_{{$obj.Name}}Mgr) ZAdd(key string, obj *{{$obj.Name}}) error {
@@ -257,29 +285,43 @@ var (
 	_ time.Time
 )
 
-{{- if ne $obj.ImportSQL ""}}
-func (m *_{{$obj.Name}}Mgr) GeoAddBySQLs(sqls ...string) error {
-	querys := []string{}
-	if len(sqls) > 0 {
-		querys = append(querys, sqls...)
-	} else {
-		querys = append(querys, "{{$obj.ImportSQL}}")
+{{- if or ($obj.DbContains "mysql") ($obj.DbContains "mssql")}}
+func (m *_{{$obj.Name}}Mgr) AddBySQL(sql string, args ...interface{}) error {
+	objs, err := m.Query(sql)
+	if err != nil {
+		return err
 	}
-	for _, sql := range querys {
-		objs, err := m.Query(sql)
-		if err != nil {
+
+	for _, obj := range objs {
+		if err := m.GeoAdd(obj.Key, obj); err != nil {
 			return err
 		}
-
-		for _, obj := range objs {
-			if err := m.GeoAdd(obj.Key, obj); err != nil {
-				return err
-			}
-		}
-	}
+	}	
 	return nil
 }
+
+func (m *_{{$obj.Name}}Mgr) DelBySQL(sql string, args ...interface{}) error {
+	objs, err := m.Query(sql)
+	if err != nil {
+		return err
+	}
+
+	for _, obj := range objs {
+		if err := m.GeoRem(obj.Key, obj); err != nil {
+			return err
+		}
+	}	
+	return nil
+}
+
+{{- if ne $obj.ImportSQL ""}}
+func (m *_{{$obj.Name}}Mgr) Import() error {	
+	return m.AddBySQL("{{$obj.ImportSQL}}")
+}
 {{- end}}
+
+{{- end}}
+
 
 ///////////// GEO /////////////////////////////////////////////////////
 func (m *_{{$obj.Name}}Mgr) GeoAdd(key string, obj *{{$obj.Name}}) error {
@@ -351,6 +393,9 @@ func (m *_{{$obj.Name}}Mgr) GeoRadiusRelated{{$obj.ModelType}}s(key string, long
 }
 {{- end}}
 
+func (m *_{{$obj.Name}}Mgr) GeoRem(key string, obj *{{$obj.Name}}) error {
+	return redisZSetRem(m.New{{$obj.Name}}(), key, obj)
+}
 
 func (m *_{{$obj.Name}}Mgr) GeoDel(key string) error {
 	return redisGeoDel(m.New{{$obj.Name}}(), key)
@@ -367,51 +412,45 @@ import (
 var (
 	_ time.Time
 )
-{{- if ne $obj.ImportSQL ""}}
-func (m *_{{$obj.Name}}Mgr) ListLPushBySQLs(sqls ...string) error {
-	querys := []string{}
-	if len(sqls) > 0 {
-		querys = append(querys, sqls...)
-	} else {
-		querys = append(querys, "{{$obj.ImportSQL}}")
+
+{{- if or ($obj.DbContains "mysql") ($obj.DbContains "mssql")}}
+func (m *_{{$obj.Name}}Mgr) AddBySQL(sql string, args ...interface{}) error {
+	objs, err := m.Query(sql)
+	if err != nil {
+		return err
 	}
-	for _, sql := range querys {
-		objs, err := m.Query(sql)
-		if err != nil {
+
+	for _, obj := range objs {
+		if _, err := m.ListLPush(obj.Key, obj); err != nil {
 			return err
 		}
-
-		for _, obj := range objs {
-			if _, err := m.ListLPush(obj.Key, obj); err != nil {
-				return err
-			}
-		}
-	}
+	}	
 	return nil
 }
 
-func (m *_{{$obj.Name}}Mgr) ListRPushBySQLs(sqls ...string) error {
-	querys := []string{}
-	if len(sqls) > 0 {
-		querys = append(querys, sqls...)
-	} else {
-		querys = append(querys, "{{$obj.ImportSQL}}")
+func (m *_{{$obj.Name}}Mgr) DelBySQL(sql string, args ...interface{}) error {
+	objs, err := m.Query(sql)
+	if err != nil {
+		return err
 	}
-	for _, sql := range querys {
-		objs, err := m.Query(sql)
-		if err != nil {
+
+	for _, obj := range objs {
+		if err := m.ListRem(obj.Key, obj); err != nil {
 			return err
 		}
-
-		for _, obj := range objs {
-			if _, err := m.ListRPush(obj.Key, obj); err != nil {
-				return err
-			}
-		}
-	}
+	}	
 	return nil
+}
+
+{{- if ne $obj.ImportSQL ""}}
+func (m *_{{$obj.Name}}Mgr) Import() error {	
+	return m.AddBySQL("{{$obj.ImportSQL}}")
 }
 {{- end}}
+
+{{- end}}
+
+
 ///////////// LIST /////////////////////////////////////////////////////
 func (m *_{{$obj.Name}}Mgr) ListLPush(key string, obj *{{$obj.Name}}) (int64, error) {
 	{{- if $obj.ValueField.IsNeedTransform}}
@@ -541,6 +580,10 @@ func (m *_{{$obj.Name}}Mgr) ListRangeRelated{{$obj.ModelType}}s(key string, star
 
 func (m *_{{$obj.Name}}Mgr) ListCount(key string) (int64, error) {
 	return redisListCount(m.New{{$obj.Name}}(), key)
+}
+
+func (m *_{{$obj.Name}}Mgr) ListRem(key string, obj *{{$obj.Name}}) error {
+	return redisListRemove(m.New{{$obj.Name}}(), key, obj)
 }
 
 func (m *_{{$obj.Name}}Mgr) ListDel(key string) error {

@@ -3,6 +3,7 @@ package parser
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -132,6 +133,42 @@ func (f *Field) GetNullSQLType() string {
 		return "NullFloat64"
 	}
 	return t
+}
+
+func (f *Field) GetTag() string {
+	tags := map[string]bool{}
+	for _, db := range f.Obj.Dbs {
+		switch db {
+		case "mongo":
+			tags["bson"] = false
+			tags["json"] = false
+		case "redis":
+			tags["json"] = true
+		case "mysql":
+			tags["db"] = true
+		case "mssql":
+			tags["db"] = false
+		}
+	}
+
+	tagstr := []string{}
+	for tag, noCamel := range tags {
+		if val, ok := f.Attrs[tag+"Tag"]; ok {
+			tagstr = append(tagstr, fmt.Sprintf("%s:\"%s\"", tag, val))
+		} else {
+			if noCamel {
+				tagstr = append(tagstr, fmt.Sprintf("%s:\"%s\"", tag, f.Name))
+			} else {
+				tagstr = append(tagstr, fmt.Sprintf("%s:\"%s\"", tag, camel2name(f.Name)))
+			}
+		}
+	}
+	sortstr := sort.StringSlice(tagstr)
+	sort.Sort(sortstr)
+	if len(sortstr) != 0 {
+		return "`" + strings.Join(sortstr, "\t") + "`"
+	}
+	return ""
 }
 
 func (f *Field) NullSQLTypeValue() string {

@@ -8,48 +8,35 @@ var (
 	_ time.Time
 )
 
-func (m *_UserIdMgr) ListLPushBySQLs(sqls ...string) error {
-	querys := []string{}
-	if len(sqls) > 0 {
-		querys = append(querys, sqls...)
-	} else {
-		querys = append(querys, "SELECT CONCAT('UserId:', UserId) AS k, ID AS v FROM BLOGS")
+func (m *_UserIdMgr) AddBySQL(sql string, args ...interface{}) error {
+	objs, err := m.Query(sql)
+	if err != nil {
+		return err
 	}
-	for _, sql := range querys {
-		objs, err := m.Query(sql)
-		if err != nil {
-			return err
-		}
 
-		for _, obj := range objs {
-			if _, err := m.ListLPush(obj.Key, obj); err != nil {
-				return err
-			}
+	for _, obj := range objs {
+		if _, err := m.ListLPush(obj.Key, obj); err != nil {
+			return err
 		}
 	}
 	return nil
 }
 
-func (m *_UserIdMgr) ListRPushBySQLs(sqls ...string) error {
-	querys := []string{}
-	if len(sqls) > 0 {
-		querys = append(querys, sqls...)
-	} else {
-		querys = append(querys, "SELECT CONCAT('UserId:', UserId) AS k, ID AS v FROM BLOGS")
+func (m *_UserIdMgr) DelBySQL(sql string, args ...interface{}) error {
+	objs, err := m.Query(sql)
+	if err != nil {
+		return err
 	}
-	for _, sql := range querys {
-		objs, err := m.Query(sql)
-		if err != nil {
-			return err
-		}
 
-		for _, obj := range objs {
-			if _, err := m.ListRPush(obj.Key, obj); err != nil {
-				return err
-			}
+	for _, obj := range objs {
+		if err := m.ListRem(obj.Key, obj); err != nil {
+			return err
 		}
 	}
 	return nil
+}
+func (m *_UserIdMgr) Import() error {
+	return m.AddBySQL("SELECT CONCAT('UserId:', UserId) AS k, ID AS v FROM BLOGS")
 }
 
 ///////////// LIST /////////////////////////////////////////////////////
@@ -117,6 +104,10 @@ func (m *_UserIdMgr) ListRangeRelatedUsers(key string, start, stop int64) ([]*Us
 
 func (m *_UserIdMgr) ListCount(key string) (int64, error) {
 	return redisListCount(m.NewUserId(), key)
+}
+
+func (m *_UserIdMgr) ListRem(key string, obj *UserId) error {
+	return redisListRemove(m.NewUserId(), key, obj)
 }
 
 func (m *_UserIdMgr) ListDel(key string) error {

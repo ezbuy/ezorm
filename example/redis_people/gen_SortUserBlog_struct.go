@@ -5,9 +5,9 @@ import "time"
 var _ time.Time
 
 type SortUserBlog struct {
-	Key   string  `db:"key" json:"key"`
-	Score float64 `db:"score" json:"score"`
-	Value int32   `db:"value" json:"value"`
+	Key   string  `db:"Key"	json:"Key"`
+	Score float64 `db:"Score"	json:"Score"`
+	Value int32   `db:"Value"	json:"Value"`
 	isNew bool
 }
 

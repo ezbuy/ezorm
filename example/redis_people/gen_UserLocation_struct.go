@@ -5,10 +5,10 @@ import "time"
 var _ time.Time
 
 type UserLocation struct {
-	Key       string  `db:"key" json:"key"`
-	Longitude float64 `db:"longitude" json:"longitude"`
-	Latitude  float64 `db:"latitude" json:"latitude"`
-	Value     int32   `db:"value" json:"value"`
+	Key       string  `db:"Key"	json:"Key"`
+	Longitude float64 `db:"Longitude"	json:"Longitude"`
+	Latitude  float64 `db:"Latitude"	json:"Latitude"`
+	Value     int32   `db:"Value"	json:"Value"`
 	isNew     bool
 }
 

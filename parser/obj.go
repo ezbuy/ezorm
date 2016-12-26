@@ -398,10 +398,16 @@ func (o *Obj) Read(data map[string]interface{}) error {
 		switch key {
 		case "db":
 			o.Db = val.(string)
-			o.Dbs = append(o.Dbs, o.Db)
+			dbs := []string{}
+			dbs = append(dbs, o.Db)
+			dbs = append(dbs, o.Dbs...)
+			o.Dbs = dbs
 			hasType = true
 		case "dbs":
 			o.Dbs = ToStringSlice(val.([]interface{}))
+			if len(o.Dbs) != 0 {
+				o.Db = o.Dbs[0]
+			}
 			hasType = true
 		}
 	}

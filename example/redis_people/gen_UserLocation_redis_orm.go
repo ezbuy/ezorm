@@ -9,26 +9,35 @@ var (
 	_ time.Time
 )
 
-func (m *_UserLocationMgr) GeoAddBySQLs(sqls ...string) error {
-	querys := []string{}
-	if len(sqls) > 0 {
-		querys = append(querys, sqls...)
-	} else {
-		querys = append(querys, "SELECT CONCAT('UserId:', UserId) AS k, Longitude, Latitude, ID AS v FROM BLOGS")
+func (m *_UserLocationMgr) AddBySQL(sql string, args ...interface{}) error {
+	objs, err := m.Query(sql)
+	if err != nil {
+		return err
 	}
-	for _, sql := range querys {
-		objs, err := m.Query(sql)
-		if err != nil {
-			return err
-		}
 
-		for _, obj := range objs {
-			if err := m.GeoAdd(obj.Key, obj); err != nil {
-				return err
-			}
+	for _, obj := range objs {
+		if err := m.GeoAdd(obj.Key, obj); err != nil {
+			return err
 		}
 	}
 	return nil
+}
+
+func (m *_UserLocationMgr) DelBySQL(sql string, args ...interface{}) error {
+	objs, err := m.Query(sql)
+	if err != nil {
+		return err
+	}
+
+	for _, obj := range objs {
+		if err := m.GeoRem(obj.Key, obj); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (m *_UserLocationMgr) Import() error {
+	return m.AddBySQL("SELECT CONCAT('UserId:', UserId) AS k, Longitude, Latitude, ID AS v FROM BLOGS")
 }
 
 ///////////// GEO /////////////////////////////////////////////////////
@@ -70,6 +79,10 @@ func (m *_UserLocationMgr) GeoRadiusRelatedUsers(key string, longitude float64, 
 		}
 	}
 	return objs, nil
+}
+
+func (m *_UserLocationMgr) GeoRem(key string, obj *UserLocation) error {
+	return redisZSetRem(m.NewUserLocation(), key, obj)
 }
 
 func (m *_UserLocationMgr) GeoDel(key string) error {

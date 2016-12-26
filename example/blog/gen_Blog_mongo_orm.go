@@ -24,23 +24,26 @@ func initBlogIndex() {
 	defer session.Close()
 
 	if err := collection.EnsureIndex(mgo.Index{
-		Key:    []string{"User", "IsPublished"},
-		Sparse: true,
+		Key:        []string{"User", "IsPublished"},
+		Background: true,
+		Sparse:     true,
 	}); err != nil {
 		panic("ensureIndex test.Blog UserIsPublished error:" + err.Error())
 	}
 
 	if err := collection.EnsureIndex(mgo.Index{
-		Key:    []string{"Slug"},
-		Unique: true,
-		Sparse: true,
+		Key:        []string{"Slug"},
+		Unique:     true,
+		Background: true,
+		Sparse:     true,
 	}); err != nil {
 		panic("ensureIndex test.Blog Slug error:" + err.Error())
 	}
 
 	if err := collection.EnsureIndex(mgo.Index{
-		Key:    []string{"IsPublished"},
-		Sparse: true,
+		Key:        []string{"IsPublished"},
+		Background: true,
+		Sparse:     true,
 	}); err != nil {
 		panic("ensureIndex test.Blog IsPublished error:" + err.Error())
 	}

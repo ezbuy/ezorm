@@ -8,26 +8,35 @@ var (
 	_ time.Time
 )
 
-func (m *_SortUserBlogMgr) ZAddBySQLs(sqls ...string) error {
-	querys := []string{}
-	if len(sqls) > 0 {
-		querys = append(querys, sqls...)
-	} else {
-		querys = append(querys, "SELECT CONCAT('UserId:', UserId) AS k, SCORE, ID AS v FROM BLOGS")
+func (m *_SortUserBlogMgr) AddBySQL(sql string, args ...interface{}) error {
+	objs, err := m.Query(sql)
+	if err != nil {
+		return err
 	}
-	for _, sql := range querys {
-		objs, err := m.Query(sql)
-		if err != nil {
-			return err
-		}
 
-		for _, obj := range objs {
-			if err := m.ZAdd(obj.Key, obj); err != nil {
-				return err
-			}
+	for _, obj := range objs {
+		if err := m.ZAdd(obj.Key, obj); err != nil {
+			return err
 		}
 	}
 	return nil
+}
+
+func (m *_SortUserBlogMgr) DelBySQL(sql string, args ...interface{}) error {
+	objs, err := m.Query(sql)
+	if err != nil {
+		return err
+	}
+
+	for _, obj := range objs {
+		if err := m.ZRem(obj.Key, obj); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (m *_SortUserBlogMgr) Import() error {
+	return m.AddBySQL("SELECT CONCAT('UserId:', UserId) AS k, SCORE, ID AS v FROM BLOGS")
 }
 
 ///////////// ZSET /////////////////////////////////////////////////////

@@ -4,15 +4,15 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
+	"github.com/ezbuy/ezorm/db"
 	"strings"
 	"time"
-
-	"github.com/ezbuy/ezorm/db"
 )
 
 var (
 	_ time.Time
 	_ bytes.Buffer
+	_ = strings.Index
 )
 
 // -----------------------------------------------------------------------------
@@ -60,7 +60,6 @@ func (*_UserMgr) queryLimit(query string, limit int, args ...interface{}) (resul
 		}
 
 		results = append(results, &result)
-
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("test.User fetch result error: %v", err)
@@ -68,6 +67,8 @@ func (*_UserMgr) queryLimit(query string, limit int, args ...interface{}) (resul
 
 	return
 }
+
+//! begin of TABLE functions
 
 func (m *_UserMgr) Save(obj *User) (sql.Result, error) {
 	if obj.UserId == 0 {
@@ -326,6 +327,8 @@ func (m *_UserMgr) Count(where string, args ...interface{}) (int32, error) {
 
 	return count, nil
 }
+
+//! end of TABLE functions
 
 func (m *_UserMgr) GetSort(sorts []string) string {
 	if len(sorts) == 0 {

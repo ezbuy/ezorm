@@ -5,11 +5,11 @@ import "time"
 var _ time.Time
 
 type User struct {
-	UserId     int32     `db:"user_id" json:"user_id"`
-	UserNumber int32     `db:"user_number" json:"user_number"`
-	Name       string    `db:"name" json:"name"`
-	Create     time.Time `db:"create" json:"create"`
-	Update     time.Time `db:"update" json:"update"`
+	UserId     int32     `db:"UserId"	json:"UserId"`
+	UserNumber int32     `db:"UserNumber"	json:"UserNumber"`
+	Name       string    `db:"Name"	json:"Name"`
+	Create     time.Time `db:"Create"	json:"Create"`
+	Update     time.Time `db:"Update"	json:"Update"`
 	isNew      bool
 }
 

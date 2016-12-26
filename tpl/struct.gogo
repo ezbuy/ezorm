@@ -9,29 +9,13 @@ var _ time.Time
 
 type {{.Name}} struct {
 	{{- range $field := .Fields}}
-	{{- if or ($obj.DbContains "mssql") }}
-	{{- if ($obj.DbSwitch "mssql")}}
-	{{$field.Name}}  {{$field.GetGoType}} `db:"{{$field.Name}}"`
-	{{- end}}
-	{{- else if ($obj.DbContains "mysql") }}
-	{{- if ($obj.DbSwitch "mysql")}}
-	{{$field.Name}}  {{$field.GetGoType}} `db:"{{camel2name $field.Name}}" json:"{{camel2name $field.Name}}"`
-	{{- end}}
-	{{- else if ($obj.DbContains "redis") }}
-	{{- if ($obj.DbSwitch "redis")}}
-	{{$field.Name}}  {{$field.GetGoType}} `json:"{{camel2name $field.Name}}"`
-	{{- end}}
-	{{- else}}
-		{{- if ($obj.DbSwitch "mongo")}}
 		{{- if and ($obj.DbContains "mongo") (eq $field.Name "ID")}}
 		ID         bson.ObjectId `json:"id" bson:"_id,omitempty"`
 		{{- else}}
-		{{$field.Name}}  {{$field.GetGoType}} {{$field.BJTag}}
+		{{$field.Name}}  {{$field.GetGoType}} {{$field.GetTag}}
 		{{- end -}}
-		{{- end}}
-	{{- end -}}
-	{{- end -}}
-	{{- if ($obj.DbContains "mysql")}}
+	{{- end}}
+	{{- if or ($obj.DbContains "mysql") ($obj.DbContains "mongo")}}
 		isNew bool
 	{{- end}}
 }
