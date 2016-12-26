@@ -80,7 +80,6 @@ func (*_BlogMgr) queryLimit(query string, limit int, args ...interface{}) (resul
 	return
 }
 
-//! begin of TABLE functions
 func (m *_BlogMgr) Insert(obj *Blog) (sql.Result, error) {
 	return m.saveInsert(obj)
 }
@@ -335,7 +334,7 @@ func (m *_BlogMgr) FindWithOffset(where string, offset int, limit int, args ...i
 }
 
 func (m *_BlogMgr) GetQuerysql(where string) string {
-	query := "SELECT `blog_id`, `title`, `hits`, `slug`, `body`, `user`, `is_published`, `create`, `update` FROM test.blog "
+	query := "SELECT `blog_id`, `title`, `hits`, `slug`, `body`, `user`, `is_published`, `create`, `update` FROM test.blog"
 
 	where = strings.TrimSpace(where)
 	if where != "" {
@@ -393,8 +392,6 @@ func (m *_BlogMgr) Count(where string, args ...interface{}) (int32, error) {
 
 	return count, nil
 }
-
-//! end of TABLE functions
 
 func (m *_BlogMgr) GetSort(sorts []string) string {
 	if len(sorts) == 0 {

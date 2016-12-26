@@ -68,8 +68,6 @@ func (*_UserMgr) queryLimit(query string, limit int, args ...interface{}) (resul
 	return
 }
 
-//! begin of TABLE functions
-
 func (m *_UserMgr) Save(obj *User) (sql.Result, error) {
 	if obj.UserId == 0 {
 		return m.saveInsert(obj)
@@ -269,7 +267,7 @@ func (m *_UserMgr) FindWithOffset(where string, offset int, limit int, args ...i
 }
 
 func (m *_UserMgr) GetQuerysql(where string) string {
-	query := "SELECT `user_id`, `user_number`, `name` FROM test.test_user "
+	query := "SELECT `user_id`, `user_number`, `name` FROM test.test_user"
 
 	where = strings.TrimSpace(where)
 	if where != "" {
@@ -327,8 +325,6 @@ func (m *_UserMgr) Count(where string, args ...interface{}) (int32, error) {
 
 	return count, nil
 }
-
-//! end of TABLE functions
 
 func (m *_UserMgr) GetSort(sorts []string) string {
 	if len(sorts) == 0 {
