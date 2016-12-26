@@ -166,7 +166,7 @@ func (f *Field) GetTag() string {
 	sortstr := sort.StringSlice(tagstr)
 	sort.Sort(sortstr)
 	if len(sortstr) != 0 {
-		return "`" + strings.Join(sortstr, "\t") + "`"
+		return "`" + strings.Join(sortstr, " ") + "`"
 	}
 	return ""
 }
