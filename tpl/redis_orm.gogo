@@ -605,7 +605,8 @@ var (
 
 func (m *_{{$obj.Name}}Mgr) Set(obj *{{$obj.Name}}) error {
 	{{- if eq $obj.StoreType "json"}}
-	if err := redisJsonSet(obj); err != nil {
+	pipeline := redisPipeline()
+	if err := pipeline.JsonSet(obj); err != nil {
 	 	return err
 	}
 	//! object index set
@@ -613,11 +614,11 @@ func (m *_{{$obj.Name}}Mgr) Set(obj *{{$obj.Name}}) error {
 		{{- if $field.HasIndex}}
 		{{- if $idField.IsNeedTransform}}
 			transformed_{{$idFieldName.Name}}_primary := {{- printf $idField.GetTransformType.ConvertBack (printf "obj.%s" $idField.Name)}}
-			if err := redisIndexSet(obj, "{{$field.Name}}", transformed_{{$idFieldName.Name}}_primary); err != nil {
+			if err := pipeline.IndexSet(obj, "{{$field.Name}}", transformed_{{$idFieldName.Name}}_primary); err != nil {
 				return err
 			}
 		{{else}}
-			if err := redisIndexSet(obj, "{{$field.Name}}", obj.{{$field.Name}}, obj.{{$idFieldName}}); err != nil {
+			if err := pipeline.IndexSet(obj, "{{$field.Name}}", obj.{{$field.Name}}, obj.{{$idFieldName}}); err != nil {
 				return err
 			}
 		{{- end}}
@@ -626,22 +627,27 @@ func (m *_{{$obj.Name}}Mgr) Set(obj *{{$obj.Name}}) error {
 	//! object primary key set
 		{{- if $idField.IsNeedTransform}}
 			transformed_{{$idFieldName.Name}}_primary := {{- printf $idField.GetTransformType.ConvertBack (printf "obj.%s" $idField.Name)}}
-			_, err := redisListLPush(obj, "{{$idFieldName}}", transformed_{{$idFieldName.Name}}_primary)
-			return err
+			if err := pipeline.ListLPush(obj, "{{$idFieldName}}", transformed_{{$idFieldName.Name}}_primary); err != nil {
+				return err
+			}
 		{{else}}
-			_, err := redisListLPush(obj, "{{$idFieldName}}", obj.{{$idFieldName}})
-			return err
+			if err := pipeline.ListLPush(obj, "{{$idFieldName}}", obj.{{$idFieldName}}); err != nil {
+				return err
+			}
 		{{- end}}
+		_, err := pipeline.Exec()
+		return err
 	{{- else if eq $obj.StoreType "hash"}}
 	//! object field set
+		pipeline := redisPipeline()
 		{{- range $index, $field := $obj.Fields}}
 		{{- if $field.IsNeedTransform}}
 			transformed_{{$field.Name}}_field := {{- printf $field.GetTransformType.ConvertBack (printf "obj.%s" $field.Name)}}
-			if err := redisFieldSet(obj, "{{$field.Name}}", transformed_{{$field.Name}}_field); err != nil {
+			if err := pipeline.FieldSet(obj, "{{$field.Name}}", transformed_{{$field.Name}}_field); err != nil {
 				return err
 			}
 		{{- else}}
-			if err := redisFieldSet(obj, "{{$field.Name}}", obj.{{$field.Name}}); err != nil {
+			if err := pipeline.FieldSet(obj, "{{$field.Name}}", obj.{{$field.Name}}); err != nil {
 				return err
 			}
 		{{- end}}
@@ -652,11 +658,11 @@ func (m *_{{$obj.Name}}Mgr) Set(obj *{{$obj.Name}}) error {
 
 		{{- if $idField.IsNeedTransform}}
 			transformed_{{$idFieldName.Name}}_primary := {{- printf $idField.GetTransformType.ConvertBack (printf "obj.%s" $idField.Name)}}
-			if err := redisIndexSet(obj, "{{$field.Name}}", obj.{{$field.Name}}, transformed_{{$idFieldName.Name}}_primary); err != nil {
+			if err := pipeline.IndexSet(obj, "{{$field.Name}}", obj.{{$field.Name}}, transformed_{{$idFieldName.Name}}_primary); err != nil {
 				return err
 			}
 		{{else}}
-			if err := redisIndexSet(obj, "{{$field.Name}}", obj.{{$field.Name}}, obj.{{$idFieldName}}); err != nil {
+			if err := pipeline.IndexSet(obj, "{{$field.Name}}", obj.{{$field.Name}}, obj.{{$idFieldName}}); err != nil {
 				return err
 			}
 		{{- end}}
@@ -666,12 +672,16 @@ func (m *_{{$obj.Name}}Mgr) Set(obj *{{$obj.Name}}) error {
 	//! object primary key set
 		{{- if $idField.IsNeedTransform}}
 			transformed_{{$idFieldName.Name}}_primary := {{- printf $idField.GetTransformType.ConvertBack (printf "obj.%s" $idField.Name)}}
-			_, err := redisListLPush(obj, "{{$idFieldName}}", transformed_{{$idFieldName.Name}}_primary)
-			return err
+			if err := pipeline.ListLPush(obj, "{{$idFieldName}}", transformed_{{$idFieldName.Name}}_primary); err != nil {
+				return err
+			}
 		{{else}}
-			_, err := redisListLPush(obj, "{{$idFieldName}}", obj.{{$idFieldName}})
-			return err
-		{{- end}}	
+			if err := pipeline.ListLPush(obj, "{{$idFieldName}}", obj.{{$idFieldName}}); err != nil {
+				return err
+			}
+		{{- end}}
+		_, err := pipeline.Exec()
+		return err
 	{{- else}}
 	return errors.New("unsupport object store type")	
 	{{- end}}

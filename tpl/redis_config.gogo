@@ -69,7 +69,53 @@ func keyOfClass(obj Object, keys ...string) string {
 func redisStringScan(str string, val interface{}) error {
 	return _redis_store.StringScan(str, val)
 }
-/////////////
+///////////// pipeline: now only support add operations
+
+type RedisPipeline struct {
+	*redis.Pipeline
+}
+
+func redisPipeline() *RedisPipeline {
+	return &RedisPipeline{_redis_store.Pipeline()}
+}
+
+func (p *RedisPipeline) JsonSet(obj Object) error {
+	data, err := json.Marshal(obj)
+	if err != nil {
+		return err
+	}
+	return p.Process(redis.NewStatusCmd("set", keyOfObject(obj), data, 0))
+}
+
+func (p *RedisPipeline) FieldSet(obj Object, field string, value interface{}) error {
+	return p.Process(redis.NewBoolCmd("hset", keyOfObject(obj), field, fmt.Sprint(value)))
+}
+
+func (p *RedisPipeline) IndexSet(obj Object, indexName string, indexValue interface{}, value interface{}) error {
+	return p.Process(redis.NewBoolCmd("sadd", indexOfObject(obj, fmt.Sprintf("%s:%v", indexName, indexValue)), fmt.Sprint(value)))
+}
+
+func (p *RedisPipeline) SetAdd(obj Object, key string, value interface{}) error {
+	return p.Process(redis.NewBoolCmd("sadd", keyOfClass(obj, key), fmt.Sprint(value)))
+}	
+
+func (p *RedisPipeline) ZAdd(obj Object, key string, score float64, value interface{}) error {
+	return p.Process(redis.NewBoolCmd("zadd", keyOfClass(obj, key), score, value))
+}	
+
+func (p *RedisPipeline) GeoAdd(obj Object, key string, longitude float64, latitude float64, value interface{}) error {
+	return p.Process(redis.NewBoolCmd("geoadd", keyOfClass(obj, key), longitude, latitude, value))
+}	
+
+func (p *RedisPipeline) ListLPush(obj Object, listName string, value interface{}) error {
+	return p.Process(redis.NewIntCmd("lpush", listOfObject(obj, listName), value))
+}	
+
+func (p *RedisPipeline) ListRPush(obj Object, listName string, value interface{}) error {
+	return p.Process(redis.NewIntCmd("rpush", listOfObject(obj, listName), value))
+}	
+
+///////////// 
 func redisRename(obj Object, oldkey, newkey string) error {
 	return _redis_store.Rename(keyOfClass(obj, oldkey), keyOfClass(obj, newkey)).Err()
 }

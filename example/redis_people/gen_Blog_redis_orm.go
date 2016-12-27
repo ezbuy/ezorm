@@ -13,53 +13,57 @@ var (
 
 func (m *_BlogMgr) Set(obj *Blog) error {
 	//! object field set
-	if err := redisFieldSet(obj, "BlogId", obj.BlogId); err != nil {
+	pipeline := redisPipeline()
+	if err := pipeline.FieldSet(obj, "BlogId", obj.BlogId); err != nil {
 		return err
 	}
-	if err := redisFieldSet(obj, "Title", obj.Title); err != nil {
+	if err := pipeline.FieldSet(obj, "Title", obj.Title); err != nil {
 		return err
 	}
-	if err := redisFieldSet(obj, "Hits", obj.Hits); err != nil {
+	if err := pipeline.FieldSet(obj, "Hits", obj.Hits); err != nil {
 		return err
 	}
-	if err := redisFieldSet(obj, "Slug", obj.Slug); err != nil {
+	if err := pipeline.FieldSet(obj, "Slug", obj.Slug); err != nil {
 		return err
 	}
-	if err := redisFieldSet(obj, "Body", obj.Body); err != nil {
+	if err := pipeline.FieldSet(obj, "Body", obj.Body); err != nil {
 		return err
 	}
-	if err := redisFieldSet(obj, "User", obj.User); err != nil {
+	if err := pipeline.FieldSet(obj, "User", obj.User); err != nil {
 		return err
 	}
-	if err := redisFieldSet(obj, "IsPublished", obj.IsPublished); err != nil {
+	if err := pipeline.FieldSet(obj, "IsPublished", obj.IsPublished); err != nil {
 		return err
 	}
 	transformed_Create_field := db.TimeFormat(obj.Create)
-	if err := redisFieldSet(obj, "Create", transformed_Create_field); err != nil {
+	if err := pipeline.FieldSet(obj, "Create", transformed_Create_field); err != nil {
 		return err
 	}
 	transformed_Update_field := db.TimeToLocalTime(obj.Update)
-	if err := redisFieldSet(obj, "Update", transformed_Update_field); err != nil {
+	if err := pipeline.FieldSet(obj, "Update", transformed_Update_field); err != nil {
 		return err
 	}
 	//! object index set
-	if err := redisIndexSet(obj, "Slug", obj.Slug, obj.BlogId); err != nil {
+	if err := pipeline.IndexSet(obj, "Slug", obj.Slug, obj.BlogId); err != nil {
 		return err
 	}
-	if err := redisIndexSet(obj, "User", obj.User, obj.BlogId); err != nil {
+	if err := pipeline.IndexSet(obj, "User", obj.User, obj.BlogId); err != nil {
 		return err
 	}
-	if err := redisIndexSet(obj, "IsPublished", obj.IsPublished, obj.BlogId); err != nil {
+	if err := pipeline.IndexSet(obj, "IsPublished", obj.IsPublished, obj.BlogId); err != nil {
 		return err
 	}
-	if err := redisIndexSet(obj, "Create", obj.Create, obj.BlogId); err != nil {
+	if err := pipeline.IndexSet(obj, "Create", obj.Create, obj.BlogId); err != nil {
 		return err
 	}
-	if err := redisIndexSet(obj, "Update", obj.Update, obj.BlogId); err != nil {
+	if err := pipeline.IndexSet(obj, "Update", obj.Update, obj.BlogId); err != nil {
 		return err
 	}
 	//! object primary key set
-	_, err := redisListLPush(obj, "BlogId", obj.BlogId)
+	if err := pipeline.ListLPush(obj, "BlogId", obj.BlogId); err != nil {
+		return err
+	}
+	_, err := pipeline.Exec()
 	return err
 }
 

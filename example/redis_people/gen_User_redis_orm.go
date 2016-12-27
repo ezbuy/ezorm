@@ -13,38 +13,42 @@ var (
 
 func (m *_UserMgr) Set(obj *User) error {
 	//! object field set
-	if err := redisFieldSet(obj, "UserId", obj.UserId); err != nil {
+	pipeline := redisPipeline()
+	if err := pipeline.FieldSet(obj, "UserId", obj.UserId); err != nil {
 		return err
 	}
-	if err := redisFieldSet(obj, "UserNumber", obj.UserNumber); err != nil {
+	if err := pipeline.FieldSet(obj, "UserNumber", obj.UserNumber); err != nil {
 		return err
 	}
-	if err := redisFieldSet(obj, "Name", obj.Name); err != nil {
+	if err := pipeline.FieldSet(obj, "Name", obj.Name); err != nil {
 		return err
 	}
 	transformed_Create_field := db.TimeFormat(obj.Create)
-	if err := redisFieldSet(obj, "Create", transformed_Create_field); err != nil {
+	if err := pipeline.FieldSet(obj, "Create", transformed_Create_field); err != nil {
 		return err
 	}
 	transformed_Update_field := db.TimeToLocalTime(obj.Update)
-	if err := redisFieldSet(obj, "Update", transformed_Update_field); err != nil {
+	if err := pipeline.FieldSet(obj, "Update", transformed_Update_field); err != nil {
 		return err
 	}
 	//! object index set
-	if err := redisIndexSet(obj, "UserNumber", obj.UserNumber, obj.UserId); err != nil {
+	if err := pipeline.IndexSet(obj, "UserNumber", obj.UserNumber, obj.UserId); err != nil {
 		return err
 	}
-	if err := redisIndexSet(obj, "Name", obj.Name, obj.UserId); err != nil {
+	if err := pipeline.IndexSet(obj, "Name", obj.Name, obj.UserId); err != nil {
 		return err
 	}
-	if err := redisIndexSet(obj, "Create", obj.Create, obj.UserId); err != nil {
+	if err := pipeline.IndexSet(obj, "Create", obj.Create, obj.UserId); err != nil {
 		return err
 	}
-	if err := redisIndexSet(obj, "Update", obj.Update, obj.UserId); err != nil {
+	if err := pipeline.IndexSet(obj, "Update", obj.Update, obj.UserId); err != nil {
 		return err
 	}
 	//! object primary key set
-	_, err := redisListLPush(obj, "UserId", obj.UserId)
+	if err := pipeline.ListLPush(obj, "UserId", obj.UserId); err != nil {
+		return err
+	}
+	_, err := pipeline.Exec()
 	return err
 }
 
