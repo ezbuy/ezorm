@@ -1,0 +1,73 @@
+Blog:
+  dbs: [mysql, redis]
+  fields:
+    - BlogId: int32
+      flags: [noinc]
+    - Title: string
+    - Hits: int32
+    - Slug: string
+      flags: [unique]
+    - Body: string
+      flags: [nullable]
+    - User: int32
+      flags: [index]
+      fk: User.UserNumber
+    - IsPublished: bool
+      flags: [index]
+    - Create: timestamp
+      flags: [index]
+    - Update: datetime
+      flags: [index]
+  indexes: [[User, IsPublished]]
+
+  table: Blog
+  dbname: Test
+  storetype: hash
+
+User:
+  dbs: [mysql, redis]
+  fields:
+    - UserId: int32
+    - UserNumber: int32
+      flags: [unique]
+    - Name: string
+      flags: [index]
+    - Create: timestamp
+      flags: [index]
+    - Update: datetime
+      flags: [index]
+  table: test_user
+  dbname: test
+  storetype: hash
+
+UserBlog:
+  dbs: [redis, mysql]
+  storetype: set
+  valuetype: int32
+  modeltype: Blog
+  dbname: Test
+  importSQL: "SELECT CONCAT('UserId:', UserId) AS k, ID AS v FROM BLOGS"
+  
+SortUserBlog:
+  dbs: [redis, mysql]
+  storetype: zset
+  valuetype: int32
+  modeltype: Blog
+  dbname: Test
+  importSQL: "SELECT CONCAT('UserId:', UserId) AS k, SCORE, ID AS v FROM BLOGS"
+
+UserLocation:
+  dbs: [redis, mysql]
+  storetype: geo
+  valuetype: int32
+  modeltype: User
+  dbname: Test
+  importSQL: "SELECT CONCAT('UserId:', UserId) AS k, Longitude, Latitude, ID AS v FROM BLOGS"
+
+UserId:
+  dbs: [redis, mysql]
+  storetype: list
+  valuetype: int32
+  modeltype: User
+  dbname: Test
+  importSQL: "SELECT CONCAT('UserId:', UserId) AS k, ID AS v FROM BLOGS"

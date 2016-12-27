@@ -1,5 +1,6 @@
 {{define "mssql_orm"}}package {{.GoPackage}}
 {{$obj := .}}
+{{if ($obj.DbSwitch "mssql")}}
 {{$idFieldName := printf "%sId" .Name}}
 {{/* Only generate source file for table with primary key */}}
 {{range $index, $field := $obj.Fields}}
@@ -282,6 +283,7 @@ func (m *_{{$obj.Name}}Mgr) timeConvToLocal(t *time.Time) *time.Time{
 	return &localTime
 }
 
+{{end}}
 {{end}}
 {{end}}
 {{end}}

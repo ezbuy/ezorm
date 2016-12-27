@@ -1,11 +1,12 @@
 {{define "mysql_orm"}}package {{.GoPackage}}
 
 {{$obj := .}}
+{{if ($obj.DbSwitch "mysql")}}
 {{/* Only generate source file for table with primary key */}}
 {{$idFieldName := $obj.GetPrimaryKeyName}}
 {{$idField := $obj.GetPrimaryKey}}
 {{$field := $obj.GetPrimaryKey}}
-{{ if $field }}
+
 
 {{$allFields := join (camel2list $obj.GetFieldNames) "`, `"}}
 {{$allFields := printf "`%v`" $allFields}}
@@ -25,8 +26,8 @@ import (
 var (
 	_ time.Time
 	_ bytes.Buffer
+	_ = strings.Index
 )
-
 
 // -----------------------------------------------------------------------------
 
@@ -100,8 +101,6 @@ func (*_{{$obj.Name}}Mgr) queryLimit(query string, limit int, args ...interface{
 		{{end}}
 
 		results = append(results, &result)
-
-
 	}
 	if err := rows.Err() ;err != nil {
 		return nil, fmt.Errorf("{{$tag}} fetch result error: %v", err)
@@ -109,6 +108,9 @@ func (*_{{$obj.Name}}Mgr) queryLimit(query string, limit int, args ...interface{
 
 	return
 }
+
+{{ if $field }}
+{{if ne $obj.Table ""}}
 
 {{- if $idField.DisableAutoInc}}
 func (m *_{{$obj.Name}}Mgr) Insert(obj *{{$obj.Name}}) (sql.Result, error) {
@@ -202,6 +204,7 @@ func (m *_{{$obj.Name}}Mgr) InsertBatch(objs []*{{$obj.Name}}) (sql.Result, erro
 	query := fmt.Sprintf("INSERT INTO {{$tbl}} (`{{- join (camel2list $obj.GetNonIdFieldNames) "`, `" -}}`) VALUES %s", strings.Join(values, ","))
 	return db.MysqlExec(query, params...)
 }
+
 
 func (m *_{{$obj.Name}}Mgr) FindByID(id {{$idField.Type}}) (*{{$obj.Name}}, error) {
 	query := "SELECT {{$allFields}} FROM {{$tbl}} WHERE {{camel2name $idFieldName}}=?"
@@ -349,7 +352,7 @@ func (m *_{{$obj.Name}}Mgr) FindWithOffset(where string, offset int, limit int, 
 
 
 func (m *_{{$obj.Name}}Mgr) GetQuerysql(where string) string {
-	query := "SELECT {{$allFields}} FROM {{$tbl}} "
+	query := "SELECT {{$allFields}} FROM {{$tbl}}"
 
 	where = strings.TrimSpace(where)
 	if where != "" {
@@ -407,6 +410,8 @@ func (m *_{{$obj.Name}}Mgr) Count(where string, args ...interface{}) (int32, err
 
 	return count, nil
 }
+{{end}}
+
 
 func (m *_{{$obj.Name}}Mgr) GetSort(sorts []string) string {
 	 if len(sorts) == 0 {
@@ -441,6 +446,7 @@ func (m *_{{$obj.Name}}Mgr) GetLimit(offset, limit int) string {
 	 return fmt.Sprintf(" LIMIT %d, %d", offset, limit)
 }
 
+{{- end -}}
 {{- end -}}
 {{- end -}}
 

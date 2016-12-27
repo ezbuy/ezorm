@@ -43,6 +43,9 @@ func (*_UserMgr) queryLimit(query string, limit int, args ...interface{}) (resul
 	}
 	defer rows.Close()
 
+	var Create string
+	var Update string
+
 	offset := 0
 	for rows.Next() {
 		if limit >= 0 && offset >= limit {
@@ -54,10 +57,14 @@ func (*_UserMgr) queryLimit(query string, limit int, args ...interface{}) (resul
 		err := rows.Scan(&(result.UserId),
 			&(result.UserNumber),
 			&(result.Name),
-		)
+			&Create, &Update)
 		if err != nil {
 			return nil, err
 		}
+
+		result.Create = db.TimeParse(Create)
+
+		result.Update = db.TimeParseLocalTime(Update)
 
 		results = append(results, &result)
 	}
@@ -76,8 +83,8 @@ func (m *_UserMgr) Save(obj *User) (sql.Result, error) {
 }
 
 func (m *_UserMgr) saveInsert(obj *User) (sql.Result, error) {
-	query := "INSERT INTO test.test_user (`user_number`, `name`) VALUES (?, ?)"
-	result, err := db.MysqlExec(query, obj.UserNumber, obj.Name)
+	query := "INSERT INTO test.test_user (`user_number`, `name`, `create`, `update`) VALUES (?, ?, ?, ?)"
+	result, err := db.MysqlExec(query, obj.UserNumber, obj.Name, db.TimeFormat(obj.Create), db.TimeToLocalTime(obj.Update))
 	if err != nil {
 		return result, err
 	}
@@ -93,8 +100,8 @@ func (m *_UserMgr) saveInsert(obj *User) (sql.Result, error) {
 }
 
 func (m *_UserMgr) saveUpdate(obj *User) (sql.Result, error) {
-	query := "UPDATE test.test_user SET `user_number`=?, `name`=? WHERE `user_id`=?"
-	return db.MysqlExec(query, obj.UserNumber, obj.Name, obj.UserId)
+	query := "UPDATE test.test_user SET `user_number`=?, `name`=?, `create`=?, `update`=? WHERE `user_id`=?"
+	return db.MysqlExec(query, obj.UserNumber, obj.Name, db.TimeFormat(obj.Create), db.TimeToLocalTime(obj.Update), obj.UserId)
 }
 
 func (m *_UserMgr) InsertBatch(objs []*User) (sql.Result, error) {
@@ -103,17 +110,17 @@ func (m *_UserMgr) InsertBatch(objs []*User) (sql.Result, error) {
 	}
 
 	values := make([]string, 0, len(objs))
-	params := make([]interface{}, 0, len(objs)*2)
+	params := make([]interface{}, 0, len(objs)*4)
 	for _, obj := range objs {
-		values = append(values, "(?, ?)")
-		params = append(params, obj.UserNumber, obj.Name)
+		values = append(values, "(?, ?, ?, ?)")
+		params = append(params, obj.UserNumber, obj.Name, db.TimeFormat(obj.Create), db.TimeToLocalTime(obj.Update))
 	}
-	query := fmt.Sprintf("INSERT INTO test.test_user (`user_number`, `name`) VALUES %s", strings.Join(values, ","))
+	query := fmt.Sprintf("INSERT INTO test.test_user (`user_number`, `name`, `create`, `update`) VALUES %s", strings.Join(values, ","))
 	return db.MysqlExec(query, params...)
 }
 
 func (m *_UserMgr) FindByID(id int32) (*User, error) {
-	query := "SELECT `user_id`, `user_number`, `name` FROM test.test_user WHERE user_id=?"
+	query := "SELECT `user_id`, `user_number`, `name`, `create`, `update` FROM test.test_user WHERE user_id=?"
 	return m.queryOne(query, id)
 }
 
@@ -127,7 +134,7 @@ func (m *_UserMgr) FindByIDs(ids []int32) ([]*User, error) {
 	}
 
 	query := fmt.Sprintf(
-		"SELECT `user_id`, `user_number`, `name` FROM test.test_user WHERE user_id IN (%s)",
+		"SELECT `user_id`, `user_number`, `name`, `create`, `update` FROM test.test_user WHERE user_id IN (%s)",
 		strings.Join(placeHolders, ","))
 	return m.query(query, args...)
 }
@@ -186,7 +193,7 @@ func (m *_UserMgr) FindMapUserNumber(UserNumber []int32) (map[int32]*User, error
 
 func (m *_UserMgr) FindInUserNumber(UserNumber []int32, sortFields ...string) ([]*User, error) {
 	buf := bytes.NewBuffer(nil)
-	buf.WriteString("SELECT `user_id`, `user_number`, `name` FROM test.test_user WHERE ")
+	buf.WriteString("SELECT `user_id`, `user_number`, `name`, `create`, `update` FROM test.test_user WHERE ")
 
 	buf.WriteString("`user_number` in ")
 	int32ToIds(buf, UserNumber)
@@ -194,7 +201,7 @@ func (m *_UserMgr) FindInUserNumber(UserNumber []int32, sortFields ...string) ([
 }
 
 func (m *_UserMgr) FindOneByUserNumber(UserNumber int32) (*User, error) {
-	query := "SELECT `user_id`, `user_number`, `name` FROM test.test_user WHERE user_number=?"
+	query := "SELECT `user_id`, `user_number`, `name`, `create`, `update` FROM test.test_user WHERE user_number=?"
 	return m.queryOne(query, UserNumber)
 }
 
@@ -224,7 +231,7 @@ func (m *_UserMgr) FindMapName(Name []string) (map[string]*User, error) {
 
 func (m *_UserMgr) FindInName(Name []string, sortFields ...string) ([]*User, error) {
 	buf := bytes.NewBuffer(nil)
-	buf.WriteString("SELECT `user_id`, `user_number`, `name` FROM test.test_user WHERE ")
+	buf.WriteString("SELECT `user_id`, `user_number`, `name`, `create`, `update` FROM test.test_user WHERE ")
 
 	buf.WriteString("`name` in ")
 	stringToIds(buf, Name)
@@ -236,9 +243,29 @@ func (m *_UserMgr) FindAllByName(Name string, sortFields ...string) ([]*User, er
 }
 
 func (m *_UserMgr) FindByName(Name string, offset int, limit int, sortFields ...string) ([]*User, error) {
-	query := fmt.Sprintf("SELECT `user_id`, `user_number`, `name` FROM test.test_user WHERE `name`=? %s%s", m.GetSort(sortFields), m.GetLimit(offset, limit))
+	query := fmt.Sprintf("SELECT `user_id`, `user_number`, `name`, `create`, `update` FROM test.test_user WHERE `name`=? %s%s", m.GetSort(sortFields), m.GetLimit(offset, limit))
 
 	return m.query(query, Name)
+}
+
+func (m *_UserMgr) FindAllByCreate(Create time.Time, sortFields ...string) ([]*User, error) {
+	return m.FindByCreate(Create, -1, -1, sortFields...)
+}
+
+func (m *_UserMgr) FindByCreate(Create time.Time, offset int, limit int, sortFields ...string) ([]*User, error) {
+	query := fmt.Sprintf("SELECT `user_id`, `user_number`, `name`, `create`, `update` FROM test.test_user WHERE `create`=? %s%s", m.GetSort(sortFields), m.GetLimit(offset, limit))
+
+	return m.query(query, db.TimeFormat(Create))
+}
+
+func (m *_UserMgr) FindAllByUpdate(Update time.Time, sortFields ...string) ([]*User, error) {
+	return m.FindByUpdate(Update, -1, -1, sortFields...)
+}
+
+func (m *_UserMgr) FindByUpdate(Update time.Time, offset int, limit int, sortFields ...string) ([]*User, error) {
+	query := fmt.Sprintf("SELECT `user_id`, `user_number`, `name`, `create`, `update` FROM test.test_user WHERE `update`=? %s%s", m.GetSort(sortFields), m.GetLimit(offset, limit))
+
+	return m.query(query, db.TimeToLocalTime(Update))
 }
 
 func (m *_UserMgr) FindOne(where string, args ...interface{}) (*User, error) {
@@ -267,7 +294,7 @@ func (m *_UserMgr) FindWithOffset(where string, offset int, limit int, args ...i
 }
 
 func (m *_UserMgr) GetQuerysql(where string) string {
-	query := "SELECT `user_id`, `user_number`, `name` FROM test.test_user"
+	query := "SELECT `user_id`, `user_number`, `name`, `create`, `update` FROM test.test_user"
 
 	where = strings.TrimSpace(where)
 	if where != "" {
