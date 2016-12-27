@@ -25,14 +25,6 @@ func (p *Blog) GetClassName() string {
 	return "Blog"
 }
 
-func (p *Blog) GetIndexes() []string {
-	idx := []string{
-		"Slug",
-		"IsPublished",
-	}
-	return idx
-}
-
 type _BlogMgr struct {
 }
 

@@ -35,7 +35,6 @@ func (p *{{.Name}}) GetStoreType() string {
 func (p *{{.Name}}) GetPrimaryKey() string {
 	return "{{.GetPrimaryKeyName}}"
 }
-{{- end}}
 
 func (p *{{.Name}}) GetIndexes() []string {
 	idx := []string{
@@ -47,6 +46,7 @@ func (p *{{.Name}}) GetIndexes() []string {
 	}
 	return idx
 }
+{{- end}}
 
 type _{{.Name}}Mgr struct {
 }

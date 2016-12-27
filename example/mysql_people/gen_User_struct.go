@@ -19,14 +19,6 @@ func (p *User) GetClassName() string {
 	return "User"
 }
 
-func (p *User) GetIndexes() []string {
-	idx := []string{
-		"UserNumber",
-		"Name",
-	}
-	return idx
-}
-
 type _UserMgr struct {
 }
 
