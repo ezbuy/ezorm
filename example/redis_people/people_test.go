@@ -42,8 +42,8 @@ func TestPeopleObject(t *testing.T) {
 		Create:      now,
 		Update:      now,
 	}
-	assert.Equal(t, BlogMgr.DelBlog(&blog), nil)
-	assert.Equal(t, BlogMgr.SetBlog(&blog), nil)
+	assert.Equal(t, BlogMgr.Remove(&blog), nil)
+	assert.Equal(t, BlogMgr.Set(&blog), nil)
 
 	blog2 := Blog{
 		BlogId:      2,
@@ -54,8 +54,8 @@ func TestPeopleObject(t *testing.T) {
 		Create:      now,
 		Update:      now,
 	}
-	assert.Equal(t, BlogMgr.DelBlog(&blog2), nil)
-	assert.Equal(t, BlogMgr.SetBlog(&blog2), nil)
+	assert.Equal(t, BlogMgr.Remove(&blog2), nil)
+	assert.Equal(t, BlogMgr.Set(&blog2), nil)
 
 	blog3 := Blog{
 		BlogId:      3,
@@ -66,8 +66,8 @@ func TestPeopleObject(t *testing.T) {
 		Create:      now,
 		Update:      now,
 	}
-	assert.Equal(t, BlogMgr.DelBlog(&blog3), nil)
-	assert.Equal(t, BlogMgr.SetBlog(&blog3), nil)
+	assert.Equal(t, BlogMgr.Remove(&blog3), nil)
+	assert.Equal(t, BlogMgr.Set(&blog3), nil)
 
 	blog4 := Blog{
 		BlogId:      4,
@@ -78,12 +78,12 @@ func TestPeopleObject(t *testing.T) {
 		Create:      now,
 		Update:      now,
 	}
-	assert.Equal(t, BlogMgr.DelBlog(&blog4), nil)
-	assert.Equal(t, BlogMgr.SetBlog(&blog4), nil)
+	assert.Equal(t, BlogMgr.Remove(&blog4), nil)
+	assert.Equal(t, BlogMgr.Set(&blog4), nil)
 
 	b := BlogMgr.NewBlog()
 	b.BlogId = 2
-	assert.Equal(t, BlogMgr.GetBlog(b), nil)
+	assert.Equal(t, BlogMgr.Get(b), nil)
 	assert.Equal(t, blog2.Title, b.Title)
 	assert.Equal(t, blog2.Slug, b.Slug)
 	assert.Equal(t, blog2.User, b.User)
@@ -92,12 +92,12 @@ func TestPeopleObject(t *testing.T) {
 	assert.Equal(t, blog2.Update.Unix(), b.Update.Unix())
 	log.Println("get blog =>", b)
 
-	blogs, err := BlogMgr.GetBlogsByUser(1)
+	blogs, err := BlogMgr.GetByUser(1)
 	log.Println("get blogs =>", blogs)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, len(blogs), 3)
 
-	blogs2, err := BlogMgr.GetBlogsByIndexes(map[string]interface{}{
+	blogs2, err := BlogMgr.GetByIndexes(map[string]interface{}{
 		"User":        1,
 		"IsPublished": false,
 	})
@@ -118,13 +118,13 @@ func TestPeopleObject(t *testing.T) {
 	user.UserNumber = 9527
 	user.Create = now
 	user.Update = now
-	assert.Equal(t, UserMgr.DelUser(user), nil)
-	assert.Equal(t, UserMgr.SetUser(user), nil)
+	assert.Equal(t, UserMgr.Remove(user), nil)
+	assert.Equal(t, UserMgr.Set(user), nil)
 
 	u2 := UserMgr.NewUser()
 	u2.UserId = 101
 
-	assert.Equal(t, UserMgr.GetUser(u2), nil)
+	assert.Equal(t, UserMgr.Get(u2), nil)
 	assert.Equal(t, user.UserId, u2.UserId)
 	assert.Equal(t, user.Name, u2.Name)
 	assert.Equal(t, user.UserNumber, u2.UserNumber)

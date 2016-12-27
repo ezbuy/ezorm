@@ -81,7 +81,7 @@ func (m *_UserBlogMgr) RelatedBlogs(key string) ([]*Blog, error) {
 		if err := redisStringScan(str, &val); err != nil {
 			return nil, err
 		}
-		if obj, err := BlogMgr.GetBlogById(val); err == nil {
+		if obj, err := BlogMgr.GetById(val); err == nil {
 			objs = append(objs, obj)
 		}
 	}

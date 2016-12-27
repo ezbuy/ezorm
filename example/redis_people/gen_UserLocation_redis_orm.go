@@ -74,7 +74,7 @@ func (m *_UserLocationMgr) GeoRadiusRelatedUsers(key string, longitude float64, 
 		if err := redisStringScan(str, &val); err != nil {
 			return nil, err
 		}
-		if obj, err := UserMgr.GetUserById(val); err == nil {
+		if obj, err := UserMgr.GetById(val); err == nil {
 			objs = append(objs, obj)
 		}
 	}

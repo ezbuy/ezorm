@@ -11,7 +11,7 @@ var (
 	_ time.Time
 )
 
-func (m *_BlogMgr) SetBlog(obj *Blog) error {
+func (m *_BlogMgr) Set(obj *Blog) error {
 	//! object field set
 	if err := redisFieldSet(obj, "BlogId", obj.BlogId); err != nil {
 		return err
@@ -63,7 +63,7 @@ func (m *_BlogMgr) SetBlog(obj *Blog) error {
 	return err
 }
 
-func (m *_BlogMgr) DelBlog(obj *Blog) error {
+func (m *_BlogMgr) Remove(obj *Blog) error {
 	if err := redisDelObject(obj); err != nil {
 		return err
 	}
@@ -85,7 +85,7 @@ func (m *_BlogMgr) DelBlog(obj *Blog) error {
 	return redisListRemove(obj, "BlogId", obj.BlogId)
 }
 
-func (m *_BlogMgr) GetBlog(obj *Blog) error {
+func (m *_BlogMgr) Get(obj *Blog) error {
 	//! object field get
 	if err := redisFieldGet(obj, "BlogId", &obj.BlogId); err != nil {
 		return err
@@ -121,19 +121,19 @@ func (m *_BlogMgr) GetBlog(obj *Blog) error {
 	return nil
 }
 
-func (m *_BlogMgr) GetBlogById(id int32) (*Blog, error) {
+func (m *_BlogMgr) GetById(id int32) (*Blog, error) {
 	obj := m.NewBlog()
 	obj.BlogId = id
-	if err := m.GetBlog(obj); err != nil {
+	if err := m.Get(obj); err != nil {
 		return nil, err
 	}
 	return obj, nil
 }
 
-func (m *_BlogMgr) GetBlogsByIds(ids []int32) ([]*Blog, error) {
-	objs := []*Blog{}
+func (m *_BlogMgr) GetByIds(ids []int32) ([]*Blog, error) {
+	objs := make([]*Blog, 0, len(ids))
 	for _, id := range ids {
-		obj, err := m.GetBlogById(id)
+		obj, err := m.GetById(id)
 		if err != nil {
 			return objs, err
 		}
@@ -142,19 +142,19 @@ func (m *_BlogMgr) GetBlogsByIds(ids []int32) ([]*Blog, error) {
 	return objs, nil
 }
 
-func (m *_BlogMgr) GetBlogsBySlug(val string) ([]*Blog, error) {
+func (m *_BlogMgr) GetBySlug(val string) ([]*Blog, error) {
 	strs, err := redisIndexGet(m.NewBlog(), "Slug", val)
 	if err != nil {
 		return nil, err
 	}
-	objs := []*Blog{}
+	objs := make([]*Blog, 0, len(strs))
 	for _, str := range strs {
 		var id int32
 		if err := redisStringScan(str, &id); err != nil {
 			return nil, err
 		}
 
-		obj, err := m.GetBlogById(id)
+		obj, err := m.GetById(id)
 		if err != nil {
 			return nil, err
 		}
@@ -164,19 +164,19 @@ func (m *_BlogMgr) GetBlogsBySlug(val string) ([]*Blog, error) {
 	return objs, nil
 }
 
-func (m *_BlogMgr) GetBlogsByUser(val int32) ([]*Blog, error) {
+func (m *_BlogMgr) GetByUser(val int32) ([]*Blog, error) {
 	strs, err := redisIndexGet(m.NewBlog(), "User", val)
 	if err != nil {
 		return nil, err
 	}
-	objs := []*Blog{}
+	objs := make([]*Blog, 0, len(strs))
 	for _, str := range strs {
 		var id int32
 		if err := redisStringScan(str, &id); err != nil {
 			return nil, err
 		}
 
-		obj, err := m.GetBlogById(id)
+		obj, err := m.GetById(id)
 		if err != nil {
 			return nil, err
 		}
@@ -186,19 +186,19 @@ func (m *_BlogMgr) GetBlogsByUser(val int32) ([]*Blog, error) {
 	return objs, nil
 }
 
-func (m *_BlogMgr) GetBlogsByIsPublished(val bool) ([]*Blog, error) {
+func (m *_BlogMgr) GetByIsPublished(val bool) ([]*Blog, error) {
 	strs, err := redisIndexGet(m.NewBlog(), "IsPublished", val)
 	if err != nil {
 		return nil, err
 	}
-	objs := []*Blog{}
+	objs := make([]*Blog, 0, len(strs))
 	for _, str := range strs {
 		var id int32
 		if err := redisStringScan(str, &id); err != nil {
 			return nil, err
 		}
 
-		obj, err := m.GetBlogById(id)
+		obj, err := m.GetById(id)
 		if err != nil {
 			return nil, err
 		}
@@ -208,19 +208,19 @@ func (m *_BlogMgr) GetBlogsByIsPublished(val bool) ([]*Blog, error) {
 	return objs, nil
 }
 
-func (m *_BlogMgr) GetBlogsByCreate(val time.Time) ([]*Blog, error) {
+func (m *_BlogMgr) GetByCreate(val time.Time) ([]*Blog, error) {
 	strs, err := redisIndexGet(m.NewBlog(), "Create", val)
 	if err != nil {
 		return nil, err
 	}
-	objs := []*Blog{}
+	objs := make([]*Blog, 0, len(strs))
 	for _, str := range strs {
 		var id int32
 		if err := redisStringScan(str, &id); err != nil {
 			return nil, err
 		}
 
-		obj, err := m.GetBlogById(id)
+		obj, err := m.GetById(id)
 		if err != nil {
 			return nil, err
 		}
@@ -230,19 +230,19 @@ func (m *_BlogMgr) GetBlogsByCreate(val time.Time) ([]*Blog, error) {
 	return objs, nil
 }
 
-func (m *_BlogMgr) GetBlogsByUpdate(val time.Time) ([]*Blog, error) {
+func (m *_BlogMgr) GetByUpdate(val time.Time) ([]*Blog, error) {
 	strs, err := redisIndexGet(m.NewBlog(), "Update", val)
 	if err != nil {
 		return nil, err
 	}
-	objs := []*Blog{}
+	objs := make([]*Blog, 0, len(strs))
 	for _, str := range strs {
 		var id int32
 		if err := redisStringScan(str, &id); err != nil {
 			return nil, err
 		}
 
-		obj, err := m.GetBlogById(id)
+		obj, err := m.GetById(id)
 		if err != nil {
 			return nil, err
 		}
@@ -252,7 +252,7 @@ func (m *_BlogMgr) GetBlogsByUpdate(val time.Time) ([]*Blog, error) {
 	return objs, nil
 }
 
-func (m *_BlogMgr) GetBlogsByIndexes(indexes map[string]interface{}) ([]*Blog, error) {
+func (m *_BlogMgr) GetByIndexes(indexes map[string]interface{}) ([]*Blog, error) {
 	index_keys := []string{}
 	if val, ok := indexes["Slug"]; ok {
 		index_keys = append(index_keys, fmt.Sprintf("Slug:%v", val))
@@ -277,14 +277,14 @@ func (m *_BlogMgr) GetBlogsByIndexes(indexes map[string]interface{}) ([]*Blog, e
 		return nil, err
 	}
 
-	objs := []*Blog{}
+	objs := make([]*Blog, 0, len(strs))
 	for _, str := range strs {
 		var id int32
 		if err := redisStringScan(str, &id); err != nil {
 			return nil, err
 		}
 
-		obj, err := m.GetBlogById(id)
+		obj, err := m.GetById(id)
 		if err != nil {
 			return nil, err
 		}
@@ -307,7 +307,7 @@ func (m *_BlogMgr) ListRange(start, stop int64) ([]*Blog, error) {
 			return nil, err
 		}
 
-		obj, err := m.GetBlogById(id)
+		obj, err := m.GetById(id)
 		if err != nil {
 			return nil, err
 		}

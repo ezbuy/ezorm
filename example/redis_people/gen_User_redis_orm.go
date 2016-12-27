@@ -11,7 +11,7 @@ var (
 	_ time.Time
 )
 
-func (m *_UserMgr) SetUser(obj *User) error {
+func (m *_UserMgr) Set(obj *User) error {
 	//! object field set
 	if err := redisFieldSet(obj, "UserId", obj.UserId); err != nil {
 		return err
@@ -48,7 +48,7 @@ func (m *_UserMgr) SetUser(obj *User) error {
 	return err
 }
 
-func (m *_UserMgr) DelUser(obj *User) error {
+func (m *_UserMgr) Remove(obj *User) error {
 	if err := redisDelObject(obj); err != nil {
 		return err
 	}
@@ -67,7 +67,7 @@ func (m *_UserMgr) DelUser(obj *User) error {
 	return redisListRemove(obj, "UserId", obj.UserId)
 }
 
-func (m *_UserMgr) GetUser(obj *User) error {
+func (m *_UserMgr) Get(obj *User) error {
 	//! object field get
 	if err := redisFieldGet(obj, "UserId", &obj.UserId); err != nil {
 		return err
@@ -91,19 +91,19 @@ func (m *_UserMgr) GetUser(obj *User) error {
 	return nil
 }
 
-func (m *_UserMgr) GetUserById(id int32) (*User, error) {
+func (m *_UserMgr) GetById(id int32) (*User, error) {
 	obj := m.NewUser()
 	obj.UserId = id
-	if err := m.GetUser(obj); err != nil {
+	if err := m.Get(obj); err != nil {
 		return nil, err
 	}
 	return obj, nil
 }
 
-func (m *_UserMgr) GetUsersByIds(ids []int32) ([]*User, error) {
-	objs := []*User{}
+func (m *_UserMgr) GetByIds(ids []int32) ([]*User, error) {
+	objs := make([]*User, 0, len(ids))
 	for _, id := range ids {
-		obj, err := m.GetUserById(id)
+		obj, err := m.GetById(id)
 		if err != nil {
 			return objs, err
 		}
@@ -112,19 +112,19 @@ func (m *_UserMgr) GetUsersByIds(ids []int32) ([]*User, error) {
 	return objs, nil
 }
 
-func (m *_UserMgr) GetUsersByUserNumber(val int32) ([]*User, error) {
+func (m *_UserMgr) GetByUserNumber(val int32) ([]*User, error) {
 	strs, err := redisIndexGet(m.NewUser(), "UserNumber", val)
 	if err != nil {
 		return nil, err
 	}
-	objs := []*User{}
+	objs := make([]*User, 0, len(strs))
 	for _, str := range strs {
 		var id int32
 		if err := redisStringScan(str, &id); err != nil {
 			return nil, err
 		}
 
-		obj, err := m.GetUserById(id)
+		obj, err := m.GetById(id)
 		if err != nil {
 			return nil, err
 		}
@@ -134,19 +134,19 @@ func (m *_UserMgr) GetUsersByUserNumber(val int32) ([]*User, error) {
 	return objs, nil
 }
 
-func (m *_UserMgr) GetUsersByName(val string) ([]*User, error) {
+func (m *_UserMgr) GetByName(val string) ([]*User, error) {
 	strs, err := redisIndexGet(m.NewUser(), "Name", val)
 	if err != nil {
 		return nil, err
 	}
-	objs := []*User{}
+	objs := make([]*User, 0, len(strs))
 	for _, str := range strs {
 		var id int32
 		if err := redisStringScan(str, &id); err != nil {
 			return nil, err
 		}
 
-		obj, err := m.GetUserById(id)
+		obj, err := m.GetById(id)
 		if err != nil {
 			return nil, err
 		}
@@ -156,19 +156,19 @@ func (m *_UserMgr) GetUsersByName(val string) ([]*User, error) {
 	return objs, nil
 }
 
-func (m *_UserMgr) GetUsersByCreate(val time.Time) ([]*User, error) {
+func (m *_UserMgr) GetByCreate(val time.Time) ([]*User, error) {
 	strs, err := redisIndexGet(m.NewUser(), "Create", val)
 	if err != nil {
 		return nil, err
 	}
-	objs := []*User{}
+	objs := make([]*User, 0, len(strs))
 	for _, str := range strs {
 		var id int32
 		if err := redisStringScan(str, &id); err != nil {
 			return nil, err
 		}
 
-		obj, err := m.GetUserById(id)
+		obj, err := m.GetById(id)
 		if err != nil {
 			return nil, err
 		}
@@ -178,19 +178,19 @@ func (m *_UserMgr) GetUsersByCreate(val time.Time) ([]*User, error) {
 	return objs, nil
 }
 
-func (m *_UserMgr) GetUsersByUpdate(val time.Time) ([]*User, error) {
+func (m *_UserMgr) GetByUpdate(val time.Time) ([]*User, error) {
 	strs, err := redisIndexGet(m.NewUser(), "Update", val)
 	if err != nil {
 		return nil, err
 	}
-	objs := []*User{}
+	objs := make([]*User, 0, len(strs))
 	for _, str := range strs {
 		var id int32
 		if err := redisStringScan(str, &id); err != nil {
 			return nil, err
 		}
 
-		obj, err := m.GetUserById(id)
+		obj, err := m.GetById(id)
 		if err != nil {
 			return nil, err
 		}
@@ -200,7 +200,7 @@ func (m *_UserMgr) GetUsersByUpdate(val time.Time) ([]*User, error) {
 	return objs, nil
 }
 
-func (m *_UserMgr) GetUsersByIndexes(indexes map[string]interface{}) ([]*User, error) {
+func (m *_UserMgr) GetByIndexes(indexes map[string]interface{}) ([]*User, error) {
 	index_keys := []string{}
 	if val, ok := indexes["UserNumber"]; ok {
 		index_keys = append(index_keys, fmt.Sprintf("UserNumber:%v", val))
@@ -222,14 +222,14 @@ func (m *_UserMgr) GetUsersByIndexes(indexes map[string]interface{}) ([]*User, e
 		return nil, err
 	}
 
-	objs := []*User{}
+	objs := make([]*User, 0, len(strs))
 	for _, str := range strs {
 		var id int32
 		if err := redisStringScan(str, &id); err != nil {
 			return nil, err
 		}
 
-		obj, err := m.GetUserById(id)
+		obj, err := m.GetById(id)
 		if err != nil {
 			return nil, err
 		}
@@ -252,7 +252,7 @@ func (m *_UserMgr) ListRange(start, stop int64) ([]*User, error) {
 			return nil, err
 		}
 
-		obj, err := m.GetUserById(id)
+		obj, err := m.GetById(id)
 		if err != nil {
 			return nil, err
 		}

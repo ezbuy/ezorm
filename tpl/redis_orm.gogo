@@ -118,7 +118,7 @@ func (m *_{{$obj.Name}}Mgr) Related{{$obj.ModelType}}s(key string) ([]*{{$obj.Mo
 				return nil, err
 			}
 			transformed_val := {{- printf $obj.ValueField.GetTransformType.ConvertTo "val"}}
-			obj, err := {{$obj.ModelType}}Mgr.Get{{$obj.ModelType}}ById(transformed_val)
+			obj, err := {{$obj.ModelType}}Mgr.GetById(transformed_val)
 			if err != nil {
 				return nil, err
 			}
@@ -128,7 +128,7 @@ func (m *_{{$obj.Name}}Mgr) Related{{$obj.ModelType}}s(key string) ([]*{{$obj.Mo
 			if err := redisStringScan(str, &val); err != nil {
 				return nil, err
 			}
-			if obj, err := {{$obj.ModelType}}Mgr.Get{{$obj.ModelType}}ById(val); err == nil {
+			if obj, err := {{$obj.ModelType}}Mgr.GetById(val); err == nil {
 				objs = append(objs, obj)
 			}
 		{{- end}}
@@ -252,7 +252,7 @@ func (m *_{{$obj.Name}}Mgr) ZRangeRelated{{$obj.ModelType}}(key string, min, max
 				return nil, err
 			}
 			transformed_val := {{- printf $obj.ValueField.GetTransformType.ConvertTo "val"}}
-			obj, err := {{$obj.ModelType}}Mgr.Get{{$obj.ModelType}}ById(transformed_val)
+			obj, err := {{$obj.ModelType}}Mgr.GetById(transformed_val)
 			if err != nil {
 				return nil, err
 			}
@@ -262,7 +262,7 @@ func (m *_{{$obj.Name}}Mgr) ZRangeRelated{{$obj.ModelType}}(key string, min, max
 			if err := redisStringScan(str, &val); err != nil {
 				return nil, err
 			}
-			if obj, err := {{$obj.ModelType}}Mgr.Get{{$obj.ModelType}}ById(val); err == nil {
+			if obj, err := {{$obj.ModelType}}Mgr.GetById(val); err == nil {
 				objs = append(objs, obj)
 			}
 		{{- end}}
@@ -374,7 +374,7 @@ func (m *_{{$obj.Name}}Mgr) GeoRadiusRelated{{$obj.ModelType}}s(key string, long
 				return nil, err
 			}
 			transformed_val := {{- printf $obj.ValueField.GetTransformType.ConvertTo "val"}}
-			obj, err := {{$obj.ModelType}}Mgr.Get{{$obj.ModelType}}ById(transformed_val)
+			obj, err := {{$obj.ModelType}}Mgr.GetById(transformed_val)
 			if err != nil {
 				return nil, err
 			}
@@ -384,7 +384,7 @@ func (m *_{{$obj.Name}}Mgr) GeoRadiusRelated{{$obj.ModelType}}s(key string, long
 			if err := redisStringScan(str, &val); err != nil {
 				return nil, err
 			}
-			if obj, err := {{$obj.ModelType}}Mgr.Get{{$obj.ModelType}}ById(val); err == nil {
+			if obj, err := {{$obj.ModelType}}Mgr.GetById(val); err == nil {
 				objs = append(objs, obj)
 			}
 		{{- end}}
@@ -559,7 +559,7 @@ func (m *_{{$obj.Name}}Mgr) ListRangeRelated{{$obj.ModelType}}s(key string, star
 				return nil, err
 			}
 			transformed_val := {{- printf $obj.ValueField.GetTransformType.ConvertTo "val"}}
-			obj, err := {{$obj.ModelType}}Mgr.Get{{$obj.ModelType}}ById(transformed_val)
+			obj, err := {{$obj.ModelType}}Mgr.GetById(transformed_val)
 			if err != nil {
 				return nil, err
 			}
@@ -569,7 +569,7 @@ func (m *_{{$obj.Name}}Mgr) ListRangeRelated{{$obj.ModelType}}s(key string, star
 			if err := redisStringScan(str, &val); err != nil {
 				return nil, err
 			}
-			if obj, err := {{$obj.ModelType}}Mgr.Get{{$obj.ModelType}}ById(val); err == nil {
+			if obj, err := {{$obj.ModelType}}Mgr.GetById(val); err == nil {
 				objs = append(objs, obj)
 			}
 		{{- end}}
@@ -603,7 +603,7 @@ var (
 )
 
 
-func (m *_{{$obj.Name}}Mgr) Set{{$obj.Name}}(obj *{{$obj.Name}}) error {
+func (m *_{{$obj.Name}}Mgr) Set(obj *{{$obj.Name}}) error {
 	{{- if eq $obj.StoreType "json"}}
 	if err := redisJsonSet(obj); err != nil {
 	 	return err
@@ -677,7 +677,7 @@ func (m *_{{$obj.Name}}Mgr) Set{{$obj.Name}}(obj *{{$obj.Name}}) error {
 	{{- end}}
 }
 
-func (m *_{{$obj.Name}}Mgr) Del{{$obj.Name}}(obj *{{$obj.Name}}) error {
+func (m *_{{$obj.Name}}Mgr) Remove(obj *{{$obj.Name}}) error {
 	{{- if or (eq $obj.StoreType "json") (eq $obj.StoreType "hash")}}
 		if err := redisDelObject(obj); err != nil {
 			return err
@@ -695,7 +695,7 @@ func (m *_{{$obj.Name}}Mgr) Del{{$obj.Name}}(obj *{{$obj.Name}}) error {
 	{{- end}}
 }
 
-func (m *_{{$obj.Name}}Mgr) Get{{$obj.Name}}(obj *{{$obj.Name}}) error {
+func (m *_{{$obj.Name}}Mgr) Get(obj *{{$obj.Name}}) error {
 	{{- if eq $obj.StoreType "json"}}
 	return redisJsonGet(obj)
 	{{- else}}
@@ -717,19 +717,19 @@ func (m *_{{$obj.Name}}Mgr) Get{{$obj.Name}}(obj *{{$obj.Name}}) error {
 	{{- end}}
 }
 
-func (m *_{{$obj.Name}}Mgr) Get{{$obj.Name}}ById(id {{$idField.Type}}) (*{{$obj.Name}}, error) {
+func (m *_{{$obj.Name}}Mgr) GetById(id {{$idField.Type}}) (*{{$obj.Name}}, error) {
 	obj := m.New{{$obj.Name}}()
 	obj.{{$idFieldName}} = id
-	if err := m.Get{{$obj.Name}}(obj); err != nil {
+	if err := m.Get(obj); err != nil {
 		return nil, err
 	}
 	return obj, nil
 }
 
-func (m *_{{$obj.Name}}Mgr) Get{{$obj.Name}}sByIds(ids []{{$idField.Type}}) ([]*{{$obj.Name}}, error) {
-	objs := []*{{$obj.Name}}{}
+func (m *_{{$obj.Name}}Mgr) GetByIds(ids []{{$idField.Type}}) ([]*{{$obj.Name}}, error) {
+	objs := make([]*{{$obj.Name}}, 0, len(ids))
 	for _, id := range ids {
-		obj, err := m.Get{{$obj.Name}}ById(id)
+		obj, err := m.GetById(id)
 		if err != nil {
 			return objs, err
 		}
@@ -742,19 +742,19 @@ func (m *_{{$obj.Name}}Mgr) Get{{$obj.Name}}sByIds(ids []{{$idField.Type}}) ([]*
 {{- range $field := .Fields}} 
 {{- if $field.HasIndex}}
 
-func (m *_{{$obj.Name}}Mgr) Get{{$obj.Name}}sBy{{$field.Name}}(val {{$field.GetGoType}}) ([]*{{$obj.Name}}, error) {
+func (m *_{{$obj.Name}}Mgr) GetBy{{$field.Name}}(val {{$field.GetGoType}}) ([]*{{$obj.Name}}, error) {
 	strs, err := redisIndexGet(m.New{{$obj.Name}}(), "{{$field.Name}}", val)
 	if err != nil {
 		return nil, err
 	}
-	objs := []*{{$obj.Name}}{}
+	objs := make([]*{{$obj.Name}}, 0, len(strs))
 	for _, str := range strs {
 		var id {{$idField.Type}}
 		if err := redisStringScan(str, &id); err != nil {
 			return nil, err
 		}
 
-		obj, err := m.Get{{$obj.Name}}ById(id)
+		obj, err := m.GetById(id)
 		if err != nil {
 			return nil, err
 		}
@@ -769,7 +769,7 @@ func (m *_{{$obj.Name}}Mgr) Get{{$obj.Name}}sBy{{$field.Name}}(val {{$field.GetG
 
 
 {{if gt (len $obj.Indexes) 0}}
-func (m *_{{$obj.Name}}Mgr) Get{{$obj.Name}}sByIndexes(indexes map[string]interface{}) ([]*{{$obj.Name}}, error) {
+func (m *_{{$obj.Name}}Mgr) GetByIndexes(indexes map[string]interface{}) ([]*{{$obj.Name}}, error) {
 	index_keys := []string{}
 	{{- range $index, $field := $obj.Fields}}
 	{{- if $field.HasIndex}}	
@@ -792,14 +792,14 @@ func (m *_{{$obj.Name}}Mgr) Get{{$obj.Name}}sByIndexes(indexes map[string]interf
 		return nil, err
 	}
 
-	objs := []*{{$obj.Name}}{}
+	objs := make([]*{{$obj.Name}}, 0, len(strs))
 	for _, str := range strs {
 		var id {{$idField.Type}}
 		if err := redisStringScan(str, &id); err != nil {
 			return nil, err
 		}
 
-		obj, err := m.Get{{$obj.Name}}ById(id)
+		obj, err := m.GetById(id)
 		if err != nil {
 			return nil, err
 		}
@@ -823,7 +823,7 @@ func (m *_{{$obj.Name}}Mgr) ListRange(start, stop int64) ([]*{{$obj.Name}}, erro
 			return nil, err
 		}
 
-		obj, err := m.Get{{$obj.Name}}ById(id)
+		obj, err := m.GetById(id)
 		if err != nil {
 			return nil, err
 		}

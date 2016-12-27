@@ -95,7 +95,7 @@ func (m *_UserIdMgr) ListRangeRelatedUsers(key string, start, stop int64) ([]*Us
 		if err := redisStringScan(str, &val); err != nil {
 			return nil, err
 		}
-		if obj, err := UserMgr.GetUserById(val); err == nil {
+		if obj, err := UserMgr.GetById(val); err == nil {
 			objs = append(objs, obj)
 		}
 	}
