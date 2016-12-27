@@ -13,3 +13,4 @@ Blog:
   indexes: [[User, IsPublished]]
   table: test_blog
   dbname: test
+  
