@@ -7,11 +7,14 @@ import (
 	"time"
 
 	"github.com/bmizerany/assert"
-
+	"github.com/ezbuy/ezorm/db"
 	redis "gopkg.in/redis.v5"
 )
 
 func TestPeopleObject(t *testing.T) {
+	db.MysqlInit(&db.MysqlConfig{
+		DataSource: "tcp(localhost:3306)/",
+	})
 
 	var cmd redis.Cmdable
 

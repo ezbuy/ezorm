@@ -11,6 +11,34 @@ var (
 	_ time.Time
 )
 
+func (m *_BlogMgr) AddBySQL(sql string, args ...interface{}) error {
+	objs, err := m.Query(sql)
+	if err != nil {
+		return err
+	}
+
+	for _, obj := range objs {
+		if err := m.Set(obj); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (m *_BlogMgr) DelBySQL(sql string, args ...interface{}) error {
+	objs, err := m.Query(sql)
+	if err != nil {
+		return err
+	}
+
+	for _, obj := range objs {
+		if err := m.Remove(obj); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (m *_BlogMgr) Set(obj *Blog) error {
 	//! object field set
 	pipeline := redisPipeline()

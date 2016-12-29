@@ -144,6 +144,8 @@ func (f *Field) GetTag() string {
 			tags["json"] = true
 		case "redis":
 			tags["json"] = false
+		case "elastic":
+			tags["json"] = false
 		case "mysql":
 			tags["db"] = false
 		case "mssql":

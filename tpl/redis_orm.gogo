@@ -591,6 +591,7 @@ func (m *_{{$obj.Name}}Mgr) ListDel(key string) error {
 }
 {{end}}
 
+
 {{if or (eq $obj.StoreType "json") (eq $obj.StoreType "hash")}}
 ///////////// JSON & HASH /////////////////////////////////////////////////////
 import (
@@ -602,6 +603,41 @@ var (
 	_ time.Time
 )
 
+{{- if or ($obj.DbContains "mysql") ($obj.DbContains "mssql")}}
+func (m *_{{$obj.Name}}Mgr) AddBySQL(sql string, args ...interface{}) error {
+	objs, err := m.Query(sql)
+	if err != nil {
+		return err
+	}
+
+	for _, obj := range objs {
+		if err := m.Set(obj); err != nil {
+			return err
+		}
+	}	
+	return nil
+}
+
+func (m *_{{$obj.Name}}Mgr) DelBySQL(sql string, args ...interface{}) error {
+	objs, err := m.Query(sql)
+	if err != nil {
+		return err
+	}
+
+	for _, obj := range objs {
+		if err := m.Remove(obj); err != nil {
+			return err
+		}
+	}	
+	return nil
+}
+
+{{- if ne $obj.ImportSQL "" -}}
+func (m *_{{$obj.Name}}Mgr) Import() error {	
+	return m.AddBySQL("{{$obj.ImportSQL}}")
+}
+{{- end -}}
+{{- end}}
 
 func (m *_{{$obj.Name}}Mgr) Set(obj *{{$obj.Name}}) error {
 	{{- if eq $obj.StoreType "json"}}

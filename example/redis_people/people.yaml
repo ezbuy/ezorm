@@ -19,7 +19,6 @@ Blog:
     - Update: datetime
       flags: [index]
   indexes: [[User, IsPublished]]
-
   table: Blog
   dbname: Test
   storetype: hash
