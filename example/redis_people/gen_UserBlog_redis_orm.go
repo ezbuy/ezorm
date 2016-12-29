@@ -1,6 +1,7 @@
 package test
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -36,7 +37,7 @@ func (m *_UserBlogMgr) DelBySQL(sql string, args ...interface{}) error {
 	return nil
 }
 func (m *_UserBlogMgr) Import() error {
-	return m.AddBySQL("SELECT CONCAT('UserId:', UserId) AS k, ID AS v FROM BLOGS")
+	return m.AddBySQL("SELECT user_id, id FROM blogs")
 }
 
 ///////////// SET /////////////////////////////////////////////////////
@@ -45,6 +46,7 @@ func (m *_UserBlogMgr) SetAdd(key string, obj *UserBlog) error {
 }
 
 func (m *_UserBlogMgr) SetGet(key string) ([]*UserBlog, error) {
+
 	strs, err := redisSetGet(m.NewUserBlog(), key)
 	if err != nil {
 		return nil, err
@@ -69,8 +71,13 @@ func (m *_UserBlogMgr) SetRem(key string, obj *UserBlog) error {
 func (m *_UserBlogMgr) SetDel(key string) error {
 	return redisSetDel(m.NewUserBlog(), key)
 }
-func (m *_UserBlogMgr) RelatedBlogs(key string) ([]*Blog, error) {
-	strs, err := redisSetGet(m.NewUserBlog(), key)
+
+func (m *_UserBlogMgr) Clear() error {
+	return redisDrop(m.NewUserBlog())
+}
+func (m *_UserBlogMgr) RelatedBlogs(key interface{}) ([]*Blog, error) {
+
+	strs, err := redisSetGet(m.NewUserBlog(), fmt.Sprint(key))
 	if err != nil {
 		return nil, err
 	}

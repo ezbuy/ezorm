@@ -2,30 +2,118 @@ package test
 
 import (
 	"fmt"
-	"log"
 	"testing"
 	"time"
 
 	"github.com/bmizerany/assert"
 	"github.com/ezbuy/ezorm/db"
-	redis "gopkg.in/redis.v5"
 )
 
 func TestPeopleObject(t *testing.T) {
+	dsn := fmt.Sprintf("%s:%s@tcp(localhost:3306)/%s?charset=utf8&autocommit=true&parseTime=True",
+		"root",
+		"147011",
+		"ezorm")
+
 	db.MysqlInit(&db.MysqlConfig{
-		DataSource: "tcp(localhost:3306)/",
+		DataSource: dsn,
 	})
+	now := time.Now()
+	user1 := UserMgr.NewUser()
+	user1.Name = "user01"
+	user1.Mailbox = "user01@sss.fff"
+	user1.HeadUrl = "aaaa.png"
+	user1.Password = "123456"
+	user1.CreatedAt = now
+	user1.UpdatedAt = now
+	user1.Longitude = 103.754
+	user1.Latitude = 1.3282
 
-	var cmd redis.Cmdable
+	UserMgr.Del("id > 0")
+	BlogMgr.Del("id > 0")
+	_, err := UserMgr.Save(user1)
+	assert.Equal(t, nil, err)
 
-	cmd = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
-	})
+	blog11 := Blog{
+		UserId:    user1.Id,
+		Title:     "BlogTitle1",
+		Content:   "hello! everybody!!!",
+		Status:    1,
+		Readed:    10,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	BlogMgr.Save(&blog11)
 
-	pong, err := cmd.Ping().Result()
-	fmt.Println(pong, err)
+	blog12 := Blog{
+		UserId:    user1.Id,
+		Title:     "BlogTitle1222",
+		Content:   "hello! everybody!!!",
+		Status:    1,
+		Readed:    10,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	BlogMgr.Save(&blog12)
+
+	user2 := UserMgr.NewUser()
+	user2.Name = "user02"
+	user2.Mailbox = "user201@sss.fff"
+	user2.HeadUrl = "aaaa.png"
+	user2.Password = "123456"
+	user2.CreatedAt = now
+	user2.UpdatedAt = now
+	user2.Longitude = 103.754
+	user2.Latitude = 1.3282
+
+	_, err = UserMgr.Save(user2)
+	assert.Equal(t, nil, err)
+
+	blog21 := Blog{
+		UserId:    user2.Id,
+		Title:     "BlogTitle1",
+		Content:   "hello! everybody!!!",
+		Status:    1,
+		Readed:    10,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	BlogMgr.Save(&blog21)
+
+	blog22 := Blog{
+		UserId:    user2.Id,
+		Title:     "BlogTitle1222",
+		Content:   "hello! everybody!!!",
+		Status:    1,
+		Readed:    12,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	BlogMgr.Save(&blog22)
+
+	blog23 := Blog{
+		UserId:    user2.Id,
+		Title:     "BlogTitle1222",
+		Content:   "hello! everybody!!!",
+		Status:    1,
+		Readed:    18,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	BlogMgr.Save(&blog23)
+
+	user3 := UserMgr.NewUser()
+	user3.Name = "user03"
+	user3.Mailbox = "use301@sss.fff"
+	user3.HeadUrl = "aaaa.png"
+	user3.Password = "123456"
+	user3.CreatedAt = now
+	user3.UpdatedAt = now
+	user3.Longitude = 103.754
+	user3.Latitude = 1.3282
+
+	_, err = UserMgr.Save(user3)
+	assert.Equal(t, nil, err)
 
 	RedisSetUp(&RedisConfig{
 		Host: "127.0.0.1",
@@ -33,179 +121,27 @@ func TestPeopleObject(t *testing.T) {
 		DB:   1,
 	})
 
-	now := time.Now()
+	BlogMgr.Clear()
+	assert.Equal(t, BlogMgr.Import(), err)
+	UserMgr.Clear()
+	assert.Equal(t, UserMgr.Import(), err)
+	UserBlogMgr.Clear()
+	assert.Equal(t, UserBlogMgr.Import(), err)
+	SortUserBlogMgr.Clear()
+	assert.Equal(t, SortUserBlogMgr.Import(), err)
+	UserLocationMgr.Clear()
+	assert.Equal(t, UserLocationMgr.Import(), err)
 
-	blog := Blog{
-		BlogId:      1,
-		Title:       "BlogTitle1",
-		Slug:        "blog-title",
-		Body:        "hello! everybody!!!",
-		User:        1,
-		IsPublished: false,
-		Create:      now,
-		Update:      now,
-	}
-	assert.Equal(t, BlogMgr.Remove(&blog), nil)
-	assert.Equal(t, BlogMgr.Set(&blog), nil)
+	c1, err := BlogMgr.ListCount()
+	fmt.Println("BlogMgr.ListCount =>", c1, err)
 
-	blog2 := Blog{
-		BlogId:      2,
-		Title:       "BlogTitile2",
-		Slug:        "blog-title-2",
-		User:        2,
-		IsPublished: false,
-		Create:      now,
-		Update:      now,
-	}
-	assert.Equal(t, BlogMgr.Remove(&blog2), nil)
-	assert.Equal(t, BlogMgr.Set(&blog2), nil)
+	c2, err := UserMgr.ListCount()
+	fmt.Println("UserMgr.ListCount =>", c2, err)
 
-	blog3 := Blog{
-		BlogId:      3,
-		Title:       "BlogTitle3",
-		Slug:        "blog-title-3",
-		User:        1,
-		IsPublished: true,
-		Create:      now,
-		Update:      now,
-	}
-	assert.Equal(t, BlogMgr.Remove(&blog3), nil)
-	assert.Equal(t, BlogMgr.Set(&blog3), nil)
+	blogs1, err := BlogMgr.GetByUserId(user2.Id)
+	assert.Equal(t, 3, len(blogs1))
 
-	blog4 := Blog{
-		BlogId:      4,
-		Title:       "BlogTitile2",
-		Slug:        "blog-title-2",
-		User:        1,
-		IsPublished: false,
-		Create:      now,
-		Update:      now,
-	}
-	assert.Equal(t, BlogMgr.Remove(&blog4), nil)
-	assert.Equal(t, BlogMgr.Set(&blog4), nil)
-
-	b := BlogMgr.NewBlog()
-	b.BlogId = 2
-	assert.Equal(t, BlogMgr.Get(b), nil)
-	assert.Equal(t, blog2.Title, b.Title)
-	assert.Equal(t, blog2.Slug, b.Slug)
-	assert.Equal(t, blog2.User, b.User)
-	assert.Equal(t, blog2.IsPublished, b.IsPublished)
-	assert.Equal(t, blog2.Create.Unix(), b.Create.Unix())
-	assert.Equal(t, blog2.Update.Unix(), b.Update.Unix())
-	log.Println("get blog =>", b)
-
-	blogs, err := BlogMgr.GetByUser(1)
-	log.Println("get blogs =>", blogs)
-	assert.Equal(t, err, nil)
-	assert.Equal(t, len(blogs), 3)
-
-	blogs2, err := BlogMgr.GetByIndexes(map[string]interface{}{
-		"User":        1,
-		"IsPublished": false,
-	})
-	assert.Equal(t, err, nil)
-	log.Println("get blogs =>", blogs2)
-	assert.Equal(t, len(blogs2), 2)
-
-	allblogs, err := BlogMgr.ListRange(0, -1)
-	assert.Equal(t, err, nil)
-	log.Println("all blogs =>", allblogs)
-	count, err := BlogMgr.ListCount()
-	assert.Equal(t, err, nil)
-	assert.Equal(t, int64(4), count)
-
-	user := UserMgr.NewUser()
-	user.UserId = 101
-	user.Name = "username"
-	user.UserNumber = 9527
-	user.Create = now
-	user.Update = now
-	assert.Equal(t, UserMgr.Remove(user), nil)
-	assert.Equal(t, UserMgr.Set(user), nil)
-
-	u2 := UserMgr.NewUser()
-	u2.UserId = 101
-
-	assert.Equal(t, UserMgr.Get(u2), nil)
-	assert.Equal(t, user.UserId, u2.UserId)
-	assert.Equal(t, user.Name, u2.Name)
-	assert.Equal(t, user.UserNumber, u2.UserNumber)
-	assert.Equal(t, user.Create.Unix(), u2.Create.Unix())
-	assert.Equal(t, user.Update.Unix(), u2.Update.Unix())
-
-	//! set test
-	for i := 1; i < 5; i++ {
-		ub := UserBlogMgr.NewUserBlog()
-		ub.Value = int32(i)
-		err := UserBlogMgr.SetAdd(fmt.Sprint(1), ub)
-		assert.Equal(t, err, nil)
-	}
-
-	relations, err := UserBlogMgr.SetGet(fmt.Sprint(1))
-	assert.Equal(t, err, nil)
-	assert.Equal(t, len(relations), 4)
-
-	relatedblogs, err := UserBlogMgr.RelatedBlogs(fmt.Sprint(1))
-	assert.Equal(t, err, nil)
-	assert.Equal(t, len(relatedblogs), 4)
-	log.Println("relatedblogs =>", relatedblogs)
-
-	urm := UserBlogMgr.NewUserBlog()
-	urm.Value = int32(1)
-	assert.Equal(t, UserBlogMgr.SetRem(fmt.Sprint(1), urm), nil)
-
-	relations, err = UserBlogMgr.SetGet(fmt.Sprint(1))
-	assert.Equal(t, err, nil)
-	assert.Equal(t, len(relations), 3)
-
-	assert.Equal(t, UserBlogMgr.SetDel(fmt.Sprint(1)), nil)
-	relations, err = UserBlogMgr.SetGet(fmt.Sprint(1))
-	assert.Equal(t, err, nil)
-	assert.Equal(t, len(relations), 0)
-
-	//! zset test
-	for i := 1; i < 5; i++ {
-		ub := SortUserBlogMgr.NewSortUserBlog()
-		ub.Value = int32(i)
-		switch i {
-		case 1:
-			ub.Score = 0.1
-			err := SortUserBlogMgr.ZAdd(fmt.Sprint(1), ub)
-			assert.Equal(t, err, nil)
-		case 2:
-			ub.Score = 1.1
-			err := SortUserBlogMgr.ZAdd(fmt.Sprint(1), ub)
-			assert.Equal(t, err, nil)
-		case 3:
-			ub.Score = 2.1
-			err := SortUserBlogMgr.ZAdd(fmt.Sprint(1), ub)
-			assert.Equal(t, err, nil)
-		case 4:
-			ub.Score = 3.1
-			err := SortUserBlogMgr.ZAdd(fmt.Sprint(1), ub)
-			assert.Equal(t, err, nil)
-		}
-	}
-
-	zrelations, err := SortUserBlogMgr.ZRangeByScore(fmt.Sprint(1), 2, 5)
-	assert.Equal(t, err, nil)
-	assert.Equal(t, len(zrelations), 2)
-
-	//! list test
-	UserIdMgr.ListDel("key")
-	for i := 1; i < 5; i++ {
-		uid := UserIdMgr.NewUserId()
-		uid.Value = int32(i)
-		length, err := UserIdMgr.ListLPush("key", uid)
-		assert.Equal(t, err, nil)
-		assert.Equal(t, length, int64(i))
-	}
-
-	uids, err := UserIdMgr.ListRange("key", 0, 3)
-	assert.Equal(t, err, nil)
-	assert.Equal(t, 4, len(uids))
-
-	//! geo test
+	blogs2, err := UserBlogMgr.RelatedBlogs(user1.Id)
+	assert.Equal(t, 2, len(blogs2))
 
 }

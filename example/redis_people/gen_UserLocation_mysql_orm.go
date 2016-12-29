@@ -39,7 +39,7 @@ func (m *_UserLocationMgr) Query(query string, args ...interface{}) (results []*
 func (*_UserLocationMgr) queryLimit(query string, limit int, args ...interface{}) (results []*UserLocation, err error) {
 	rows, err := db.MysqlQuery(query, args...)
 	if err != nil {
-		return nil, fmt.Errorf("test.UserLocation query error: %v", err)
+		return nil, fmt.Errorf("ezorm.UserLocation query error: %v", err)
 	}
 	defer rows.Close()
 
@@ -63,7 +63,7 @@ func (*_UserLocationMgr) queryLimit(query string, limit int, args ...interface{}
 		results = append(results, &result)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("test.UserLocation fetch result error: %v", err)
+		return nil, fmt.Errorf("ezorm.UserLocation fetch result error: %v", err)
 	}
 
 	return

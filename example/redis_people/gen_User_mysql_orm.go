@@ -39,12 +39,12 @@ func (m *_UserMgr) Query(query string, args ...interface{}) (results []*User, er
 func (*_UserMgr) queryLimit(query string, limit int, args ...interface{}) (results []*User, err error) {
 	rows, err := db.MysqlQuery(query, args...)
 	if err != nil {
-		return nil, fmt.Errorf("test.User query error: %v", err)
+		return nil, fmt.Errorf("ezorm.User query error: %v", err)
 	}
 	defer rows.Close()
 
-	var Create string
-	var Update string
+	var CreatedAt string
+	var UpdatedAt string
 
 	offset := 0
 	for rows.Next() {
@@ -54,37 +54,44 @@ func (*_UserMgr) queryLimit(query string, limit int, args ...interface{}) (resul
 		offset++
 
 		var result User
-		err := rows.Scan(&(result.UserId),
-			&(result.UserNumber),
+		err := rows.Scan(&(result.Id),
 			&(result.Name),
-			&Create, &Update)
+			&(result.Mailbox),
+			&(result.Sex),
+			&(result.Longitude),
+			&(result.Latitude),
+			&(result.Description),
+			&(result.Password),
+			&(result.HeadUrl),
+			&(result.Status),
+			&CreatedAt, &UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
 
-		result.Create = db.TimeParse(Create)
+		result.CreatedAt = db.TimeParse(CreatedAt)
 
-		result.Update = db.TimeParseLocalTime(Update)
+		result.UpdatedAt = db.TimeParse(UpdatedAt)
 
 		results = append(results, &result)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("test.User fetch result error: %v", err)
+		return nil, fmt.Errorf("ezorm.User fetch result error: %v", err)
 	}
 
 	return
 }
 
 func (m *_UserMgr) Save(obj *User) (sql.Result, error) {
-	if obj.UserId == 0 {
+	if obj.Id == 0 {
 		return m.saveInsert(obj)
 	}
 	return m.saveUpdate(obj)
 }
 
 func (m *_UserMgr) saveInsert(obj *User) (sql.Result, error) {
-	query := "INSERT INTO test.test_user (`user_number`, `name`, `create`, `update`) VALUES (?, ?, ?, ?)"
-	result, err := db.MysqlExec(query, obj.UserNumber, obj.Name, db.TimeFormat(obj.Create), db.TimeToLocalTime(obj.Update))
+	query := "INSERT INTO ezorm.users (`name`, `mailbox`, `sex`, `longitude`, `latitude`, `description`, `password`, `head_url`, `status`, `created_at`, `updated_at`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	result, err := db.MysqlExec(query, obj.Name, obj.Mailbox, obj.Sex, obj.Longitude, obj.Latitude, obj.Description, obj.Password, obj.HeadUrl, obj.Status, db.TimeFormat(obj.CreatedAt), db.TimeFormat(obj.UpdatedAt))
 	if err != nil {
 		return result, err
 	}
@@ -94,14 +101,14 @@ func (m *_UserMgr) saveInsert(obj *User) (sql.Result, error) {
 		return result, err
 	}
 
-	obj.UserId = int32(lastInsertId)
+	obj.Id = int32(lastInsertId)
 
 	return result, err
 }
 
 func (m *_UserMgr) saveUpdate(obj *User) (sql.Result, error) {
-	query := "UPDATE test.test_user SET `user_number`=?, `name`=?, `create`=?, `update`=? WHERE `user_id`=?"
-	return db.MysqlExec(query, obj.UserNumber, obj.Name, db.TimeFormat(obj.Create), db.TimeToLocalTime(obj.Update), obj.UserId)
+	query := "UPDATE ezorm.users SET `name`=?, `mailbox`=?, `sex`=?, `longitude`=?, `latitude`=?, `description`=?, `password`=?, `head_url`=?, `status`=?, `created_at`=?, `updated_at`=? WHERE `id`=?"
+	return db.MysqlExec(query, obj.Name, obj.Mailbox, obj.Sex, obj.Longitude, obj.Latitude, obj.Description, obj.Password, obj.HeadUrl, obj.Status, db.TimeFormat(obj.CreatedAt), db.TimeFormat(obj.UpdatedAt), obj.Id)
 }
 
 func (m *_UserMgr) InsertBatch(objs []*User) (sql.Result, error) {
@@ -110,17 +117,17 @@ func (m *_UserMgr) InsertBatch(objs []*User) (sql.Result, error) {
 	}
 
 	values := make([]string, 0, len(objs))
-	params := make([]interface{}, 0, len(objs)*4)
+	params := make([]interface{}, 0, len(objs)*11)
 	for _, obj := range objs {
-		values = append(values, "(?, ?, ?, ?)")
-		params = append(params, obj.UserNumber, obj.Name, db.TimeFormat(obj.Create), db.TimeToLocalTime(obj.Update))
+		values = append(values, "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+		params = append(params, obj.Name, obj.Mailbox, obj.Sex, obj.Longitude, obj.Latitude, obj.Description, obj.Password, obj.HeadUrl, obj.Status, db.TimeFormat(obj.CreatedAt), db.TimeFormat(obj.UpdatedAt))
 	}
-	query := fmt.Sprintf("INSERT INTO test.test_user (`user_number`, `name`, `create`, `update`) VALUES %s", strings.Join(values, ","))
+	query := fmt.Sprintf("INSERT INTO ezorm.users (`name`, `mailbox`, `sex`, `longitude`, `latitude`, `description`, `password`, `head_url`, `status`, `created_at`, `updated_at`) VALUES %s", strings.Join(values, ","))
 	return db.MysqlExec(query, params...)
 }
 
 func (m *_UserMgr) FindByID(id int32) (*User, error) {
-	query := "SELECT `user_id`, `user_number`, `name`, `create`, `update` FROM test.test_user WHERE user_id=?"
+	query := "SELECT `id`, `name`, `mailbox`, `sex`, `longitude`, `latitude`, `description`, `password`, `head_url`, `status`, `created_at`, `updated_at` FROM ezorm.users WHERE id=?"
 	return m.queryOne(query, id)
 }
 
@@ -134,75 +141,60 @@ func (m *_UserMgr) FindByIDs(ids []int32) ([]*User, error) {
 	}
 
 	query := fmt.Sprintf(
-		"SELECT `user_id`, `user_number`, `name`, `create`, `update` FROM test.test_user WHERE user_id IN (%s)",
+		"SELECT `id`, `name`, `mailbox`, `sex`, `longitude`, `latitude`, `description`, `password`, `head_url`, `status`, `created_at`, `updated_at` FROM ezorm.users WHERE id IN (%s)",
 		strings.Join(placeHolders, ","))
 	return m.query(query, args...)
 }
 
-func (m *_UserMgr) FindInUserId(ids []int32, sortFields ...string) ([]*User, error) {
+func (m *_UserMgr) FindInId(ids []int32, sortFields ...string) ([]*User, error) {
 	return m.FindByIDs(ids)
 }
 
-func (m *_UserMgr) FindListUserId(UserId []int32) ([]*User, error) {
-	retmap, err := m.FindMapUserId(UserId)
+func (m *_UserMgr) FindListId(Id []int32) ([]*User, error) {
+	retmap, err := m.FindMapId(Id)
 	if err != nil {
 		return nil, err
 	}
-	ret := make([]*User, len(UserId))
-	for idx, key := range UserId {
+	ret := make([]*User, len(Id))
+	for idx, key := range Id {
 		ret[idx] = retmap[key]
 	}
 	return ret, nil
 }
 
-func (m *_UserMgr) FindMapUserId(UserId []int32, sortFields ...string) (map[int32]*User, error) {
-	ret, err := m.FindInUserId(UserId, sortFields...)
+func (m *_UserMgr) FindMapId(Id []int32, sortFields ...string) (map[int32]*User, error) {
+	ret, err := m.FindInId(Id, sortFields...)
 	if err != nil {
 		return nil, err
 	}
 	retmap := make(map[int32]*User, len(ret))
 	for _, n := range ret {
-		retmap[n.UserId] = n
+		retmap[n.Id] = n
 	}
 	return retmap, nil
 }
 
-func (m *_UserMgr) FindListUserNumber(UserNumber []int32) ([]*User, error) {
-	retmap, err := m.FindMapUserNumber(UserNumber)
-	if err != nil {
-		return nil, err
-	}
-	ret := make([]*User, len(UserNumber))
-	for idx, key := range UserNumber {
-		ret[idx] = retmap[key]
-	}
-	return ret, nil
-}
-
-func (m *_UserMgr) FindMapUserNumber(UserNumber []int32) (map[int32]*User, error) {
-	ret, err := m.FindInUserNumber(UserNumber)
-	if err != nil {
-		return nil, err
-	}
-	retmap := make(map[int32]*User, len(ret))
-	for _, n := range ret {
-		retmap[n.UserNumber] = n
-	}
-	return retmap, nil
-}
-
-func (m *_UserMgr) FindInUserNumber(UserNumber []int32, sortFields ...string) ([]*User, error) {
+func (m *_UserMgr) FindInMailboxPassword(Mailbox []string, Password []string, sortFields ...string) ([]*User, error) {
 	buf := bytes.NewBuffer(nil)
-	buf.WriteString("SELECT `user_id`, `user_number`, `name`, `create`, `update` FROM test.test_user WHERE ")
+	buf.WriteString("SELECT `id`, `name`, `mailbox`, `sex`, `longitude`, `latitude`, `description`, `password`, `head_url`, `status`, `created_at`, `updated_at` FROM ezorm.users WHERE ")
 
-	buf.WriteString("`user_number` in ")
-	int32ToIds(buf, UserNumber)
+	buf.WriteString("`mailbox` in ")
+	stringToIds(buf, Mailbox)
+	buf.WriteString(" AND ")
+
+	buf.WriteString("`password` in ")
+	stringToIds(buf, Password)
 	return m.query(buf.String() + m.GetSort(sortFields))
 }
 
-func (m *_UserMgr) FindOneByUserNumber(UserNumber int32) (*User, error) {
-	query := "SELECT `user_id`, `user_number`, `name`, `create`, `update` FROM test.test_user WHERE user_number=?"
-	return m.queryOne(query, UserNumber)
+func (m *_UserMgr) FindAllByMailboxPassword(Mailbox string, Password string, sortFields ...string) ([]*User, error) {
+	return m.FindByMailboxPassword(Mailbox, Password, -1, -1, sortFields...)
+}
+
+func (m *_UserMgr) FindByMailboxPassword(Mailbox string, Password string, offset int, limit int, sortFields ...string) ([]*User, error) {
+	query := fmt.Sprintf("SELECT `id`, `name`, `mailbox`, `sex`, `longitude`, `latitude`, `description`, `password`, `head_url`, `status`, `created_at`, `updated_at` FROM ezorm.users WHERE `mailbox`=? AND `password`=? %s%s", m.GetSort(sortFields), m.GetLimit(offset, limit))
+
+	return m.query(query, Mailbox, Password)
 }
 
 func (m *_UserMgr) FindListName(Name []string) ([]*User, error) {
@@ -231,7 +223,7 @@ func (m *_UserMgr) FindMapName(Name []string) (map[string]*User, error) {
 
 func (m *_UserMgr) FindInName(Name []string, sortFields ...string) ([]*User, error) {
 	buf := bytes.NewBuffer(nil)
-	buf.WriteString("SELECT `user_id`, `user_number`, `name`, `create`, `update` FROM test.test_user WHERE ")
+	buf.WriteString("SELECT `id`, `name`, `mailbox`, `sex`, `longitude`, `latitude`, `description`, `password`, `head_url`, `status`, `created_at`, `updated_at` FROM ezorm.users WHERE ")
 
 	buf.WriteString("`name` in ")
 	stringToIds(buf, Name)
@@ -243,29 +235,9 @@ func (m *_UserMgr) FindAllByName(Name string, sortFields ...string) ([]*User, er
 }
 
 func (m *_UserMgr) FindByName(Name string, offset int, limit int, sortFields ...string) ([]*User, error) {
-	query := fmt.Sprintf("SELECT `user_id`, `user_number`, `name`, `create`, `update` FROM test.test_user WHERE `name`=? %s%s", m.GetSort(sortFields), m.GetLimit(offset, limit))
+	query := fmt.Sprintf("SELECT `id`, `name`, `mailbox`, `sex`, `longitude`, `latitude`, `description`, `password`, `head_url`, `status`, `created_at`, `updated_at` FROM ezorm.users WHERE `name`=? %s%s", m.GetSort(sortFields), m.GetLimit(offset, limit))
 
 	return m.query(query, Name)
-}
-
-func (m *_UserMgr) FindAllByCreate(Create time.Time, sortFields ...string) ([]*User, error) {
-	return m.FindByCreate(Create, -1, -1, sortFields...)
-}
-
-func (m *_UserMgr) FindByCreate(Create time.Time, offset int, limit int, sortFields ...string) ([]*User, error) {
-	query := fmt.Sprintf("SELECT `user_id`, `user_number`, `name`, `create`, `update` FROM test.test_user WHERE `create`=? %s%s", m.GetSort(sortFields), m.GetLimit(offset, limit))
-
-	return m.query(query, db.TimeFormat(Create))
-}
-
-func (m *_UserMgr) FindAllByUpdate(Update time.Time, sortFields ...string) ([]*User, error) {
-	return m.FindByUpdate(Update, -1, -1, sortFields...)
-}
-
-func (m *_UserMgr) FindByUpdate(Update time.Time, offset int, limit int, sortFields ...string) ([]*User, error) {
-	query := fmt.Sprintf("SELECT `user_id`, `user_number`, `name`, `create`, `update` FROM test.test_user WHERE `update`=? %s%s", m.GetSort(sortFields), m.GetLimit(offset, limit))
-
-	return m.query(query, db.TimeToLocalTime(Update))
 }
 
 func (m *_UserMgr) FindOne(where string, args ...interface{}) (*User, error) {
@@ -294,7 +266,7 @@ func (m *_UserMgr) FindWithOffset(where string, offset int, limit int, args ...i
 }
 
 func (m *_UserMgr) GetQuerysql(where string) string {
-	query := "SELECT `user_id`, `user_number`, `name`, `create`, `update` FROM test.test_user"
+	query := "SELECT `id`, `name`, `mailbox`, `sex`, `longitude`, `latitude`, `description`, `password`, `head_url`, `status`, `created_at`, `updated_at` FROM ezorm.users"
 
 	where = strings.TrimSpace(where)
 	if where != "" {
@@ -314,7 +286,7 @@ func (m *_UserMgr) Del(where string, params ...interface{}) (sql.Result, error) 
 	if where != "" {
 		where = "WHERE " + where
 	}
-	query := "DELETE FROM test.test_user " + where
+	query := "DELETE FROM ezorm.users " + where
 	return db.MysqlExec(query, params...)
 }
 
@@ -323,15 +295,15 @@ func (m *_UserMgr) Del(where string, params ...interface{}) (sql.Result, error) 
 // where:"c=? and d=?"
 // params:[]interface{}{"a", "b", "c", "d"}...
 func (m *_UserMgr) Update(set, where string, params ...interface{}) (sql.Result, error) {
-	query := fmt.Sprintf("UPDATE test.test_user SET %s", set)
+	query := fmt.Sprintf("UPDATE ezorm.users SET %s", set)
 	if where != "" {
-		query = fmt.Sprintf("UPDATE test.test_user SET %s WHERE %s", set, where)
+		query = fmt.Sprintf("UPDATE ezorm.users SET %s WHERE %s", set, where)
 	}
 	return db.MysqlExec(query, params...)
 }
 
 func (m *_UserMgr) Count(where string, args ...interface{}) (int32, error) {
-	query := "SELECT COUNT(*) FROM test.test_user"
+	query := "SELECT COUNT(*) FROM ezorm.users"
 	if where != "" {
 		query = query + " WHERE " + where
 	}
