@@ -39,7 +39,7 @@ func (m *_SortUserBlogMgr) Query(query string, args ...interface{}) (results []*
 func (*_SortUserBlogMgr) queryLimit(query string, limit int, args ...interface{}) (results []*SortUserBlog, err error) {
 	rows, err := db.MysqlQuery(query, args...)
 	if err != nil {
-		return nil, fmt.Errorf("test.SortUserBlog query error: %v", err)
+		return nil, fmt.Errorf("ezorm.SortUserBlog query error: %v", err)
 	}
 	defer rows.Close()
 
@@ -62,7 +62,7 @@ func (*_SortUserBlogMgr) queryLimit(query string, limit int, args ...interface{}
 		results = append(results, &result)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("test.SortUserBlog fetch result error: %v", err)
+		return nil, fmt.Errorf("ezorm.SortUserBlog fetch result error: %v", err)
 	}
 
 	return

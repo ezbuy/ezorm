@@ -1,73 +1,65 @@
 Blog:
   dbs: [mysql, redis]
   fields:
-    - BlogId: int32
-      flags: [noinc]
+    - Id: int32
+      flags: [primary]
+    - UserId: int32
+      flags: [index]
     - Title: string
-    - Hits: int32
-    - Slug: string
-      flags: [unique]
-    - Body: string
-      flags: [nullable]
-    - User: int32
-      flags: [index]
-      fk: User.UserNumber
-    - IsPublished: bool
-      flags: [index]
-    - Create: timestamp
-      flags: [index]
-    - Update: datetime
-      flags: [index]
-  indexes: [[User, IsPublished]]
-
-  table: Blog
-  dbname: Test
+    - Content: string
+    - Status: int32
+    - Readed: int32
+    - CreatedAt: timestamp
+    - UpdatedAt: timestamp
+  table: blogs
+  dbname: ezorm
   storetype: hash
+  importSQL: "SELECT `id`,`user_id`,`title`,`content`,`status`,`readed`, `created_at`, `updated_at` FROM blogs"
 
 User:
   dbs: [mysql, redis]
   fields:
-    - UserId: int32
-    - UserNumber: int32
-      flags: [unique]
+    - Id: int32
+      flags: [primary]
     - Name: string
       flags: [index]
-    - Create: timestamp
-      flags: [index]
-    - Update: datetime
-      flags: [index]
-  table: test_user
-  dbname: test
+    - Mailbox: string
+    - Sex: bool
+    - Longitude: float64
+    - Latitude: float64
+    - Description: string
+    - Password: string
+    - HeadUrl: string
+    - Status: int32
+    - CreatedAt: timestamp
+    - UpdatedAt: timestamp
+  indexes: [[Mailbox, Password]]
+  table: users
+  dbname: ezorm
   storetype: hash
+  importSQL: "SELECT `id`,`name`,`mailbox`,`sex`,`longitude`,`latitude`,`description`,`password`,`head_url`,`status`,`created_at`, `updated_at` FROM users"
 
 UserBlog:
   dbs: [redis, mysql]
   storetype: set
   valuetype: int32
   modeltype: Blog
-  dbname: Test
-  importSQL: "SELECT CONCAT('UserId:', UserId) AS k, ID AS v FROM BLOGS"
+  dbname: ezorm
+  importSQL: "SELECT user_id, id FROM blogs"
   
 SortUserBlog:
   dbs: [redis, mysql]
   storetype: zset
   valuetype: int32
   modeltype: Blog
-  dbname: Test
-  importSQL: "SELECT CONCAT('UserId:', UserId) AS k, SCORE, ID AS v FROM BLOGS"
+  dbname: ezorm
+  importSQL: "SELECT user_id, readed, id FROM blogs"
 
 UserLocation:
   dbs: [redis, mysql]
   storetype: geo
   valuetype: int32
   modeltype: User
-  dbname: Test
-  importSQL: "SELECT CONCAT('UserId:', UserId) AS k, Longitude, Latitude, ID AS v FROM BLOGS"
+  dbname: ezorm
+  importSQL: "SELECT CONCAT('Sex:', sex), Longitude, Latitude, id AS v FROM users"
 
-UserId:
-  dbs: [redis, mysql]
-  storetype: list
-  valuetype: int32
-  modeltype: User
-  dbname: Test
-  importSQL: "SELECT CONCAT('UserId:', UserId) AS k, ID AS v FROM BLOGS"

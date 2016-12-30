@@ -39,7 +39,7 @@ func (m *_UserBlogMgr) Query(query string, args ...interface{}) (results []*User
 func (*_UserBlogMgr) queryLimit(query string, limit int, args ...interface{}) (results []*UserBlog, err error) {
 	rows, err := db.MysqlQuery(query, args...)
 	if err != nil {
-		return nil, fmt.Errorf("test.UserBlog query error: %v", err)
+		return nil, fmt.Errorf("ezorm.UserBlog query error: %v", err)
 	}
 	defer rows.Close()
 
@@ -61,7 +61,7 @@ func (*_UserBlogMgr) queryLimit(query string, limit int, args ...interface{}) (r
 		results = append(results, &result)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("test.UserBlog fetch result error: %v", err)
+		return nil, fmt.Errorf("ezorm.UserBlog fetch result error: %v", err)
 	}
 
 	return

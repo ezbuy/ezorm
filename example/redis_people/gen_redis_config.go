@@ -71,6 +71,28 @@ func redisStringScan(str string, val interface{}) error {
 	return _redis_store.StringScan(str, val)
 }
 
+func redisDrop(obj Object) error {
+	strs1, err := _redis_store.Keys(keyOfClass(obj, "*")).Result()
+	if err != nil {
+		return err
+	}
+	if err := _redis_store.Del(strs1...).Err(); err != nil {
+		return err
+	}
+	strs2, err := _redis_store.Keys(indexOfObject(obj, "*")).Result()
+	if err != nil {
+		return err
+	}
+	if err := _redis_store.Del(strs2...).Err(); err != nil {
+		return err
+	}
+	strs3, err := _redis_store.Keys(listOfObject(obj, "*")).Result()
+	if err != nil {
+		return err
+	}
+	return _redis_store.Del(strs3...).Err()
+}
+
 ///////////// pipeline: now only support add operations
 
 type RedisPipeline struct {

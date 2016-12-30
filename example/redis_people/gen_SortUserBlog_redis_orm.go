@@ -9,7 +9,7 @@ var (
 )
 
 func (m *_SortUserBlogMgr) AddBySQL(sql string, args ...interface{}) error {
-	objs, err := m.Query(sql)
+	objs, err := m.Query(sql, args...)
 	if err != nil {
 		return err
 	}
@@ -23,7 +23,7 @@ func (m *_SortUserBlogMgr) AddBySQL(sql string, args ...interface{}) error {
 }
 
 func (m *_SortUserBlogMgr) DelBySQL(sql string, args ...interface{}) error {
-	objs, err := m.Query(sql)
+	objs, err := m.Query(sql, args...)
 	if err != nil {
 		return err
 	}
@@ -36,7 +36,7 @@ func (m *_SortUserBlogMgr) DelBySQL(sql string, args ...interface{}) error {
 	return nil
 }
 func (m *_SortUserBlogMgr) Import() error {
-	return m.AddBySQL("SELECT CONCAT('UserId:', UserId) AS k, SCORE, ID AS v FROM BLOGS")
+	return m.AddBySQL("SELECT user_id, readed, id FROM blogs")
 }
 
 ///////////// ZSET /////////////////////////////////////////////////////
@@ -45,6 +45,7 @@ func (m *_SortUserBlogMgr) ZAdd(key string, obj *SortUserBlog) error {
 }
 
 func (m *_SortUserBlogMgr) ZRangeByScore(key string, min, max int64) ([]*SortUserBlog, error) {
+
 	strs, err := redisZSetRangeByScore(m.NewSortUserBlog(), key, min, max)
 	if err != nil {
 		return nil, err
@@ -69,7 +70,12 @@ func (m *_SortUserBlogMgr) ZRem(key string, obj *SortUserBlog) error {
 func (m *_SortUserBlogMgr) ZDel(key string) error {
 	return redisZSetDel(m.NewSortUserBlog(), key)
 }
+
+func (m *_SortUserBlogMgr) Clear() error {
+	return redisDrop(m.NewSortUserBlog())
+}
 func (m *_SortUserBlogMgr) ZRangeRelatedBlog(key string, min, max int64) ([]*Blog, error) {
+
 	strs, err := redisZSetRangeByScore(m.NewSortUserBlog(), key, min, max)
 	if err != nil {
 		return nil, err

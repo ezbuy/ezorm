@@ -10,7 +10,7 @@ var (
 )
 
 func (m *_UserLocationMgr) AddBySQL(sql string, args ...interface{}) error {
-	objs, err := m.Query(sql)
+	objs, err := m.Query(sql, args...)
 	if err != nil {
 		return err
 	}
@@ -24,7 +24,7 @@ func (m *_UserLocationMgr) AddBySQL(sql string, args ...interface{}) error {
 }
 
 func (m *_UserLocationMgr) DelBySQL(sql string, args ...interface{}) error {
-	objs, err := m.Query(sql)
+	objs, err := m.Query(sql, args...)
 	if err != nil {
 		return err
 	}
@@ -37,7 +37,7 @@ func (m *_UserLocationMgr) DelBySQL(sql string, args ...interface{}) error {
 	return nil
 }
 func (m *_UserLocationMgr) Import() error {
-	return m.AddBySQL("SELECT CONCAT('UserId:', UserId) AS k, Longitude, Latitude, ID AS v FROM BLOGS")
+	return m.AddBySQL("SELECT CONCAT('Sex:', sex), Longitude, Latitude, id AS v FROM users")
 }
 
 ///////////// GEO /////////////////////////////////////////////////////
@@ -46,6 +46,7 @@ func (m *_UserLocationMgr) GeoAdd(key string, obj *UserLocation) error {
 }
 
 func (m *_UserLocationMgr) GeoRadius(key string, longitude float64, latitude float64, query *redis.GeoRadiusQuery) ([]*UserLocation, error) {
+
 	strs, err := redisGeoRadius(m.NewUserLocation(), key, longitude, latitude, query)
 	if err != nil {
 		return nil, err
@@ -63,6 +64,7 @@ func (m *_UserLocationMgr) GeoRadius(key string, longitude float64, latitude flo
 	return objs, nil
 }
 func (m *_UserLocationMgr) GeoRadiusRelatedUsers(key string, longitude float64, latitude float64, query *redis.GeoRadiusQuery) ([]*User, error) {
+
 	strs, err := redisGeoRadius(m.NewUserLocation(), key, longitude, latitude, query)
 	if err != nil {
 		return nil, err
@@ -82,9 +84,15 @@ func (m *_UserLocationMgr) GeoRadiusRelatedUsers(key string, longitude float64, 
 }
 
 func (m *_UserLocationMgr) GeoRem(key string, obj *UserLocation) error {
+
 	return redisZSetRem(m.NewUserLocation(), key, obj)
 }
 
 func (m *_UserLocationMgr) GeoDel(key string) error {
+
 	return redisGeoDel(m.NewUserLocation(), key)
+}
+
+func (m *_UserLocationMgr) Clear() error {
+	return redisDrop(m.NewUserLocation())
 }
