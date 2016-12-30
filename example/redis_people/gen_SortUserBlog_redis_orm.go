@@ -9,7 +9,7 @@ var (
 )
 
 func (m *_SortUserBlogMgr) AddBySQL(sql string, args ...interface{}) error {
-	objs, err := m.Query(sql)
+	objs, err := m.Query(sql, args...)
 	if err != nil {
 		return err
 	}
@@ -23,7 +23,7 @@ func (m *_SortUserBlogMgr) AddBySQL(sql string, args ...interface{}) error {
 }
 
 func (m *_SortUserBlogMgr) DelBySQL(sql string, args ...interface{}) error {
-	objs, err := m.Query(sql)
+	objs, err := m.Query(sql, args...)
 	if err != nil {
 		return err
 	}

@@ -12,7 +12,7 @@ var (
 )
 
 func (m *_BlogMgr) AddBySQL(sql string, args ...interface{}) error {
-	objs, err := m.Query(sql)
+	objs, err := m.Query(sql, args...)
 	if err != nil {
 		return err
 	}
@@ -26,7 +26,7 @@ func (m *_BlogMgr) AddBySQL(sql string, args ...interface{}) error {
 }
 
 func (m *_BlogMgr) DelBySQL(sql string, args ...interface{}) error {
-	objs, err := m.Query(sql)
+	objs, err := m.Query(sql, args...)
 	if err != nil {
 		return err
 	}

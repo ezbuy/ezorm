@@ -10,7 +10,7 @@ var (
 )
 
 func (m *_UserLocationMgr) AddBySQL(sql string, args ...interface{}) error {
-	objs, err := m.Query(sql)
+	objs, err := m.Query(sql, args...)
 	if err != nil {
 		return err
 	}
@@ -24,7 +24,7 @@ func (m *_UserLocationMgr) AddBySQL(sql string, args ...interface{}) error {
 }
 
 func (m *_UserLocationMgr) DelBySQL(sql string, args ...interface{}) error {
-	objs, err := m.Query(sql)
+	objs, err := m.Query(sql, args...)
 	if err != nil {
 		return err
 	}

@@ -118,17 +118,21 @@ func TestPeopleObject(t *testing.T) {
 	RedisSetUp(&RedisConfig{
 		Host: "127.0.0.1",
 		Port: 6379,
-		DB:   1,
 	})
 
+	//! redis 数据准备
 	BlogMgr.Clear()
 	assert.Equal(t, BlogMgr.Import(), err)
+
 	UserMgr.Clear()
 	assert.Equal(t, UserMgr.Import(), err)
+
 	UserBlogMgr.Clear()
 	assert.Equal(t, UserBlogMgr.Import(), err)
+
 	SortUserBlogMgr.Clear()
 	assert.Equal(t, SortUserBlogMgr.Import(), err)
+
 	UserLocationMgr.Clear()
 	assert.Equal(t, UserLocationMgr.Import(), err)
 
@@ -138,10 +142,33 @@ func TestPeopleObject(t *testing.T) {
 	c2, err := UserMgr.ListCount()
 	fmt.Println("UserMgr.ListCount =>", c2, err)
 
+	//! redis 数据查询
 	blogs1, err := BlogMgr.GetByUserId(user2.Id)
 	assert.Equal(t, 3, len(blogs1))
 
 	blogs2, err := UserBlogMgr.RelatedBlogs(user1.Id)
 	assert.Equal(t, 2, len(blogs2))
 
+	//! redis 数据增量同步
+	blog24 := Blog{
+		UserId:    user2.Id,
+		Title:     "BlogTitle1222444",
+		Content:   "hello! everybody!!!",
+		Status:    1,
+		Readed:    19,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	r, err := BlogMgr.Save(&blog24)
+	assert.Equal(t, err, nil)
+	fmt.Println("save =>", r, blog24, user2.Id)
+
+	BlogMgr.AddBySQL("SELECT `id`,`user_id`,`title`,`content`,`status`,`readed`, `created_at`, `updated_at` FROM blogs WHERE id = ?", blog24.Id)
+	UserBlogMgr.AddBySQL("SELECT user_id, id FROM blogs WHERE id = ?", blog24.Id)
+
+	ids, err := UserBlogMgr.SetGet(fmt.Sprint(user2.Id))
+	assert.Equal(t, 4, len(ids))
+
+	blogs3, err := UserBlogMgr.RelatedBlogs(user2.Id)
+	assert.Equal(t, 4, len(blogs3))
 }
