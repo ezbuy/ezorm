@@ -11,8 +11,8 @@ import (
 
 func TestPeopleObject(t *testing.T) {
 	dsn := fmt.Sprintf("%s:%s@tcp(localhost:3306)/%s?charset=utf8&autocommit=true&parseTime=True",
-		"root",
-		"147011",
+		"ezorm_user",
+		"ezorm_pass",
 		"ezorm")
 
 	db.MysqlInit(&db.MysqlConfig{
