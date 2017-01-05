@@ -492,14 +492,20 @@ func TestInsertBatch(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	p1 := newUnsavedPeople()
+	// p1 := newUnsavedPeople()
 
-	p2 := newUnsavedPeople()
+	// p2 := newUnsavedPeople()
 
-	_, err = PeopleMgr.InsertBatch([]*People{p1, p2})
-	if err != nil {
-		t.Errorf("InsertBatch err:%v", err)
+	maxNum := 11000
+	ids := make([]*People, 0, maxNum)
+	for i := 0; i < maxNum; i++ {
+		ids = append(ids, &People{})
+		_, err = PeopleMgr.InsertBatch(ids)
+		if err != nil {
+			t.Errorf("InsertBatch err:%v", err)
+		}
 	}
+
 }
 
 func TestErrNoRows(t *testing.T) {
@@ -512,4 +518,24 @@ func TestErrNoRows(t *testing.T) {
 	if err != sql.ErrNoRows {
 		t.Errorf("error:[%v] not sql.ErrNoRows", err)
 	}
+}
+
+func TestFindByIds(t *testing.T) {
+	_, err := PeopleMgr.Del("")
+	if err != nil {
+		t.Errorf("delete error:%s", err.Error())
+	}
+
+	maxNum := 11000
+	ids := make([]int32, 0, maxNum)
+	for i := 0; i < maxNum; i++ {
+		ids = append(ids, int32(i))
+	}
+
+	vals, err := PeopleMgr.FindByIDs(ids)
+	if err != nil {
+		t.Errorf("error:[%v]", err)
+	}
+
+	fmt.Println("vals len:%v", len(vals))
 }

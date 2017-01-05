@@ -149,16 +149,62 @@ func (m *_{{$obj.Name}}Mgr) FindByID(id {{$idField.Type}}) (*{{$obj.Name}}, erro
 }
 
 func (m *_{{$obj.Name}}Mgr) FindByIDs(ids []{{$idField.Type}}) ([]*{{$obj.Name}}, error) {
-	idsLen := len(ids)
-	placeHolders := make([]string, 0, idsLen)
-	args := make([]interface{}, 0, idsLen)
-	for _, id := range ids {
-		placeHolders = append(placeHolders, "?")
-		args = append(args, id)
+	idsArray := m.getIdsOnSep(ids)
+
+	var vals []*{{$obj.Name}}
+	for _, idsBySep := range idsArray {
+		placeHolders,args := m.getParamAndValue(idsBySep)
+
+		query := fmt.Sprintf("SELECT {{$allFields}} FROM [dbo].[{{$obj.Name}}] WHERE {{$idFieldName}} IN (%s)", placeHolders)
+		val , err := m.query(query, args...)
+		if err != nil {
+			return nil,err
+		}
+
+		vals = append(vals , val...)
 	}
 
-	query := fmt.Sprintf("SELECT {{$allFields}} FROM [dbo].[{{$obj.Name}}] WHERE {{$idFieldName}} IN (%s)", strings.Join(placeHolders, ","))
-	return m.query(query, args...)
+	return vals,nil
+}
+
+func (m *_{{$obj.Name}}Mgr) getParamAndValue(idsBySep []{{$idField.Type}}) (string,[]interface{}){
+	params := strings.Repeat("?,",len(idsBySep))
+	if len(params) > 0 {
+		params = params[:len(params)-1]
+	}
+
+	val := make([]interface{}, 0, len(idsBySep))
+
+	for _,id := range idsBySep{
+		val = append(val, id)
+	}
+
+	return params , val
+}
+
+
+func (m *_{{$obj.Name}}Mgr) getIdsOnSep(ids []{{$idField.Type}}) [][]{{$idField.Type}}{
+	re := [][]{{$idField.Type}}{}
+	if len(ids) <= 0 {
+		return re
+	}
+
+	idsBySep := []{{$idField.Type}}{}
+	for i, id := range ids {
+		idsBySep = append(idsBySep, id)
+		if (i+1)%2000 == 0 {
+			ns := make([]{{$idField.Type}}, len(idsBySep))
+			copy(ns, idsBySep)
+			idsBySep = idsBySep[:0]
+			re = append(re, ns)
+		}
+	}
+	if len(idsBySep) > 0 {
+		ns := make([]{{$idField.Type}}, len(idsBySep))
+		copy(ns, idsBySep)
+		re = append(re, ns)
+	}
+	return re
 }
 
 {{range $index := $obj.Indexes}}

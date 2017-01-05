@@ -105,16 +105,61 @@ func (m *_PeopleMgr) FindByID(id int32) (*People, error) {
 }
 
 func (m *_PeopleMgr) FindByIDs(ids []int32) ([]*People, error) {
-	idsLen := len(ids)
-	placeHolders := make([]string, 0, idsLen)
-	args := make([]interface{}, 0, idsLen)
-	for _, id := range ids {
-		placeHolders = append(placeHolders, "?")
-		args = append(args, id)
+	idsArray := m.getIdsOnSep(ids)
+
+	var vals []*People
+	for _, idsBySep := range idsArray {
+		placeHolders, args := m.getParamAndValue(idsBySep)
+
+		query := fmt.Sprintf("SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate FROM [dbo].[People] WHERE PeopleId IN (%s)", placeHolders)
+		val, err := m.query(query, args...)
+		if err != nil {
+			return nil, err
+		}
+
+		vals = append(vals, val...)
 	}
 
-	query := fmt.Sprintf("SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate FROM [dbo].[People] WHERE PeopleId IN (%s)", strings.Join(placeHolders, ","))
-	return m.query(query, args...)
+	return vals, nil
+}
+
+func (m *_PeopleMgr) getParamAndValue(idsBySep []int32) (string, []interface{}) {
+	params := strings.Repeat("?,", len(idsBySep))
+	if len(params) > 0 {
+		params = params[:len(params)-1]
+	}
+
+	val := make([]interface{}, 0, len(idsBySep))
+
+	for _, id := range idsBySep {
+		val = append(val, id)
+	}
+
+	return params, val
+}
+
+func (m *_PeopleMgr) getIdsOnSep(ids []int32) [][]int32 {
+	re := [][]int32{}
+	if len(ids) <= 0 {
+		return re
+	}
+
+	idsBySep := []int32{}
+	for i, id := range ids {
+		idsBySep = append(idsBySep, id)
+		if (i+1)%2000 == 0 {
+			ns := make([]int32, len(idsBySep))
+			copy(ns, idsBySep)
+			idsBySep = idsBySep[:0]
+			re = append(re, ns)
+		}
+	}
+	if len(idsBySep) > 0 {
+		ns := make([]int32, len(idsBySep))
+		copy(ns, idsBySep)
+		re = append(re, ns)
+	}
+	return re
 }
 
 func (m *_PeopleMgr) FindByIndexAPart1IndexAPart2IndexAPart3(IndexAPart1 int64, IndexAPart2 int32, IndexAPart3 int32, offset int, limit int, sortFields ...string) ([]*People, error) {
