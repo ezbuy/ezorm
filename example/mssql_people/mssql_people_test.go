@@ -492,18 +492,13 @@ func TestInsertBatch(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	// p1 := newUnsavedPeople()
+	p1 := newUnsavedPeople()
 
-	// p2 := newUnsavedPeople()
+	p2 := newUnsavedPeople()
 
-	maxNum := 11000
-	ids := make([]*People, 0, maxNum)
-	for i := 0; i < maxNum; i++ {
-		ids = append(ids, &People{})
-		_, err = PeopleMgr.InsertBatch(ids)
-		if err != nil {
-			t.Errorf("InsertBatch err:%v", err)
-		}
+	_, err = PeopleMgr.InsertBatch([]*People{p1, p2})
+	if err != nil {
+		t.Errorf("InsertBatch err:%v", err)
 	}
 
 }
