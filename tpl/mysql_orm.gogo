@@ -110,7 +110,6 @@ func (*_{{$obj.Name}}Mgr) queryLimit(query string, limit int, args ...interface{
 }
 
 {{ if $field }}
-{{if ne $obj.Table ""}}
 
 {{- if $idField.DisableAutoInc}}
 func (m *_{{$obj.Name}}Mgr) Insert(obj *{{$obj.Name}}) (sql.Result, error) {
@@ -411,6 +410,7 @@ func (m *_{{$obj.Name}}Mgr) Count(where string, args ...interface{}) (int32, err
 	return count, nil
 }
 {{end}}
+
 
 
 func (m *_{{$obj.Name}}Mgr) GetSort(sorts []string) string {
