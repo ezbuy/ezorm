@@ -245,10 +245,12 @@ func (o *Obj) GetGenTypes() []string {
 		case "redis":
 			gens["struct"] = true
 			gens["redis_orm"] = true
-		default:
-			gens["struct"] = true
 		}
 	}
+	if len(gens) == 0 {
+		gens["struct"] = true
+	}
+
 	result := []string{}
 	for k := range gens {
 		result = append(result, k)
