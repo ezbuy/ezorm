@@ -105,7 +105,7 @@ func (m *_PeopleMgr) FindByID(id int32) (*People, error) {
 }
 
 func (m *_PeopleMgr) FindByIDs(ids []int32) ([]*People, error) {
-	idsArray := m.getPartParamsBySep(ids)
+	idsArray := m.getSplitIds(ids)
 
 	var vals []*People
 	for _, idsBySep := range idsArray {
@@ -138,7 +138,7 @@ func (m *_PeopleMgr) getPlaceHolderAndParameter(idsBySep []int32) (string, []int
 	return params, val
 }
 
-func (m *_PeopleMgr) getPartParamsBySep(ids []int32) [][]int32 {
+func (m *_PeopleMgr) getSplitIds(ids []int32) [][]int32 {
 	re := [][]int32{}
 	if len(ids) <= 0 {
 		return re
