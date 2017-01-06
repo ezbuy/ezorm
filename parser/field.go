@@ -152,6 +152,10 @@ func (f *Field) GetTag() string {
 			tags["db"] = true
 		}
 	}
+	if len(tags) == 0 {
+		tags["bson"] = true
+		tags["json"] = true
+	}
 
 	tagstr := []string{}
 	for tag, camel := range tags {
