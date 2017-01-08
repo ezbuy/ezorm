@@ -62,15 +62,16 @@ func strDefault(a, b string) string {
 
 func camel2name(s string) string {
 	nameBuf := bytes.NewBuffer(nil)
-	for i := range s {
-		n := rune(s[i]) // always ASCII?
-		if unicode.IsUpper(n) {
-			if i > 0 {
+	afterSpace := false
+	for i, c := range s {
+		if unicode.IsUpper(c) && unicode.IsLetter(c) {
+			if i > 0 && !afterSpace {
 				nameBuf.WriteRune('_')
 			}
-			n = unicode.ToLower(n)
+			c = unicode.ToLower(c)
 		}
-		nameBuf.WriteRune(n)
+		nameBuf.WriteRune(c)
+		afterSpace = unicode.IsSpace(c)
 	}
 	return nameBuf.String()
 }
