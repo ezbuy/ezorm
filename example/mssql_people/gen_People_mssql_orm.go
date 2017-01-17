@@ -99,6 +99,14 @@ func (m *_PeopleMgr) InsertBatch(objs []*People) (sql.Result, error) {
 	return mssqlExec(query, params...)
 }
 
+func (m *_PeopleMgr) GetId2Obj(objs []*People) map[int32]*People {
+	id2obj := make(map[int32]*People, len(objs))
+	for _, obj := range objs {
+		id2obj[obj.PeopleId] = obj
+	}
+	return id2obj
+}
+
 func (m *_PeopleMgr) FindByID(id int32) (*People, error) {
 	query := "SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate FROM [dbo].[People] WHERE PeopleId=?"
 	return m.queryOne(query, id)
