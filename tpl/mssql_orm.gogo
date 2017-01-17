@@ -151,6 +151,14 @@ func (m *_{{$obj.Name}}Mgr) GetId2Obj(objs []*{{$obj.Name}}) map[{{$idField.Type
 	return id2obj
 }
 
+func (m *_{{$obj.Name}}Mgr) GetIds(objs []*{{$obj.Name}}) []{{$idField.Type}} {
+	ids := make([]{{$idField.Type}}, len(objs))
+	for i, obj := range objs {
+		ids[i] = obj.{{$idFieldName}}
+	}
+	return ids
+}
+
 func (m *_{{$obj.Name}}Mgr) FindByID(id {{$idField.Type}}) (*{{$obj.Name}}, error) {
 	query := "SELECT {{$allFields}} FROM [dbo].[{{$obj.Name}}] WHERE {{$idFieldName}}=?"
 	return m.queryOne(query, id)
