@@ -534,3 +534,42 @@ func TestFindByIds(t *testing.T) {
 
 	fmt.Println("vals len:%v", len(vals))
 }
+
+func TestGetId2Obj(t *testing.T) {
+	_, err := PeopleMgr.Del("")
+	if err != nil {
+		t.Errorf("delete error:%s", err.Error())
+	}
+
+	rand.Seed(time.Now().UnixNano())
+
+	p1 := newUnsavedPeople()
+
+	_, err = PeopleMgr.Save(p1)
+	if err != nil {
+		t.Errorf("save error:%s", err.Error())
+	}
+
+	p2 := newUnsavedPeople()
+
+	_, err = PeopleMgr.Save(p2)
+	if err != nil {
+		t.Errorf("save error:%s", err.Error())
+	}
+
+	ids := []int32{p1.PeopleId, p2.PeopleId}
+
+	ps, err := PeopleMgr.FindByIDs(ids)
+	if err != nil {
+		t.Errorf("FindByIds err:%s", err.Error())
+	} else if len(ps) != 2 {
+		t.Errorf("FindByIds incorrect:len(ps)[%d]!=2", len(ps))
+	}
+
+	id2obj := PeopleMgr.GetId2Obj(ps)
+	for _, each := range ps {
+		if id2obj[each.PeopleId] != each {
+			t.Error("id2obj[each.PeopleId] != each")
+		}
+	}
+}
