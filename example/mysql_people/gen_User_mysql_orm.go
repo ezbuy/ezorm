@@ -267,7 +267,7 @@ func (m *_UserMgr) FindWithOffset(where string, offset int, limit int, args ...i
 }
 
 func (m *_UserMgr) GetQuerysql(where string) string {
-	query := "SELECT `user_id`, `user_number`, `name` FROM test.test_user"
+	query := "SELECT `user_id`, `user_number`, `name` FROM test.test_user "
 
 	where = strings.TrimSpace(where)
 	if where != "" {
@@ -347,6 +347,22 @@ func (m *_UserMgr) GetSort(sorts []string) string {
 		buf.WriteString(",")
 	}
 	return buf.String()
+}
+
+func (m *_UserMgr) GetId2Obj(objs []*User) map[int32]*User {
+	id2obj := make(map[int32]*User, len(objs))
+	for _, obj := range objs {
+		id2obj[obj.UserId] = obj
+	}
+	return id2obj
+}
+
+func (m *_UserMgr) GetIds(objs []*User) []int32 {
+	ids := make([]int32, len(objs))
+	for i, obj := range objs {
+		ids[i] = obj.UserId
+	}
+	return ids
 }
 
 func (m *_UserMgr) GetLimit(offset, limit int) string {
