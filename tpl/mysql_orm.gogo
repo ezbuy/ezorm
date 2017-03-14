@@ -71,7 +71,7 @@ func (*_{{$obj.Name}}Mgr) queryLimit(query string, limit int, args ...interface{
 			break
 		}
 		offset++
-		
+
 		var result {{$obj.Name}}
 		err := rows.Scan(
 		{{- range $index, $field := $obj.Fields -}}
@@ -289,13 +289,13 @@ func (m *_{{$obj.Name}}Mgr) FindIn{{$index.Name}}({{$index.GetFuncParamIn}}, sor
 	buf := bytes.NewBuffer(nil)
 	buf.WriteString("SELECT {{$allFields}} FROM {{$tbl}} WHERE ")
 	{{- range $idx, $field := $index.Fields}}
-	
+
 	buf.WriteString("`{{camel2name $field.Name}}` in ")
 	{{$index.GetFindInIds $idx "buf" $field.Name}}
 	{{- if (lt $idx (minus (len $index.Fields) 1)) }}
 	buf.WriteString(" AND ")
 	{{- end -}}
-	
+
 	{{end}}
 	return m.query(buf.String() + m.GetSort(sortFields))
 }
@@ -434,6 +434,22 @@ func (m *_{{$obj.Name}}Mgr) GetSort(sorts []string) string {
 	 return buf.String()
 }
 
+func (m *_{{$obj.Name}}Mgr) GetId2Obj(objs []*{{$obj.Name}}) map[{{$idField.Type}}]*{{$obj.Name}} {
+	id2obj := make(map[{{$idField.Type}}]*{{$obj.Name}}, len(objs))
+	for _, obj := range objs {
+		id2obj[obj.{{$idFieldName}}] = obj
+	}
+	return id2obj
+}
+
+func (m *_{{$obj.Name}}Mgr) GetIds(objs []*{{$obj.Name}}) []{{$idField.Type}} {
+	ids := make([]{{$idField.Type}}, len(objs))
+	for i, obj := range objs {
+		ids[i] = obj.{{$idFieldName}}
+	}
+	return ids
+}
+
 func (m *_{{$obj.Name}}Mgr) GetLimit(offset, limit int) string {
 	 if limit <= 0 {
 	 	return ""
@@ -447,4 +463,3 @@ func (m *_{{$obj.Name}}Mgr) GetLimit(offset, limit int) string {
 {{- end -}}
 {{- end -}}
 {{- end -}}
-
