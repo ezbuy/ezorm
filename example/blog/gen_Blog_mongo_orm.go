@@ -1,6 +1,8 @@
 package test
 
 import (
+	"time"
+
 	//3rd party libs
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -9,6 +11,8 @@ import (
 	"github.com/ezbuy/ezorm/db"
 	. "github.com/ezbuy/ezorm/orm"
 )
+
+var _ time.Time
 
 func init() {
 
@@ -38,6 +42,13 @@ func initBlogIndex() {
 		Sparse:     true,
 	}); err != nil {
 		panic("ensureIndex test.Blog Slug error:" + err.Error())
+	}
+
+	if err := collection.EnsureIndex(mgo.Index{
+		Key:        []string{"CreateDate"},
+		Background: true,
+	}); err != nil {
+		panic("ensureIndex test.Blog CreateDate error:" + err.Error())
 	}
 
 	if err := collection.EnsureIndex(mgo.Index{
@@ -203,6 +214,15 @@ func (o *_BlogMgr) MustFindOneBySlug(Slug string) (result *Blog) {
 		result.Slug = Slug
 		result.Save()
 	}
+	return
+}
+func (o *_BlogMgr) FindByCreateDate(CreateDate time.Time, limit int, offset int, sortFields ...string) (result []*Blog, err error) {
+	query := db.M{
+		"CreateDate": CreateDate,
+	}
+	session, q := BlogMgr.Query(query, limit, offset, sortFields)
+	defer session.Close()
+	err = q.All(&result)
 	return
 }
 func (o *_BlogMgr) FindByIsPublished(IsPublished bool, limit int, offset int, sortFields ...string) (result []*Blog, err error) {

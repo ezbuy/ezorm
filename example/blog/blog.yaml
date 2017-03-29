@@ -7,6 +7,9 @@ Blog:
     - Slug: string
       flags: [unique]
     - Body: string
+    - CreateDate: time.Time
+      attrs: {bsonTag: createDate,jsonTag: createDate}
+      flags: [sort]
     - User: int32
     - IsPublished: bool
       flags: [index]

@@ -2,6 +2,8 @@
 {{$obj := .}}
 {{if ($obj.DbSwitch "mongo")}}
 import (
+	"time"
+
 	//3rd party libs
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -14,6 +16,8 @@ import (
 	"{{.}}"
 	{{end}}
 )
+
+var _ time.Time
 
 func init() {
 	{{if .NeedIndex}}
