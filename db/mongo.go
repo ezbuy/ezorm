@@ -74,7 +74,7 @@ func ShareSession() *mgo.Session {
 			// default 4096 in mgo
 			poolLimit := config.PoolLimit
 			if poolLimit <= 0 {
-				poolLimit = 128
+				poolLimit = 32
 			}
 
 			session.SetPoolLimit(poolLimit)
