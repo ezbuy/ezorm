@@ -2,17 +2,20 @@ package db
 
 import (
 	"errors"
-	"sync"
-
 	"strings"
+	"sync"
+	"sync/atomic"
 
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
 var config *MongoConfig
-var instance *mgo.Session
+var instances []*mgo.Session
 var instanceOnce sync.Once
+var instancesIndex uint32
+
+const mgoMaxSessions = 8
 
 type M bson.M
 
@@ -50,7 +53,7 @@ func SetOnFinishInit(f func()) {
 }
 
 func IsFinishInit() bool {
-	return instance != nil
+	return instances != nil
 }
 
 func Setup(c *MongoConfig) {
@@ -60,7 +63,8 @@ func Setup(c *MongoConfig) {
 func ShareSession() *mgo.Session {
 	doInit := false
 	instanceOnce.Do(func() {
-		if instance == nil {
+		instances = make([]*mgo.Session, mgoMaxSessions)
+		for i := 0; i < mgoMaxSessions; i++ {
 			if config == nil {
 				panic(ErrOperaBeforeInit)
 			}
@@ -70,16 +74,11 @@ func ShareSession() *mgo.Session {
 			}
 			// Optional. Switch the session to a monotonic behavior.
 			session.SetMode(mgo.Monotonic, true)
-
-			// default 4096 in mgo
-			poolLimit := config.PoolLimit
-			if poolLimit <= 0 {
-				poolLimit = 32
+			if err := session.Ping(); err != nil {
+				panic(err)
 			}
-
-			session.SetPoolLimit(poolLimit)
-
-			instance = session
+			session.SetPoolLimit(1)
+			instances[i] = session
 			doInit = true
 		}
 	})
@@ -89,7 +88,10 @@ func ShareSession() *mgo.Session {
 			f()
 		}
 	}
-	return instance
+
+	i := atomic.AddUint32(&instancesIndex, 1)
+	i = i % uint32(len(instances))
+	return instances[int(i)]
 }
 
 func InID(ids []string) (ret M) {
