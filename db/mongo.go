@@ -6,7 +6,7 @@ import (
 
 	"strings"
 
-	"gopkg.in/mgo.v2"
+	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -70,6 +70,15 @@ func ShareSession() *mgo.Session {
 			}
 			// Optional. Switch the session to a monotonic behavior.
 			session.SetMode(mgo.Monotonic, true)
+
+			// default 4096 in mgo
+			poolLimit := config.PoolLimit
+			if poolLimit <= 0 {
+				poolLimit = 32
+			}
+
+			session.SetPoolLimit(poolLimit)
+
 			instance = session
 			doInit = true
 		}
