@@ -337,7 +337,10 @@ func (m *_{{$obj.Name}}Mgr) Count(where string, args ...interface{}) (int32, err
 	if rows.Next() {
 		err = rows.Scan(&count)
 	}
-
+	if err := rows.Err(); err != nil {
+	   return 0, err
+	}
+	
 	return count, err
 }
 
