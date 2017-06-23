@@ -67,6 +67,10 @@ func (m *_{{$obj.Name}}Mgr) query(query string, args ...interface{}) ([]*{{$obj.
 		results = append(results, &result)
 	}
 
+	if err := rows.Err() ;err != nil {
+		return nil, fmt.Errorf("fetch result error: %v", err)
+	}
+
 	{{if $obj.HasTimeFields}}
 		// 目前sql server保存的都是local time
 		for _, r := range results {
