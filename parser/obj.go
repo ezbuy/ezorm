@@ -98,6 +98,7 @@ type Obj struct {
 	ValueField   *Field
 	ModelType    string
 	ImportSQL    string
+	PrimaryKey   string
 }
 
 func (o *Obj) init() {

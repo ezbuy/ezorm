@@ -69,7 +69,7 @@ type ColumnInfo struct {
 func handler(table string, sqlServer *db.SqlServer) {
 	columnsinfo := getColumnInfo(table, sqlServer)
 	createYamlFile(table, columnsinfo)
-	generate(table)
+	generate(table, columnsinfo)
 }
 
 func getAllTables(sqlServer *db.SqlServer) (tables []string) {
@@ -189,6 +189,10 @@ func mapper(table string, columns []*ColumnInfo) map[string]*tbl {
 			flags = append(flags, "nullable")
 		}
 
+		if v.IsPrimaryKey {
+			flags = append(flags, "primary")
+		}
+
 		if flags != nil {
 			dataitem["flags"] = flags
 		}
@@ -227,7 +231,7 @@ func getOutYamlFileName(table string) string {
 	return outputYaml + "/gen_" + strings.ToLower(table) + "_mssql.yaml"
 }
 
-func generate(table string) {
+func generate(table string, columnsinfo []*ColumnInfo) {
 	var objs map[string]map[string]interface{}
 	fileName := getOutYamlFileName(table)
 	data, _ := ioutil.ReadFile(fileName)
@@ -241,6 +245,13 @@ func generate(table string) {
 		packageName = strings.ToLower(table)
 	}
 
+	//    var primaryKey string
+	// for _, v := range columnsinfo {
+	// 	if v.IsPrimaryKey {
+	// 		primaryKey = v.ColumnName
+	// 	}
+	// }
+
 	genConfigDone := false
 	for key, obj := range objs {
 		metaObj := new(parser.Obj)
@@ -248,6 +259,7 @@ func generate(table string) {
 		metaObj.Name = key
 		metaObj.Db = obj["db"].(string)
 		err := metaObj.Read(obj)
+		metaObj.PrimaryKey = metaObj.GetPrimaryKeyName()
 		if err != nil {
 			panic(err)
 		}
@@ -262,14 +274,6 @@ func generate(table string) {
 
 		for _, genType := range metaObj.GetGenTypes() {
 			fileAbsPath := output + "/gen_" + metaObj.Name + "_" + genType + ".go"
-			fmt.Println(fileAbsPath)
-			fmt.Println(genType)
-			fmt.Println(metaObj)
-			fmt.Println("=================")
-			fmt.Println(metaObj.Fields[0].Name)
-			for _, v := range metaObj.Fields {
-				fmt.Println(v.Name)
-			}
 			executeTpl(fileAbsPath, genType, metaObj)
 		}
 	}

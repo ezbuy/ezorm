@@ -1,10 +1,9 @@
 {{define "mssql_orm"}}package {{.GoPackage}}
 {{$obj := .}}
 {{if ($obj.DbSwitch "mssql")}}
-{{$idFieldName := printf "%sId" .Name}}
+{{$idFieldName := $obj.PrimaryKey}}
 {{/* Only generate source file for table with primary key */}}
 {{range $index, $field := $obj.Fields}}
-{{$idFieldName}}
 {{if eq $field.Name $idFieldName}}
 {{$idField := $field}}
 {{$allFields := join $obj.GetFieldNames ", "}}
