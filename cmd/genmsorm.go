@@ -262,6 +262,14 @@ func generate(table string) {
 
 		for _, genType := range metaObj.GetGenTypes() {
 			fileAbsPath := output + "/gen_" + metaObj.Name + "_" + genType + ".go"
+			fmt.Println(fileAbsPath)
+			fmt.Println(genType)
+			fmt.Println(metaObj)
+			fmt.Println("=================")
+			fmt.Println(metaObj.Fields[0].Name)
+			for _, v := range metaObj.Fields {
+				fmt.Println(v.Name)
+			}
 			executeTpl(fileAbsPath, genType, metaObj)
 		}
 	}

@@ -4,11 +4,11 @@
 {{$idFieldName := printf "%sId" .Name}}
 {{/* Only generate source file for table with primary key */}}
 {{range $index, $field := $obj.Fields}}
+{{$idFieldName}}
 {{if eq $field.Name $idFieldName}}
 {{$idField := $field}}
 {{$allFields := join $obj.GetFieldNames ", "}}
 {{$nonIdFieldNames := preSuffixJoin $obj.GetNonIdFieldNames "obj." "" ", "}}
-
 
 import (
 	"database/sql"
