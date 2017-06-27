@@ -44,8 +44,6 @@ var genmsormCmd = &cobra.Command{
 				handler(t, sqlServer)
 			}
 		}
-
-		fmt.Println("genmsorm called")
 	},
 }
 

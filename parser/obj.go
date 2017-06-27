@@ -51,7 +51,6 @@ func init() {
 		}
 		_, err = Tpl.Parse(string(data))
 		if err != nil {
-			fmt.Println(fname)
 			panic(err)
 		}
 	}

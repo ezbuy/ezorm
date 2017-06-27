@@ -41,7 +41,7 @@ type asset struct {
 
 // tplMongo_collectionGogo reads file data from disk. It returns an error on failure.
 func tplMongo_collectionGogo() (*asset, error) {
-	path := "/Users/aliasliyu4/kobe/src/github.com/ezbuy/ezorm/tpl/mongo_collection.gogo"
+	path := "/Users/admin/aliasliyu4/src/github.com/ezbuy/ezorm/tpl/mongo_collection.gogo"
 	name := "tpl/mongo_collection.gogo"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
@@ -59,7 +59,7 @@ func tplMongo_collectionGogo() (*asset, error) {
 
 // tplMongo_foreign_keyGogo reads file data from disk. It returns an error on failure.
 func tplMongo_foreign_keyGogo() (*asset, error) {
-	path := "/Users/aliasliyu4/kobe/src/github.com/ezbuy/ezorm/tpl/mongo_foreign_key.gogo"
+	path := "/Users/admin/aliasliyu4/src/github.com/ezbuy/ezorm/tpl/mongo_foreign_key.gogo"
 	name := "tpl/mongo_foreign_key.gogo"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
@@ -77,7 +77,7 @@ func tplMongo_foreign_keyGogo() (*asset, error) {
 
 // tplMongo_mongoGogo reads file data from disk. It returns an error on failure.
 func tplMongo_mongoGogo() (*asset, error) {
-	path := "/Users/aliasliyu4/kobe/src/github.com/ezbuy/ezorm/tpl/mongo_mongo.gogo"
+	path := "/Users/admin/aliasliyu4/src/github.com/ezbuy/ezorm/tpl/mongo_mongo.gogo"
 	name := "tpl/mongo_mongo.gogo"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
@@ -95,7 +95,7 @@ func tplMongo_mongoGogo() (*asset, error) {
 
 // tplMongo_ormGogo reads file data from disk. It returns an error on failure.
 func tplMongo_ormGogo() (*asset, error) {
-	path := "/Users/aliasliyu4/kobe/src/github.com/ezbuy/ezorm/tpl/mongo_orm.gogo"
+	path := "/Users/admin/aliasliyu4/src/github.com/ezbuy/ezorm/tpl/mongo_orm.gogo"
 	name := "tpl/mongo_orm.gogo"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
@@ -113,7 +113,7 @@ func tplMongo_ormGogo() (*asset, error) {
 
 // tplMongo_searchGogo reads file data from disk. It returns an error on failure.
 func tplMongo_searchGogo() (*asset, error) {
-	path := "/Users/aliasliyu4/kobe/src/github.com/ezbuy/ezorm/tpl/mongo_search.gogo"
+	path := "/Users/admin/aliasliyu4/src/github.com/ezbuy/ezorm/tpl/mongo_search.gogo"
 	name := "tpl/mongo_search.gogo"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
@@ -131,7 +131,7 @@ func tplMongo_searchGogo() (*asset, error) {
 
 // tplMssql_configGogo reads file data from disk. It returns an error on failure.
 func tplMssql_configGogo() (*asset, error) {
-	path := "/Users/aliasliyu4/kobe/src/github.com/ezbuy/ezorm/tpl/mssql_config.gogo"
+	path := "/Users/admin/aliasliyu4/src/github.com/ezbuy/ezorm/tpl/mssql_config.gogo"
 	name := "tpl/mssql_config.gogo"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
@@ -149,7 +149,7 @@ func tplMssql_configGogo() (*asset, error) {
 
 // tplMssql_ormGogo reads file data from disk. It returns an error on failure.
 func tplMssql_ormGogo() (*asset, error) {
-	path := "/Users/aliasliyu4/kobe/src/github.com/ezbuy/ezorm/tpl/mssql_orm.gogo"
+	path := "/Users/admin/aliasliyu4/src/github.com/ezbuy/ezorm/tpl/mssql_orm.gogo"
 	name := "tpl/mssql_orm.gogo"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
@@ -167,7 +167,7 @@ func tplMssql_ormGogo() (*asset, error) {
 
 // tplMysql_configGogo reads file data from disk. It returns an error on failure.
 func tplMysql_configGogo() (*asset, error) {
-	path := "/Users/aliasliyu4/kobe/src/github.com/ezbuy/ezorm/tpl/mysql_config.gogo"
+	path := "/Users/admin/aliasliyu4/src/github.com/ezbuy/ezorm/tpl/mysql_config.gogo"
 	name := "tpl/mysql_config.gogo"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
@@ -185,7 +185,7 @@ func tplMysql_configGogo() (*asset, error) {
 
 // tplMysql_fkGogo reads file data from disk. It returns an error on failure.
 func tplMysql_fkGogo() (*asset, error) {
-	path := "/Users/aliasliyu4/kobe/src/github.com/ezbuy/ezorm/tpl/mysql_fk.gogo"
+	path := "/Users/admin/aliasliyu4/src/github.com/ezbuy/ezorm/tpl/mysql_fk.gogo"
 	name := "tpl/mysql_fk.gogo"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
@@ -203,7 +203,7 @@ func tplMysql_fkGogo() (*asset, error) {
 
 // tplMysql_ormGogo reads file data from disk. It returns an error on failure.
 func tplMysql_ormGogo() (*asset, error) {
-	path := "/Users/aliasliyu4/kobe/src/github.com/ezbuy/ezorm/tpl/mysql_orm.gogo"
+	path := "/Users/admin/aliasliyu4/src/github.com/ezbuy/ezorm/tpl/mysql_orm.gogo"
 	name := "tpl/mysql_orm.gogo"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
@@ -221,7 +221,7 @@ func tplMysql_ormGogo() (*asset, error) {
 
 // tplRedis_configGogo reads file data from disk. It returns an error on failure.
 func tplRedis_configGogo() (*asset, error) {
-	path := "/Users/aliasliyu4/kobe/src/github.com/ezbuy/ezorm/tpl/redis_config.gogo"
+	path := "/Users/admin/aliasliyu4/src/github.com/ezbuy/ezorm/tpl/redis_config.gogo"
 	name := "tpl/redis_config.gogo"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
@@ -239,7 +239,7 @@ func tplRedis_configGogo() (*asset, error) {
 
 // tplRedis_ormGogo reads file data from disk. It returns an error on failure.
 func tplRedis_ormGogo() (*asset, error) {
-	path := "/Users/aliasliyu4/kobe/src/github.com/ezbuy/ezorm/tpl/redis_orm.gogo"
+	path := "/Users/admin/aliasliyu4/src/github.com/ezbuy/ezorm/tpl/redis_orm.gogo"
 	name := "tpl/redis_orm.gogo"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
@@ -257,7 +257,7 @@ func tplRedis_ormGogo() (*asset, error) {
 
 // tplStructGogo reads file data from disk. It returns an error on failure.
 func tplStructGogo() (*asset, error) {
-	path := "/Users/aliasliyu4/kobe/src/github.com/ezbuy/ezorm/tpl/struct.gogo"
+	path := "/Users/admin/aliasliyu4/src/github.com/ezbuy/ezorm/tpl/struct.gogo"
 	name := "tpl/struct.gogo"
 	bytes, err := bindataRead(path, name)
 	if err != nil {
@@ -325,19 +325,19 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
-	"tpl/mongo_collection.gogo": tplMongo_collectionGogo,
+	"tpl/mongo_collection.gogo":  tplMongo_collectionGogo,
 	"tpl/mongo_foreign_key.gogo": tplMongo_foreign_keyGogo,
-	"tpl/mongo_mongo.gogo": tplMongo_mongoGogo,
-	"tpl/mongo_orm.gogo": tplMongo_ormGogo,
-	"tpl/mongo_search.gogo": tplMongo_searchGogo,
-	"tpl/mssql_config.gogo": tplMssql_configGogo,
-	"tpl/mssql_orm.gogo": tplMssql_ormGogo,
-	"tpl/mysql_config.gogo": tplMysql_configGogo,
-	"tpl/mysql_fk.gogo": tplMysql_fkGogo,
-	"tpl/mysql_orm.gogo": tplMysql_ormGogo,
-	"tpl/redis_config.gogo": tplRedis_configGogo,
-	"tpl/redis_orm.gogo": tplRedis_ormGogo,
-	"tpl/struct.gogo": tplStructGogo,
+	"tpl/mongo_mongo.gogo":       tplMongo_mongoGogo,
+	"tpl/mongo_orm.gogo":         tplMongo_ormGogo,
+	"tpl/mongo_search.gogo":      tplMongo_searchGogo,
+	"tpl/mssql_config.gogo":      tplMssql_configGogo,
+	"tpl/mssql_orm.gogo":         tplMssql_ormGogo,
+	"tpl/mysql_config.gogo":      tplMysql_configGogo,
+	"tpl/mysql_fk.gogo":          tplMysql_fkGogo,
+	"tpl/mysql_orm.gogo":         tplMysql_ormGogo,
+	"tpl/redis_config.gogo":      tplRedis_configGogo,
+	"tpl/redis_orm.gogo":         tplRedis_ormGogo,
+	"tpl/struct.gogo":            tplStructGogo,
 }
 
 // AssetDir returns the file names below a certain
@@ -379,21 +379,22 @@ type bintree struct {
 	Func     func() (*asset, error)
 	Children map[string]*bintree
 }
+
 var _bintree = &bintree{nil, map[string]*bintree{
 	"tpl": &bintree{nil, map[string]*bintree{
-		"mongo_collection.gogo": &bintree{tplMongo_collectionGogo, map[string]*bintree{}},
+		"mongo_collection.gogo":  &bintree{tplMongo_collectionGogo, map[string]*bintree{}},
 		"mongo_foreign_key.gogo": &bintree{tplMongo_foreign_keyGogo, map[string]*bintree{}},
-		"mongo_mongo.gogo": &bintree{tplMongo_mongoGogo, map[string]*bintree{}},
-		"mongo_orm.gogo": &bintree{tplMongo_ormGogo, map[string]*bintree{}},
-		"mongo_search.gogo": &bintree{tplMongo_searchGogo, map[string]*bintree{}},
-		"mssql_config.gogo": &bintree{tplMssql_configGogo, map[string]*bintree{}},
-		"mssql_orm.gogo": &bintree{tplMssql_ormGogo, map[string]*bintree{}},
-		"mysql_config.gogo": &bintree{tplMysql_configGogo, map[string]*bintree{}},
-		"mysql_fk.gogo": &bintree{tplMysql_fkGogo, map[string]*bintree{}},
-		"mysql_orm.gogo": &bintree{tplMysql_ormGogo, map[string]*bintree{}},
-		"redis_config.gogo": &bintree{tplRedis_configGogo, map[string]*bintree{}},
-		"redis_orm.gogo": &bintree{tplRedis_ormGogo, map[string]*bintree{}},
-		"struct.gogo": &bintree{tplStructGogo, map[string]*bintree{}},
+		"mongo_mongo.gogo":       &bintree{tplMongo_mongoGogo, map[string]*bintree{}},
+		"mongo_orm.gogo":         &bintree{tplMongo_ormGogo, map[string]*bintree{}},
+		"mongo_search.gogo":      &bintree{tplMongo_searchGogo, map[string]*bintree{}},
+		"mssql_config.gogo":      &bintree{tplMssql_configGogo, map[string]*bintree{}},
+		"mssql_orm.gogo":         &bintree{tplMssql_ormGogo, map[string]*bintree{}},
+		"mysql_config.gogo":      &bintree{tplMysql_configGogo, map[string]*bintree{}},
+		"mysql_fk.gogo":          &bintree{tplMysql_fkGogo, map[string]*bintree{}},
+		"mysql_orm.gogo":         &bintree{tplMysql_ormGogo, map[string]*bintree{}},
+		"redis_config.gogo":      &bintree{tplRedis_configGogo, map[string]*bintree{}},
+		"redis_orm.gogo":         &bintree{tplRedis_ormGogo, map[string]*bintree{}},
+		"struct.gogo":            &bintree{tplStructGogo, map[string]*bintree{}},
 	}},
 }}
 
@@ -443,4 +444,3 @@ func _filePath(dir, name string) string {
 	cannonicalName := strings.Replace(name, "\\", "/", -1)
 	return filepath.Join(append([]string{dir}, strings.Split(cannonicalName, "/")...)...)
 }
-
