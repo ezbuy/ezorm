@@ -51,7 +51,6 @@ func init() {
 		}
 		_, err = Tpl.Parse(string(data))
 		if err != nil {
-			fmt.Println(fname)
 			panic(err)
 		}
 	}
@@ -98,6 +97,7 @@ type Obj struct {
 	ValueField   *Field
 	ModelType    string
 	ImportSQL    string
+	PrimaryKey   string
 }
 
 func (o *Obj) init() {

@@ -44,8 +44,6 @@ var genmsormCmd = &cobra.Command{
 				handler(t, sqlServer)
 			}
 		}
-
-		fmt.Println("genmsorm called")
 	},
 }
 
@@ -189,6 +187,10 @@ func mapper(table string, columns []*ColumnInfo) map[string]*tbl {
 			flags = append(flags, "nullable")
 		}
 
+		if v.IsPrimaryKey {
+			flags = append(flags, "primary")
+		}
+
 		if flags != nil {
 			dataitem["flags"] = flags
 		}
@@ -248,6 +250,7 @@ func generate(table string) {
 		metaObj.Name = key
 		metaObj.Db = obj["db"].(string)
 		err := metaObj.Read(obj)
+		metaObj.PrimaryKey = metaObj.GetPrimaryKeyName()
 		if err != nil {
 			panic(err)
 		}

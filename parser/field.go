@@ -416,7 +416,7 @@ func DbToGoType(colType string) string {
 	var typeStr string
 	switch colType {
 	case "nvarchar", "timestamp", "text", "cursor", "uniqueidentifier", "sysname", "real",
-		"binary", "varbinary", "nchar", "char", "varchar":
+		"binary", "varbinary", "nchar", "char", "varchar", "ntext":
 		typeStr = "string"
 	case "datetime", "smalldatetime":
 		// Use pointer type to avoid null value panic
