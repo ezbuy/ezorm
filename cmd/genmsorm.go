@@ -69,7 +69,7 @@ type ColumnInfo struct {
 func handler(table string, sqlServer *db.SqlServer) {
 	columnsinfo := getColumnInfo(table, sqlServer)
 	createYamlFile(table, columnsinfo)
-	generate(table, columnsinfo)
+	generate(table)
 }
 
 func getAllTables(sqlServer *db.SqlServer) (tables []string) {
@@ -231,7 +231,7 @@ func getOutYamlFileName(table string) string {
 	return outputYaml + "/gen_" + strings.ToLower(table) + "_mssql.yaml"
 }
 
-func generate(table string, columnsinfo []*ColumnInfo) {
+func generate(table string) {
 	var objs map[string]map[string]interface{}
 	fileName := getOutYamlFileName(table)
 	data, _ := ioutil.ReadFile(fileName)
@@ -244,13 +244,6 @@ func generate(table string, columnsinfo []*ColumnInfo) {
 	if packageName == "" {
 		packageName = strings.ToLower(table)
 	}
-
-	//    var primaryKey string
-	// for _, v := range columnsinfo {
-	// 	if v.IsPrimaryKey {
-	// 		primaryKey = v.ColumnName
-	// 	}
-	// }
 
 	genConfigDone := false
 	for key, obj := range objs {
