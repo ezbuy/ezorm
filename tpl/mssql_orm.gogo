@@ -1,14 +1,13 @@
 {{define "mssql_orm"}}package {{.GoPackage}}
 {{$obj := .}}
 {{if ($obj.DbSwitch "mssql")}}
-{{$idFieldName := printf "%sId" .Name}}
+{{$idFieldName := $obj.PrimaryKey}}
 {{/* Only generate source file for table with primary key */}}
 {{range $index, $field := $obj.Fields}}
 {{if eq $field.Name $idFieldName}}
 {{$idField := $field}}
 {{$allFields := join $obj.GetFieldNames ", "}}
 {{$nonIdFieldNames := preSuffixJoin $obj.GetNonIdFieldNames "obj." "" ", "}}
-
 
 import (
 	"database/sql"
