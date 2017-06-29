@@ -75,7 +75,15 @@ func TestPeople(t *testing.T) {
 			t.Fatal("not expected")
 		}
 	}
-
+	{
+		bs, err := BlogTempMgr.Query("Select `blog_id`,`title`,`hits`,`slug`,`body`,`user`,(`blog_id` * `hits`) as `ghost_number` FROM test.blog")
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, b := range bs {
+			t.Log(b.Title)
+		}
+	}
 	{
 		blog, err := BlogMgr.FindOneBySlug("blog-title")
 		if err != nil {

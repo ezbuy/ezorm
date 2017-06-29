@@ -98,6 +98,7 @@ type Obj struct {
 	ValueField   *Field
 	ModelType    string
 	ImportSQL    string
+	Query        bool
 }
 
 func (o *Obj) init() {
@@ -484,6 +485,8 @@ func (o *Obj) Read(data map[string]interface{}) error {
 				o.Fields[i+startPos] = f
 				o.FieldNameMap[f.Name] = f
 			}
+		case "query":
+			o.Query = val.(bool)
 		default:
 			return errors.New(o.Name + " has invalid obj property: " + key)
 		}

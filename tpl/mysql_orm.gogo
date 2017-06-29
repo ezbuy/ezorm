@@ -109,7 +109,7 @@ func (*_{{$obj.Name}}Mgr) queryLimit(query string, limit int, args ...interface{
 	return
 }
 
-{{ if $field }}
+{{ if and ($field) (not $obj.Query)}}
 
 {{- if $idField.DisableAutoInc}}
 func (m *_{{$obj.Name}}Mgr) Insert(obj *{{$obj.Name}}) (sql.Result, error) {

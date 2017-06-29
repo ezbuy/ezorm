@@ -33,3 +33,24 @@ User:
       flags: [index]
   table: test_user
   dbname: test
+
+BlogTemp:
+  db: mysql
+  table: Blog
+  dbname: test  
+  fields:
+    - BlogId: int32
+      flags: [noinc]
+    - Title: string
+    - Hits: int32
+    - Slug: string
+      flags: [unique]
+    - Body: string
+      flags: [nullable]
+    - User: int32
+      flags: [index]
+      fk: User.UserNumber
+    - GhostNumber: int32
+  query: true
+  indexes: [[User, IsPublished]]
+ 
