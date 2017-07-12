@@ -80,6 +80,11 @@ var genCmd = &cobra.Command{
 			}
 		}
 
+		metaObj := new(parser.Obj)
+		metaObj.GoPackage = genGoPackageName
+		fileAbsPath := output + "/gen_mongo_config.go"
+		executeTpl(fileAbsPath, "mongo_config", metaObj)
+
 		oscmd := exec.Command("gofmt", "-w", output)
 		oscmd.Run()
 
