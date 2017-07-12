@@ -1,8 +1,5 @@
 all:
 
-debugTpl:
-	go-bindata -nometadata -o tpl/bindata.go -ignore bindata.go -pkg tpl -debug tpl
-
 buildTpl:
 	go-bindata -nometadata -o tpl/bindata.go -ignore bindata.go -pkg tpl tpl
 
