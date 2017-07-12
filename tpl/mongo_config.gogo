@@ -6,11 +6,11 @@ import (
 
     "github.com/ezbuy/ezorm/db"
 
-	"gopkg.in/mgo.v2"
+    "gopkg.in/mgo.v2"
 )
 
 var (
-	mgoInstances        []*mgo.Session
+    mgoInstances        []*mgo.Session
     mgoConfig    *db.MongoConfig
     mgoInstanceOnce sync.Once
     mgoInstanceIndex uint32
