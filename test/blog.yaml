@@ -1,0 +1,18 @@
+Blog:
+  db: mongo
+  fields:
+    - Title: string
+      attrs: {bsonTag: title,jsonTag: title}
+    - Hits: int32
+    - Slug: string
+      flags: [unique]
+    - Body: string
+    - CreateDate: time.Time
+      attrs: {bsonTag: createDate,jsonTag: createDate}
+      flags: [sort]
+    - User: int32
+    - IsPublished: bool
+      flags: [index]
+  indexes: [[User, IsPublished]]
+  table: test_blog
+  dbname: test
