@@ -77,7 +77,13 @@ func ShareSession() *mgo.Session {
 			if err := session.Ping(); err != nil {
 				panic(err)
 			}
-			session.SetPoolLimit(1)
+
+			poolLimit := config.PoolLimit
+			if poolLimit <= 0 {
+				poolLimit = 16
+			}
+
+			session.SetPoolLimit(poolLimit)
 			instances[i] = session
 			doInit = true
 		}

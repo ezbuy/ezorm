@@ -264,10 +264,15 @@ func (o *Obj) GetConfigTemplates() []string {
 		switch db {
 		case "mssql":
 			tpls = append(tpls, "mssql_config")
+
 		case "mysql":
 			tpls = append(tpls, "mysql_config")
+
 		case "redis":
 			tpls = append(tpls, "redis_config")
+
+		case "mongo":
+			tpls = append(tpls, "mongo_config")
 		}
 	}
 	return tpls
