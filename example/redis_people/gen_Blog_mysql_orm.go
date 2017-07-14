@@ -239,7 +239,7 @@ func (m *_BlogMgr) FindWithOffset(where string, offset int, limit int, args ...i
 }
 
 func (m *_BlogMgr) GetQuerysql(where string) string {
-	query := "SELECT `id`, `user_id`, `title`, `content`, `status`, `readed`, `created_at`, `updated_at` FROM ezorm.blogs"
+	query := "SELECT `id`, `user_id`, `title`, `content`, `status`, `readed`, `created_at`, `updated_at` FROM ezorm.blogs "
 
 	where = strings.TrimSpace(where)
 	if where != "" {
@@ -319,6 +319,22 @@ func (m *_BlogMgr) GetSort(sorts []string) string {
 		buf.WriteString(",")
 	}
 	return buf.String()
+}
+
+func (m *_BlogMgr) GetId2Obj(objs []*Blog) map[int32]*Blog {
+	id2obj := make(map[int32]*Blog, len(objs))
+	for _, obj := range objs {
+		id2obj[obj.Id] = obj
+	}
+	return id2obj
+}
+
+func (m *_BlogMgr) GetIds(objs []*Blog) []int32 {
+	ids := make([]int32, len(objs))
+	for i, obj := range objs {
+		ids[i] = obj.Id
+	}
+	return ids
 }
 
 func (m *_BlogMgr) GetLimit(offset, limit int) string {
