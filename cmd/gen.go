@@ -78,11 +78,6 @@ var genCmd = &cobra.Command{
 				fileAbsPath := output + "/gen_" + t + ".go"
 				executeTpl(fileAbsPath, t, obj)
 			}
-
-			if obj.Db == "mongo" {
-				fileAbsPath := output + "/gen_mongo_config.go"
-				executeTpl(fileAbsPath, "mongo_config", obj)
-			}
 		}
 
 		oscmd := exec.Command("gofmt", "-w", output)
