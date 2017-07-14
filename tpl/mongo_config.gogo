@@ -42,10 +42,15 @@ func MgoSetup(config *db.MongoConfig) {
 
 func getCol(dbName, col string) (*mgo.Session, *mgo.Collection) {
     i := atomic.AddUint32(&mgoInstanceIndex, 1)
-    i = i % uint32(len(mgoInstances))
-    instance := mgoInstances[int(i)]
-    return instance, instance.DB(dbName).C(col)
+	i = i % uint32(len(mgoInstances))
+	session := mgoInstances[int(i)].Clone()
+	var mgoCol *mgo.Collection
+	if dbName == "" {
+		mgoCol = session.DB(mgoConfig.DBName).C(col)
+	} else {
+		mgoCol = session.DB(dbName).C(col)
+	}
+	return session, mgoCol
 }
 
 {{end}}
-
