@@ -312,7 +312,10 @@ func (m *_BlogMgr) RemoveByID(id string) (err error) {
 }
 
 func (m *_BlogMgr) GetCol() (session *mgo.Session, col *mgo.Collection) {
-	return db.GetCol("test", "test_blog")
+	if mgoInstances == nil {
+		return db.GetCol("test", "test_blog")
+	}
+	return getCol("test", "test_blog")
 }
 
 //Search
