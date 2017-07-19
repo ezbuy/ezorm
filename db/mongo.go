@@ -5,6 +5,7 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -63,30 +64,7 @@ func Setup(c *MongoConfig) {
 func ShareSession() *mgo.Session {
 	doInit := false
 	instanceOnce.Do(func() {
-		instances = make([]*mgo.Session, mgoMaxSessions)
-		for i := 0; i < mgoMaxSessions; i++ {
-			if config == nil {
-				panic(ErrOperaBeforeInit)
-			}
-			session, err := mgo.Dial(config.MongoDB)
-			if err != nil {
-				panic(err)
-			}
-			// Optional. Switch the session to a monotonic behavior.
-			session.SetMode(mgo.Monotonic, true)
-			if err := session.Ping(); err != nil {
-				panic(err)
-			}
-
-			poolLimit := config.PoolLimit
-			if poolLimit <= 0 {
-				poolLimit = 16
-			}
-
-			session.SetPoolLimit(poolLimit)
-			instances[i] = session
-			doInit = true
-		}
+		instances = MustNewMgoSessions(config)
 	})
 
 	if doInit {
@@ -97,7 +75,45 @@ func ShareSession() *mgo.Session {
 
 	i := atomic.AddUint32(&instancesIndex, 1)
 	i = i % uint32(len(instances))
-	return instances[int(i)]
+	return instances[int(i)].Clone()
+}
+
+func MustNewMgoSessions(config *MongoConfig) []*mgo.Session {
+	sessions := make([]*mgo.Session, mgoMaxSessions)
+	for i := 0; i < mgoMaxSessions; i++ {
+		if config == nil {
+			panic(ErrOperaBeforeInit)
+		}
+		session, err := mgo.Dial(config.MongoDB)
+		if err != nil {
+			panic(err)
+		}
+		// Optional. Switch the session to a monotonic behavior.
+		session.SetMode(mgo.Monotonic, true)
+		if err := session.Ping(); err != nil {
+			panic(err)
+		}
+
+		poolLimit := config.PoolLimit
+		if poolLimit <= 0 {
+			poolLimit = 16
+		}
+
+		session.SetPoolLimit(poolLimit)
+		sessions[i] = session
+
+		// Refresh session in case of network error.
+		go func(s *mgo.Session) {
+			for {
+				if err := s.Ping(); err != nil {
+					s.Refresh()
+				}
+				time.Sleep(time.Second)
+			}
+		}(session)
+	}
+
+	return sessions
 }
 
 func InID(ids []string) (ret M) {
@@ -120,7 +136,7 @@ func ObjectIds(ids []string) (ret []bson.ObjectId) {
 }
 
 func NewSession() (session *mgo.Session) {
-	return ShareSession().Clone()
+	return ShareSession()
 }
 
 func NewCollection(session *mgo.Session, dbName, name string) *mgo.Collection {
