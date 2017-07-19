@@ -23,27 +23,7 @@ const mgoMaxSessions = 8
 
 func MgoSetup(config *db.MongoConfig) {
 	mgoConfig = config
-	mgoInstances = make([]*mgo.Session, mgoMaxSessions)
-	for i := 0; i < mgoMaxSessions; i++ {
-		if mgoConfig == nil {
-			panic(ErrOperaBeforeInit)
-		}
-		session, err := mgo.Dial(mgoConfig.MongoDB)
-		if err != nil {
-			panic(err)
-		}
-		session.SetMode(mgo.Monotonic, true)
-		if err := session.Ping(); err != nil {
-			panic(err)
-		}
-		poolLimit := config.PoolLimit
-		if poolLimit <= 0 {
-			poolLimit = 16
-		}
-
-		session.SetPoolLimit(poolLimit)
-		mgoInstances[i] = session
-	}
+	mgoInstances = db.MustNewMgoSessions(config)
 }
 
 func getCol(dbName, col string) (*mgo.Session, *mgo.Collection) {
