@@ -16,3 +16,15 @@ Blog:
   indexes: [[User, IsPublished]]
   table: test_blog
   dbname: test
+
+Category:
+  fields:
+    - Cid: int64
+    - Name: string
+
+TimeRange:
+  fields:
+    - From: list<int64>
+      attrs: {bsonTag: From}
+    - To: list<int64>
+      attrs: {bsonTag: To}

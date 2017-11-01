@@ -135,6 +135,11 @@ func (f *Field) GetNullSQLType() string {
 	return t
 }
 
+func (f *Field) AttrsContains(attr string) bool {
+	_, ok := f.Attrs[attr]
+	return ok
+}
+
 func (f *Field) BsonTagName() string {
 	if bVal, ok := f.Attrs["bsonTag"]; ok {
 		return bVal

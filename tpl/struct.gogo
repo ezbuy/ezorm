@@ -20,13 +20,13 @@ type {{.Name}} struct {
 	{{- end}}
 }
 
-{{- if ($obj.DbContains "mongo")}}
 const (
     {{- range $field := .Fields}}
-        {{$obj.Name}}MgoField{{$field.Name}} = "{{$field.BsonTagName}}"
+        {{- if or ($obj.DbContains "mongo") ($field.AttrsContains "bsonTag")}}
+            {{$obj.Name}}MgoField{{$field.Name}} = "{{$field.BsonTagName}}"
+        {{- end}}
     {{- end}}
 )
-{{- end}}
 
 func (p *{{.Name}}) GetNameSpace() string {
 	return "{{.Package}}"
