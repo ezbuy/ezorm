@@ -23,7 +23,7 @@ type {{.Name}} struct {
 {{- if ($obj.DbContains "mongo")}}
 const (
     {{- range $field := .Fields}}
-        {{$obj.Name}}Field{{$field.Name}} = "{{$field.BsonTagName}}"
+        {{$obj.Name}}MgoField{{$field.Name}} = "{{$field.BsonTagName}}"
     {{- end}}
 )
 {{- end}}

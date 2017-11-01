@@ -19,14 +19,14 @@ type Blog struct {
 }
 
 const (
-	BlogFieldID          = "_id"
-	BlogFieldTitle       = "title"
-	BlogFieldHits        = "Hits"
-	BlogFieldSlug        = "Slug"
-	BlogFieldBody        = "Body"
-	BlogFieldCreateDate  = "createDate"
-	BlogFieldUser        = "User"
-	BlogFieldIsPublished = "IsPublished"
+	BlogMgoFieldID          = "_id"
+	BlogMgoFieldTitle       = "title"
+	BlogMgoFieldHits        = "Hits"
+	BlogMgoFieldSlug        = "Slug"
+	BlogMgoFieldBody        = "Body"
+	BlogMgoFieldCreateDate  = "createDate"
+	BlogMgoFieldUser        = "User"
+	BlogMgoFieldIsPublished = "IsPublished"
 )
 
 func (p *Blog) GetNameSpace() string {
