@@ -18,6 +18,17 @@ type Blog struct {
 	isNew       bool
 }
 
+const (
+	BlogMgoFieldID          = "_id"
+	BlogMgoFieldTitle       = "title"
+	BlogMgoFieldHits        = "Hits"
+	BlogMgoFieldSlug        = "Slug"
+	BlogMgoFieldBody        = "Body"
+	BlogMgoFieldCreateDate  = "createDate"
+	BlogMgoFieldUser        = "User"
+	BlogMgoFieldIsPublished = "IsPublished"
+)
+
 func (p *Blog) GetNameSpace() string {
 	return "blog"
 }

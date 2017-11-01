@@ -16,6 +16,10 @@ clean:
 	rm ./example/mysql_people/gen_*.go
 	rm ./example/redis_people/gen_*.go
 
+genmongo:
+	rm example/blog/gen_*.go
+	ezorm gen -i example/blog/blog.yaml -o example/blog -p blog --goPackage test
+
 test: genexample testmssql testmongo testmysql
 
 testmssql:

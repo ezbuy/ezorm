@@ -2,3 +2,4 @@
 example/mssql_people/config.go
 db/config.go
 .vscode/
+.idea/
