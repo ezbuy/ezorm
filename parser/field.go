@@ -135,6 +135,14 @@ func (f *Field) GetNullSQLType() string {
 	return t
 }
 
+func (f *Field) BsonTagName() string {
+	if bVal, ok := f.Attrs["bsonTag"]; ok {
+		return bVal
+	}
+
+	return f.Name
+}
+
 func (f *Field) GetTag() string {
 	tags := map[string]bool{}
 	for _, db := range f.Obj.Dbs {
