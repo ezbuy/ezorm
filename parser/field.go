@@ -140,6 +140,10 @@ func (f *Field) BsonTagName() string {
 		return bVal
 	}
 
+	if f.Name == "ID" {
+		return "_id"
+	}
+
 	return f.Name
 }
 

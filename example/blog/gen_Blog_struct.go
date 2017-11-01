@@ -19,7 +19,7 @@ type Blog struct {
 }
 
 const (
-	BlogFieldID          = "ID"
+	BlogFieldID          = "_id"
 	BlogFieldTitle       = "title"
 	BlogFieldHits        = "Hits"
 	BlogFieldSlug        = "Slug"
