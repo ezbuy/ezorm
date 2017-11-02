@@ -107,6 +107,7 @@ func MustNewMgoSessions(config *MongoConfig) []*mgo.Session {
 			for {
 				if err := s.Ping(); err != nil {
 					s.Refresh()
+					s.Ping()
 				}
 				time.Sleep(time.Second)
 			}
