@@ -20,6 +20,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"sort"
 	"strings"
 
 	yaml "gopkg.in/yaml.v2"
@@ -95,19 +96,27 @@ func createYamlFile(table string, columns []*ColumnInfo) {
 func getIndexInfo(columns []*ColumnInfo) (multiColumnIndexes, multiColumnUniques [][]string,
 	singleColumnIndexSet, singleColumnUniqueSet map[int64]struct{}) {
 	indexIdToColumns := make(map[int64][]*ColumnInfo)
+
+	indexIds := make([]int64, 0, len(columns))
 	for _, v := range columns {
 		indexId := v.IndexId.Int64
 		if indexId > 0 && !v.IsPrimaryKey {
 			indexIdToColumns[indexId] = append(indexIdToColumns[indexId], v)
+			indexIds = append(indexIds, indexId)
 		}
 	}
+
+	sort.Slice(indexIds, func(i, j int) bool {
+		return indexIds[i] < indexIds[j]
+	})
 
 	singleColumnIndexSet = make(map[int64]struct{})
 	singleColumnUniqueSet = make(map[int64]struct{})
 
 	multiColumnIndexNames := make(map[string]struct{})
 
-	for indexId, indexColums := range indexIdToColumns {
+	for _, indexId := range indexIds {
+		indexColums := indexIdToColumns[indexId]
 		if len(indexColums) == 1 {
 			if indexColums[0].IsUnique.Bool {
 				singleColumnUniqueSet[indexId] = struct{}{}
