@@ -246,6 +246,26 @@ func (m *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, offse
 
 	return m.query(query, {{$index.GetFuncParamNames}}, offset, limit)
 }
+
+func (m *_{{$obj.Name}}Mgr) CountBy{{$index.Name}}({{$index.GetFuncParam}}) (int32, error) {
+	query := fmt.Sprintf("SELECT count(1) FROM [dbo].[{{$obj.Name}}] WHERE
+	{{- preSuffixJoin $index.FieldNames " " "=? " "AND" -}}
+	")
+
+	rows, err := mssqlQuery(query, args...)
+	if err != nil {
+		return 0, err
+	}
+
+	defer rows.Close()
+
+	var count int32
+	if rows.Next() {
+		err = rows.Scan(&count)
+	}
+
+	return count, err
+}
 {{end}}
 {{end}}
 
