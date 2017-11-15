@@ -248,11 +248,11 @@ func (m *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, offse
 }
 
 func (m *_{{$obj.Name}}Mgr) CountBy{{$index.Name}}({{$index.GetFuncParam}}) (int32, error) {
-	query := fmt.Sprintf("SELECT count(1) FROM [dbo].[{{$obj.Name}}] WHERE
-	{{- preSuffixJoin $index.FieldNames " " "=? " "AND" -}}
-	")
+	query := fmt.Sprintf(`SELECT count(1) FROM [dbo].[{{$obj.Name}}] WHERE
+		{{- preSuffixJoin $index.FieldNames " " "=? " "AND" -}}
+	`)
 
-	rows, err := mssqlQuery(query, args...)
+	rows, err := mssqlQuery(query, {{$index.GetFuncParamNames}})
 	if err != nil {
 		return 0, err
 	}
