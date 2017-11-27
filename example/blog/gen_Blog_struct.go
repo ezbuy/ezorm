@@ -49,3 +49,7 @@ func (m *_BlogMgr) NewBlog() *Blog {
 
 	return rval
 }
+
+func (m *_BlogMgr) New() *Blog {
+	return NewBlog()
+}

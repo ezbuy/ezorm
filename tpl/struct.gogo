@@ -76,4 +76,9 @@ func (m *_{{.Name}}Mgr) New{{.Name}}() *{{.Name}} {
 {{- end}}
 	return rval
 }
+
+func (m *_{{.Name}}Mgr) New() *{{.Name}} {
+	return New{{.Name}}()
+}
+
 {{end}}
