@@ -78,7 +78,7 @@ func (m *_{{.Name}}Mgr) New{{.Name}}() *{{.Name}} {
 }
 
 func (m *_{{.Name}}Mgr) New() *{{.Name}} {
-	return New{{.Name}}()
+	return m.New{{.Name}}()
 }
 
 {{end}}

@@ -51,5 +51,5 @@ func (m *_BlogMgr) NewBlog() *Blog {
 }
 
 func (m *_BlogMgr) New() *Blog {
-	return NewBlog()
+	return m.NewBlog()
 }

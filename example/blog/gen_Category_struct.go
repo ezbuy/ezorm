@@ -28,3 +28,7 @@ func (m *_CategoryMgr) NewCategory() *Category {
 	rval := new(Category)
 	return rval
 }
+
+func (m *_CategoryMgr) New() *Category {
+	return m.NewCategory()
+}

@@ -31,3 +31,7 @@ func (m *_TimeRangeMgr) NewTimeRange() *TimeRange {
 	rval := new(TimeRange)
 	return rval
 }
+
+func (m *_TimeRangeMgr) New() *TimeRange {
+	return m.NewTimeRange()
+}
