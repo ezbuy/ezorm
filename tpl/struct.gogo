@@ -62,6 +62,9 @@ type _{{.Name}}Mgr struct {
 
 var {{.Name}}Mgr *_{{.Name}}Mgr
 
+// Get_{{.Name}}Mgr returns the orm manager in case of its name starts with lower letter
+func Get_{{.Name}}Mgr() *_{{.Name}}Mgr { return {{.Name}}Mgr }
+
 func (m *_{{.Name}}Mgr) New{{.Name}}() *{{.Name}} {
 	rval := new({{.Name}})
 {{- if ($obj.DbContains "mongo")}}
