@@ -27,6 +27,9 @@ type _TimeRangeMgr struct {
 
 var TimeRangeMgr *_TimeRangeMgr
 
+// Get_TimeRangeMgr returns the orm manager in case of its name starts with lower letter
+func Get_TimeRangeMgr() *_TimeRangeMgr { return TimeRangeMgr }
+
 func (m *_TimeRangeMgr) NewTimeRange() *TimeRange {
 	rval := new(TimeRange)
 	return rval

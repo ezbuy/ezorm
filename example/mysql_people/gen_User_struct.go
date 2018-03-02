@@ -11,6 +11,8 @@ type User struct {
 	isNew      bool
 }
 
+const ()
+
 func (p *User) GetNameSpace() string {
 	return "people"
 }
@@ -23,6 +25,9 @@ type _UserMgr struct {
 }
 
 var UserMgr *_UserMgr
+
+// Get_UserMgr returns the orm manager in case of its name starts with lower letter
+func Get_UserMgr() *_UserMgr { return UserMgr }
 
 func (m *_UserMgr) NewUser() *User {
 	rval := new(User)

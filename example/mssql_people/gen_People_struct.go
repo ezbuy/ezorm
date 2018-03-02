@@ -19,6 +19,8 @@ type People struct {
 	UpdateDate  *time.Time `db:"UpdateDate"`
 }
 
+const ()
+
 func (p *People) GetNameSpace() string {
 	return "people"
 }
@@ -31,6 +33,9 @@ type _PeopleMgr struct {
 }
 
 var PeopleMgr *_PeopleMgr
+
+// Get_PeopleMgr returns the orm manager in case of its name starts with lower letter
+func Get_PeopleMgr() *_PeopleMgr { return PeopleMgr }
 
 func (m *_PeopleMgr) NewPeople() *People {
 	rval := new(People)

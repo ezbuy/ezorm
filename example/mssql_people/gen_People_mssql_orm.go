@@ -192,6 +192,24 @@ func (m *_PeopleMgr) FindByIndexAPart1IndexAPart2IndexAPart3(IndexAPart1 int64, 
 	return m.query(query, IndexAPart1, IndexAPart2, IndexAPart3, offset, limit)
 }
 
+func (m *_PeopleMgr) CountByIndexAPart1IndexAPart2IndexAPart3(IndexAPart1 int64, IndexAPart2 int32, IndexAPart3 int32) (int32, error) {
+	query := fmt.Sprintf(`SELECT count(1) FROM [dbo].[People] WHERE IndexAPart1=? AND IndexAPart2=? AND IndexAPart3=? `)
+
+	rows, err := mssqlQuery(query, IndexAPart1, IndexAPart2, IndexAPart3)
+	if err != nil {
+		return 0, err
+	}
+
+	defer rows.Close()
+
+	var count int32
+	if rows.Next() {
+		err = rows.Scan(&count)
+	}
+
+	return count, err
+}
+
 func (m *_PeopleMgr) FindOneByUniquePart1UniquePart2(UniquePart1 int32, UniquePart2 int32) (*People, error) {
 	query := "SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate FROM [dbo].[People] WHERE UniquePart1=? AND UniquePart2=?"
 	return m.queryOne(query, UniquePart1, UniquePart2)
@@ -208,6 +226,24 @@ func (m *_PeopleMgr) FindByAge(Age int32, offset int, limit int, sortFields ...s
 	query := fmt.Sprintf("SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate FROM [dbo].[People] WHERE Age=? %s  OFFSET ? Rows FETCH NEXT ? Rows ONLY", orderBy)
 
 	return m.query(query, Age, offset, limit)
+}
+
+func (m *_PeopleMgr) CountByAge(Age int32) (int32, error) {
+	query := fmt.Sprintf(`SELECT count(1) FROM [dbo].[People] WHERE Age=? `)
+
+	rows, err := mssqlQuery(query, Age)
+	if err != nil {
+		return 0, err
+	}
+
+	defer rows.Close()
+
+	var count int32
+	if rows.Next() {
+		err = rows.Scan(&count)
+	}
+
+	return count, err
 }
 
 func (m *_PeopleMgr) FindOneByName(Name string) (*People, error) {

@@ -10,6 +10,8 @@ type UserBlog struct {
 	isNew bool
 }
 
+const ()
+
 func (p *UserBlog) GetNameSpace() string {
 	return "people"
 }
@@ -34,6 +36,9 @@ type _UserBlogMgr struct {
 }
 
 var UserBlogMgr *_UserBlogMgr
+
+// Get_UserBlogMgr returns the orm manager in case of its name starts with lower letter
+func Get_UserBlogMgr() *_UserBlogMgr { return UserBlogMgr }
 
 func (m *_UserBlogMgr) NewUserBlog() *UserBlog {
 	rval := new(UserBlog)
