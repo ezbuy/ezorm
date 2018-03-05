@@ -24,6 +24,9 @@ type _CategoryMgr struct {
 
 var CategoryMgr *_CategoryMgr
 
+// Get_CategoryMgr returns the orm manager in case of its name starts with lower letter
+func Get_CategoryMgr() *_CategoryMgr { return CategoryMgr }
+
 func (m *_CategoryMgr) NewCategory() *Category {
 	rval := new(Category)
 	return rval

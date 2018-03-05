@@ -79,6 +79,19 @@ func (o *_{{$obj.Name}}Mgr) MustFindOneBy{{$index.Name}}({{$index.GetFuncParam}}
 	}
 	return
 }
+
+func (o *_{{$obj.Name}}Mgr) RemoveBy{{$index.Name}}({{$index.GetFuncParam}}) (err error) {
+	session, col := {{$obj.Name}}Mgr.GetCol()
+	defer session.Close()
+
+	query := db.M{
+		{{- range $field := $index.Fields}}
+		"{{$field.Name}}": {{$field.Name}},
+		{{- end}}
+	}
+	return col.Remove(query)
+}
+
 {{- else}}
 func (o *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, limit int, offset int, sortFields ...string) (result []*{{$obj.Name}}, err error) {
 	query := db.M{

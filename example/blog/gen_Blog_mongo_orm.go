@@ -216,6 +216,16 @@ func (o *_BlogMgr) MustFindOneBySlug(Slug string) (result *Blog) {
 	}
 	return
 }
+
+func (o *_BlogMgr) RemoveBySlug(Slug string) (err error) {
+	session, col := BlogMgr.GetCol()
+	defer session.Close()
+
+	query := db.M{
+		"Slug": Slug,
+	}
+	return col.Remove(query)
+}
 func (o *_BlogMgr) FindByCreateDate(CreateDate time.Time, limit int, offset int, sortFields ...string) (result []*Blog, err error) {
 	query := db.M{
 		"CreateDate": CreateDate,

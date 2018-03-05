@@ -12,6 +12,8 @@ type UserLocation struct {
 	isNew     bool
 }
 
+const ()
+
 func (p *UserLocation) GetNameSpace() string {
 	return "people"
 }
@@ -36,6 +38,9 @@ type _UserLocationMgr struct {
 }
 
 var UserLocationMgr *_UserLocationMgr
+
+// Get_UserLocationMgr returns the orm manager in case of its name starts with lower letter
+func Get_UserLocationMgr() *_UserLocationMgr { return UserLocationMgr }
 
 func (m *_UserLocationMgr) NewUserLocation() *UserLocation {
 	rval := new(UserLocation)
