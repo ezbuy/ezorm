@@ -33,7 +33,13 @@ func TimeFormat(t time.Time) string {
 }
 
 func TimeParseLocalTime(s string) time.Time {
-	t, err := time.Parse("2006-01-02 15:04:05", s)
+	var layout string
+	if strings.HasSuffix(s, "Z") {
+		layout = "2006-01-02T15:04:05Z"
+	} else {
+		layout = "2006-01-02 15:04:05"
+	}
+	t, err := time.Parse(layout, s)
 	if err != nil {
 		return t
 	}
