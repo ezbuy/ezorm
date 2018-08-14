@@ -1,0 +1,123 @@
+{{define "mongo_search"}}
+{{$obj := .}}
+//Search
+{{if $obj.NeedSearch}}
+type {{$obj.Name}}SearchIndexObj struct {
+	{{range $field := $obj.GetSearchFields}}
+	{{$field.Name}} {{$field.Type}} `json:"{{$field.Name}}"`
+	{{end}}
+	{{range $field := $obj.GetFilterAndIndexFields}}
+	{{$field.Name}} {{$field.Type}} `json:"{{$field.Name}}"`
+	{{end}}
+}
+
+func {{$obj.Name}}SearchIndexName() (string, string) {
+	return "{{$obj.SearchIndex}}", "{{$obj.SearchType}}"
+}
+
+func (o *{{$obj.Name}}) IndexSearch() () {
+	data := {{$obj.Name}}SearchIndexObj{
+		{{range $field := $obj.GetSearchFields}}
+		{{if eq $field.Type "string"}}
+		{{$field.Name}}: o.GetFieldAsString("{{$field.Name}}"),
+		{{else}}
+		{{$field.Name}}: o.{{$field.Name}},
+		{{end}}
+		{{end}}
+		{{range $field := $obj.GetFilterAndIndexFields}}
+		{{$field.Name}}: o.{{$field.Name}},
+		{{end}}
+	}
+	id := o.ID.Hex()
+	core.Index("{{$obj.SearchIndex}}", "{{$obj.SearchType}}", id, nil, data)
+}
+
+var {{$obj.Name}}SearchFileds = []string{
+	{{range $field := $obj.GetSearchFields}}
+	"{{$field.Name}}",
+	{{end}}
+}
+
+var {{$obj.Name}}SearchTermKeys = map[string]bool{
+	{{range $key := $obj.GetTermKeys}}
+	"{{$key}}": true,
+	{{end}}
+}
+
+var {{$obj.Name}}SearchDateKeys = map[string]bool{
+	{{range $key := $obj.GetDataKeys}}
+	{{if $obj.IsStartKey $key}}
+	"{{$key}}": true,
+	{{else}}
+	"{{$key}}": false,
+	{{end}}
+	{{end}}
+}
+
+func {{$obj.Name}}SearchParamsObj(word string, params map[string]string) map[string]interface{} {
+	if word == "" && len(params) == 0 {
+		return nil
+	}
+	return XGetSearchObj(word, {{$obj.Name}}SearchFileds, params, {{$obj.Name}}SearchTermKeys, {{$obj.Name}}SearchDateKeys)
+
+}
+
+func (m *_{{$obj.Name}}Mgr) SearchWithParams(word string, params map[string]string, limit int, offset int) (core.SearchResult, error) {
+	searchObj := {{$obj.Name}}SearchParamsObj(word, params)
+	args := map[string]interface{} {"from" : offset, "size": limit}
+	return core.SearchRequest("{{$obj.SearchIndex}}", "{{$obj.SearchType}}", args, searchObj)
+}
+
+{{if $obj.NeedSearchMore}}
+func (m *_{{$obj.Name}}Mgr) SearchWithMoreParams(word string, params map[string]interface{}, limit int, offset int) (core.SearchResult, error) {
+	searchObj := XGetMoreSearchObj(word, {{$obj.Name}}SearchFileds, params, {{$obj.Name}}SearchTermKeys, {{$obj.Name}}SearchDateKeys)
+	args := map[string]interface{} {"from" : offset, "size": limit}
+	return core.SearchRequest("{{$obj.SearchIndex}}", "{{$obj.SearchType}}", args, searchObj)
+}
+{{end}}
+
+func (m *_{{$obj.Name}}Mgr) Search(word string, limit int, offset int) (core.SearchResult, error) {
+	searchObj := XGetQuery("query_string", XGetQueryString(word, {{$obj.Name}}SearchFileds))
+	return {{$obj.Name}}Mgr.SearchRequest(searchObj, limit, offset)
+}
+
+func (m *_{{$obj.Name}}Mgr) SearchPurge() {
+	core.Delete("{{$obj.SearchIndex}}", "{{$obj.SearchType}}", "", nil)
+	// for delete old index
+	core.Delete("{{$obj.Name}}", "simple", "", nil)
+}
+
+func (m *_{{$obj.Name}}Mgr) SearchRequest(query interface{}, limit, offset int) (core.SearchResult, error) {
+	args := map[string]interface{} {"from" : offset, "size": limit}
+	return core.SearchRequest("{{$obj.SearchIndex}}", "{{$obj.SearchType}}", args, query)
+}
+
+func (m *_{{$obj.Name}}Mgr) SearchRebuild() {
+	{{$obj.Name}}Mgr.SearchPurge()
+{{if $obj.NeedMapping}}
+	init{{$obj.Name}}Mapping()
+{{end}}
+	total := {{$obj.Name}}Mgr.Count(nil)
+	step := 100
+	start := 0
+	for start < total {
+		objs, _ := {{$obj.Name}}Mgr.Find(nil, step, start)
+		for _, o := range objs {
+			o.IndexSearch()
+		}
+		start += len(objs)
+	}
+}
+{{end}}
+
+func (o *{{$obj.Name}}) IsSearchEnabled() bool {
+{{if $obj.NeedSearch}}
+	return true
+{{else}}
+	return false
+{{end}}
+}
+
+//end search
+
+{{end}}

@@ -1,0 +1,372 @@
+{{define "mssql_orm"}}package {{.GoPackage}}
+{{$obj := .}}
+{{if ($obj.DbSwitch "mssql")}}
+{{$idFieldName := printf "%sId" .Name}}
+{{/* Only generate source file for table with primary key */}}
+{{range $index, $field := $obj.Fields}}
+{{if eq $field.Name $idFieldName}}
+{{$idField := $field}}
+{{$allFields := join $obj.GetFieldNames ", "}}
+{{$nonIdFieldNames := preSuffixJoin $obj.GetNonIdFieldNames "obj." "" ", "}}
+
+
+import (
+	"database/sql"
+	"errors"
+	"fmt"
+	"strings"
+	"time"
+	{{range $obj.GetOrmImports}}
+	"{{.}}"
+	{{end}}
+)
+
+func (m *_{{$obj.Name}}Mgr) query(query string, args ...interface{}) ([]*{{$obj.Name}}, error) {
+	rows, err := mssqlQuery(query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+
+	{{range $index, $field := $obj.Fields}}
+	{{- if $field.IsNullablePrimitive}}
+		var {{$field.Name}} sql.{{$field.GetNullSQLType}}
+	{{- end -}}
+	{{end}}
+
+
+	var results []*{{$obj.Name}}
+	for rows.Next() {
+		var result {{$obj.Name}}
+		err := rows.Scan(
+		{{- range $index, $field := $obj.Fields -}}
+		{{- if $field.IsNullablePrimitive -}}
+			&{{$field.Name}},
+		{{- else -}}
+		&(result.{{$field.Name}}),
+		{{- end -}}
+		{{- end -}}
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		{{range $index, $field := $obj.Fields}}
+		{{- if $field.IsNullablePrimitive}}
+			result.{{$field.Name}} =
+			{{- if $field.NullSQLTypeNeedCast -}}
+				{{$field.GetGoType}}({{$field.Name}}.{{$field.NullSQLTypeValue}})
+			{{- else -}}
+			{{$field.Name}}.{{$field.NullSQLTypeValue}}
+			{{- end -}}
+		{{end -}}
+		{{end}}
+
+		results = append(results, &result)
+	}
+
+	{{if $obj.HasTimeFields}}
+		// 目前sql server保存的都是local time
+		for _, r := range results {
+			{{- range $field := $obj.GetTimeFields}}
+				r.{{$field.Name}} = m.timeConvToLocal(r.{{$field.Name}})
+			{{- end}}
+		}
+	{{end}}
+
+	return results, nil
+}
+
+
+func (m *_{{$obj.Name}}Mgr) queryOne(query string, args ...interface{}) (*{{$obj.Name}}, error) {
+	rows, err:=m.query(query, args...)
+	if err != nil {
+		return nil,err
+	}
+
+	if len(rows) == 0 {
+		return nil, sql.ErrNoRows
+	}
+
+	return rows[0], err
+}
+
+
+func (m *_{{$obj.Name}}Mgr) Save(obj *{{$obj.Name}}) (sql.Result, error) {
+	if obj.{{$idFieldName}} == 0 {
+		return m.saveInsert(obj)
+	}
+	return m.saveUpdate(obj)
+}
+
+func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
+	query := "INSERT INTO [dbo].[{{$obj.Name}}] (
+	{{- join $obj.GetNonIdFieldNames ", " -}}
+	) VALUES (
+	{{- repeatJoin (len $obj.GetNonIdFieldNames) "?" ", " -}}
+	)"
+	result, err := mssqlExec(query, {{$nonIdFieldNames}})
+	if err != nil {
+		return result, err
+	}
+
+	lastInsertId, err := result.LastInsertId()
+	if err != nil {
+		return result, err
+	}
+
+	obj.{{$idFieldName}} = {{$idField.Type}}(lastInsertId)
+
+	return result, err
+}
+
+func (m *_{{$obj.Name}}Mgr) saveUpdate(obj *{{$obj.Name}}) (sql.Result, error) {
+	query := "UPDATE [dbo].[{{$obj.Name}}] SET
+	{{- preSuffixJoin $obj.GetNonIdFieldNames " " "=?" "," }} WHERE {{$field.Name}}=?"
+	return mssqlExec(query, {{$nonIdFieldNames}}, obj.{{$field.Name}})
+}
+
+func (m *_{{$obj.Name}}Mgr) InsertBatch(objs []*{{$obj.Name}}) (sql.Result, error) {
+	if len(objs) == 0 {
+		return nil, errors.New("Empty insert")
+	}
+
+	values := make([]string, 0, len(objs))
+	params := make([]interface{}, 0, len(objs) * {{(len $obj.GetNonIdFieldNames)}})
+	for _, obj := range objs {
+		values = append(values, "({{- repeatJoin (len $obj.GetNonIdFieldNames) "?" ", " -}})")
+		params = append(params, {{$nonIdFieldNames}})
+	}
+	query := fmt.Sprintf("INSERT INTO [dbo].[{{$obj.Name}}] ({{- join $obj.GetNonIdFieldNames ", " -}}) VALUES %s", strings.Join(values, ","))
+	return mssqlExec(query, params...)
+}
+
+func (m *_{{$obj.Name}}Mgr) GetId2Obj(objs []*{{$obj.Name}}) map[{{$idField.Type}}]*{{$obj.Name}} {
+	id2obj := make(map[{{$idField.Type}}]*{{$obj.Name}}, len(objs))
+	for _, obj := range objs {
+		id2obj[obj.{{$idFieldName}}] = obj
+	}
+	return id2obj
+}
+
+func (m *_{{$obj.Name}}Mgr) GetIds(objs []*{{$obj.Name}}) []{{$idField.Type}} {
+	ids := make([]{{$idField.Type}}, len(objs))
+	for i, obj := range objs {
+		ids[i] = obj.{{$idFieldName}}
+	}
+	return ids
+}
+
+func (m *_{{$obj.Name}}Mgr) FindByID(id {{$idField.Type}}) (*{{$obj.Name}}, error) {
+	query := "SELECT {{$allFields}} FROM [dbo].[{{$obj.Name}}] WHERE {{$idFieldName}}=?"
+	return m.queryOne(query, id)
+}
+
+func (m *_{{$obj.Name}}Mgr) FindByIDs(ids []{{$idField.Type}}) ([]*{{$obj.Name}}, error) {
+	idsArray := m.getSplitIds(ids)
+
+	var vals []*{{$obj.Name}}
+	for _, idsBySep := range idsArray {
+		placeHolders,args := m.getPlaceHolderAndParameter(idsBySep)
+
+		query := fmt.Sprintf("SELECT {{$allFields}} FROM [dbo].[{{$obj.Name}}] WHERE {{$idFieldName}} IN (%s)", placeHolders)
+		val , err := m.query(query, args...)
+		if err != nil {
+			return nil,err
+		}
+
+		vals = append(vals , val...)
+	}
+
+	return vals,nil
+}
+
+func (m *_{{$obj.Name}}Mgr) getPlaceHolderAndParameter(idsBySep []{{$idField.Type}}) (string,[]interface{}){
+	params := strings.Repeat("?,",len(idsBySep))
+	if len(params) > 0 {
+		params = params[:len(params)-1]
+	}
+
+	val := make([]interface{}, 0, len(idsBySep))
+
+	for _,id := range idsBySep{
+		val = append(val, id)
+	}
+
+	return params , val
+}
+
+
+func (m *_{{$obj.Name}}Mgr) getSplitIds(ids []{{$idField.Type}}) [][]{{$idField.Type}}{
+	re := [][]{{$idField.Type}}{}
+	if len(ids) <= 0 {
+		return re
+	}
+
+	maxLimit := 2000
+	idsBySep := []{{$idField.Type}}{}
+	for i, id := range ids {
+		idsBySep = append(idsBySep, id)
+		if (i+1)%maxLimit == 0 {
+			ns := make([]{{$idField.Type}}, len(idsBySep))
+			copy(ns, idsBySep)
+			idsBySep = idsBySep[:0]
+			re = append(re, ns)
+		}
+	}
+	if len(idsBySep) > 0 {
+		ns := make([]{{$idField.Type}}, len(idsBySep))
+		copy(ns, idsBySep)
+		re = append(re, ns)
+	}
+	return re
+}
+
+{{range $index := $obj.Indexes}}
+{{if $index.IsUnique }}
+func (m *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (*{{$obj.Name}}, error) {
+	query := "SELECT {{$allFields}} FROM [dbo].[{{$obj.Name}}] WHERE
+	{{- preSuffixJoin $index.FieldNames " " "=?" " AND" -}}"
+	return m.queryOne(query, {{$index.GetFuncParamNames}})
+}
+{{else}}
+func (m *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, offset int, limit int, sortFields ...string) ( []*{{$obj.Name}},  error) {
+	orderBy := "ORDER BY %s"
+	if len(sortFields) != 0 {
+		orderBy = fmt.Sprintf(orderBy, strings.Join(sortFields, ","))
+	} else {
+		orderBy = fmt.Sprintf(orderBy, "{{$idFieldName}}")
+	}
+
+	query := fmt.Sprintf("SELECT {{$allFields}} FROM [dbo].[{{$obj.Name}}] WHERE
+	{{- preSuffixJoin $index.FieldNames " " "=? " "AND" -}}
+	%s  OFFSET ? Rows FETCH NEXT ? Rows ONLY", orderBy)
+
+	return m.query(query, {{$index.GetFuncParamNames}}, offset, limit)
+}
+
+func (m *_{{$obj.Name}}Mgr) CountBy{{$index.Name}}({{$index.GetFuncParam}}) (int32, error) {
+	query := fmt.Sprintf(`SELECT count(1) FROM [dbo].[{{$obj.Name}}] WHERE
+		{{- preSuffixJoin $index.FieldNames " " "=? " "AND" -}}
+	`)
+
+	rows, err := mssqlQuery(query, {{$index.GetFuncParamNames}})
+	if err != nil {
+		return 0, err
+	}
+
+	defer rows.Close()
+
+	var count int32
+	if rows.Next() {
+		err = rows.Scan(&count)
+	}
+
+	return count, err
+}
+{{end}}
+{{end}}
+
+func (m *_{{$obj.Name}}Mgr) FindOne(where string, args ...interface{}) (*{{$obj.Name}}, error) {
+	query := m.getQuerysql(true, where)
+	return m.queryOne(query, args...)
+}
+
+
+func (m *_{{$obj.Name}}Mgr) Find(where string, args ...interface{}) ([]*{{$obj.Name}}, error) {
+	query := m.getQuerysql(false, where)
+	return m.query(query, args...)
+}
+
+func (m *_{{$obj.Name}}Mgr) FindAll() (results []*{{$obj.Name}}, err error) {
+	return m.Find("")
+}
+
+func (m *_{{$obj.Name}}Mgr) FindWithOffset(where string, offset int, limit int, args ...interface{}) ([]*{{$obj.Name}}, error) {
+	query := m.getQuerysql(false, where)
+
+	query = query + " OFFSET ? Rows FETCH NEXT ? Rows ONLY"
+
+	args = append(args, offset)
+	args = append(args, limit)
+
+	return m.query(query, args...)
+}
+
+
+func (m *_{{$obj.Name}}Mgr) getQuerysql(topOne bool, where string) string {
+	query := `SELECT `
+	if topOne {
+		query = query + ` TOP 1 `
+	}
+	query = query + ` {{$allFields}} FROM [dbo].[{{$obj.Name}}] WITH(NOLOCK) `
+
+	where = strings.Trim(where, " ")
+	if where != "" {
+		upwhere := strings.ToUpper(where)
+
+		if !strings.HasPrefix(upwhere, "WHERE") && !strings.HasPrefix(upwhere, "ORDER BY") {
+			where = " WHERE " + where
+		}
+
+		query = query + where
+	}
+	return query
+}
+
+func (m *_{{$obj.Name}}Mgr) Del(where string, params ...interface{}) (sql.Result, error) {
+	query := "DELETE FROM [dbo].[{{$obj.Name}}]"
+	if where != "" {
+		query = fmt.Sprintf("DELETE FROM {{$obj.Name}} WHERE " + where)
+	}
+	return mssqlExec(query, params...)
+}
+
+// argument example:
+// set:"a=?, b=?"
+// where:"c=? and d=?"
+// params:[]interface{}{"a", "b", "c", "d"}...
+func (m *_{{$obj.Name}}Mgr) Update(set, where string, params ...interface{}) (sql.Result, error) {
+	query := fmt.Sprintf("UPDATE [dbo].[{{$obj.Name}}] SET %s", set)
+	if where != "" {
+		query = fmt.Sprintf("UPDATE [dbo].[{{$obj.Name}}] SET %s WHERE %s", set, where)
+	}
+	return mssqlExec(query, params...)
+}
+
+func (m *_{{$obj.Name}}Mgr) Count(where string, args ...interface{}) (int32, error) {
+	query := "SELECT COUNT(*) FROM [dbo].[{{$obj.Name}}]"
+	if where != "" {
+		query = query + " WHERE " + where
+	}
+
+	rows, err := mssqlQuery(query, args...)
+	if err != nil {
+		return 0, err
+	}
+
+	defer rows.Close()
+
+	var count int32
+	if rows.Next() {
+		err = rows.Scan(&count)
+	}
+
+	return count, err
+}
+
+func (m *_{{$obj.Name}}Mgr) timeConvToLocal(t *time.Time) *time.Time{
+	if t == nil{
+		return nil
+	}
+	localTime := time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(),
+	t.Second(), t.Nanosecond(), time.Local)
+	return &localTime
+}
+
+{{end}}
+{{end}}
+{{end}}
+{{end}}
