@@ -3,7 +3,7 @@ all:
 buildTpl:
 	go-bindata -nometadata -o tpl/bindata.go -ignore bindata.go -pkg tpl tpl
 
-genexample: clean
+genexample:
 	go install
 	ezorm gen -i ./example/mssql_people/people_mssql.yaml -o ./example/mssql_people -p people --goPackage test
 	ezorm gen -i ./example/blog/blog.yaml -o ./example/blog -p blog --goPackage test

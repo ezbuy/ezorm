@@ -1,6 +1,7 @@
 package test
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"os"
@@ -44,6 +45,8 @@ func MssqlSetUp(dataSourceName string) {
 	}
 
 	_sqlServer = &db.SqlServer{DB: conn}
+	_queryContextWrappers = append(_queryContextWrappers, _sqlServer.GetContextWrappers()...)
+	_queryWrappers = append(_queryWrappers, _sqlServer.GetWrappers()...)
 	_db = conn.DB
 }
 
@@ -60,6 +63,11 @@ func MssqlAddQueryWrapper(r db.QueryWrapper) {
 	_queryWrappers = append(_queryWrappers, r)
 }
 
+func MssqlAddQueryContextWrapper(r db.QueryContextWrapper) {
+	_sqlServer.AddContextQueryWrapper(r)
+	_queryContextWrappers = append(_queryContextWrappers, r)
+}
+
 func MssqlClose() error {
 	return _sqlServer.Close()
 }
@@ -69,8 +77,18 @@ func mssqlUnwrappedQuery(query string, args ...interface{}) (interface{}, error)
 	return rows, err
 }
 
+func mssqlUnwrappedQueryContext(ctx context.Context, query string, args ...interface{}) (interface{}, error) {
+	rows, err := _db.QueryContext(ctx, query, args...)
+	return rows, err
+}
+
 func mssqlUnwrappedExec(query string, args ...interface{}) (interface{}, error) {
 	result, err := _db.Exec(query, args...)
+	return result, err
+}
+
+func mssqlUnwrappedExecContext(ctx context.Context, query string, args ...interface{}) (interface{}, error) {
+	result, err := _db.ExecContext(ctx, query, args...)
 	return result, err
 }
 
@@ -86,6 +104,25 @@ func mssqlQuery(query string, args ...interface{}) (*sql.Rows, error) {
 	}
 
 	rowsItf, err := queryer(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	rows := rowsItf.(*sql.Rows)
+	return rows, err
+}
+
+func mssqlQueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+	if len(_queryContextWrappers) == 0 {
+		return _db.Query(query, args...)
+	}
+
+	queryer := mssqlUnwrappedQueryContext
+
+	for _, r := range _queryContextWrappers {
+		queryer = r(queryer, query, args...)
+	}
+
+	rowsItf, err := queryer(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -110,4 +147,8 @@ func mssqlExec(query string, args ...interface{}) (sql.Result, error) {
 	}
 	result := resultItf.(sql.Result)
 	return result, err
+}
+
+func mssqlExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	return _sqlServer.ExecContext(ctx, query, args...)
 }

@@ -79,9 +79,31 @@ func (m *_PeopleMgr) saveInsert(obj *People) (sql.Result, error) {
 	return result, err
 }
 
+func (m *_PeopleMgr) saveInsertContext(ctx context.Context, obj *People) (sql.Result, error) {
+	query := "INSERT INTO [dbo].[People] (NonIndexA, NonIndexB, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	result, err := mssqlExecContext(ctx, query, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.UniquePart1, obj.UniquePart2, obj.CreateDate, obj.UpdateDate)
+	if err != nil {
+		return result, err
+	}
+
+	lastInsertId, err := result.LastInsertId()
+	if err != nil {
+		return result, err
+	}
+
+	obj.PeopleId = int32(lastInsertId)
+
+	return result, err
+}
+
 func (m *_PeopleMgr) saveUpdate(obj *People) (sql.Result, error) {
 	query := "UPDATE [dbo].[People] SET NonIndexA=?, NonIndexB=?, Age=?, Name=?, IndexAPart1=?, IndexAPart2=?, IndexAPart3=?, UniquePart1=?, UniquePart2=?, CreateDate=?, UpdateDate=? WHERE PeopleId=?"
 	return mssqlExec(query, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.UniquePart1, obj.UniquePart2, obj.CreateDate, obj.UpdateDate, obj.PeopleId)
+}
+
+func (m *_PeopleMgr) saveUpdateContext(ctx context.Context, obj *People) (sql.Result, error) {
+	query := "UPDATE [dbo].[People] SET NonIndexA=?, NonIndexB=?, Age=?, Name=?, IndexAPart1=?, IndexAPart2=?, IndexAPart3=?, UniquePart1=?, UniquePart2=?, CreateDate=?, UpdateDate=? WHERE PeopleId=?"
+	return mssqlExecContext(ctx, query, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.UniquePart1, obj.UniquePart2, obj.CreateDate, obj.UpdateDate, obj.PeopleId)
 }
 
 func (m *_PeopleMgr) InsertBatch(objs []*People) (sql.Result, error) {
@@ -97,6 +119,21 @@ func (m *_PeopleMgr) InsertBatch(objs []*People) (sql.Result, error) {
 	}
 	query := fmt.Sprintf("INSERT INTO [dbo].[People] (NonIndexA, NonIndexB, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate) VALUES %s", strings.Join(values, ","))
 	return mssqlExec(query, params...)
+}
+
+func (m *_PeopleMgr) InsertBatchContext(ctx context.Context, objs []*People) (sql.Result, error) {
+	if len(objs) == 0 {
+		return nil, errors.New("Empty insert")
+	}
+
+	values := make([]string, 0, len(objs))
+	params := make([]interface{}, 0, len(objs)*11)
+	for _, obj := range objs {
+		values = append(values, "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+		params = append(params, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.UniquePart1, obj.UniquePart2, obj.CreateDate, obj.UpdateDate)
+	}
+	query := fmt.Sprintf("INSERT INTO [dbo].[People] (NonIndexA, NonIndexB, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate) VALUES %s", strings.Join(values, ","))
+	return mssqlExecContext(ctx, query, params...)
 }
 
 func (m *_PeopleMgr) GetId2Obj(objs []*People) map[int32]*People {
@@ -304,6 +341,14 @@ func (m *_PeopleMgr) Del(where string, params ...interface{}) (sql.Result, error
 	return mssqlExec(query, params...)
 }
 
+func (m *_PeopleMgr) DelContext(ctx context.Context, where string, params ...interface{}) (sql.Result, error) {
+	query := "DELETE FROM [dbo].[People]"
+	if where != "" {
+		query = fmt.Sprintf("DELETE FROM People WHERE " + where)
+	}
+	return mssqlExecContext(ctx, query, params...)
+}
+
 // argument example:
 // set:"a=?, b=?"
 // where:"c=? and d=?"
@@ -314,6 +359,14 @@ func (m *_PeopleMgr) Update(set, where string, params ...interface{}) (sql.Resul
 		query = fmt.Sprintf("UPDATE [dbo].[People] SET %s WHERE %s", set, where)
 	}
 	return mssqlExec(query, params...)
+}
+
+func (m *_PeopleMgr) UpdateContext(ctx context.Context, set, where string, params ...interface{}) (sql.Result, error) {
+	query := fmt.Sprintf("UPDATE [dbo].[People] SET %s", set)
+	if where != "" {
+		query = fmt.Sprintf("UPDATE [dbo].[People] SET %s WHERE %s", set, where)
+	}
+	return mssqlExecContext(ctx, query, params...)
 }
 
 func (m *_PeopleMgr) Count(where string, args ...interface{}) (int32, error) {
