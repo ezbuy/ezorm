@@ -14,9 +14,10 @@ import (
 )
 
 var (
-	_sqlServer     *db.SqlServer
-	_db            *sql.DB
-	_queryWrappers []db.QueryWrapper
+	_sqlServer            *db.SqlServer
+	_db                   *sql.DB
+	_queryWrappers        []db.QueryWrapper
+	_queryContextWrappers []db.QueryContextWrapper
 )
 
 func MssqlSetUp(dataSourceName string) {
@@ -45,6 +46,10 @@ func MssqlSetUp(dataSourceName string) {
 	}
 
 	_sqlServer = &db.SqlServer{DB: conn}
+	sqlServerTraceWrapper := db.QueryContextWrapper(
+		db.SQLServerTracerWrapper,
+	)
+	_sqlServer.AddQueryContextWrapper(sqlServerTraceWrapper)
 	_queryContextWrappers = append(_queryContextWrappers, _sqlServer.GetContextWrappers()...)
 	_queryWrappers = append(_queryWrappers, _sqlServer.GetWrappers()...)
 	_db = conn.DB
@@ -64,7 +69,7 @@ func MssqlAddQueryWrapper(r db.QueryWrapper) {
 }
 
 func MssqlAddQueryContextWrapper(r db.QueryContextWrapper) {
-	_sqlServer.AddContextQueryWrapper(r)
+	_sqlServer.AddQueryContextWrapper(r)
 	_queryContextWrappers = append(_queryContextWrappers, r)
 }
 
@@ -119,7 +124,7 @@ func mssqlQueryContext(ctx context.Context, query string, args ...interface{}) (
 	queryer := mssqlUnwrappedQueryContext
 
 	for _, r := range _queryContextWrappers {
-		queryer = r(queryer, query, args...)
+		queryer = r(ctx, queryer, query, args...)
 	}
 
 	rowsItf, err := queryer(ctx, query, args...)

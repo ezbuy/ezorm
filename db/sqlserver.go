@@ -5,6 +5,11 @@ import (
 	"database/sql"
 	"fmt"
 	"reflect"
+	"regexp"
+	"strings"
+
+	"github.com/opentracing/opentracing-go"
+	tags "github.com/opentracing/opentracing-go/ext"
 
 	_ "github.com/denisenkom/go-mssqldb"
 	"github.com/jmoiron/sqlx"
@@ -53,7 +58,7 @@ func (s *SqlServer) QueryContext(ctx context.Context, dest interface{}, query st
 	}
 
 	for _, r := range s.contextWrappers {
-		queryer = r(queryer, query, args...)
+		queryer = r(ctx, queryer, query, args...)
 	}
 
 	_, err := queryer(ctx, query, args...)
@@ -91,7 +96,7 @@ func (s *SqlServer) ExecContext(ctx context.Context, query string, args ...inter
 	}
 
 	for _, r := range s.contextWrappers {
-		queryer = r(queryer, query, args...)
+		queryer = r(ctx, queryer, query, args...)
 	}
 
 	resultItf, err := queryer(ctx, query, args...)
@@ -140,4 +145,30 @@ type QueryWrapper func(queryer Queryer, query string, args ...interface{}) Query
 
 type ContextQueryer func(ctx context.Context, query string, args ...interface{}) (interface{}, error)
 
-type QueryContextWrapper func(queryer ContextQueryer, query string, args ...interface{}) ContextQueryer
+type QueryContextWrapper func(ctx context.Context, queryer ContextQueryer, query string, args ...interface{}) ContextQueryer
+
+func SQLServerTracerWrapper(ctx context.Context, queryer ContextQueryer, query string, args ...interface{}) ContextQueryer {
+	return func(ctx context.Context, query string, args ...interface{}) (interface{}, error) {
+		tracer := opentracing.GlobalTracer()
+		span := opentracing.SpanFromContext(ctx)
+		if span == nil {
+			return queryer(ctx, query, args...)
+		}
+		span = tracer.StartSpan("mssql", opentracing.ChildOf(span.Context()))
+		tags.DBInstance.Set(span, "")
+		tags.DBStatement.Set(span, hackQueryBuilder(query))
+		tags.DBType.Set(span, "mssql")
+		tags.DBUser.Set(span, "")
+		ctx = opentracing.ContextWithSpan(ctx, span)
+		defer span.Finish()
+		return queryer(ctx, query, args...)
+	}
+}
+
+func hackQueryBuilder(query string) string {
+	query = strings.Replace(query, "select", "SELECT", -1)
+	query = strings.Replace(query, "from", "FROM", -1)
+	r := regexp.MustCompile("SELECT (.*) FROM")
+	query = r.ReplaceAllString(query, "SELECT ... FROM")
+	return query
+}
