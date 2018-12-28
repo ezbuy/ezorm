@@ -80,6 +80,63 @@ func (m *_{{$obj.Name}}Mgr) query(query string, args ...interface{}) ([]*{{$obj.
 	return results, nil
 }
 
+func (m *_{{$obj.Name}}Mgr) queryContext(ctx context.Context,query string, args ...interface{}) ([]*{{$obj.Name}}, error) {
+	rows, err := mssqlQueryContext(ctx,query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+
+	{{range $index, $field := $obj.Fields}}
+	{{- if $field.IsNullablePrimitive}}
+		var {{$field.Name}} sql.{{$field.GetNullSQLType}}
+	{{- end -}}
+	{{end}}
+
+
+	var results []*{{$obj.Name}}
+	for rows.Next() {
+		var result {{$obj.Name}}
+		err := rows.Scan(
+		{{- range $index, $field := $obj.Fields -}}
+		{{- if $field.IsNullablePrimitive -}}
+			&{{$field.Name}},
+		{{- else -}}
+		&(result.{{$field.Name}}),
+		{{- end -}}
+		{{- end -}}
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		{{range $index, $field := $obj.Fields}}
+		{{- if $field.IsNullablePrimitive}}
+			result.{{$field.Name}} =
+			{{- if $field.NullSQLTypeNeedCast -}}
+				{{$field.GetGoType}}({{$field.Name}}.{{$field.NullSQLTypeValue}})
+			{{- else -}}
+			{{$field.Name}}.{{$field.NullSQLTypeValue}}
+			{{- end -}}
+		{{end -}}
+		{{end}}
+
+		results = append(results, &result)
+	}
+
+	{{if $obj.HasTimeFields}}
+		// 目前sql server保存的都是local time
+		for _, r := range results {
+			{{- range $field := $obj.GetTimeFields}}
+				r.{{$field.Name}} = m.timeConvToLocal(r.{{$field.Name}})
+			{{- end}}
+		}
+	{{end}}
+
+	return results, nil
+}
 
 func (m *_{{$obj.Name}}Mgr) queryOne(query string, args ...interface{}) (*{{$obj.Name}}, error) {
 	rows, err:=m.query(query, args...)
@@ -94,12 +151,31 @@ func (m *_{{$obj.Name}}Mgr) queryOne(query string, args ...interface{}) (*{{$obj
 	return rows[0], err
 }
 
+func (m *_{{$obj.Name}}Mgr) queryOneContext(ctx context.Context, query string, args ...interface{}) (*{{$obj.Name}}, error) {
+	rows, err:=m.queryContext(ctx,query, args...)
+	if err != nil {
+		return nil,err
+	}
+
+	if len(rows) == 0 {
+		return nil, sql.ErrNoRows
+	}
+
+	return rows[0], err
+}
 
 func (m *_{{$obj.Name}}Mgr) Save(obj *{{$obj.Name}}) (sql.Result, error) {
 	if obj.{{$idFieldName}} == 0 {
 		return m.saveInsert(obj)
 	}
 	return m.saveUpdate(obj)
+}
+
+func (m *_{{$obj.Name}}Mgr) SaveContext(ctx context.Context,obj *{{$obj.Name}}) (sql.Result, error) {
+	if obj.{{$idFieldName}} == 0 {
+		return m.saveInsertContext(ctx,obj)
+	}
+	return m.saveUpdateContext(ctx,obj)
 }
 
 func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
@@ -207,6 +283,11 @@ func (m *_{{$obj.Name}}Mgr) FindByID(id {{$idField.Type}}) (*{{$obj.Name}}, erro
 	return m.queryOne(query, id)
 }
 
+func (m *_{{$obj.Name}}Mgr) FindByIDContext(ctx context.Context,id {{$idField.Type}}) (*{{$obj.Name}}, error) {
+	query := "SELECT {{$allFields}} FROM [dbo].[{{$obj.Name}}] WHERE {{$idFieldName}}=?"
+	return m.queryOneContext(ctx,query, id)
+}
+
 func (m *_{{$obj.Name}}Mgr) FindByIDs(ids []{{$idField.Type}}) ([]*{{$obj.Name}}, error) {
 	idsArray := m.getSplitIds(ids)
 
@@ -216,6 +297,25 @@ func (m *_{{$obj.Name}}Mgr) FindByIDs(ids []{{$idField.Type}}) ([]*{{$obj.Name}}
 
 		query := fmt.Sprintf("SELECT {{$allFields}} FROM [dbo].[{{$obj.Name}}] WHERE {{$idFieldName}} IN (%s)", placeHolders)
 		val , err := m.query(query, args...)
+		if err != nil {
+			return nil,err
+		}
+
+		vals = append(vals , val...)
+	}
+
+	return vals,nil
+}
+
+func (m *_{{$obj.Name}}Mgr) FindByIDsContext(ctx context.Context,ids []{{$idField.Type}}) ([]*{{$obj.Name}}, error) {
+	idsArray := m.getSplitIds(ids)
+
+	var vals []*{{$obj.Name}}
+	for _, idsBySep := range idsArray {
+		placeHolders,args := m.getPlaceHolderAndParameter(idsBySep)
+
+		query := fmt.Sprintf("SELECT {{$allFields}} FROM [dbo].[{{$obj.Name}}] WHERE {{$idFieldName}} IN (%s)", placeHolders)
+		val , err := m.queryContext(ctx,query, args...)
 		if err != nil {
 			return nil,err
 		}
@@ -274,6 +374,13 @@ func (m *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (*
 	{{- preSuffixJoin $index.FieldNames " " "=?" " AND" -}}"
 	return m.queryOne(query, {{$index.GetFuncParamNames}})
 }
+
+func (m *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}Context(ctx context.Context, {{$index.GetFuncParam}}) (*{{$obj.Name}}, error) {
+	query := "SELECT {{$allFields}} FROM [dbo].[{{$obj.Name}}] WHERE
+	{{- preSuffixJoin $index.FieldNames " " "=?" " AND" -}}"
+	return m.queryOneContext(ctx,query, {{$index.GetFuncParamNames}})
+}
+
 {{else}}
 func (m *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, offset int, limit int, sortFields ...string) ( []*{{$obj.Name}},  error) {
 	orderBy := "ORDER BY %s"
@@ -288,6 +395,21 @@ func (m *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, offse
 	%s  OFFSET ? Rows FETCH NEXT ? Rows ONLY", orderBy)
 
 	return m.query(query, {{$index.GetFuncParamNames}}, offset, limit)
+}
+
+func (m *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}Context(ctx context.Context, {{$index.GetFuncParam}}, offset int, limit int, sortFields ...string) ( []*{{$obj.Name}},  error) {
+	orderBy := "ORDER BY %s"
+	if len(sortFields) != 0 {
+		orderBy = fmt.Sprintf(orderBy, strings.Join(sortFields, ","))
+	} else {
+		orderBy = fmt.Sprintf(orderBy, "{{$idFieldName}}")
+	}
+
+	query := fmt.Sprintf("SELECT {{$allFields}} FROM [dbo].[{{$obj.Name}}] WHERE
+	{{- preSuffixJoin $index.FieldNames " " "=? " "AND" -}}
+	%s  OFFSET ? Rows FETCH NEXT ? Rows ONLY", orderBy)
+
+	return m.queryContext(ctx,query, {{$index.GetFuncParamNames}}, offset, limit)
 }
 
 func (m *_{{$obj.Name}}Mgr) CountBy{{$index.Name}}({{$index.GetFuncParam}}) (int32, error) {
@@ -309,6 +431,26 @@ func (m *_{{$obj.Name}}Mgr) CountBy{{$index.Name}}({{$index.GetFuncParam}}) (int
 
 	return count, err
 }
+
+func (m *_{{$obj.Name}}Mgr) CountBy{{$index.Name}}Context(ctx context.Context,{{$index.GetFuncParam}}) (int32, error) {
+	query := fmt.Sprintf(`SELECT count(1) FROM [dbo].[{{$obj.Name}}] WHERE
+		{{- preSuffixJoin $index.FieldNames " " "=? " "AND" -}}
+	`)
+
+	rows, err := mssqlQueryContext(ctx,query, {{$index.GetFuncParamNames}})
+	if err != nil {
+		return 0, err
+	}
+
+	defer rows.Close()
+
+	var count int32
+	if rows.Next() {
+		err = rows.Scan(&count)
+	}
+
+	return count, err
+}
 {{end}}
 {{end}}
 
@@ -317,14 +459,27 @@ func (m *_{{$obj.Name}}Mgr) FindOne(where string, args ...interface{}) (*{{$obj.
 	return m.queryOne(query, args...)
 }
 
+func (m *_{{$obj.Name}}Mgr) FindOneContext(ctx context.Context,where string, args ...interface{}) (*{{$obj.Name}}, error) {
+	query := m.getQuerysql(true, where)
+	return m.queryOneContext(ctx,query, args...)
+}
 
 func (m *_{{$obj.Name}}Mgr) Find(where string, args ...interface{}) ([]*{{$obj.Name}}, error) {
 	query := m.getQuerysql(false, where)
 	return m.query(query, args...)
 }
 
+func (m *_{{$obj.Name}}Mgr) FindContext(ctx context.Context,where string, args ...interface{}) ([]*{{$obj.Name}}, error) {
+	query := m.getQuerysql(false, where)
+	return m.queryContext(ctx,query, args...)
+}
+
 func (m *_{{$obj.Name}}Mgr) FindAll() (results []*{{$obj.Name}}, err error) {
 	return m.Find("")
+}
+
+func (m *_{{$obj.Name}}Mgr) FindAllContext(ctx context.Context) (results []*{{$obj.Name}}, err error) {
+	return m.FindContext(ctx,"")
 }
 
 func (m *_{{$obj.Name}}Mgr) FindWithOffset(where string, offset int, limit int, args ...interface{}) ([]*{{$obj.Name}}, error) {
@@ -338,6 +493,17 @@ func (m *_{{$obj.Name}}Mgr) FindWithOffset(where string, offset int, limit int, 
 	return m.query(query, args...)
 }
 
+
+func (m *_{{$obj.Name}}Mgr) FindWithOffsetContext(ctx context.Context,where string, offset int, limit int, args ...interface{}) ([]*{{$obj.Name}}, error) {
+	query := m.getQuerysql(false, where)
+
+	query = query + " OFFSET ? Rows FETCH NEXT ? Rows ONLY"
+
+	args = append(args, offset)
+	args = append(args, limit)
+
+	return m.queryContext(ctx,query, args...)
+}
 
 func (m *_{{$obj.Name}}Mgr) getQuerysql(topOne bool, where string) string {
 	query := `SELECT `
@@ -402,6 +568,27 @@ func (m *_{{$obj.Name}}Mgr) Count(where string, args ...interface{}) (int32, err
 	}
 
 	rows, err := mssqlQuery(query, args...)
+	if err != nil {
+		return 0, err
+	}
+
+	defer rows.Close()
+
+	var count int32
+	if rows.Next() {
+		err = rows.Scan(&count)
+	}
+
+	return count, err
+}
+
+func (m *_{{$obj.Name}}Mgr) CountContext(ctx context.Context,where string, args ...interface{}) (int32, error) {
+	query := "SELECT COUNT(*) FROM [dbo].[{{$obj.Name}}]"
+	if where != "" {
+		query = query + " WHERE " + where
+	}
+
+	rows, err := mssqlQueryContext(ctx,query, args...)
 	if err != nil {
 		return 0, err
 	}
