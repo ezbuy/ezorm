@@ -119,7 +119,7 @@ func mssqlQuery(query string, args ...interface{}) (*sql.Rows, error) {
 
 func mssqlQueryContext(ctx context.Context,query string, args ...interface{}) (*sql.Rows, error) {
 	if len(_queryContextWrappers) == 0 {
-		return _db.Query(query, args...)
+		return _db.QueryContext(ctx,query, args...)
 	}
 
 	queryer := mssqlUnwrappedQueryContext

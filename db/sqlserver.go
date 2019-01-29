@@ -150,6 +150,9 @@ type QueryContextWrapper func(ctx context.Context, queryer ContextQueryer, query
 func SQLServerTracerWrapper(ctx context.Context, queryer ContextQueryer, query string, args ...interface{}) ContextQueryer {
 	return func(ctx context.Context, query string, args ...interface{}) (interface{}, error) {
 		tracer := opentracing.GlobalTracer()
+		if ctx == nil {
+			ctx = context.TODO()
+		}
 		span := opentracing.SpanFromContext(ctx)
 		if span == nil {
 			return queryer(ctx, query, args...)
