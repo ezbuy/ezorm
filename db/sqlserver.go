@@ -169,10 +169,9 @@ func SQLServerTracerWrapper(ctx context.Context, queryer ContextQueryer, query s
 }
 
 func hackQueryBuilder(query string) string {
-	query = strings.Replace(query, "\n", "", -1)
 	query = strings.Replace(query, "select", "SELECT", -1)
 	query = strings.Replace(query, "from", "FROM", -1)
-	r := regexp.MustCompile("SELECT (.*) FROM")
+	r := regexp.MustCompile("(?s)SELECT (.*) FROM")
 	query = r.ReplaceAllString(query, "SELECT ... FROM")
 	return query
 }
