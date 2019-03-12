@@ -532,7 +532,7 @@ func TestFindByIds(t *testing.T) {
 		t.Errorf("error:[%v]", err)
 	}
 
-	fmt.Println("vals len:%v", len(vals))
+	fmt.Printf("vals len:%d", len(vals))
 }
 
 func TestGetId2Obj(t *testing.T) {

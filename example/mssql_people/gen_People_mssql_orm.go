@@ -1,6 +1,7 @@
 package test
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -10,6 +11,40 @@ import (
 
 func (m *_PeopleMgr) query(query string, args ...interface{}) ([]*People, error) {
 	rows, err := mssqlQuery(query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var Age sql.NullInt64
+	var IndexAPart2 sql.NullInt64
+
+	var results []*People
+	for rows.Next() {
+		var result People
+		err := rows.Scan(&(result.NonIndexA), &(result.NonIndexB), &(result.PeopleId), &Age, &(result.Name), &(result.IndexAPart1), &IndexAPart2, &(result.IndexAPart3), &(result.UniquePart1), &(result.UniquePart2), &(result.CreateDate), &(result.UpdateDate))
+		if err != nil {
+			return nil, err
+		}
+
+		result.Age = int32(Age.Int64)
+		result.IndexAPart2 = int32(IndexAPart2.Int64)
+
+		results = append(results, &result)
+	}
+
+	// 目前sql server保存的都是local time
+	for _, r := range results {
+		r.CreateDate = m.timeConvToLocal(r.CreateDate)
+		r.UpdateDate = m.timeConvToLocal(r.UpdateDate)
+	}
+
+	return results, nil
+}
+
+func (m *_PeopleMgr) queryContext(ctx context.Context, query string, args ...interface{}) ([]*People, error) {
+	rows, err := mssqlQueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -55,11 +90,31 @@ func (m *_PeopleMgr) queryOne(query string, args ...interface{}) (*People, error
 	return rows[0], err
 }
 
+func (m *_PeopleMgr) queryOneContext(ctx context.Context, query string, args ...interface{}) (*People, error) {
+	rows, err := m.queryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(rows) == 0 {
+		return nil, sql.ErrNoRows
+	}
+
+	return rows[0], err
+}
+
 func (m *_PeopleMgr) Save(obj *People) (sql.Result, error) {
 	if obj.PeopleId == 0 {
 		return m.saveInsert(obj)
 	}
 	return m.saveUpdate(obj)
+}
+
+func (m *_PeopleMgr) SaveContext(ctx context.Context, obj *People) (sql.Result, error) {
+	if obj.PeopleId == 0 {
+		return m.saveInsertContext(ctx, obj)
+	}
+	return m.saveUpdateContext(ctx, obj)
 }
 
 func (m *_PeopleMgr) saveInsert(obj *People) (sql.Result, error) {
@@ -79,9 +134,31 @@ func (m *_PeopleMgr) saveInsert(obj *People) (sql.Result, error) {
 	return result, err
 }
 
+func (m *_PeopleMgr) saveInsertContext(ctx context.Context, obj *People) (sql.Result, error) {
+	query := "INSERT INTO [dbo].[People] (NonIndexA, NonIndexB, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	result, err := mssqlExecContext(ctx, query, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.UniquePart1, obj.UniquePart2, obj.CreateDate, obj.UpdateDate)
+	if err != nil {
+		return result, err
+	}
+
+	lastInsertId, err := result.LastInsertId()
+	if err != nil {
+		return result, err
+	}
+
+	obj.PeopleId = int32(lastInsertId)
+
+	return result, err
+}
+
 func (m *_PeopleMgr) saveUpdate(obj *People) (sql.Result, error) {
 	query := "UPDATE [dbo].[People] SET NonIndexA=?, NonIndexB=?, Age=?, Name=?, IndexAPart1=?, IndexAPart2=?, IndexAPart3=?, UniquePart1=?, UniquePart2=?, CreateDate=?, UpdateDate=? WHERE PeopleId=?"
 	return mssqlExec(query, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.UniquePart1, obj.UniquePart2, obj.CreateDate, obj.UpdateDate, obj.PeopleId)
+}
+
+func (m *_PeopleMgr) saveUpdateContext(ctx context.Context, obj *People) (sql.Result, error) {
+	query := "UPDATE [dbo].[People] SET NonIndexA=?, NonIndexB=?, Age=?, Name=?, IndexAPart1=?, IndexAPart2=?, IndexAPart3=?, UniquePart1=?, UniquePart2=?, CreateDate=?, UpdateDate=? WHERE PeopleId=?"
+	return mssqlExecContext(ctx, query, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.UniquePart1, obj.UniquePart2, obj.CreateDate, obj.UpdateDate, obj.PeopleId)
 }
 
 func (m *_PeopleMgr) InsertBatch(objs []*People) (sql.Result, error) {
@@ -97,6 +174,21 @@ func (m *_PeopleMgr) InsertBatch(objs []*People) (sql.Result, error) {
 	}
 	query := fmt.Sprintf("INSERT INTO [dbo].[People] (NonIndexA, NonIndexB, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate) VALUES %s", strings.Join(values, ","))
 	return mssqlExec(query, params...)
+}
+
+func (m *_PeopleMgr) InsertBatchContext(ctx context.Context, objs []*People) (sql.Result, error) {
+	if len(objs) == 0 {
+		return nil, errors.New("Empty insert")
+	}
+
+	values := make([]string, 0, len(objs))
+	params := make([]interface{}, 0, len(objs)*11)
+	for _, obj := range objs {
+		values = append(values, "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+		params = append(params, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.UniquePart1, obj.UniquePart2, obj.CreateDate, obj.UpdateDate)
+	}
+	query := fmt.Sprintf("INSERT INTO [dbo].[People] (NonIndexA, NonIndexB, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate) VALUES %s", strings.Join(values, ","))
+	return mssqlExecContext(ctx, query, params...)
 }
 
 func (m *_PeopleMgr) GetId2Obj(objs []*People) map[int32]*People {
@@ -120,6 +212,11 @@ func (m *_PeopleMgr) FindByID(id int32) (*People, error) {
 	return m.queryOne(query, id)
 }
 
+func (m *_PeopleMgr) FindByIDContext(ctx context.Context, id int32) (*People, error) {
+	query := "SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate FROM [dbo].[People] WHERE PeopleId=?"
+	return m.queryOneContext(ctx, query, id)
+}
+
 func (m *_PeopleMgr) FindByIDs(ids []int32) ([]*People, error) {
 	idsArray := m.getSplitIds(ids)
 
@@ -129,6 +226,25 @@ func (m *_PeopleMgr) FindByIDs(ids []int32) ([]*People, error) {
 
 		query := fmt.Sprintf("SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate FROM [dbo].[People] WHERE PeopleId IN (%s)", placeHolders)
 		val, err := m.query(query, args...)
+		if err != nil {
+			return nil, err
+		}
+
+		vals = append(vals, val...)
+	}
+
+	return vals, nil
+}
+
+func (m *_PeopleMgr) FindByIDsContext(ctx context.Context, ids []int32) ([]*People, error) {
+	idsArray := m.getSplitIds(ids)
+
+	var vals []*People
+	for _, idsBySep := range idsArray {
+		placeHolders, args := m.getPlaceHolderAndParameter(idsBySep)
+
+		query := fmt.Sprintf("SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate FROM [dbo].[People] WHERE PeopleId IN (%s)", placeHolders)
+		val, err := m.queryContext(ctx, query, args...)
 		if err != nil {
 			return nil, err
 		}
@@ -179,6 +295,16 @@ func (m *_PeopleMgr) getSplitIds(ids []int32) [][]int32 {
 	return re
 }
 
+func (m *_PeopleMgr) FindOneByUniquePart1UniquePart2(UniquePart1 int32, UniquePart2 int32) (*People, error) {
+	query := "SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate FROM [dbo].[People] WHERE UniquePart1=? AND UniquePart2=?"
+	return m.queryOne(query, UniquePart1, UniquePart2)
+}
+
+func (m *_PeopleMgr) FindOneByUniquePart1UniquePart2Context(ctx context.Context, UniquePart1 int32, UniquePart2 int32) (*People, error) {
+	query := "SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate FROM [dbo].[People] WHERE UniquePart1=? AND UniquePart2=?"
+	return m.queryOneContext(ctx, query, UniquePart1, UniquePart2)
+}
+
 func (m *_PeopleMgr) FindByIndexAPart1IndexAPart2IndexAPart3(IndexAPart1 int64, IndexAPart2 int32, IndexAPart3 int32, offset int, limit int, sortFields ...string) ([]*People, error) {
 	orderBy := "ORDER BY %s"
 	if len(sortFields) != 0 {
@@ -190,6 +316,19 @@ func (m *_PeopleMgr) FindByIndexAPart1IndexAPart2IndexAPart3(IndexAPart1 int64, 
 	query := fmt.Sprintf("SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate FROM [dbo].[People] WHERE IndexAPart1=? AND IndexAPart2=? AND IndexAPart3=? %s  OFFSET ? Rows FETCH NEXT ? Rows ONLY", orderBy)
 
 	return m.query(query, IndexAPart1, IndexAPart2, IndexAPart3, offset, limit)
+}
+
+func (m *_PeopleMgr) FindByIndexAPart1IndexAPart2IndexAPart3Context(ctx context.Context, IndexAPart1 int64, IndexAPart2 int32, IndexAPart3 int32, offset int, limit int, sortFields ...string) ([]*People, error) {
+	orderBy := "ORDER BY %s"
+	if len(sortFields) != 0 {
+		orderBy = fmt.Sprintf(orderBy, strings.Join(sortFields, ","))
+	} else {
+		orderBy = fmt.Sprintf(orderBy, "PeopleId")
+	}
+
+	query := fmt.Sprintf("SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate FROM [dbo].[People] WHERE IndexAPart1=? AND IndexAPart2=? AND IndexAPart3=? %s  OFFSET ? Rows FETCH NEXT ? Rows ONLY", orderBy)
+
+	return m.queryContext(ctx, query, IndexAPart1, IndexAPart2, IndexAPart3, offset, limit)
 }
 
 func (m *_PeopleMgr) CountByIndexAPart1IndexAPart2IndexAPart3(IndexAPart1 int64, IndexAPart2 int32, IndexAPart3 int32) (int32, error) {
@@ -210,9 +349,22 @@ func (m *_PeopleMgr) CountByIndexAPart1IndexAPart2IndexAPart3(IndexAPart1 int64,
 	return count, err
 }
 
-func (m *_PeopleMgr) FindOneByUniquePart1UniquePart2(UniquePart1 int32, UniquePart2 int32) (*People, error) {
-	query := "SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate FROM [dbo].[People] WHERE UniquePart1=? AND UniquePart2=?"
-	return m.queryOne(query, UniquePart1, UniquePart2)
+func (m *_PeopleMgr) CountByIndexAPart1IndexAPart2IndexAPart3Context(ctx context.Context, IndexAPart1 int64, IndexAPart2 int32, IndexAPart3 int32) (int32, error) {
+	query := fmt.Sprintf(`SELECT count(1) FROM [dbo].[People] WHERE IndexAPart1=? AND IndexAPart2=? AND IndexAPart3=? `)
+
+	rows, err := mssqlQueryContext(ctx, query, IndexAPart1, IndexAPart2, IndexAPart3)
+	if err != nil {
+		return 0, err
+	}
+
+	defer rows.Close()
+
+	var count int32
+	if rows.Next() {
+		err = rows.Scan(&count)
+	}
+
+	return count, err
 }
 
 func (m *_PeopleMgr) FindByAge(Age int32, offset int, limit int, sortFields ...string) ([]*People, error) {
@@ -226,6 +378,19 @@ func (m *_PeopleMgr) FindByAge(Age int32, offset int, limit int, sortFields ...s
 	query := fmt.Sprintf("SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate FROM [dbo].[People] WHERE Age=? %s  OFFSET ? Rows FETCH NEXT ? Rows ONLY", orderBy)
 
 	return m.query(query, Age, offset, limit)
+}
+
+func (m *_PeopleMgr) FindByAgeContext(ctx context.Context, Age int32, offset int, limit int, sortFields ...string) ([]*People, error) {
+	orderBy := "ORDER BY %s"
+	if len(sortFields) != 0 {
+		orderBy = fmt.Sprintf(orderBy, strings.Join(sortFields, ","))
+	} else {
+		orderBy = fmt.Sprintf(orderBy, "PeopleId")
+	}
+
+	query := fmt.Sprintf("SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate FROM [dbo].[People] WHERE Age=? %s  OFFSET ? Rows FETCH NEXT ? Rows ONLY", orderBy)
+
+	return m.queryContext(ctx, query, Age, offset, limit)
 }
 
 func (m *_PeopleMgr) CountByAge(Age int32) (int32, error) {
@@ -246,9 +411,32 @@ func (m *_PeopleMgr) CountByAge(Age int32) (int32, error) {
 	return count, err
 }
 
+func (m *_PeopleMgr) CountByAgeContext(ctx context.Context, Age int32) (int32, error) {
+	query := fmt.Sprintf(`SELECT count(1) FROM [dbo].[People] WHERE Age=? `)
+
+	rows, err := mssqlQueryContext(ctx, query, Age)
+	if err != nil {
+		return 0, err
+	}
+
+	defer rows.Close()
+
+	var count int32
+	if rows.Next() {
+		err = rows.Scan(&count)
+	}
+
+	return count, err
+}
+
 func (m *_PeopleMgr) FindOneByName(Name string) (*People, error) {
 	query := "SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate FROM [dbo].[People] WHERE Name=?"
 	return m.queryOne(query, Name)
+}
+
+func (m *_PeopleMgr) FindOneByNameContext(ctx context.Context, Name string) (*People, error) {
+	query := "SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate FROM [dbo].[People] WHERE Name=?"
+	return m.queryOneContext(ctx, query, Name)
 }
 
 func (m *_PeopleMgr) FindOne(where string, args ...interface{}) (*People, error) {
@@ -256,13 +444,27 @@ func (m *_PeopleMgr) FindOne(where string, args ...interface{}) (*People, error)
 	return m.queryOne(query, args...)
 }
 
+func (m *_PeopleMgr) FindOneContext(ctx context.Context, where string, args ...interface{}) (*People, error) {
+	query := m.getQuerysql(true, where)
+	return m.queryOneContext(ctx, query, args...)
+}
+
 func (m *_PeopleMgr) Find(where string, args ...interface{}) ([]*People, error) {
 	query := m.getQuerysql(false, where)
 	return m.query(query, args...)
 }
 
+func (m *_PeopleMgr) FindContext(ctx context.Context, where string, args ...interface{}) ([]*People, error) {
+	query := m.getQuerysql(false, where)
+	return m.queryContext(ctx, query, args...)
+}
+
 func (m *_PeopleMgr) FindAll() (results []*People, err error) {
 	return m.Find("")
+}
+
+func (m *_PeopleMgr) FindAllContext(ctx context.Context) (results []*People, err error) {
+	return m.FindContext(ctx, "")
 }
 
 func (m *_PeopleMgr) FindWithOffset(where string, offset int, limit int, args ...interface{}) ([]*People, error) {
@@ -274,6 +476,17 @@ func (m *_PeopleMgr) FindWithOffset(where string, offset int, limit int, args ..
 	args = append(args, limit)
 
 	return m.query(query, args...)
+}
+
+func (m *_PeopleMgr) FindWithOffsetContext(ctx context.Context, where string, offset int, limit int, args ...interface{}) ([]*People, error) {
+	query := m.getQuerysql(false, where)
+
+	query = query + " OFFSET ? Rows FETCH NEXT ? Rows ONLY"
+
+	args = append(args, offset)
+	args = append(args, limit)
+
+	return m.queryContext(ctx, query, args...)
 }
 
 func (m *_PeopleMgr) getQuerysql(topOne bool, where string) string {
@@ -304,6 +517,14 @@ func (m *_PeopleMgr) Del(where string, params ...interface{}) (sql.Result, error
 	return mssqlExec(query, params...)
 }
 
+func (m *_PeopleMgr) DelContext(ctx context.Context, where string, params ...interface{}) (sql.Result, error) {
+	query := "DELETE FROM [dbo].[People]"
+	if where != "" {
+		query = fmt.Sprintf("DELETE FROM People WHERE " + where)
+	}
+	return mssqlExecContext(ctx, query, params...)
+}
+
 // argument example:
 // set:"a=?, b=?"
 // where:"c=? and d=?"
@@ -316,6 +537,14 @@ func (m *_PeopleMgr) Update(set, where string, params ...interface{}) (sql.Resul
 	return mssqlExec(query, params...)
 }
 
+func (m *_PeopleMgr) UpdateContext(ctx context.Context, set, where string, params ...interface{}) (sql.Result, error) {
+	query := fmt.Sprintf("UPDATE [dbo].[People] SET %s", set)
+	if where != "" {
+		query = fmt.Sprintf("UPDATE [dbo].[People] SET %s WHERE %s", set, where)
+	}
+	return mssqlExecContext(ctx, query, params...)
+}
+
 func (m *_PeopleMgr) Count(where string, args ...interface{}) (int32, error) {
 	query := "SELECT COUNT(*) FROM [dbo].[People]"
 	if where != "" {
@@ -323,6 +552,27 @@ func (m *_PeopleMgr) Count(where string, args ...interface{}) (int32, error) {
 	}
 
 	rows, err := mssqlQuery(query, args...)
+	if err != nil {
+		return 0, err
+	}
+
+	defer rows.Close()
+
+	var count int32
+	if rows.Next() {
+		err = rows.Scan(&count)
+	}
+
+	return count, err
+}
+
+func (m *_PeopleMgr) CountContext(ctx context.Context, where string, args ...interface{}) (int32, error) {
+	query := "SELECT COUNT(*) FROM [dbo].[People]"
+	if where != "" {
+		query = query + " WHERE " + where
+	}
+
+	rows, err := mssqlQueryContext(ctx, query, args...)
 	if err != nil {
 		return 0, err
 	}
