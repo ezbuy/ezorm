@@ -471,6 +471,7 @@ func (o *Obj) Read(data map[string]interface{}) error {
 				f.Name = "ID"
 				f.Tag = "1"
 				f.Type = "string"
+				f.AsSort = true
 				o.Fields[0] = f
 				startPos = 1
 			} else {

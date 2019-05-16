@@ -28,6 +28,18 @@ const (
     {{- end}}
 )
 
+{{- if ($obj.DbContains "mongo") }}
+const (
+    {{- range $field := .Fields}}
+        {{- if ($field.AsSort)}}
+            {{$obj.Name}}MgoSortField{{$field.Name}}Asc = "{{$field.BsonTagName}}"
+            {{$obj.Name}}MgoSortField{{$field.Name}}Desc = "-{{$field.BsonTagName}}"
+        {{- end}}
+    {{- end}}
+)
+{{- end}}
+
+
 func (p *{{.Name}}) GetNameSpace() string {
 	return "{{.Package}}"
 }
