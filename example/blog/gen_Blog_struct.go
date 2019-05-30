@@ -28,6 +28,12 @@ const (
 	BlogMgoFieldUser        = "User"
 	BlogMgoFieldIsPublished = "IsPublished"
 )
+const (
+	BlogMgoSortFieldIDAsc          = "_id"
+	BlogMgoSortFieldIDDesc         = "-_id"
+	BlogMgoSortFieldCreateDateAsc  = "createDate"
+	BlogMgoSortFieldCreateDateDesc = "-createDate"
+)
 
 func (p *Blog) GetNameSpace() string {
 	return "blog"

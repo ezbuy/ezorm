@@ -47,6 +47,7 @@ type Field struct {
 	Remark       string
 	FK           *ForeignKey
 	Obj          *Obj
+	AsSort       bool
 }
 
 type ListedField struct {
@@ -410,6 +411,11 @@ func (f *Field) Read(data map[interface{}]interface{}) error {
 			case "flags":
 				for _, v := range val {
 					f.Flags.Add(v.(string))
+					switch v.(string) {
+					case "sort":
+						f.AsSort = true
+					default:
+					}
 				}
 			}
 		}
