@@ -2,6 +2,7 @@ package db
 
 import (
 	"errors"
+	"log"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -29,6 +30,7 @@ func (m M) Update(qs ...M) M {
 	return m
 }
 
+var ErrInitResource = errors.New("ezorm/db: failed to initial mongo resource")
 var ErrOperaBeforeInit = errors.New("please set db.SetOnFinishInit when needed operating db in init()")
 
 // non-multhreads
@@ -82,16 +84,18 @@ func MustNewMgoSessions(config *MongoConfig) []*mgo.Session {
 	sessions := make([]*mgo.Session, mgoMaxSessions)
 	for i := 0; i < mgoMaxSessions; i++ {
 		if config == nil {
-			panic(ErrOperaBeforeInit)
+			log.Fatal(ErrOperaBeforeInit)
 		}
 		session, err := mgo.Dial(config.MongoDB)
 		if err != nil {
-			panic(err)
+			log.Println("failed to dial mongo:", err)
+			panic(ErrInitResource)
 		}
 		// Optional. Switch the session to a monotonic behavior.
 		session.SetMode(mgo.Monotonic, true)
 		if err := session.Ping(); err != nil {
-			panic(err)
+			log.Println("failed to ping mongo:", err)
+			panic(ErrInitResource)
 		}
 
 		poolLimit := config.PoolLimit
