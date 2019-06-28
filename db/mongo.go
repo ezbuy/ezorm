@@ -2,8 +2,7 @@ package db
 
 import (
 	"errors"
-	"fmt"
-	"os"
+	"log"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -85,18 +84,17 @@ func MustNewMgoSessions(config *MongoConfig) []*mgo.Session {
 	sessions := make([]*mgo.Session, mgoMaxSessions)
 	for i := 0; i < mgoMaxSessions; i++ {
 		if config == nil {
-			fmt.Println(ErrOperaBeforeInit)
-			os.Exit(1)
+			log.Fatal(ErrOperaBeforeInit)
 		}
 		session, err := mgo.Dial(config.MongoDB)
 		if err != nil {
-			fmt.Println("failed to dial mongo:", err)
+			log.Println("failed to dial mongo:", err)
 			panic(ErrInitResource)
 		}
 		// Optional. Switch the session to a monotonic behavior.
 		session.SetMode(mgo.Monotonic, true)
 		if err := session.Ping(); err != nil {
-			fmt.Println("failed to ping mongo:", err)
+			log.Println("failed to ping mongo:", err)
 			panic(ErrInitResource)
 		}
 
