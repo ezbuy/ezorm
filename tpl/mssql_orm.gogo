@@ -183,15 +183,16 @@ func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
 	{{- join $obj.GetNonIdFieldNames ", " -}}
 	) VALUES (
 	{{- repeatJoin (len $obj.GetNonIdFieldNames) "?" ", " -}}
-	)"
+	);SELECT ID=convert(bigint, SCOPE_IDENTITY())"
 	result, err := mssqlExec(query, {{$nonIdFieldNames}})
 	if err != nil {
 		return result, err
 	}
 
-	lastInsertId, err := result.LastInsertId()
-	if err != nil {
-		return result, err
+	var lastInsertId int64
+
+	for rows.Next() {
+		rows.Scan(&lastInsertId)
 	}
 
 	obj.{{$idFieldName}} = {{$idField.Type}}(lastInsertId)

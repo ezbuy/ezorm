@@ -21,3 +21,5 @@ require (
 	gopkg.in/redis.v5 v5.2.9
 	gopkg.in/yaml.v2 v2.2.2
 )
+
+go 1.13
