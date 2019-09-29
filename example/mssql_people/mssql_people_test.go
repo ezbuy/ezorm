@@ -3,8 +3,8 @@ package test
 import (
 	"database/sql"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
-	"os"
 	"testing"
 	"time"
 
@@ -23,25 +23,43 @@ func requestTimeLogger(queryer db.Queryer, query string, args ...interface{}) db
 	}
 }
 
-var (
-	host     = os.Getenv("host")
-	userId   = os.Getenv("userId")
-	password = os.Getenv("password")
-	database = os.Getenv("database")
+const (
+	host     = "localhost"
+	userId   = "sa"
+	password = "ezbuy@ezbuyisthebest"
+	database = "test"
 )
 
 func init() {
-	dsn := fmt.Sprintf("server=%s;user id=%s;password=%s;DATABASE=%s",
-		host, userId, password, database)
+	dsn := fmt.Sprintf("server=%s;user id=%s;password=%s;DATABASE=master",
+		host, userId, password)
 	MssqlSetUp(dsn)
 
 	MssqlSetMaxOpenConns(255)
 	MssqlSetMaxIdleConns(255)
 
 	MssqlAddQueryWrapper(requestTimeLogger)
+
+	query, err := ioutil.ReadFile("People.sql")
+	if err != nil {
+		panic(err)
+	}
+
+	if _, err := mssqlExec("CREATE DATABASE test"); err != nil {
+		panic(err)
+	}
+
+	if _, err := mssqlExec(string(query)); err != nil {
+		panic(err)
+	}
+
+	dsn = fmt.Sprintf("server=%s;user id=%s;password=%s;DATABASE=%s",
+		host, userId, password, database)
+	MssqlSetUp(dsn)
+
 }
 
-func savePeople(name string) (*People, error) {
+func savePeople(t *testing.T, name string) (*People, error) {
 	now := time.Now()
 	p := &People{
 		Name:        name,
@@ -52,7 +70,16 @@ func savePeople(name string) (*People, error) {
 		UpdateDate:  &now,
 	}
 
-	_, err := PeopleMgr.Save(p)
+	res, err := PeopleMgr.Save(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = res.LastInsertId()
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	return p, err
 }
 
@@ -85,10 +112,15 @@ func TestSaveInsert(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	_, err = savePeople("testuser")
+	p, err := savePeople(t, "testuser")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}
+
+	if p.PeopleId != 1 {
+		t.Fatalf("1. TestSaveInsert: expect 1 but get %d", p.PeopleId)
+	}
+
 }
 
 func TestSaveUpdate(t *testing.T) {
@@ -97,9 +129,13 @@ func TestSaveUpdate(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	p, err := savePeople("testuser")
+	p, err := savePeople(t, "testuser")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
+	}
+
+	if p.PeopleId != 2 {
+		t.Fatalf("2. TestSaveUpdate: expect 2 but get %d", p.PeopleId)
 	}
 
 	p.Age = p.Age + 1
@@ -129,9 +165,13 @@ func TestFindOne(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	p, err := savePeople("testuser")
+	p, err := savePeople(t, "testuser")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
+	}
+
+	if p.PeopleId != 3 {
+		t.Fatalf("3. TestFindOne: expect 3 but get %d", p.PeopleId)
 	}
 
 	pFound, err := PeopleMgr.FindOne("")
@@ -147,9 +187,13 @@ func TestFind(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	p, err := savePeople("testuser")
+	p, err := savePeople(t, "testuser")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
+	}
+
+	if p.PeopleId != 4 {
+		t.Fatalf("4. TestFindOne: expect 4 but get %d", p.PeopleId)
 	}
 
 	pSlice, err := PeopleMgr.Find("")
@@ -169,14 +213,22 @@ func TestFindAll(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	_, err = savePeople("testuser1")
+	p, err := savePeople(t, "testuser1")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}
 
-	_, err = savePeople("testuser2")
+	if p.PeopleId != 5 {
+		t.Fatalf("5. TestFindAll: expect 5 but get %d", p.PeopleId)
+	}
+
+	p, err = savePeople(t, "testuser2")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
+	}
+
+	if p.PeopleId != 6 {
+		t.Fatalf("6. TestFindAll: expect 6 but get %d", p.PeopleId)
 	}
 
 	pSlice, err := PeopleMgr.FindAll()
@@ -196,7 +248,7 @@ func TestFindWithOffset(t *testing.T) {
 	}
 
 	for i := 0; i < 5; i++ {
-		_, err = savePeople(fmt.Sprint(i))
+		_, err = savePeople(t, fmt.Sprint(i))
 		if err != nil {
 			t.Errorf("save err:%s", err.Error())
 		}
@@ -227,12 +279,12 @@ func TestDel(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	p1, err := savePeople("testuser1")
+	p1, err := savePeople(t, "testuser1")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}
 
-	p2, err := savePeople("testuser2")
+	p2, err := savePeople(t, "testuser2")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}
@@ -268,7 +320,7 @@ func TestUpdate(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	p, err := savePeople("testuser")
+	p, err := savePeople(t, "testuser")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}
@@ -304,7 +356,7 @@ func TestFindByID(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	p1, err := savePeople("testuser")
+	p1, err := savePeople(t, "testuser")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}
@@ -322,7 +374,7 @@ func TestFindOneByName(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	p1, err := savePeople("testuser")
+	p1, err := savePeople(t, "testuser")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}

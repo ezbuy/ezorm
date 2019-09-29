@@ -178,47 +178,80 @@ func (m *_{{$obj.Name}}Mgr) SaveContext(ctx context.Context,obj *{{$obj.Name}}) 
 	return m.saveUpdateContext(ctx,obj)
 }
 
+type {{$obj.Name}}SQLResult struct {
+	lastInsertID int64
+	rowsCount    int64
+}
+
+func (sr *{{$obj.Name}}SQLResult) LastInsertId() (int64, error) {
+	return sr.lastInsertID, nil
+}
+
+func (sr *{{$obj.Name}}SQLResult) RowsAffected() (int64, error) {
+	return sr.rowsCount, nil
+}
+
 func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
+
+	r := &{{$obj.Name}}SQLResult{}
+
 	query := "INSERT INTO [dbo].[{{$obj.Name}}] (
 	{{- join $obj.GetNonIdFieldNames ", " -}}
 	) VALUES (
 	{{- repeatJoin (len $obj.GetNonIdFieldNames) "?" ", " -}}
 	);SELECT ID=convert(bigint, SCOPE_IDENTITY())"
-	result, err := mssqlExec(query, {{$nonIdFieldNames}})
+	rows, err := mssqlQuery(query, {{$nonIdFieldNames}})
 	if err != nil {
-		return result, err
+		return r, err
 	}
+
+	defer rows.Close()
 
 	var lastInsertId int64
 
 	for rows.Next() {
-		rows.Scan(&lastInsertId)
+		if err:=rows.Scan(&lastInsertId);err!=nil{
+			return nil,err
+		}
 	}
+
+	r.lastInsertID = lastInsertId
+	r.rowsCount = 1
 
 	obj.{{$idFieldName}} = {{$idField.Type}}(lastInsertId)
 
-	return result, err
+	return r, err
 }
 
 func (m *_{{$obj.Name}}Mgr) saveInsertContext(ctx context.Context,obj *{{$obj.Name}}) (sql.Result, error) {
+
+	r := &{{$obj.Name}}SQLResult{}
+
 	query := "INSERT INTO [dbo].[{{$obj.Name}}] (
 	{{- join $obj.GetNonIdFieldNames ", " -}}
 	) VALUES (
 	{{- repeatJoin (len $obj.GetNonIdFieldNames) "?" ", " -}}
-	)"
-	result, err := mssqlExecContext(ctx, query, {{$nonIdFieldNames}})
+	);SELECT ID=convert(bigint, SCOPE_IDENTITY())"
+	rows, err := mssqlQueryContext(ctx, query, {{$nonIdFieldNames}})
 	if err != nil {
-		return result, err
+		return r, err
+	}
+	defer rows.Close()
+
+	var lastInsertId int64
+
+	for rows.Next() {
+		if err := rows.Scan(&lastInsertId);err!=nil{
+			return nil,err
+		}
 	}
 
-	lastInsertId, err := result.LastInsertId()
-	if err != nil {
-		return result, err
-	}
+	r.lastInsertID = lastInsertId
+	r.rowsCount = 1
 
 	obj.{{$idFieldName}} = {{$idField.Type}}(lastInsertId)
 
-	return result, err
+	return r, err
 }
 
 func (m *_{{$obj.Name}}Mgr) saveUpdate(obj *{{$obj.Name}}) (sql.Result, error) {
