@@ -85,15 +85,14 @@ func savePeople(t *testing.T, name string) (*People, error) {
 	return p, err
 }
 
-func saveDuplicatedPeople(id int32, t *testing.T) (*People, error) {
+func saveDuplicatedPeople(p1, p2 int32, t *testing.T) (*People, error) {
 
 	now := time.Now()
 	p := &People{
-		PeopleId:    id,
 		Name:        "dup",
 		Age:         1,
-		UniquePart1: rand.Int31n(1000000),
-		UniquePart2: rand.Int31n(1000000),
+		UniquePart1: p1,
+		UniquePart2: p2,
 		CreateDate:  &now,
 		UpdateDate:  &now,
 	}
@@ -143,7 +142,7 @@ func TestSaveInsert(t *testing.T) {
 		t.Fatalf("1. TestSaveInsert: expect 1 but get %d", p.PeopleId)
 	}
 
-	if _, err := saveDuplicatedPeople(p.PeopleId, t); err != nil {
+	if _, err := saveDuplicatedPeople(p.UniquePart1, p.UniquePart2, t); err != nil {
 		t.Fatalf("1. TestSaveDuplicateInsert: %q", err)
 	}
 
