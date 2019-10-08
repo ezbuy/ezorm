@@ -6,14 +6,14 @@ jobs:
         environment:
           GOPROXY: https://proxy.golang.org
           GO111MODULE: "on"
-          MSSQL_PASSWORD: ezbuy@ezbuyisthebest
+          MSSQL_PASSWORD: ezbuy@ezbuyIsTheBest2019
           MSSQL_USER: sa
           MSSQL_DATABASE: test
           MSSQL_HOST: localhost
       - image: microsoft/mssql-server-linux
         environment:
           ACCEPT_EULA: Y
-          SA_PASSWORD: ezbuy@ezbuyisthebest
+          SA_PASSWORD: ezbuy@ezbuyIsTheBest2019
     branch:
     working_directory: /go/src/github.com/ezbuy/ezorm
     steps:
