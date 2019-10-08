@@ -2,9 +2,11 @@ package test
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"os"
 	"testing"
 	"time"
 
@@ -23,11 +25,11 @@ func requestTimeLogger(queryer db.Queryer, query string, args ...interface{}) db
 	}
 }
 
-const (
-	host     = "localhost"
-	userId   = "sa"
-	password = "ezbuy@ezbuyisthebest"
-	database = "test"
+var (
+	host     = os.Getenv("MSSQL_HOST")
+	userId   = os.Getenv("MSSQL_USER")
+	password = os.Getenv("MSSQL_PASSWORD")
+	database = os.Getenv("MSSQL_DATABASE")
 )
 
 func init() {
@@ -83,6 +85,26 @@ func savePeople(t *testing.T, name string) (*People, error) {
 	return p, err
 }
 
+func saveDuplicatedPeople(id int32, t *testing.T) (*People, error) {
+
+	now := time.Now()
+	p := &People{
+		PeopleId:    id,
+		Name:        "dup",
+		Age:         1,
+		UniquePart1: rand.Int31n(1000000),
+		UniquePart2: rand.Int31n(1000000),
+		CreateDate:  &now,
+		UpdateDate:  &now,
+	}
+
+	_, err := PeopleMgr.Save(p)
+	if err == nil {
+		return nil, errors.New("dup: save expected duplicate error,but got nil")
+	}
+	return nil, nil
+}
+
 func assertPeopleEqual(a, b *People, t *testing.T) {
 	if a.Age != b.Age || a.Name != b.Name {
 		t.Errorf("%#v != %#v. people not equal", a, b)
@@ -119,6 +141,10 @@ func TestSaveInsert(t *testing.T) {
 
 	if p.PeopleId != 1 {
 		t.Fatalf("1. TestSaveInsert: expect 1 but get %d", p.PeopleId)
+	}
+
+	if _, err := saveDuplicatedPeople(p.PeopleId, t); err != nil {
+		t.Fatalf("1. TestSaveDuplicateInsert: %q", err)
 	}
 
 }

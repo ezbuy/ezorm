@@ -6,6 +6,10 @@ jobs:
         environment:
           GOPROXY: https://proxy.golang.org
           GO111MODULE: "on"
+          MSSQL_PASSWORD: ezbuy@ezbuyisthebest
+          MSSQL_USER: sa
+          MSSQL_DATABASE: test
+          MSSQL_HOST: localhost
       - image: microsoft/mssql-server-linux
         environment:
           ACCEPT_EULA: Y
