@@ -140,6 +140,15 @@ func TestSaveInsert(t *testing.T) {
 		t.Fatalf("1. TestSaveDuplicateInsert: %q", err)
 	}
 
+	all, err := PeopleMgr.FindAll()
+	if err != nil {
+		t.Fatalf("1. TestFindAll: %q", err)
+	}
+
+	if len(all) != 1 {
+		t.Fatalf("1. TestSaveInsert: expect insert 1,but got %d", len(all))
+	}
+
 }
 
 func TestSaveUpdate(t *testing.T) {
