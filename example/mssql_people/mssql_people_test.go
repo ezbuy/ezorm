@@ -17,7 +17,7 @@ func requestTimeLogger(queryer db.Queryer, query string, args ...interface{}) db
 	return func(query string, args ...interface{}) (interface{}, error) {
 		start := time.Now()
 		defer func() {
-			fmt.Printf("query time: %.6f seconds\n", time.Now().Sub(start).Seconds())
+			fmt.Printf("query time: %.6f seconds\n", time.Since(start).Seconds())
 		}()
 
 		time.Sleep(time.Millisecond * time.Duration(rand.Int31n(100)))
@@ -162,10 +162,6 @@ func TestSaveUpdate(t *testing.T) {
 		t.Errorf("save err:%s", err.Error())
 	}
 
-	if p.PeopleId != 2 {
-		t.Fatalf("2. TestSaveUpdate: expect 2 but get %d", p.PeopleId)
-	}
-
 	p.Age = p.Age + 1
 	result, err := PeopleMgr.Save(p)
 	if err != nil {
@@ -198,10 +194,6 @@ func TestFindOne(t *testing.T) {
 		t.Errorf("save err:%s", err.Error())
 	}
 
-	if p.PeopleId != 3 {
-		t.Fatalf("3. TestFindOne: expect 3 but get %d", p.PeopleId)
-	}
-
 	pFound, err := PeopleMgr.FindOne("")
 	if err != nil {
 		t.Errorf("find one error:%s", err.Error())
@@ -218,10 +210,6 @@ func TestFind(t *testing.T) {
 	p, err := savePeople(t, "testuser")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
-	}
-
-	if p.PeopleId != 4 {
-		t.Fatalf("4. TestFindOne: expect 4 but get %d", p.PeopleId)
 	}
 
 	pSlice, err := PeopleMgr.Find("")
@@ -241,22 +229,14 @@ func TestFindAll(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	p, err := savePeople(t, "testuser1")
+	_, err = savePeople(t, "testuser1")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}
 
-	if p.PeopleId != 5 {
-		t.Fatalf("5. TestFindAll: expect 5 but get %d", p.PeopleId)
-	}
-
-	p, err = savePeople(t, "testuser2")
+	_, err = savePeople(t, "testuser2")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
-	}
-
-	if p.PeopleId != 6 {
-		t.Fatalf("6. TestFindAll: expect 6 but get %d", p.PeopleId)
 	}
 
 	pSlice, err := PeopleMgr.FindAll()
