@@ -197,22 +197,14 @@ func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
 
 	query := "INSERT INTO [dbo].[{{$obj.Name}}] (
 	{{- join $obj.GetNonIdFieldNames ", " -}}
-	) VALUES (
+	) OUTPUT inserted.PeopleID VALUES (
 	{{- repeatJoin (len $obj.GetNonIdFieldNames) "?" ", " -}}
-	);SELECT ID=convert(bigint, SCOPE_IDENTITY())"
-	rows, err := mssqlQuery(query, {{$nonIdFieldNames}})
-	if err != nil {
-		return r, err
-	}
-
-	defer rows.Close()
+	)"
 
 	var lastInsertId int64
 
-	for rows.Next() {
-		if err:=rows.Scan(&lastInsertId);err!=nil{
-			return nil,err
-		}
+	if err := _db.QueryRow(query,{{$nonIdFieldNames}}).Scan(&lastInsertId); err != nil {
+		return nil, err
 	}
 
 	r.lastInsertID = lastInsertId
@@ -220,7 +212,7 @@ func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
 
 	obj.{{$idFieldName}} = {{$idField.Type}}(lastInsertId)
 
-	return r, err
+	return r, nil
 }
 
 func (m *_{{$obj.Name}}Mgr) saveInsertContext(ctx context.Context,obj *{{$obj.Name}}) (sql.Result, error) {

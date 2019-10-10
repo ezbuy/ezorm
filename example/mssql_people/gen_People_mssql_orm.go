@@ -134,20 +134,12 @@ func (m *_PeopleMgr) saveInsert(obj *People) (sql.Result, error) {
 
 	r := &PeopleSQLResult{}
 
-	query := "INSERT INTO [dbo].[People] (NonIndexA, NonIndexB, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);SELECT ID=convert(bigint, SCOPE_IDENTITY())"
-	rows, err := mssqlQuery(query, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.UniquePart1, obj.UniquePart2, obj.CreateDate, obj.UpdateDate)
-	if err != nil {
-		return r, err
-	}
-
-	defer rows.Close()
+	query := "INSERT INTO [dbo].[People] (NonIndexA, NonIndexB, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate) OUTPUT inserted.PeopleID VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
 	var lastInsertId int64
 
-	for rows.Next() {
-		if err := rows.Scan(&lastInsertId); err != nil {
-			return nil, err
-		}
+	if err := _db.QueryRow(query, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.UniquePart1, obj.UniquePart2, obj.CreateDate, obj.UpdateDate).Scan(&lastInsertId); err != nil {
+		return nil, err
 	}
 
 	r.lastInsertID = lastInsertId
@@ -155,7 +147,7 @@ func (m *_PeopleMgr) saveInsert(obj *People) (sql.Result, error) {
 
 	obj.PeopleId = int32(lastInsertId)
 
-	return r, err
+	return r, nil
 }
 
 func (m *_PeopleMgr) saveInsertContext(ctx context.Context, obj *People) (sql.Result, error) {

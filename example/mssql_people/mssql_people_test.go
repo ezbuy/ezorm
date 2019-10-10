@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -87,14 +88,14 @@ func savePeople(t *testing.T, name string) (*People, error) {
 
 func saveDuplicatedPeople(p *People, t *testing.T) (*People, error) {
 
-	p.PeopleId = 0
-
 	// force insert
+	p.PeopleId = 0
 
 	_, err := PeopleMgr.Save(p)
 	if err == nil {
 		return nil, errors.New("dup: save expected duplicate error,but got nil")
 	}
+	t.Logf("save duplicate: %q", err)
 	return nil, nil
 }
 
@@ -149,6 +150,36 @@ func TestSaveInsert(t *testing.T) {
 		t.Fatalf("1. TestSaveInsert: expect insert 1,but got %d", len(all))
 	}
 
+}
+
+func TestConcurrentSaveInsert(t *testing.T) {
+
+	_, err := PeopleMgr.Del("")
+	if err != nil {
+		t.Errorf("delete error:%s", err.Error())
+	}
+
+	var wg sync.WaitGroup
+	dupID := new(sync.Map)
+	for i := 3; i < 50; i++ {
+		wg.Add(1)
+		go func(idx int) {
+			p, err := savePeople(t, fmt.Sprintf("testUser%d", idx))
+			if err != nil {
+				t.Errorf("save err:%s", err.Error())
+				return
+			}
+			if _, ok := dupID.Load(p.PeopleId); ok {
+				t.Errorf("TestConCurrentSaveInsert: got %d", p.PeopleId)
+				return
+			}
+
+			dupID.Store(p.PeopleId, struct{}{})
+			wg.Done()
+		}(i)
+	}
+
+	wg.Wait()
 }
 
 func TestSaveUpdate(t *testing.T) {
