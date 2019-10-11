@@ -134,7 +134,7 @@ func (m *_PeopleMgr) saveInsert(obj *People) (sql.Result, error) {
 
 	r := &PeopleSQLResult{}
 
-	query := "INSERT INTO [dbo].[People] (NonIndexA, NonIndexB, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate) OUTPUT inserted.PeopleID VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	query := "INSERT INTO [dbo].[People] (NonIndexA, NonIndexB, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate) OUTPUT inserted.PeopleId VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
 	var lastInsertId int64
 
@@ -154,7 +154,7 @@ func (m *_PeopleMgr) saveInsertContext(ctx context.Context, obj *People) (sql.Re
 
 	r := &PeopleSQLResult{}
 
-	query := "INSERT INTO [dbo].[People] (NonIndexA, NonIndexB, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate) OUTPUT inserted.PeopleID VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	query := "INSERT INTO [dbo].[People] (NonIndexA, NonIndexB, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate) OUTPUT inserted.PeopleId VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
 	var lastInsertId int64
 

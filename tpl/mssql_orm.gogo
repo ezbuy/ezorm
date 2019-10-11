@@ -197,7 +197,7 @@ func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
 
 	query := "INSERT INTO [dbo].[{{$obj.Name}}] (
 	{{- join $obj.GetNonIdFieldNames ", " -}}
-	) OUTPUT inserted.PeopleID VALUES (
+	) OUTPUT inserted.{{$idFieldName}} VALUES (
 	{{- repeatJoin (len $obj.GetNonIdFieldNames) "?" ", " -}}
 	)"
 
@@ -221,7 +221,7 @@ func (m *_{{$obj.Name}}Mgr) saveInsertContext(ctx context.Context,obj *{{$obj.Na
 
 	query := "INSERT INTO [dbo].[{{$obj.Name}}] (
 	{{- join $obj.GetNonIdFieldNames ", " -}}
-	) OUTPUT inserted.PeopleID VALUES (
+	) OUTPUT inserted.{{$idFieldName}} VALUES (
 	{{- repeatJoin (len $obj.GetNonIdFieldNames) "?" ", " -}}
 	)"
 
@@ -236,7 +236,7 @@ func (m *_{{$obj.Name}}Mgr) saveInsertContext(ctx context.Context,obj *{{$obj.Na
 
 	obj.{{$idFieldName}} = {{$idField.Type}}(lastInsertId)
 
-	return r, err
+	return r, nil
 }
 
 func (m *_{{$obj.Name}}Mgr) saveUpdate(obj *{{$obj.Name}}) (sql.Result, error) {
