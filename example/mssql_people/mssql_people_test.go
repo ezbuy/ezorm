@@ -160,7 +160,8 @@ func TestConcurrentSaveInsert(t *testing.T) {
 	}
 
 	var wg sync.WaitGroup
-	dupID := new(sync.Map)
+	dupID := make(map[int32]interface{})
+	lock := new(sync.Mutex)
 	for i := 3; i < 50; i++ {
 		wg.Add(1)
 		go func(idx int) {
@@ -169,12 +170,13 @@ func TestConcurrentSaveInsert(t *testing.T) {
 				t.Errorf("save err:%s", err.Error())
 				return
 			}
-			if _, ok := dupID.Load(p.PeopleId); ok {
+			lock.Lock()
+			if _, ok := dupID[p.PeopleId]; ok {
 				t.Errorf("TestConCurrentSaveInsert: got %d", p.PeopleId)
 				return
 			}
-
-			dupID.Store(p.PeopleId, struct{}{})
+			dupID[p.PeopleId] = struct{}{}
+			lock.Unlock()
 			wg.Done()
 		}(i)
 	}
