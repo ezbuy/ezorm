@@ -167,7 +167,7 @@ func (m *_PeopleMgr) saveInsertContext(ctx context.Context, obj *People) (sql.Re
 
 	obj.PeopleId = int32(lastInsertId)
 
-	return r, err
+	return r, nil
 }
 
 func (m *_PeopleMgr) saveUpdate(obj *People) (sql.Result, error) {
