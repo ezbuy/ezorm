@@ -117,38 +117,57 @@ func (m *_PeopleMgr) SaveContext(ctx context.Context, obj *People) (sql.Result, 
 	return m.saveUpdateContext(ctx, obj)
 }
 
+type PeopleSQLResult struct {
+	lastInsertID int64
+	rowsCount    int64
+}
+
+func (sr *PeopleSQLResult) LastInsertId() (int64, error) {
+	return sr.lastInsertID, nil
+}
+
+func (sr *PeopleSQLResult) RowsAffected() (int64, error) {
+	return sr.rowsCount, nil
+}
+
 func (m *_PeopleMgr) saveInsert(obj *People) (sql.Result, error) {
-	query := "INSERT INTO [dbo].[People] (NonIndexA, NonIndexB, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-	result, err := mssqlExec(query, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.UniquePart1, obj.UniquePart2, obj.CreateDate, obj.UpdateDate)
-	if err != nil {
-		return result, err
+
+	r := &PeopleSQLResult{}
+
+	query := "INSERT INTO [dbo].[People] (NonIndexA, NonIndexB, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate) OUTPUT inserted.PeopleId VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+
+	var lastInsertId int64
+
+	if err := _db.QueryRow(query, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.UniquePart1, obj.UniquePart2, obj.CreateDate, obj.UpdateDate).Scan(&lastInsertId); err != nil {
+		return nil, err
 	}
 
-	lastInsertId, err := result.LastInsertId()
-	if err != nil {
-		return result, err
-	}
+	r.lastInsertID = lastInsertId
+	r.rowsCount = 1
 
 	obj.PeopleId = int32(lastInsertId)
 
-	return result, err
+	return r, nil
 }
 
 func (m *_PeopleMgr) saveInsertContext(ctx context.Context, obj *People) (sql.Result, error) {
-	query := "INSERT INTO [dbo].[People] (NonIndexA, NonIndexB, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-	result, err := mssqlExecContext(ctx, query, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.UniquePart1, obj.UniquePart2, obj.CreateDate, obj.UpdateDate)
-	if err != nil {
-		return result, err
+
+	r := &PeopleSQLResult{}
+
+	query := "INSERT INTO [dbo].[People] (NonIndexA, NonIndexB, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate) OUTPUT inserted.PeopleId VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+
+	var lastInsertId int64
+
+	if err := _db.QueryRowContext(ctx, query, obj.NonIndexA, obj.NonIndexB, obj.Age, obj.Name, obj.IndexAPart1, obj.IndexAPart2, obj.IndexAPart3, obj.UniquePart1, obj.UniquePart2, obj.CreateDate, obj.UpdateDate).Scan(&lastInsertId); err != nil {
+		return nil, err
 	}
 
-	lastInsertId, err := result.LastInsertId()
-	if err != nil {
-		return result, err
-	}
+	r.lastInsertID = lastInsertId
+	r.rowsCount = 1
 
 	obj.PeopleId = int32(lastInsertId)
 
-	return result, err
+	return r, err
 }
 
 func (m *_PeopleMgr) saveUpdate(obj *People) (sql.Result, error) {

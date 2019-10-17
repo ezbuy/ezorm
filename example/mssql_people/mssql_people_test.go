@@ -2,9 +2,12 @@ package test
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -15,7 +18,7 @@ func requestTimeLogger(queryer db.Queryer, query string, args ...interface{}) db
 	return func(query string, args ...interface{}) (interface{}, error) {
 		start := time.Now()
 		defer func() {
-			fmt.Printf("query time: %.6f seconds\n", time.Now().Sub(start).Seconds())
+			fmt.Printf("query time: %.6f seconds\n", time.Since(start).Seconds())
 		}()
 
 		time.Sleep(time.Millisecond * time.Duration(rand.Int31n(100)))
@@ -24,24 +27,42 @@ func requestTimeLogger(queryer db.Queryer, query string, args ...interface{}) db
 }
 
 var (
-	host     = os.Getenv("host")
-	userId   = os.Getenv("userId")
-	password = os.Getenv("password")
-	database = os.Getenv("database")
+	host     = os.Getenv("MSSQL_HOST")
+	userId   = os.Getenv("MSSQL_USER")
+	password = os.Getenv("MSSQL_PASSWORD")
+	database = os.Getenv("MSSQL_DATABASE")
 )
 
 func init() {
-	dsn := fmt.Sprintf("server=%s;user id=%s;password=%s;DATABASE=%s",
-		host, userId, password, database)
+	dsn := fmt.Sprintf("server=%s;user id=%s;password=%s;DATABASE=master",
+		host, userId, password)
 	MssqlSetUp(dsn)
 
 	MssqlSetMaxOpenConns(255)
 	MssqlSetMaxIdleConns(255)
 
 	MssqlAddQueryWrapper(requestTimeLogger)
+
+	query, err := ioutil.ReadFile("People.sql")
+	if err != nil {
+		panic(err)
+	}
+
+	if _, err := mssqlExec("CREATE DATABASE test"); err != nil {
+		panic(err)
+	}
+
+	if _, err := mssqlExec(string(query)); err != nil {
+		panic(err)
+	}
+
+	dsn = fmt.Sprintf("server=%s;user id=%s;password=%s;DATABASE=%s",
+		host, userId, password, database)
+	MssqlSetUp(dsn)
+
 }
 
-func savePeople(name string) (*People, error) {
+func savePeople(t *testing.T, name string) (*People, error) {
 	now := time.Now()
 	p := &People{
 		Name:        name,
@@ -52,8 +73,30 @@ func savePeople(name string) (*People, error) {
 		UpdateDate:  &now,
 	}
 
-	_, err := PeopleMgr.Save(p)
+	res, err := PeopleMgr.Save(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = res.LastInsertId()
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	return p, err
+}
+
+func saveDuplicatedPeople(p *People, t *testing.T) (*People, error) {
+
+	// force insert
+	p.PeopleId = 0
+
+	_, err := PeopleMgr.Save(p)
+	if err == nil {
+		return nil, errors.New("dup: save expected duplicate error,but got nil")
+	}
+	t.Logf("save duplicate: %q", err)
+	return nil, nil
 }
 
 func assertPeopleEqual(a, b *People, t *testing.T) {
@@ -85,10 +128,60 @@ func TestSaveInsert(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	_, err = savePeople("testuser")
+	p, err := savePeople(t, "testuser")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}
+
+	if p.PeopleId != 1 {
+		t.Fatalf("1. TestSaveInsert: expect 1 but get %d", p.PeopleId)
+	}
+
+	if _, err := saveDuplicatedPeople(p, t); err != nil {
+		t.Fatalf("1. TestSaveDuplicateInsert: %q", err)
+	}
+
+	all, err := PeopleMgr.FindAll()
+	if err != nil {
+		t.Fatalf("1. TestFindAll: %q", err)
+	}
+
+	if len(all) != 1 {
+		t.Fatalf("1. TestSaveInsert: expect insert 1,but got %d", len(all))
+	}
+
+}
+
+func TestConcurrentSaveInsert(t *testing.T) {
+
+	_, err := PeopleMgr.Del("")
+	if err != nil {
+		t.Errorf("delete error:%s", err.Error())
+	}
+
+	var wg sync.WaitGroup
+	dupID := make(map[int32]interface{})
+	lock := new(sync.Mutex)
+	for i := 3; i < 50; i++ {
+		wg.Add(1)
+		go func(idx int) {
+			p, err := savePeople(t, fmt.Sprintf("testUser%d", idx))
+			if err != nil {
+				t.Errorf("save err:%s", err.Error())
+				return
+			}
+			lock.Lock()
+			if _, ok := dupID[p.PeopleId]; ok {
+				t.Errorf("TestConCurrentSaveInsert: got %d", p.PeopleId)
+				return
+			}
+			dupID[p.PeopleId] = struct{}{}
+			lock.Unlock()
+			wg.Done()
+		}(i)
+	}
+
+	wg.Wait()
 }
 
 func TestSaveUpdate(t *testing.T) {
@@ -97,7 +190,7 @@ func TestSaveUpdate(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	p, err := savePeople("testuser")
+	p, err := savePeople(t, "testuser")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}
@@ -129,7 +222,7 @@ func TestFindOne(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	p, err := savePeople("testuser")
+	p, err := savePeople(t, "testuser")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}
@@ -147,7 +240,7 @@ func TestFind(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	p, err := savePeople("testuser")
+	p, err := savePeople(t, "testuser")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}
@@ -169,12 +262,12 @@ func TestFindAll(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	_, err = savePeople("testuser1")
+	_, err = savePeople(t, "testuser1")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}
 
-	_, err = savePeople("testuser2")
+	_, err = savePeople(t, "testuser2")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}
@@ -196,7 +289,7 @@ func TestFindWithOffset(t *testing.T) {
 	}
 
 	for i := 0; i < 5; i++ {
-		_, err = savePeople(fmt.Sprint(i))
+		_, err = savePeople(t, fmt.Sprint(i))
 		if err != nil {
 			t.Errorf("save err:%s", err.Error())
 		}
@@ -227,12 +320,12 @@ func TestDel(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	p1, err := savePeople("testuser1")
+	p1, err := savePeople(t, "testuser1")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}
 
-	p2, err := savePeople("testuser2")
+	p2, err := savePeople(t, "testuser2")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}
@@ -268,7 +361,7 @@ func TestUpdate(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	p, err := savePeople("testuser")
+	p, err := savePeople(t, "testuser")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}
@@ -304,7 +397,7 @@ func TestFindByID(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	p1, err := savePeople("testuser")
+	p1, err := savePeople(t, "testuser")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}
@@ -322,7 +415,7 @@ func TestFindOneByName(t *testing.T) {
 		t.Errorf("delete error:%s", err.Error())
 	}
 
-	p1, err := savePeople("testuser")
+	p1, err := savePeople(t, "testuser")
 	if err != nil {
 		t.Errorf("save err:%s", err.Error())
 	}

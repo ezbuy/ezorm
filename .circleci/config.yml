@@ -1,0 +1,36 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:1.12
+        environment:
+          GOPROXY: https://proxy.golang.org
+          GO111MODULE: "on"
+          MSSQL_PASSWORD: ezbuy@ezbuyIsTheBest2019
+          MSSQL_USER: sa
+          MSSQL_DATABASE: test
+          MSSQL_HOST: localhost
+      - image: microsoft/mssql-server-linux
+        environment:
+          ACCEPT_EULA: Y
+          SA_PASSWORD: ezbuy@ezbuyIsTheBest2019
+    branch:
+    working_directory: /go/src/github.com/ezbuy/ezorm
+    steps:
+      - checkout
+      - run:
+          name: go get
+          command: |
+           go get -u github.com/ezbuy/ezorm
+      - run:
+          name: gen tpl
+          command: |
+           go get -u github.com/jteeuwen/go-bindata/go-bindata@master
+           make buildTpl
+      - run: go install
+      - run:
+         name: mssql
+         command: |
+           ezorm gen -i ./example/mssql_people/people_mssql.yaml -o ./example/mssql_people -p people --goPackage test
+           go test -v ./example/mssql_people/...
+

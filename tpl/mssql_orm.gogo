@@ -178,46 +178,65 @@ func (m *_{{$obj.Name}}Mgr) SaveContext(ctx context.Context,obj *{{$obj.Name}}) 
 	return m.saveUpdateContext(ctx,obj)
 }
 
+type {{$obj.Name}}SQLResult struct {
+	lastInsertID int64
+	rowsCount    int64
+}
+
+func (sr *{{$obj.Name}}SQLResult) LastInsertId() (int64, error) {
+	return sr.lastInsertID, nil
+}
+
+func (sr *{{$obj.Name}}SQLResult) RowsAffected() (int64, error) {
+	return sr.rowsCount, nil
+}
+
 func (m *_{{$obj.Name}}Mgr) saveInsert(obj *{{$obj.Name}}) (sql.Result, error) {
+
+	r := &{{$obj.Name}}SQLResult{}
+
 	query := "INSERT INTO [dbo].[{{$obj.Name}}] (
 	{{- join $obj.GetNonIdFieldNames ", " -}}
-	) VALUES (
+	) OUTPUT inserted.{{$idFieldName}} VALUES (
 	{{- repeatJoin (len $obj.GetNonIdFieldNames) "?" ", " -}}
 	)"
-	result, err := mssqlExec(query, {{$nonIdFieldNames}})
-	if err != nil {
-		return result, err
+
+	var lastInsertId int64
+
+	if err := _db.QueryRow(query,{{$nonIdFieldNames}}).Scan(&lastInsertId); err != nil {
+		return nil, err
 	}
 
-	lastInsertId, err := result.LastInsertId()
-	if err != nil {
-		return result, err
-	}
+	r.lastInsertID = lastInsertId
+	r.rowsCount = 1
 
 	obj.{{$idFieldName}} = {{$idField.Type}}(lastInsertId)
 
-	return result, err
+	return r, nil
 }
 
 func (m *_{{$obj.Name}}Mgr) saveInsertContext(ctx context.Context,obj *{{$obj.Name}}) (sql.Result, error) {
+
+	r := &{{$obj.Name}}SQLResult{}
+
 	query := "INSERT INTO [dbo].[{{$obj.Name}}] (
 	{{- join $obj.GetNonIdFieldNames ", " -}}
-	) VALUES (
+	) OUTPUT inserted.{{$idFieldName}} VALUES (
 	{{- repeatJoin (len $obj.GetNonIdFieldNames) "?" ", " -}}
 	)"
-	result, err := mssqlExecContext(ctx, query, {{$nonIdFieldNames}})
-	if err != nil {
-		return result, err
+
+	var lastInsertId int64
+
+	if err := _db.QueryRowContext(ctx,query,{{$nonIdFieldNames}}).Scan(&lastInsertId); err != nil {
+		return nil, err
 	}
 
-	lastInsertId, err := result.LastInsertId()
-	if err != nil {
-		return result, err
-	}
+	r.lastInsertID = lastInsertId
+	r.rowsCount = 1
 
 	obj.{{$idFieldName}} = {{$idField.Type}}(lastInsertId)
 
-	return result, err
+	return r, nil
 }
 
 func (m *_{{$obj.Name}}Mgr) saveUpdate(obj *{{$obj.Name}}) (sql.Result, error) {
