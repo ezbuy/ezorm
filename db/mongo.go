@@ -81,7 +81,11 @@ func ShareSession() *mgo.Session {
 }
 
 func MustNewMgoSessions(config *MongoConfig) []*mgo.Session {
-	sessions := make([]*mgo.Session, mgoMaxSessions)
+	maxSession := config.MaxSession
+	if maxSession == 0 {
+		maxSession = mgoMaxSessions
+	}
+	sessions := make([]*mgo.Session, maxSession)
 	for i := 0; i < mgoMaxSessions; i++ {
 		if config == nil {
 			log.Fatal(ErrOperaBeforeInit)
