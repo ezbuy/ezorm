@@ -2,9 +2,8 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/golang:1.12
+      - image: circleci/golang:1.13
         environment:
-          GOPROXY: https://proxy.golang.org
           GO111MODULE: "on"
           MSSQL_PASSWORD: ezbuy@ezbuyIsTheBest2019
           MSSQL_USER: sa
@@ -14,6 +13,7 @@ jobs:
         environment:
           ACCEPT_EULA: Y
           SA_PASSWORD: ezbuy@ezbuyIsTheBest2019
+      - image: circleci/mongo:latest
     branch:
     working_directory: /go/src/github.com/ezbuy/ezorm
     steps:
@@ -33,4 +33,9 @@ jobs:
          command: |
            ezorm gen -i ./example/mssql_people/people_mssql.yaml -o ./example/mssql_people -p people --goPackage test
            go test -v ./example/mssql_people/...
+      - run:
+         name: mongo
+         command: |
+           ezorm gen -i ./example/blog/blog.yaml -o example/blog -p blog --goPackage test
+           go test -v ./example/blog/...
 
