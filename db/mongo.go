@@ -67,7 +67,7 @@ func ShareSession() *mgo.Session {
 	doInit := false
 	instanceOnce.Do(func() {
 		instances = MustNewMgoSessions(config)
-		SetupIdleSessionRefresher(config, instances, time.Minute)
+		SetupIdleSessionRefresher(config, instances, 3*time.Minute)
 	})
 
 	if doInit {
@@ -86,11 +86,13 @@ func ShareSession() *mgo.Session {
 func SetupIdleSessionRefresher(config *MongoConfig, instances []*mgo.Session, every time.Duration) {
 	go func() {
 		var cursor uint64
+		// NOTE: `instances` itself is read-only
+		instanceLen := uint64(len(instances))
 		for {
 			time.Sleep(every)
 			// Acquire one idle session ,and do refresh(re-dail)
 			// move the session instance cursor to next
-			idleSession := instances[int(cursor%(uint64(len(instances))))]
+			idleSession := instances[int(cursor%instanceLen)]
 			// reset session socket , and the socket will be re-allocated in next mongo operation
 			idleSession.Refresh()
 			// Ping the server after refresh sockets, it will pre-allocate the socket
