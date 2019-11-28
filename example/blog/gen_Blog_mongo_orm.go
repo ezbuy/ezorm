@@ -272,10 +272,15 @@ func (o *_BlogMgr) Has(query interface{}) bool {
 }
 
 func (o *_BlogMgr) Count(query interface{}) (result int) {
+	result, _ = o.CountE(query)
+	return
+}
+
+func (o *_BlogMgr) CountE(query interface{}) (result int, err error) {
 	session, col := BlogMgr.GetCol()
 	defer session.Close()
 
-	result, _ = col.Find(query).Count()
+	result, err = col.Find(query).Count()
 	return
 }
 

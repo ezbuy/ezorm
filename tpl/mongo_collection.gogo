@@ -134,11 +134,16 @@ func (o *_{{.Name}}Mgr) Has(query interface{}) bool {
 }
 
 func (o *_{{.Name}}Mgr) Count(query interface{}) (result int) {
-	session, col := {{.Name}}Mgr.GetCol()
-	defer session.Close()
-
-	result, _ = col.Find(query).Count()
+	result, _ = o.CountE(query)
 	return
+}
+
+func (o *_{{.Name}}Mgr) CountE(query interface{}) (result int, err error) {
+    session, col := {{.Name}}Mgr.GetCol()
+    defer session.Close()
+
+    result, err = col.Find(query).Count()
+    return
 }
 
 func (o *_{{.Name}}Mgr) FindByIDs(id []string, sortFields ...string) (result []*{{$obj.Name}}, err error) {
