@@ -28,6 +28,7 @@ jobs:
            go get -u github.com/jteeuwen/go-bindata/go-bindata@master
            make buildTpl
       - run: go install
+      - run: make clean
       - run:
          name: mssql
          command: |
