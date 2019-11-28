@@ -4,6 +4,7 @@ import (
 	"errors"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/ezbuy/ezorm/db"
 
@@ -21,7 +22,7 @@ var ErrOperaBeforeInit = errors.New("please set db.SetOnFinishInit when needed o
 
 const mgoMaxSessions = 8
 
-const defaultRefresheDuration = time.Minute
+const defaultRefresheDuration = 3 * time.Minute
 
 func MgoSetup(config *db.MongoConfig) {
 	mgoConfig = config
