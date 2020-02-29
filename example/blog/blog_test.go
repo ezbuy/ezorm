@@ -2,21 +2,33 @@ package test
 
 import (
 	"fmt"
+	"log"
+	"os"
 	"testing"
 	"time"
+
+	"gopkg.in/mgo.v2"
 
 	"github.com/ezbuy/ezorm/db"
 	"github.com/stretchr/testify/assert"
 )
 
-func init() {
+func initMongo() {
 	conf := new(db.MongoConfig)
 	conf.DBName = "ezorm"
 	conf.MongoDB = "mongodb://127.0.0.1"
 	db.Setup(conf)
 }
 
+func logMgo() {
+	mgo.SetDebug(true)
+	var aLogger *log.Logger
+	aLogger = log.New(os.Stderr, "", log.LstdFlags)
+	mgo.SetLogger(aLogger)
+}
+
 func TestBlogSave(t *testing.T) {
+	initMongo()
 	p := BlogMgr.NewBlog()
 	p.Title = "I like ezorm"
 	p.Slug = fmt.Sprintf("ezorm_%d", time.Now().Nanosecond())
@@ -36,6 +48,7 @@ func TestBlogSave(t *testing.T) {
 }
 
 func TestCursorWithSessionRefreshed(t *testing.T) {
+	initMongo()
 	session, col := BlogMgr.GetCol()
 	defer session.Close()
 
@@ -71,7 +84,40 @@ func TestCursorWithSessionRefreshed(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestSessionValidationWithRefresher(t *testing.T) {
+	initMongo()
+	logMgo()
+	session, col := BlogMgr.GetCol()
+	defer session.Close()
+
+	rchan := make(chan struct{})
+	defer close(rchan)
+
+	go func() {
+		session.Refresh()
+		rchan <- struct{}{}
+	}()
+
+	select {
+	case <-rchan:
+		var i int
+		for {
+			if i == 50 {
+				break
+			}
+			cs := session.Clone()
+			t.Logf("%d: acquire session: %p", i, cs)
+			cs.SetSyncTimeout(10 * time.Millisecond)
+			_, err := cs.DB("ezorm").C(col.Name).Count()
+			t.Logf("%d: query count", i)
+			assert.NoError(t, err)
+			i++
+		}
+	}
+}
+
 func TestOperationWithSessionRefreshed(t *testing.T) {
+	initMongo()
 	session, col := BlogMgr.GetCol()
 	defer session.Close()
 
@@ -108,6 +154,7 @@ func TestOperationWithSessionRefreshed(t *testing.T) {
 }
 
 func TestBlogCount(t *testing.T) {
+	initMongo()
 	now := time.Now() // get current time.Time as `Save` and `Count` condition
 	p := Get_BlogMgr().NewBlog()
 	p.Title = "ezorm counter"
@@ -129,6 +176,7 @@ func TestBlogCount(t *testing.T) {
 }
 
 func TestBlogCountE(t *testing.T) {
+	initMongo()
 	now := time.Now() // get current time.Time as `Save` and `CountE` condition
 	p := Get_BlogMgr().NewBlog()
 	p.Title = "ezorm counter"
