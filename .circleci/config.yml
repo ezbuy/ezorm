@@ -38,5 +38,5 @@ jobs:
          name: mongo
          command: |
            ezorm gen -i ./example/blog/blog.yaml -o example/blog -p blog --goPackage test
-           go test -v -timeout 5s ./example/blog/...
+           go test -v -race -timeout 5s ./example/blog/...
 

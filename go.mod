@@ -14,6 +14,7 @@ require (
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
 	gopkg.in/redis.v5 v5.2.9
 	gopkg.in/yaml.v2 v2.2.5
+	labix.org/v2/mgo v0.0.0-20140701140051-000000000287
 )
 
 go 1.13
