@@ -6,7 +6,8 @@ require (
 	github.com/ezbuy/utils v0.0.0-20170609090716-8ac4beef008f
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/jmoiron/sqlx v1.2.0
-	github.com/jteeuwen/go-bindata v3.0.8-0.20180305030458-6025e8de665b+incompatible // indirect
+	github.com/onsi/ginkgo v1.12.0 // indirect
+	github.com/onsi/gomega v1.9.0 // indirect
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.5.0
@@ -14,7 +15,6 @@ require (
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
 	gopkg.in/redis.v5 v5.2.9
 	gopkg.in/yaml.v2 v2.2.5
-	labix.org/v2/mgo v0.0.0-20140701140051-000000000287
 )
 
 go 1.13
