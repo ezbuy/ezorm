@@ -20,7 +20,7 @@ var instancesIndex uint32
 
 const mgoMaxSessions = 8
 
-var monitorInterval = 10 * time.Second
+var monitorInterval = 30 * time.Second
 
 type M bson.M
 
