@@ -28,6 +28,7 @@ func MgoSetup(config *db.MongoConfig) {
 	mgoConfig = config
 	mgoInstances = db.MustNewMgoSessions(config)
 	db.SetupIdleSessionRefresher(config, mgoInstances, defaultRefresheDuration)
+	db.SetupMgoMonitor()
 }
 
 func Col(col string) (*mgo.Session, *mgo.Collection) {

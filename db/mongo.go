@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/ezbuy/statsd"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -18,6 +19,8 @@ var instanceOnce sync.Once
 var instancesIndex uint32
 
 const mgoMaxSessions = 8
+
+var monitorInterval = 10 * time.Second
 
 type M bson.M
 
@@ -68,6 +71,7 @@ func ShareSession() *mgo.Session {
 	instanceOnce.Do(func() {
 		instances = MustNewMgoSessions(config)
 		SetupIdleSessionRefresher(config, instances, 3*time.Minute)
+		SetupMgoMonitor()
 	})
 
 	if doInit {
@@ -149,6 +153,26 @@ func MustNewMgoSessions(config *MongoConfig) []*mgo.Session {
 	}
 
 	return sessions
+}
+
+func SetupMgoMonitor() {
+	mgo.SetStats(true)
+	go func() {
+		for {
+			monitorMongoStats()
+			time.Sleep(monitorInterval)
+		}
+	}()
+}
+
+func monitorMongoStats() {
+	st := mgo.GetStats()
+	statsd.Gauge("infra.db.mongo.clusterNode", int64(st.Clusters))
+	statsd.Gauge("infra.db.mongo.masterConn", int64(st.MasterConns))
+	statsd.Gauge("infra.db.mongo.slaveConn", int64(st.SlaveConns))
+	statsd.Gauge("infra.db.mongo.socketRefs", int64(st.SocketRefs))
+	statsd.Gauge("infra.db.mongo.socketAlive", int64(st.SocketsAlive))
+	statsd.Gauge("infra.db.mongo.socketInUse", int64(st.SocketsInUse))
 }
 
 func InID(ids []string) (ret M) {
