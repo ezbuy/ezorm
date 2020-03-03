@@ -85,21 +85,22 @@ func ShareSession() *mgo.Session {
 // SetupIdleSessionRefresher will always refresh idle sessions if it is possible
 func SetupIdleSessionRefresher(config *MongoConfig, instances []*mgo.Session, every time.Duration) {
 	go func() {
+		d, err := mgo.ParseURL(config.MongoDB)
+		if err != nil {
+			log.Printf("Refresher: %q", err)
+			return
+		}
+		// only for replicaSet
+		if d.Direct {
+			return
+		}
 		var cursor uint64
 		// NOTE: `instances` itself is read-only
 		instanceLen := uint64(len(instances))
 		for {
 			time.Sleep(every)
-			// Acquire one idle session ,and do refresh(re-dail)
-			// move the session instance cursor to next
-			idleSession := instances[int(cursor%instanceLen)]
-			// reset session socket , and the socket will be re-allocated in next mongo operation
-			idleSession.Refresh()
-			// Ping the server after refresh sockets, it will pre-allocate the socket
-			// if ping fails , the socket will not be pre-allocated
-			if err := idleSession.Ping(); err != nil {
-				log.Printf("sessionRefreher: %q", err)
-			}
+			// Acquire one idle session ,and copy it out to avoid lock the original session
+			instances[int(cursor%instanceLen)] = instances[int(cursor%instanceLen)].Copy()
 			// move to next instance
 			cursor++
 		}
