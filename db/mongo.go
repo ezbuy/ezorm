@@ -20,7 +20,7 @@ var instancesIndex uint32
 
 const mgoMaxSessions = 8
 
-var monitorInterval = 30 * time.Second
+var monitorInterval = 10 * time.Second
 
 type M bson.M
 
@@ -71,7 +71,6 @@ func ShareSession() *mgo.Session {
 	instanceOnce.Do(func() {
 		instances = MustNewMgoSessions(config)
 		SetupIdleSessionRefresher(config, instances, 3*time.Minute)
-		SetupMgoMonitor()
 	})
 
 	if doInit {
@@ -155,24 +154,28 @@ func MustNewMgoSessions(config *MongoConfig) []*mgo.Session {
 	return sessions
 }
 
-func SetupMgoMonitor() {
+// MustSetupMgoMonitor set up mongo connection pool monitor metrics
+func MustSetupMgoMonitor(srv string) {
+	if srv == "" {
+		panic("ezorm: srv name must set at app layer")
+	}
 	mgo.SetStats(true)
 	go func() {
 		for {
-			monitorMongoStats()
+			monitorMongoStats(srv)
 			time.Sleep(monitorInterval)
 		}
 	}()
 }
 
-func monitorMongoStats() {
+func monitorMongoStats(srv string) {
 	st := mgo.GetStats()
-	statsd.Gauge("infra.db.mongo.clusterNode", int64(st.Clusters))
-	statsd.Gauge("infra.db.mongo.masterConn", int64(st.MasterConns))
-	statsd.Gauge("infra.db.mongo.slaveConn", int64(st.SlaveConns))
-	statsd.Gauge("infra.db.mongo.socketRefs", int64(st.SocketRefs))
-	statsd.Gauge("infra.db.mongo.socketAlive", int64(st.SocketsAlive))
-	statsd.Gauge("infra.db.mongo.socketInUse", int64(st.SocketsInUse))
+	statsd.Gauge("infra.db.mongo."+srv+".clusterNode", int64(st.Clusters))
+	statsd.Gauge("infra.db.mongo."+srv+"masterConn", int64(st.MasterConns))
+	statsd.Gauge("infra.db.mongo."+srv+"slaveConn", int64(st.SlaveConns))
+	statsd.Gauge("infra.db.mongo."+srv+"socketRefs", int64(st.SocketRefs))
+	statsd.Gauge("infra.db.mongo."+srv+"socketAlive", int64(st.SocketsAlive))
+	statsd.Gauge("infra.db.mongo."+srv+"socketInUse", int64(st.SocketsInUse))
 }
 
 func InID(ids []string) (ret M) {
