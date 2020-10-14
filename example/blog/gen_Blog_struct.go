@@ -6,10 +6,13 @@ import "time"
 
 var _ time.Time
 
+// Blog blog
 type Blog struct {
 	ID bson.ObjectId `json:"id" bson:"_id,omitempty"`
-	// 标题
+
+	// the title of blog
 	Title string `bson:"title" json:"title"`
+
 	// 提示
 	Hits        int32     `bson:"Hits" json:"Hits"`
 	Slug        string    `bson:"Slug" json:"Slug"`

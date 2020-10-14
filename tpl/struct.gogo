@@ -7,12 +7,16 @@ import "time"
 
 var _ time.Time
 
+{{- if (ne .Comment "")}}
+// {{.Name}} {{.Comment}}
+{{- end}}
 type {{.Name}} struct {
 	{{- range $field := .Fields}}
 		{{- if and ($obj.DbContains "mongo") (eq $field.Name "ID")}}
 		ID         bson.ObjectId `json:"id" bson:"_id,omitempty"`
 		{{- else}}
         {{- if (ne $field.Comment "")}}
+
         // {{$field.Comment}}
         {{- end }}
 		{{$field.Name}}  {{$field.GetGoType}} {{$field.GetTag}}
