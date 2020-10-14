@@ -48,6 +48,7 @@ type Field struct {
 	FK           *ForeignKey
 	Obj          *Obj
 	AsSort       bool
+	Comment      string
 }
 
 type ListedField struct {
@@ -400,6 +401,8 @@ func (f *Field) Read(data map[interface{}]interface{}) error {
 				f.Widget = val
 			case "remark":
 				f.Remark = val
+			case "comment":
+				f.Comment = val
 			default:
 				return errors.New("invalid field name: " + key)
 			}

@@ -6,15 +6,20 @@ import "time"
 
 var _ time.Time
 
+// Blog blog
 type Blog struct {
-	ID          bson.ObjectId `json:"id" bson:"_id,omitempty"`
-	Title       string        `bson:"title" json:"title"`
-	Hits        int32         `bson:"Hits" json:"Hits"`
-	Slug        string        `bson:"Slug" json:"Slug"`
-	Body        string        `bson:"Body" json:"Body"`
-	CreateDate  time.Time     `bson:"createDate" json:"createDate"`
-	User        int32         `bson:"User" json:"User"`
-	IsPublished bool          `bson:"IsPublished" json:"IsPublished"`
+	ID bson.ObjectId `json:"id" bson:"_id,omitempty"`
+
+	// the title of blog
+	Title string `bson:"title" json:"title"`
+
+	// 提示
+	Hits        int32     `bson:"Hits" json:"Hits"`
+	Slug        string    `bson:"Slug" json:"Slug"`
+	Body        string    `bson:"Body" json:"Body"`
+	CreateDate  time.Time `bson:"createDate" json:"createDate"`
+	User        int32     `bson:"User" json:"User"`
+	IsPublished bool      `bson:"IsPublished" json:"IsPublished"`
 	isNew       bool
 }
 
