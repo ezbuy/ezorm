@@ -3,7 +3,9 @@ Blog:
   fields:
     - Title: string
       attrs: {bsonTag: title,jsonTag: title}
+      comment: 标题
     - Hits: int32
+      comment: 提示
     - Slug: string
       flags: [unique]
     - Body: string
@@ -16,6 +18,7 @@ Blog:
   indexes: [[User, IsPublished]]
   table: test_blog
   dbname: test
+  comment: 博客
 
 Category:
   fields:
