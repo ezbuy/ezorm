@@ -38,7 +38,7 @@ func NewMysql(cfg *MysqlConfig) (*Mysql, error) {
 
 	db, err := sql.Open("mysql", cfg.DataSource)
 	if err != nil {
-		return nil, fmt.Errorf("sql.Open:", err)
+		return nil, fmt.Errorf("sql.Open: %s", err)
 	}
 	db.SetConnMaxLifetime(time.Hour)
 	db.SetMaxIdleConns(cfg.PoolSize)
