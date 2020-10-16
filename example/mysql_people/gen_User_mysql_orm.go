@@ -2,11 +2,13 @@ package test
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"fmt"
-	"github.com/ezbuy/ezorm/db"
 	"strings"
 	"time"
+
+	"github.com/ezbuy/ezorm/db"
 )
 
 var (
@@ -17,8 +19,8 @@ var (
 
 // -----------------------------------------------------------------------------
 
-func (m *_UserMgr) queryOne(query string, args ...interface{}) (*User, error) {
-	ret, err := m.queryLimit(query, 1, args...)
+func (m *_UserMgr) queryOne(ctx context.Context, query string, args ...interface{}) (*User, error) {
+	ret, err := m.queryLimit(ctx, query, 1, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -28,16 +30,16 @@ func (m *_UserMgr) queryOne(query string, args ...interface{}) (*User, error) {
 	return ret[0], nil
 }
 
-func (m *_UserMgr) query(query string, args ...interface{}) (results []*User, err error) {
-	return m.queryLimit(query, -1, args...)
+func (m *_UserMgr) query(ctx context.Context, query string, args ...interface{}) (results []*User, err error) {
+	return m.queryLimit(ctx, query, -1, args...)
 }
 
 func (m *_UserMgr) Query(query string, args ...interface{}) (results []*User, err error) {
-	return m.queryLimit(query, -1, args...)
+	return m.queryLimit(context.Background(), query, -1, args...)
 }
 
-func (*_UserMgr) queryLimit(query string, limit int, args ...interface{}) (results []*User, err error) {
-	rows, err := db.MysqlQuery(query, args...)
+func (*_UserMgr) queryLimit(ctx context.Context, query string, limit int, args ...interface{}) (results []*User, err error) {
+	rows, err := db.MysqlQueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("test.User query error: %v", err)
 	}
@@ -113,11 +115,19 @@ func (m *_UserMgr) InsertBatch(objs []*User) (sql.Result, error) {
 }
 
 func (m *_UserMgr) FindByID(id int32) (*User, error) {
+	return m.FindByIDContext(context.Background(), id)
+}
+
+func (m *_UserMgr) FindByIDContext(ctx context.Context, id int32) (*User, error) {
 	query := "SELECT `user_id`, `user_number`, `name` FROM test.test_user WHERE user_id=?"
-	return m.queryOne(query, id)
+	return m.queryOne(ctx, query, id)
 }
 
 func (m *_UserMgr) FindByIDs(ids []int32) ([]*User, error) {
+	return m.FindByIDsContext(context.Background(), ids)
+}
+
+func (m *_UserMgr) FindByIDsContext(ctx context.Context, ids []int32) ([]*User, error) {
 	idsLen := len(ids)
 	placeHolders := make([]string, 0, idsLen)
 	args := make([]interface{}, 0, idsLen)
@@ -129,15 +139,23 @@ func (m *_UserMgr) FindByIDs(ids []int32) ([]*User, error) {
 	query := fmt.Sprintf(
 		"SELECT `user_id`, `user_number`, `name` FROM test.test_user WHERE user_id IN (%s)",
 		strings.Join(placeHolders, ","))
-	return m.query(query, args...)
+	return m.query(ctx, query, args...)
 }
 
 func (m *_UserMgr) FindInUserId(ids []int32, sortFields ...string) ([]*User, error) {
-	return m.FindByIDs(ids)
+	return m.FindInUserIdContext(context.Background(), ids, sortFields...)
+}
+
+func (m *_UserMgr) FindInUserIdContext(ctx context.Context, ids []int32, sortFields ...string) ([]*User, error) {
+	return m.FindByIDsContext(ctx, ids)
 }
 
 func (m *_UserMgr) FindListUserId(UserId []int32) ([]*User, error) {
-	retmap, err := m.FindMapUserId(UserId)
+	return m.FindListUserIdContext(context.Background(), UserId)
+}
+
+func (m *_UserMgr) FindListUserIdContext(ctx context.Context, UserId []int32) ([]*User, error) {
+	retmap, err := m.FindMapUserIdContext(ctx, UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +167,11 @@ func (m *_UserMgr) FindListUserId(UserId []int32) ([]*User, error) {
 }
 
 func (m *_UserMgr) FindMapUserId(UserId []int32, sortFields ...string) (map[int32]*User, error) {
-	ret, err := m.FindInUserId(UserId, sortFields...)
+	return m.FindMapUserIdContext(context.Background(), UserId)
+}
+
+func (m *_UserMgr) FindMapUserIdContext(ctx context.Context, UserId []int32, sortFields ...string) (map[int32]*User, error) {
+	ret, err := m.FindInUserIdContext(ctx, UserId, sortFields...)
 	if err != nil {
 		return nil, err
 	}
@@ -190,12 +212,12 @@ func (m *_UserMgr) FindInUserNumber(UserNumber []int32, sortFields ...string) ([
 
 	buf.WriteString("`user_number` in ")
 	int32ToIds(buf, UserNumber)
-	return m.query(buf.String() + m.GetSort(sortFields))
+	return m.query(context.Background(), buf.String()+m.GetSort(sortFields))
 }
 
 func (m *_UserMgr) FindOneByUserNumber(UserNumber int32) (*User, error) {
 	query := "SELECT `user_id`, `user_number`, `name` FROM test.test_user WHERE user_number=?"
-	return m.queryOne(query, UserNumber)
+	return m.queryOne(context.Background(), query, UserNumber)
 }
 
 func (m *_UserMgr) FindListName(Name []string) ([]*User, error) {
@@ -228,7 +250,7 @@ func (m *_UserMgr) FindInName(Name []string, sortFields ...string) ([]*User, err
 
 	buf.WriteString("`name` in ")
 	stringToIds(buf, Name)
-	return m.query(buf.String() + m.GetSort(sortFields))
+	return m.query(context.Background(), buf.String()+m.GetSort(sortFields))
 }
 
 func (m *_UserMgr) FindAllByName(Name string, sortFields ...string) ([]*User, error) {
@@ -238,17 +260,25 @@ func (m *_UserMgr) FindAllByName(Name string, sortFields ...string) ([]*User, er
 func (m *_UserMgr) FindByName(Name string, offset int, limit int, sortFields ...string) ([]*User, error) {
 	query := fmt.Sprintf("SELECT `user_id`, `user_number`, `name` FROM test.test_user WHERE `name`=? %s%s", m.GetSort(sortFields), m.GetLimit(offset, limit))
 
-	return m.query(query, Name)
+	return m.query(context.Background(), query, Name)
 }
 
 func (m *_UserMgr) FindOne(where string, args ...interface{}) (*User, error) {
+	return m.FindOneContext(context.Background(), where, args...)
+}
+
+func (m *_UserMgr) FindOneContext(ctx context.Context, where string, args ...interface{}) (*User, error) {
 	query := m.GetQuerysql(where) + m.GetLimit(0, 1)
-	return m.queryOne(query, args...)
+	return m.queryOne(ctx, query, args...)
 }
 
 func (m *_UserMgr) Find(where string, args ...interface{}) ([]*User, error) {
+	return m.FindContext(context.Background(), where, args...)
+}
+
+func (m *_UserMgr) FindContext(ctx context.Context, where string, args ...interface{}) ([]*User, error) {
 	query := m.GetQuerysql(where)
-	return m.query(query, args...)
+	return m.query(ctx, query, args...)
 }
 
 func (m *_UserMgr) FindAll() (results []*User, err error) {
@@ -256,6 +286,10 @@ func (m *_UserMgr) FindAll() (results []*User, err error) {
 }
 
 func (m *_UserMgr) FindWithOffset(where string, offset int, limit int, args ...interface{}) ([]*User, error) {
+	return m.FindWithOffsetContext(context.Background(), where, offset, limit, args...)
+}
+
+func (m *_UserMgr) FindWithOffsetContext(ctx context.Context, where string, offset int, limit int, args ...interface{}) ([]*User, error) {
 	query := m.GetQuerysql(where)
 
 	query = query + " LIMIT ?, ?"
@@ -263,7 +297,7 @@ func (m *_UserMgr) FindWithOffset(where string, offset int, limit int, args ...i
 	args = append(args, offset)
 	args = append(args, limit)
 
-	return m.query(query, args...)
+	return m.query(ctx, query, args...)
 }
 
 func (m *_UserMgr) GetQuerysql(where string) string {
@@ -304,12 +338,16 @@ func (m *_UserMgr) Update(set, where string, params ...interface{}) (sql.Result,
 }
 
 func (m *_UserMgr) Count(where string, args ...interface{}) (int32, error) {
+	return m.CountContext(context.Background(), where, args...)
+}
+
+func (m *_UserMgr) CountContext(ctx context.Context, where string, args ...interface{}) (int32, error) {
 	query := "SELECT COUNT(*) FROM test.test_user"
 	if where != "" {
 		query = query + " WHERE " + where
 	}
 
-	rows, err := db.MysqlQuery(query, args...)
+	rows, err := db.MysqlQueryContext(ctx, query, args...)
 	if err != nil {
 		return 0, err
 	}

@@ -2,11 +2,13 @@ package test
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"fmt"
-	"github.com/ezbuy/ezorm/db"
 	"strings"
 	"time"
+
+	"github.com/ezbuy/ezorm/db"
 )
 
 var (
@@ -17,8 +19,8 @@ var (
 
 // -----------------------------------------------------------------------------
 
-func (m *_UserLocationMgr) queryOne(query string, args ...interface{}) (*UserLocation, error) {
-	ret, err := m.queryLimit(query, 1, args...)
+func (m *_UserLocationMgr) queryOne(ctx context.Context, query string, args ...interface{}) (*UserLocation, error) {
+	ret, err := m.queryLimit(ctx, query, 1, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -28,16 +30,16 @@ func (m *_UserLocationMgr) queryOne(query string, args ...interface{}) (*UserLoc
 	return ret[0], nil
 }
 
-func (m *_UserLocationMgr) query(query string, args ...interface{}) (results []*UserLocation, err error) {
-	return m.queryLimit(query, -1, args...)
+func (m *_UserLocationMgr) query(ctx context.Context, query string, args ...interface{}) (results []*UserLocation, err error) {
+	return m.queryLimit(ctx, query, -1, args...)
 }
 
 func (m *_UserLocationMgr) Query(query string, args ...interface{}) (results []*UserLocation, err error) {
-	return m.queryLimit(query, -1, args...)
+	return m.queryLimit(context.Background(), query, -1, args...)
 }
 
-func (*_UserLocationMgr) queryLimit(query string, limit int, args ...interface{}) (results []*UserLocation, err error) {
-	rows, err := db.MysqlQuery(query, args...)
+func (*_UserLocationMgr) queryLimit(ctx context.Context, query string, limit int, args ...interface{}) (results []*UserLocation, err error) {
+	rows, err := db.MysqlQueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("ezorm.UserLocation query error: %v", err)
 	}

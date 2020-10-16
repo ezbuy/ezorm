@@ -2,11 +2,13 @@ package test
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"fmt"
-	"github.com/ezbuy/ezorm/db"
 	"strings"
 	"time"
+
+	"github.com/ezbuy/ezorm/db"
 )
 
 var (
@@ -17,8 +19,8 @@ var (
 
 // -----------------------------------------------------------------------------
 
-func (m *_SortUserBlogMgr) queryOne(query string, args ...interface{}) (*SortUserBlog, error) {
-	ret, err := m.queryLimit(query, 1, args...)
+func (m *_SortUserBlogMgr) queryOne(ctx context.Context, query string, args ...interface{}) (*SortUserBlog, error) {
+	ret, err := m.queryLimit(ctx, query, 1, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -28,16 +30,16 @@ func (m *_SortUserBlogMgr) queryOne(query string, args ...interface{}) (*SortUse
 	return ret[0], nil
 }
 
-func (m *_SortUserBlogMgr) query(query string, args ...interface{}) (results []*SortUserBlog, err error) {
-	return m.queryLimit(query, -1, args...)
+func (m *_SortUserBlogMgr) query(ctx context.Context, query string, args ...interface{}) (results []*SortUserBlog, err error) {
+	return m.queryLimit(ctx, query, -1, args...)
 }
 
 func (m *_SortUserBlogMgr) Query(query string, args ...interface{}) (results []*SortUserBlog, err error) {
-	return m.queryLimit(query, -1, args...)
+	return m.queryLimit(context.Background(), query, -1, args...)
 }
 
-func (*_SortUserBlogMgr) queryLimit(query string, limit int, args ...interface{}) (results []*SortUserBlog, err error) {
-	rows, err := db.MysqlQuery(query, args...)
+func (*_SortUserBlogMgr) queryLimit(ctx context.Context, query string, limit int, args ...interface{}) (results []*SortUserBlog, err error) {
+	rows, err := db.MysqlQueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("ezorm.SortUserBlog query error: %v", err)
 	}
