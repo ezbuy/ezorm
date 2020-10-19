@@ -10,7 +10,7 @@ import (
 
 func TestPeople(t *testing.T) {
 	db.MysqlInit(&db.MysqlConfig{
-		DataSource: "tcp(localhost:3306)/",
+		DataSource: "root@tcp(localhost:3306)/",
 	})
 
 	ret, err := BlogMgr.Del("1 = 1")

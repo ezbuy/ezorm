@@ -35,7 +35,11 @@ func (m *_UserLocationMgr) query(ctx context.Context, query string, args ...inte
 }
 
 func (m *_UserLocationMgr) Query(query string, args ...interface{}) (results []*UserLocation, err error) {
-	return m.queryLimit(context.Background(), query, -1, args...)
+	return m.QueryContext(context.Background(), query, args...)
+}
+
+func (m *_UserLocationMgr) QueryContext(ctx context.Context, query string, args ...interface{}) (results []*UserLocation, err error) {
+	return m.queryLimit(ctx, query, -1, args...)
 }
 
 func (*_UserLocationMgr) queryLimit(ctx context.Context, query string, limit int, args ...interface{}) (results []*UserLocation, err error) {

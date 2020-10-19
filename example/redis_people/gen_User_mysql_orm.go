@@ -35,7 +35,11 @@ func (m *_UserMgr) query(ctx context.Context, query string, args ...interface{})
 }
 
 func (m *_UserMgr) Query(query string, args ...interface{}) (results []*User, err error) {
-	return m.queryLimit(context.Background(), query, -1, args...)
+	return m.QueryContext(context.Background(), query, args...)
+}
+
+func (m *_UserMgr) QueryContext(ctx context.Context, query string, args ...interface{}) (results []*User, err error) {
+	return m.queryLimit(ctx, query, -1, args...)
 }
 
 func (*_UserMgr) queryLimit(ctx context.Context, query string, limit int, args ...interface{}) (results []*User, err error) {
