@@ -11,6 +11,10 @@ import (
 )
 
 func TestMain(m *testing.M) {
+	db.MysqlInit(&db.MysqlConfig{
+		DataSource: "root@tcp(localhost:3306)/",
+	})
+
 	// initialize mysql database environment for running test below
 	table, err := ioutil.ReadFile("people.sql")
 	if err != nil {
@@ -27,9 +31,6 @@ func TestMain(m *testing.M) {
 }
 
 func TestPeople(t *testing.T) {
-	db.MysqlInit(&db.MysqlConfig{
-		DataSource: "root@tcp(localhost:3306)/",
-	})
 
 	ret, err := BlogMgr.Del("1 = 1")
 	if err != nil {
