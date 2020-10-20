@@ -14,6 +14,7 @@ jobs:
           ACCEPT_EULA: Y
           SA_PASSWORD: ezbuy@ezbuyIsTheBest2019
       - image: circleci/mongo:latest
+      - image: circleci/mysql:latest
     branch:
     working_directory: /go/src/github.com/ezbuy/ezorm
     steps:
@@ -39,4 +40,9 @@ jobs:
          command: |
            ezorm gen -i ./example/blog/blog.yaml -o example/blog -p blog --goPackage test
            go test -v ./example/blog/...
+      - run:
+          name: mysql
+          command: |
+            ezorm gen -i ./example/mysql_people/people.yaml -o ./example/mysql_people -p people --goPackage test
+            go test -v ./example/mysql_people/...
 
