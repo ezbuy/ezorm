@@ -2,11 +2,29 @@ package test
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/ezbuy/ezorm/db"
 )
+
+func TestMain(m *testing.M) {
+	// initialize mysql database environment for running test below
+	table, err := ioutil.ReadFile("people.sql")
+	if err != nil {
+		panic(fmt.Errorf("failed to read people table script: %s", err))
+	}
+	if _, err := db.MysqlExec("CREATE DATABASE test"); err != nil {
+		panic(fmt.Errorf("failed to create database: %s", err))
+	}
+	if _, err := db.MysqlExec(string(table)); err != nil {
+		panic(fmt.Errorf("failed to create table: %s", err))
+	}
+
+	os.Exit(m.Run())
+}
 
 func TestPeople(t *testing.T) {
 	db.MysqlInit(&db.MysqlConfig{
