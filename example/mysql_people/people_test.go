@@ -12,7 +12,7 @@ import (
 
 func TestMain(m *testing.M) {
 	db.MysqlInit(&db.MysqlConfig{
-		DataSource: "root@tcp(localhost:3306)/",
+		DataSource: "root@tcp(localhost:3306)/?multiStatements=true",
 	})
 
 	// initialize mysql database environment for running test below
@@ -20,7 +20,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(fmt.Errorf("failed to read people table script: %s", err))
 	}
-	if _, err := db.MysqlExec("CREATE DATABASE test"); err != nil {
+	if _, err := db.MysqlExec("CREATE DATABASE IF NOT EXISTS test"); err != nil {
 		panic(fmt.Errorf("failed to create database: %s", err))
 	}
 	if _, err := db.MysqlExec(string(table)); err != nil {
@@ -65,6 +65,8 @@ func TestPeople(t *testing.T) {
 			Slug:        "blog-title-2",
 			User:        2,
 			IsPublished: false,
+			Create:      now,
+			Update:      now,
 		}
 		if _, err := BlogMgr.Save(blog2); err != nil {
 			t.Fatal(err)
@@ -78,6 +80,8 @@ func TestPeople(t *testing.T) {
 			Slug:        "blog-title-3",
 			User:        1,
 			IsPublished: true,
+			Create:      now,
+			Update:      now,
 		}
 		if _, err := BlogMgr.Save(blog3); err != nil {
 			t.Fatal(err)

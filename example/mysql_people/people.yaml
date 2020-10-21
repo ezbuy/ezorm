@@ -1,5 +1,7 @@
 Blog:
   db: mysql
+  dbname: test
+  table: blog
   fields:
     - BlogId: int32
       flags: [noinc]
@@ -20,16 +22,13 @@ Blog:
       flags: [index]
   indexes: [[User, IsPublished]]
 
-  table: Blog
-  dbname: Test
-
 User:
   db: mysql
+  table: test_user
+  dbname: test
   fields:
     - UserId: int32
     - UserNumber: int32
       flags: [unique]
     - Name: string
       flags: [index]
-  table: test_user
-  dbname: test

@@ -14,7 +14,7 @@ jobs:
           ACCEPT_EULA: Y
           SA_PASSWORD: ezbuy@ezbuyIsTheBest2019
       - image: circleci/mongo:latest
-      - image: circleci/mysql:latest
+      - image: circleci/mysql:5.7
     branch:
     working_directory: /go/src/github.com/ezbuy/ezorm
     steps:
