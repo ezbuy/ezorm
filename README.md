@@ -1,5 +1,7 @@
 # ezorm
 
+[![ezbuy](https://circleci.com/gh/ezbuy/ezorm.svg?style=svg)](https://app.circleci.com/pipelines/github/ezbuy/ezorm)
+
 ezorm is an code-generation based ORM lib for golang, supporting mongodb/sql server/mysql/redis.
 
 data model is defined with YAML file like:
