@@ -2,16 +2,35 @@ package test
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/ezbuy/ezorm/db"
 )
 
-func TestPeople(t *testing.T) {
+func TestMain(m *testing.M) {
 	db.MysqlInit(&db.MysqlConfig{
-		DataSource: "tcp(localhost:3306)/",
+		DataSource: "root@tcp(localhost:3306)/?multiStatements=true",
 	})
+
+	// initialize mysql database environment for running test below
+	table, err := ioutil.ReadFile("people.sql")
+	if err != nil {
+		panic(fmt.Errorf("failed to read people table script: %s", err))
+	}
+	if _, err := db.MysqlExec("CREATE DATABASE IF NOT EXISTS test"); err != nil {
+		panic(fmt.Errorf("failed to create database: %s", err))
+	}
+	if _, err := db.MysqlExec(string(table)); err != nil {
+		panic(fmt.Errorf("failed to create table: %s", err))
+	}
+
+	os.Exit(m.Run())
+}
+
+func TestPeople(t *testing.T) {
 
 	ret, err := BlogMgr.Del("1 = 1")
 	if err != nil {
@@ -46,6 +65,8 @@ func TestPeople(t *testing.T) {
 			Slug:        "blog-title-2",
 			User:        2,
 			IsPublished: false,
+			Create:      now,
+			Update:      now,
 		}
 		if _, err := BlogMgr.Save(blog2); err != nil {
 			t.Fatal(err)
@@ -59,6 +80,8 @@ func TestPeople(t *testing.T) {
 			Slug:        "blog-title-3",
 			User:        1,
 			IsPublished: true,
+			Create:      now,
+			Update:      now,
 		}
 		if _, err := BlogMgr.Save(blog3); err != nil {
 			t.Fatal(err)

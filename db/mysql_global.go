@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"sync"
 )
@@ -33,6 +34,10 @@ func GetMysql() *Mysql {
 
 func MysqlQuery(query string, args ...interface{}) (*sql.Rows, error) {
 	return getMysqlInstance().Query(query, args...)
+}
+
+func MysqlQueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+	return getMysqlInstance().QueryContext(ctx, query, args...)
 }
 
 func MysqlExec(query string, args ...interface{}) (sql.Result, error) {

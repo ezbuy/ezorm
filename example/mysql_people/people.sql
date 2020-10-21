@@ -1,23 +1,26 @@
-CREATE TABLE test.Blog
-(
-    blog_id INT(11) PRIMARY KEY NOT NULL AUTO_INCREMENT,
-    title VARCHAR(1000),
-    hits INT(11),
-    slug VARCHAR(20),
-    body TEXT,
-    user INT(11),
-    is_published TINYINT(1),
-    `create` TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    `update` DATETIME,
-    column_10 TIMESTAMP,
-    time_stamp BIGINT(20)
-);
-CREATE UNIQUE INDEX Blog_Slug_uindex ON test.Blog (slug);
+USE `test`;
 
-CREATE TABLE test.test_user
-(
-    user_id INT(11) PRIMARY KEY NOT NULL AUTO_INCREMENT,
-    name VARCHAR(100),
-    user_number INT(11)
-);
-CREATE UNIQUE INDEX test_user_user_number_uindex ON test.test_user (user_number);
+CREATE TABLE IF NOT EXISTS `blog` (
+  `blog_id` int NOT NULL AUTO_INCREMENT,
+  `title` varchar(1000) COLLATE utf8mb4_bin DEFAULT NULL,
+  `hits` int DEFAULT NULL,
+  `slug` varchar(20) COLLATE utf8mb4_bin DEFAULT NULL,
+  `body` text COLLATE utf8mb4_bin,
+  `user` int DEFAULT NULL,
+  `is_published` tinyint(1) DEFAULT NULL,
+  `create` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `update` datetime DEFAULT NULL,
+  `column_10` timestamp NULL DEFAULT NULL,
+  `time_stamp` bigint DEFAULT NULL,
+  PRIMARY KEY (`blog_id`),
+  UNIQUE KEY `Blog_Slug_uindex` (`slug`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+CREATE TABLE IF NOT EXISTS `test_user` (
+  `user_id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) COLLATE utf8mb4_bin DEFAULT NULL,
+  `user_number` int DEFAULT NULL,
+  PRIMARY KEY (`user_id`),
+  UNIQUE KEY `test_user_user_number_uindex` (`user_number`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
