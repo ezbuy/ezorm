@@ -21,6 +21,7 @@ Blog:
   comment: blog
 
 Category:
+  package: "cate"
   fields:
     - Cid: int64
     - Name: string

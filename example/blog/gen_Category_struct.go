@@ -12,7 +12,7 @@ type Category struct {
 const ()
 
 func (p *Category) GetNameSpace() string {
-	return "blog"
+	return "cate"
 }
 
 func (p *Category) GetClassName() string {
