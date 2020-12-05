@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/ezbuy/statsd"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -18,6 +19,8 @@ var instanceOnce sync.Once
 var instancesIndex uint32
 
 const mgoMaxSessions = 8
+
+var monitorInterval = 10 * time.Second
 
 type M bson.M
 
@@ -149,6 +152,30 @@ func MustNewMgoSessions(config *MongoConfig) []*mgo.Session {
 	}
 
 	return sessions
+}
+
+// MustSetupMgoMonitor set up mongo connection pool monitor metrics
+func MustSetupMgoMonitor(srv string) {
+	if srv == "" {
+		panic("ezorm: srv name must set at app layer")
+	}
+	mgo.SetStats(true)
+	go func() {
+		for {
+			monitorMongoStats(srv)
+			time.Sleep(monitorInterval)
+		}
+	}()
+}
+
+func monitorMongoStats(srv string) {
+	st := mgo.GetStats()
+	statsd.Gauge("infra.db.mongo."+srv+".clusterNode", int64(st.Clusters))
+	statsd.Gauge("infra.db.mongo."+srv+"masterConn", int64(st.MasterConns))
+	statsd.Gauge("infra.db.mongo."+srv+"slaveConn", int64(st.SlaveConns))
+	statsd.Gauge("infra.db.mongo."+srv+"socketRefs", int64(st.SocketRefs))
+	statsd.Gauge("infra.db.mongo."+srv+"socketAlive", int64(st.SocketsAlive))
+	statsd.Gauge("infra.db.mongo."+srv+"socketInUse", int64(st.SocketsInUse))
 }
 
 func InID(ids []string) (ret M) {

@@ -3,10 +3,13 @@ module github.com/ezbuy/ezorm
 require (
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 	github.com/denisenkom/go-mssqldb v0.0.0-20191001013358-cfbb681360f0
+	github.com/ezbuy/statsd v0.0.0-20190521031639-ae237584062d
 	github.com/ezbuy/utils v0.0.0-20170609090716-8ac4beef008f
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/jteeuwen/go-bindata v3.0.8-0.20180305030458-6025e8de665b+incompatible // indirect
+	github.com/onsi/ginkgo v1.12.0 // indirect
+	github.com/onsi/gomega v1.9.0 // indirect
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.5.0
