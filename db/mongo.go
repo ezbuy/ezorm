@@ -67,7 +67,6 @@ func ShareSession() *mgo.Session {
 	doInit := false
 	instanceOnce.Do(func() {
 		instances = MustNewMgoSessions(config)
-		SetupIdleSessionRefresher(config, instances, 3*time.Minute)
 	})
 
 	if doInit {
