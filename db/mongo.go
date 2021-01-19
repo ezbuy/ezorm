@@ -30,6 +30,10 @@ func (m M) Update(qs ...M) M {
 	return m
 }
 
+func (m M) Apply(ms ...M) M {
+	return m.Update(ms...)
+}
+
 var ErrInitResource = errors.New("ezorm/db: failed to initial mongo resource")
 var ErrOperaBeforeInit = errors.New("please set db.SetOnFinishInit when needed operating db in init()")
 

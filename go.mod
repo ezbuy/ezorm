@@ -3,21 +3,28 @@ module github.com/ezbuy/ezorm/v2
 go 1.18
 
 require (
-	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
-	github.com/denisenkom/go-mssqldb v0.10.0
 	github.com/ezbuy/utils v0.0.0-20170609090716-8ac4beef008f
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/iancoleman/strcase v0.2.0
-	github.com/jmoiron/sqlx v1.3.1
-	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pingcap/parser v0.0.0-20200623164729-3a18f1e5dceb
 	github.com/pingcap/tidb v1.1.0-beta.0.20200630082100-328b6d0a955c
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/viper v1.10.1
 	github.com/stretchr/testify v1.7.1
+	go.mongodb.org/mongo-driver v1.4.4
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
-	gopkg.in/redis.v5 v5.2.9
 	gopkg.in/yaml.v2 v2.4.0
+)
+
+require (
+	github.com/go-stack/stack v1.8.0 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/klauspost/compress v1.9.5 // indirect
+	github.com/opentracing/opentracing-go v1.2.0 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c // indirect
+	github.com/xdg/stringprep v0.0.0-20180714160509-73f8eece6fdc // indirect
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 )
 
 require (
@@ -32,7 +39,6 @@ require (
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
-	github.com/golang-sql/civil v0.0.0-20190719163853-cb61b32ac6fe // indirect
 	github.com/golang/glog v0.0.0-20210429001901-424d2337a529 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
@@ -45,13 +51,9 @@ require (
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/klauspost/cpuid v1.2.1 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
-	github.com/kr/text v0.2.0 // indirect
-	github.com/lib/pq v1.10.2 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
-	github.com/onsi/ginkgo v1.16.4 // indirect
-	github.com/onsi/gomega v1.13.0 // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/pingcap/errors v0.11.5-0.20190809092503-95897b64e011 // indirect
 	github.com/pingcap/log v0.0.0-20200511115504-543df19646ad // indirect
