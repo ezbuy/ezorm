@@ -5,19 +5,26 @@ import (
 	"errors"
 	"fmt"
 
+	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-func NewMongoDriver(ctx context.Context) (*MongoDriver, error) {
+func NewMongoDriver(ctx context.Context, opts ...MongoDriverOption) (*MongoDriver, error) {
 	if config == nil {
 		return nil, errors.New("db: initialize config before new mongo driver")
 	}
-	cli, err := mongo.NewClient(options.Client().ApplyURI(config.MongoDB).
-		SetMaxPoolSize(uint64(config.PoolLimit)))
+
+	cliOpts := options.Client().ApplyURI(config.MongoDB).
+		SetMaxPoolSize(uint64(config.PoolLimit))
+	for _, opt := range opts {
+		opt(cliOpts)
+	}
+
+	cli, err := mongo.NewClient(cliOpts)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to mongodb server: %w", err)
+		return nil, fmt.Errorf("failed to create mongodb client: %w", err)
 	}
 
 	if err = cli.Connect(ctx); err != nil {
@@ -29,6 +36,14 @@ func NewMongoDriver(ctx context.Context) (*MongoDriver, error) {
 	}
 
 	return &MongoDriver{cli: cli}, nil
+}
+
+type MongoDriverOption func(*options.ClientOptions)
+
+func WithPoolMonitor(m *event.PoolMonitor) MongoDriverOption {
+	return func(opt *options.ClientOptions) {
+		opt.SetPoolMonitor(m)
+	}
 }
 
 type MongoDriver struct {
