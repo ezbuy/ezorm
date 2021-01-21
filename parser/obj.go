@@ -44,6 +44,8 @@ func init() {
 		"tpl/redis_config.gogo",
 		"tpl/redis_orm.gogo",
 		"tpl/mongo_config.gogo",
+		"tpl/mongodriver_config.gogo",
+		"tpl/mongodriver_orm.gogo",
 	}
 	for _, fname := range files {
 		data, err := tpl.Asset(fname)
@@ -234,6 +236,9 @@ func (o *Obj) GetGenTypes() []string {
 		case "mongo":
 			gens["struct"] = true
 			gens["mongo_orm"] = true
+		case "mongodriver":
+			gens["struct"] = true
+			gens["mongodriver_orm"] = true
 		case "enum":
 			gens["enum"] = true
 		case "mssql":
@@ -252,7 +257,7 @@ func (o *Obj) GetGenTypes() []string {
 		gens["struct"] = true
 	}
 
-	result := []string{}
+	result := make([]string, 0, len(gens))
 	for k := range gens {
 		result = append(result, k)
 	}
@@ -274,6 +279,9 @@ func (o *Obj) GetConfigTemplates() []string {
 
 		case "mongo":
 			tpls = append(tpls, "mongo_config")
+
+		case "mongodriver":
+			tpls = append(tpls, "mongodriver_config")
 		}
 	}
 	return tpls
@@ -464,7 +472,7 @@ func (o *Obj) Read(data map[string]interface{}) error {
 			fieldData := val.([]interface{})
 			startPos := 0
 
-			if o.Db == "mongo" {
+			if o.Db == "mongo" || o.Db == "mongodriver" {
 				o.Fields = make([]*Field, len(fieldData)+1)
 				f := new(Field)
 				f.init()

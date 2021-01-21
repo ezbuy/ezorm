@@ -169,6 +169,9 @@ func (f *Field) GetTag() string {
 			tags["db"] = false
 		case "mssql":
 			tags["db"] = true
+		case "mongodriver":
+			tags["bson"] = true
+			tags["json"] = true
 		}
 	}
 	if len(tags) == 0 {
