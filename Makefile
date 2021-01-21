@@ -9,9 +9,11 @@ gene2e:
 
 test: build gene2e testmongo testmysql
 
+.PHONY: testmongo
 testmongo:
 	go test -v ./e2e/mongo/blog/...
 
+.PHONY: testmysql
 testmysql:
 	go test -v ./e2e/mysql/...
 

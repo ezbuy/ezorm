@@ -3,6 +3,9 @@
 {{if eq .Db "mongo"}}
 import "gopkg.in/mgo.v2/bson"
 {{end}}
+{{if eq .Db "mongodriver"}}
+import "go.mongodb.org/mongo-driver/bson/primitive"
+{{end}}
 import "time"
 
 var _ time.Time
@@ -14,6 +17,8 @@ type {{.Name}} struct {
 	{{- range $field := .Fields}}
 		{{- if and ($obj.DbContains "mongo") (eq $field.Name "ID")}}
 		ID         bson.ObjectId `json:"id" bson:"_id,omitempty"`
+		{{- else if and ($obj.DbContains "mongodriver") (eq $field.Name "ID")}}
+		ID         primitive.ObjectId `json:"id" bson:"_id,omitempty"`
 		{{- else}}
         {{- if (ne $field.Comment "")}}
 
@@ -22,14 +27,14 @@ type {{.Name}} struct {
 		{{$field.Name}}  {{$field.GetGoType}} {{$field.GetTag}}
 		{{- end -}}
 	{{- end}}
-	{{- if or ($obj.DbContains "mysql") ($obj.DbContains "mongo")}}
+	{{- if or ($obj.DbContains "mysql") ($obj.DbContains "mongo") ($obj.DbContains "mongodriver")}}
 		isNew bool
 	{{- end}}
 }
 
 const (
     {{- range $field := .Fields}}
-        {{- if or ($obj.DbContains "mongo") ($field.AttrsContains "bsonTag")}}
+        {{- if or ($obj.DbContains "mongo") ($obj.DbContains "mongodriver") ($field.AttrsContains "bsonTag")}}
             {{$obj.Name}}MgoField{{$field.Name}} = "{{$field.BsonTagName}}"
         {{- end}}
         {{- if ($obj.DbContains "mysql")}}
@@ -38,7 +43,7 @@ const (
     {{- end}}
 )
 
-{{- if ($obj.DbContains "mongo") }}
+{{- if or ($obj.DbContains "mongo") ($obj.DbContains "mongodriver")}}
 const (
     {{- range $field := .Fields}}
         {{- if ($field.AsSort)}}
@@ -71,6 +76,11 @@ func (m *_{{.Name}}Mgr) New{{.Name}}() *{{.Name}} {
 {{- if ($obj.DbContains "mongo")}}
 	rval.isNew = true
 	rval.ID = bson.NewObjectId()
+{{end -}}
+
+{{- if ($obj.DbContains "mongodriver")}}
+	rval.isNew = true
+	rval.ID = primitive.NewObjectId()
 {{end -}}
 
 {{- range $field := .Fields}}
