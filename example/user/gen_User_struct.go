@@ -8,7 +8,7 @@ var _ time.Time
 
 // User all registered user use our systems
 type User struct {
-	ID primitive.ObjectId `json:"id" bson:"_id,omitempty"`
+	ID primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 
 	// the identity of each user
 	UserId uint64 `bson:"uid" json:"uid"`
@@ -53,7 +53,7 @@ func Get_UserMgr() *_UserMgr { return UserMgr }
 func (m *_UserMgr) NewUser() *User {
 	rval := new(User)
 	rval.isNew = true
-	rval.ID = primitive.NewObjectId()
+	rval.ID = primitive.NewObjectID()
 
 	return rval
 }
