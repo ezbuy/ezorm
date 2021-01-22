@@ -147,10 +147,13 @@ func (o *{{$field.Foreign}}) Find{{$obj.Name}}(limit, offset int, sortFields ...
 
 func (o *_{{.Name}}Mgr) FindOne(query interface{}, sortFields ...string) (result *{{$obj.Name}}, err error) {
     col := o.GetCol()
+    opts := options.FindOne()
 
-	sfs := make([]string, 0, len(sortFields))
-	sfs = append(sfs, sortFields...)
-    opts := options.FindOne().SetSort(sfs)
+    if len(sortFields) > 0 {
+	    sfs := make([]string, 0, len(sortFields))
+	    sfs = append(sfs, sortFields...)
+        opts.SetSort(sfs)
+    }
 
     ret := col.FindOne(context.TODO(), query, opts)
     if err = ret.Err(); err != nil {
@@ -164,8 +167,11 @@ func (o *_{{.Name}}Mgr) Query(query interface{}, limit, offset int, sortFields [
     col := o.GetCol()
     opts := options.Find().
         SetLimit(int64(limit)).
-        SetSkip(int64(offset)).
-        SetSort(sortFields)
+        SetSkip(int64(offset))
+
+    if len(sortFields) > 0 {
+        opts.SetSort(sortFields)
+    }
 
     return col.Find(context.TODO(), query, opts)
 }
