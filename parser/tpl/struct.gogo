@@ -18,7 +18,7 @@ type {{.Name}} struct {
 		{{- if and ($obj.DbContains "mongo") (eq $field.Name "ID")}}
 		ID         bson.ObjectId `json:"id" bson:"_id,omitempty"`
 		{{- else if and ($obj.DbContains "mongodriver") (eq $field.Name "ID")}}
-		ID         primitive.ObjectId `json:"id" bson:"_id,omitempty"`
+		ID         primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 		{{- else}}
         {{- if (ne $field.Comment "")}}
 
@@ -80,7 +80,7 @@ func (m *_{{.Name}}Mgr) New{{.Name}}() *{{.Name}} {
 
 {{- if ($obj.DbContains "mongodriver")}}
 	rval.isNew = true
-	rval.ID = primitive.NewObjectId()
+	rval.ID = primitive.NewObjectID()
 {{end -}}
 
 {{- range $field := .Fields}}
