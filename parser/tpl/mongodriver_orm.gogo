@@ -316,7 +316,7 @@ func (o *_{{.Name}}Mgr) RemoveByID(id string) (err error) {
 }
 
 func (m *_{{.Name}}Mgr) GetCol() *mongo.Collection {
-    return Col("{{.Table}}")
+    return Col({{if eq .Table ""}}"{{.Package}}.{{.Name}}"{{else}}"{{.Table}}"{{end}})
 }
 
 {{end}}
