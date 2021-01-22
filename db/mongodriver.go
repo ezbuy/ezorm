@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -16,8 +17,12 @@ func NewMongoDriver(ctx context.Context, opts ...MongoDriverOption) (*MongoDrive
 		return nil, errors.New("db: initialize config before new mongo driver")
 	}
 
-	cliOpts := options.Client().ApplyURI(config.MongoDB).
-		SetMaxPoolSize(uint64(config.PoolLimit))
+	uri := config.MongoDB
+	if !strings.HasPrefix("mongodb", uri) {
+		uri = "mongodb://" + config.MongoDB
+	}
+
+	cliOpts := options.Client().ApplyURI(uri).SetMaxPoolSize(uint64(config.PoolLimit))
 	for _, opt := range opts {
 		opt(cliOpts)
 	}
