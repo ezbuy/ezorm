@@ -6,9 +6,10 @@ import (
     "context"
 
     "github.com/ezbuy/ezorm/orm"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func init() {
@@ -145,7 +146,7 @@ func (o *{{$field.Foreign}}) Find{{$obj.Name}}(limit, offset int, sortFields ...
 // =====================================
 
 func (o *_{{.Name}}Mgr) FindOne(query interface{}, sortFields ...string) (result *{{$obj.Name}}, err error) {
-    col := {{.Name}}Mgr.GetCol()
+    col := o.GetCol()
 
 	sfs := make([]string, 0, len(sortFields))
 	sfs = append(sfs, sortFields...)
@@ -160,7 +161,7 @@ func (o *_{{.Name}}Mgr) FindOne(query interface{}, sortFields ...string) (result
 }
 
 func (o *_{{.Name}}Mgr) Query(query interface{}, limit, offset int, sortFields []string) (*mongo.Cursor, error) {
-    col := {{.Name}}Mgr.GetCol()
+    col := o.GetCol()
     opts := options.Find().
         SetLimit(int64(limit)).
         SetSkip(int64(offset)).
@@ -178,7 +179,7 @@ func (o *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (r
 		"{{$field.Name}}": {{$field.Name}},
 		{{- end}}
 	}
-    return o.FindOne(query, nil)
+    return o.FindOne(query)
 }
 
 // MustFindOneBy{{$index.Name}} only use it when you should not trust the query result
@@ -195,7 +196,7 @@ func (o *_{{$obj.Name}}Mgr) MustFindOneBy{{$index.Name}}({{$index.GetFuncParam}}
 }
 
 func (o *_{{$obj.Name}}Mgr) RemoveBy{{$index.Name}}({{$index.GetFuncParam}}) (err error) {
-    col := {{.Name}}Mgr.GetCol()
+    col := o.GetCol()
 
 	query := bson.M{
 		{{- range $field := $index.Fields}}
@@ -257,7 +258,7 @@ func (o *_{{.Name}}Mgr) Count(query interface{}) int {
 }
 
 func (o *_{{.Name}}Mgr) CountE(query interface{}) (int, error) {
-    col := {{.Name}}Mgr.GetCol()
+    col := o.GetCol()
     count, err := col.CountDocuments(context.TODO(), query)
     return int(count), err
 }
@@ -272,13 +273,13 @@ func (o *_{{.Name}}Mgr) FindByIDs(id []string, sortFields ...string) (result []*
     return o.FindAll(bson.M{"_id": bson.M{"$in": ids}}, sortFields...)
 }
 
-func (m *_{{.Name}}Mgr) FindByID(id string) (result *{{$obj.Name}}, err error) {
+func (o *_{{.Name}}Mgr) FindByID(id string) (result *{{$obj.Name}}, err error) {
     oid, err := primitive.ObjectIDFromHex(id)
     if err != nil {
         return nil, mongo.ErrNoDocuments
     }
 
-    col := {{.Name}}Mgr.GetCol()
+    col := o.GetCol()
     ret := col.FindOne(context.TODO(), bson.M{"_id": oid})
     if err = ret.Err(); err != nil {
         return nil, err
@@ -287,8 +288,8 @@ func (m *_{{.Name}}Mgr) FindByID(id string) (result *{{$obj.Name}}, err error) {
     return
 }
 
-func (m *_{{.Name}}Mgr) RemoveAll(query interface{}) (int64, error) {
-    col := {{.Name}}Mgr.GetCol()
+func (o *_{{.Name}}Mgr) RemoveAll(query interface{}) (int64, error) {
+    col := o.GetCol()
 
     ret, err := col.DeleteMany(context.TODO(), query)
     if err != nil {
@@ -297,13 +298,13 @@ func (m *_{{.Name}}Mgr) RemoveAll(query interface{}) (int64, error) {
     return ret.DeletedCount, nil
 }
 
-func (m *_{{.Name}}Mgr) RemoveByID(id string) (err error) {
+func (o *_{{.Name}}Mgr) RemoveByID(id string) (err error) {
     oid, err := primitive.ObjectIDFromHex(id)
     if err != nil {
         return mongo.ErrNoDocuments
     }
 
-    col := {{.Name}}Mgr.GetCol()
+    col := o.GetCol()
     _, err = col.DeleteOne(context.TODO(), bson.M{"_id": oid})
     return err
 }

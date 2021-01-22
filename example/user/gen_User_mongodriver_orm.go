@@ -99,7 +99,7 @@ func UserUpdateCallback(o *User) {
 // =====================================
 
 func (o *_UserMgr) FindOne(query interface{}, sortFields ...string) (result *User, err error) {
-	col := UserMgr.GetCol()
+	col := o.GetCol()
 
 	sfs := make([]string, 0, len(sortFields))
 	sfs = append(sfs, sortFields...)
@@ -114,7 +114,7 @@ func (o *_UserMgr) FindOne(query interface{}, sortFields ...string) (result *Use
 }
 
 func (o *_UserMgr) Query(query interface{}, limit, offset int, sortFields []string) (*mongo.Cursor, error) {
-	col := UserMgr.GetCol()
+	col := o.GetCol()
 	opts := options.Find().
 		SetLimit(int64(limit)).
 		SetSkip(int64(offset)).
@@ -192,7 +192,7 @@ func (o *_UserMgr) Count(query interface{}) int {
 }
 
 func (o *_UserMgr) CountE(query interface{}) (int, error) {
-	col := UserMgr.GetCol()
+	col := o.GetCol()
 	count, err := col.CountDocuments(context.TODO(), query)
 	return int(count), err
 }
@@ -207,13 +207,13 @@ func (o *_UserMgr) FindByIDs(id []string, sortFields ...string) (result []*User,
 	return o.FindAll(bson.M{"_id": bson.M{"$in": ids}}, sortFields...)
 }
 
-func (m *_UserMgr) FindByID(id string) (result *User, err error) {
+func (o *_UserMgr) FindByID(id string) (result *User, err error) {
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, mongo.ErrNoDocuments
 	}
 
-	col := UserMgr.GetCol()
+	col := o.GetCol()
 	ret := col.FindOne(context.TODO(), bson.M{"_id": oid})
 	if err = ret.Err(); err != nil {
 		return nil, err
@@ -222,8 +222,8 @@ func (m *_UserMgr) FindByID(id string) (result *User, err error) {
 	return
 }
 
-func (m *_UserMgr) RemoveAll(query interface{}) (int64, error) {
-	col := UserMgr.GetCol()
+func (o *_UserMgr) RemoveAll(query interface{}) (int64, error) {
+	col := o.GetCol()
 
 	ret, err := col.DeleteMany(context.TODO(), query)
 	if err != nil {
@@ -232,13 +232,13 @@ func (m *_UserMgr) RemoveAll(query interface{}) (int64, error) {
 	return ret.DeletedCount, nil
 }
 
-func (m *_UserMgr) RemoveByID(id string) (err error) {
+func (o *_UserMgr) RemoveByID(id string) (err error) {
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return mongo.ErrNoDocuments
 	}
 
-	col := UserMgr.GetCol()
+	col := o.GetCol()
 	_, err = col.DeleteOne(context.TODO(), bson.M{"_id": oid})
 	return err
 }
