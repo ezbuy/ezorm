@@ -33,7 +33,7 @@ genmongo:
 .PHONY: genmongodriver
 genmongodriver:
 	rm -f example/user/gen_*.go
-	ezorm gen -i example/user/user.yaml -o example/user -p user --goPackage test
+	ezorm gen -i example/user/user.yaml -o example/user -p user --goPackage user
 
 .PHONY: test
 test: genexample testmssql testmongo testmysql
