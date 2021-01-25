@@ -100,10 +100,13 @@ func UserUpdateCallback(o *User) {
 
 func (o *_UserMgr) FindOne(query interface{}, sortFields ...string) (result *User, err error) {
 	col := o.GetCol()
+	opts := options.FindOne()
 
-	sfs := make([]string, 0, len(sortFields))
-	sfs = append(sfs, sortFields...)
-	opts := options.FindOne().SetSort(sfs)
+	if len(sortFields) > 0 {
+		sfs := make([]string, 0, len(sortFields))
+		sfs = append(sfs, sortFields...)
+		opts.SetSort(sfs)
+	}
 
 	ret := col.FindOne(context.TODO(), query, opts)
 	if err = ret.Err(); err != nil {
@@ -115,10 +118,17 @@ func (o *_UserMgr) FindOne(query interface{}, sortFields ...string) (result *Use
 
 func (o *_UserMgr) Query(query interface{}, limit, offset int, sortFields []string) (*mongo.Cursor, error) {
 	col := o.GetCol()
-	opts := options.Find().
-		SetLimit(int64(limit)).
-		SetSkip(int64(offset)).
-		SetSort(sortFields)
+	opts := options.Find()
+
+	if limit > 0 {
+		opts.SetLimit(int64(limit))
+	}
+	if offset > 0 {
+		opts.SetLimit(int64(offset))
+	}
+	if len(sortFields) > 0 {
+		opts.SetSort(sortFields)
+	}
 
 	return col.Find(context.TODO(), query, opts)
 }
