@@ -165,10 +165,14 @@ func (o *_{{.Name}}Mgr) FindOne(query interface{}, sortFields ...string) (result
 
 func (o *_{{.Name}}Mgr) Query(query interface{}, limit, offset int, sortFields []string) (*mongo.Cursor, error) {
     col := o.GetCol()
-    opts := options.Find().
-        SetLimit(int64(limit)).
-        SetSkip(int64(offset))
+    opts := options.Find()
 
+    if limit > 0 {
+        opts.SetLimit(int64(limit))
+    }
+    if offset > 0 {
+        opts.SetLimit(int64(offset))
+    }
     if len(sortFields) > 0 {
         opts.SetSort(sortFields)
     }
