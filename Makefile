@@ -7,6 +7,11 @@ gene2e:
 	bin/ezorm gen -i ./e2e/mongo/blog/blog.yaml -o ./e2e/mongo/blog --goPackage blog
 	bin/ezorm gen -i ./e2e/mysql -o ./e2e/mysql --goPackage mysql
 
+.PHONY: genmongodriver
+genmongodriver:
+	rm -f example/user/gen_*.go
+	ezorm gen -i example/user/user.yaml -o example/user -p user --goPackage user
+
 test: build gene2e testmongo testmysql
 
 .PHONY: testmongo

@@ -9,7 +9,6 @@ import (
 	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 func NewMongoDriver(ctx context.Context, opts ...MongoDriverOption) (*MongoDriver, error) {
@@ -18,9 +17,10 @@ func NewMongoDriver(ctx context.Context, opts ...MongoDriverOption) (*MongoDrive
 	}
 
 	uri := config.MongoDB
-	if !strings.HasPrefix("mongodb", uri) {
+	if !strings.HasPrefix(uri, "mongodb") {
 		uri = "mongodb://" + config.MongoDB
 	}
+	fmt.Println("uri:", uri)
 
 	cliOpts := options.Client().ApplyURI(uri).SetMaxPoolSize(uint64(config.PoolLimit))
 	for _, opt := range opts {
@@ -36,7 +36,7 @@ func NewMongoDriver(ctx context.Context, opts ...MongoDriverOption) (*MongoDrive
 		return nil, fmt.Errorf("failed to connect to mongodb server: %w", err)
 	}
 
-	if err = cli.Ping(ctx, readpref.PrimaryPreferred()); err != nil {
+	if err = cli.Ping(ctx, nil); err != nil {
 		return nil, fmt.Errorf("failed to ping remote mongodb server: %w", err)
 	}
 

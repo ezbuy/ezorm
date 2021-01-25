@@ -1,4 +1,4 @@
-package test
+package user
 
 import (
 	"context"
@@ -43,9 +43,20 @@ func (o *User) Id() string {
 func (o *User) Save() (*mongo.UpdateResult, error) {
 	isNew := o.isNew
 
+	filter := bson.M{"_id": o.ID}
+	update := bson.M{
+		"$set": bson.M{
+			UserMgoFieldID:           o.ID,
+			UserMgoFieldUserId:       o.UserId,
+			UserMgoFieldUsername:     o.Username,
+			UserMgoFieldAge:          o.Age,
+			UserMgoFieldRegisterDate: o.RegisterDate,
+		},
+	}
+
 	opts := options.Update().SetUpsert(true)
 	col := UserMgr.GetCol()
-	ret, err := col.UpdateOne(context.TODO(), bson.M{"_id": o.ID}, o, opts)
+	ret, err := col.UpdateOne(context.TODO(), filter, update, opts)
 	if err != nil {
 		return ret, err
 	}
@@ -60,10 +71,19 @@ func (o *User) Save() (*mongo.UpdateResult, error) {
 }
 
 func (o *User) InsertUnique(query interface{}) (saved bool, err error) {
-	col := UserMgr.GetCol()
+	update := bson.M{
+		"$setOnInsert": bson.M{
+			UserMgoFieldID:           o.ID,
+			UserMgoFieldUserId:       o.UserId,
+			UserMgoFieldUsername:     o.Username,
+			UserMgoFieldAge:          o.Age,
+			UserMgoFieldRegisterDate: o.RegisterDate,
+		},
+	}
 
 	opts := options.Update().SetUpsert(true)
-	ret, err := col.UpdateOne(context.TODO(), query, bson.M{"$setOnInsert": o}, opts)
+	col := UserMgr.GetCol()
+	ret, err := col.UpdateOne(context.TODO(), query, update, opts)
 	if err != nil {
 		return false, err
 	}
@@ -112,7 +132,7 @@ func (o *_UserMgr) FindOne(query interface{}, sortFields ...string) (result *Use
 	if err = ret.Err(); err != nil {
 		return nil, err
 	}
-	err = ret.Decode(result)
+	err = ret.Decode(&result)
 	return
 }
 
@@ -228,13 +248,16 @@ func (o *_UserMgr) FindByID(id string) (result *User, err error) {
 	if err = ret.Err(); err != nil {
 		return nil, err
 	}
-	err = ret.Decode(result)
+	err = ret.Decode(&result)
 	return
 }
 
 func (o *_UserMgr) RemoveAll(query interface{}) (int64, error) {
-	col := o.GetCol()
+	if query == nil {
+		query = bson.M{}
+	}
 
+	col := o.GetCol()
 	ret, err := col.DeleteMany(context.TODO(), query)
 	if err != nil {
 		return 0, err
