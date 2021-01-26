@@ -118,14 +118,12 @@ func UserUpdateCallback(o *User) {
 // COLLECTION
 // =====================================
 
-func (o *_UserMgr) FindOne(query interface{}, sortFields ...string) (result *User, err error) {
+func (o *_UserMgr) FindOne(query interface{}, sortFields interface{}) (result *User, err error) {
 	col := o.GetCol()
 	opts := options.FindOne()
 
-	if len(sortFields) > 0 {
-		sfs := make([]string, 0, len(sortFields))
-		sfs = append(sfs, sortFields...)
-		opts.SetSort(sfs)
+	if sortFields != nil {
+		opts.SetSort(sortFields)
 	}
 
 	ret := col.FindOne(context.TODO(), query, opts)
@@ -136,7 +134,7 @@ func (o *_UserMgr) FindOne(query interface{}, sortFields ...string) (result *Use
 	return
 }
 
-func (o *_UserMgr) Query(query interface{}, limit, offset int, sortFields []string) (*mongo.Cursor, error) {
+func (o *_UserMgr) Query(query interface{}, limit, offset int, sortFields interface{}) (*mongo.Cursor, error) {
 	col := o.GetCol()
 	opts := options.Find()
 
@@ -146,14 +144,14 @@ func (o *_UserMgr) Query(query interface{}, limit, offset int, sortFields []stri
 	if offset > 0 {
 		opts.SetLimit(int64(offset))
 	}
-	if len(sortFields) > 0 {
+	if sortFields != nil {
 		opts.SetSort(sortFields)
 	}
 
 	return col.Find(context.TODO(), query, opts)
 }
 
-func (o *_UserMgr) FindByUsernameAge(Username string, Age int32, limit int, offset int, sortFields ...string) (result []*User, err error) {
+func (o *_UserMgr) FindByUsernameAge(Username string, Age int32, limit int, offset int, sortFields interface{}) (result []*User, err error) {
 	query := bson.M{
 		"Username": Username,
 		"Age":      Age,
@@ -166,7 +164,7 @@ func (o *_UserMgr) FindByUsernameAge(Username string, Age int32, limit int, offs
 	return
 }
 
-func (o *_UserMgr) FindByUsername(Username string, limit int, offset int, sortFields ...string) (result []*User, err error) {
+func (o *_UserMgr) FindByUsername(Username string, limit int, offset int, sortFields interface{}) (result []*User, err error) {
 	query := bson.M{
 		"Username": Username,
 	}
@@ -178,7 +176,7 @@ func (o *_UserMgr) FindByUsername(Username string, limit int, offset int, sortFi
 	return
 }
 
-func (o *_UserMgr) FindByAge(Age int32, limit int, offset int, sortFields ...string) (result []*User, err error) {
+func (o *_UserMgr) FindByAge(Age int32, limit int, offset int, sortFields interface{}) (result []*User, err error) {
 	query := bson.M{
 		"Age": Age,
 	}
@@ -190,7 +188,7 @@ func (o *_UserMgr) FindByAge(Age int32, limit int, offset int, sortFields ...str
 	return
 }
 
-func (o *_UserMgr) Find(query interface{}, limit int, offset int, sortFields ...string) (result []*User, err error) {
+func (o *_UserMgr) Find(query interface{}, limit int, offset int, sortFields interface{}) (result []*User, err error) {
 	cursor, err := UserMgr.Query(query, limit, offset, sortFields)
 	if err != nil {
 		return nil, err
@@ -199,7 +197,7 @@ func (o *_UserMgr) Find(query interface{}, limit int, offset int, sortFields ...
 	return
 }
 
-func (o *_UserMgr) FindAll(query interface{}, sortFields ...string) (result []*User, err error) {
+func (o *_UserMgr) FindAll(query interface{}, sortFields interface{}) (result []*User, err error) {
 	cursor, err := UserMgr.Query(query, -1, -1, sortFields)
 	if err != nil {
 		return nil, err
@@ -227,14 +225,14 @@ func (o *_UserMgr) CountE(query interface{}) (int, error) {
 	return int(count), err
 }
 
-func (o *_UserMgr) FindByIDs(id []string, sortFields ...string) (result []*User, err error) {
+func (o *_UserMgr) FindByIDs(id []string, sortFields interface{}) (result []*User, err error) {
 	ids := make([]primitive.ObjectID, 0, len(id))
 	for _, i := range id {
 		if oid, err := primitive.ObjectIDFromHex(i); err == nil {
 			ids = append(ids, oid)
 		}
 	}
-	return o.FindAll(bson.M{"_id": bson.M{"$in": ids}}, sortFields...)
+	return o.FindAll(bson.M{"_id": bson.M{"$in": ids}}, sortFields)
 }
 
 func (o *_UserMgr) FindByID(id string) (result *User, err error) {
