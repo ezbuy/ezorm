@@ -43,7 +43,7 @@ const (
     {{- end}}
 )
 
-{{- if or ($obj.DbContains "mongo") ($obj.DbContains "mongodriver")}}
+{{- if ($obj.DbContains "mongo") }}
 const (
     {{- range $field := .Fields}}
         {{- if ($field.AsSort)}}
@@ -52,8 +52,20 @@ const (
         {{- end}}
     {{- end}}
 )
-{{- end}}
+{{- else if ($obj.DbContains "mongodriver")}}
+// {{$obj.Name}}MgoSortField_WRP is a wrapper of {{$obj.Name}} sort fields e.g.:
+// {{$obj.Name}}MgoSortField_WRP{{`{`}}{{$obj.Name}}MgoSortField_X_Asc, {{$obj.Name}}MgoSortField_Y_DESC{{`}`}}
+type {{$obj.Name}}MgoSortField_WRP = primitive.D
 
+var (
+    {{- range $field := .Fields}}
+        {{- if ($field.AsSort)}}
+            {{$obj.Name}}MgoSortField{{$field.Name}}Asc = primitive.E{Key: "{{$field.BsonTagName}}", Value: 1}
+            {{$obj.Name}}MgoSortField{{$field.Name}}Desc = primitive.E{Key: "{{$field.BsonTagName}}", Value: -1}
+        {{- end}}
+    {{- end}}
+)
+{{- end}}
 
 func (p *{{.Name}}) GetNameSpace() string {
 	return "{{.Package}}"

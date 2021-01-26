@@ -27,11 +27,16 @@ const (
 	UserMgoFieldAge          = "Age"
 	UserMgoFieldRegisterDate = "registerDate"
 )
-const (
-	UserMgoSortFieldIDAsc   = "_id"
-	UserMgoSortFieldIDDesc  = "-_id"
-	UserMgoSortFieldAgeAsc  = "Age"
-	UserMgoSortFieldAgeDesc = "-Age"
+
+// UserMgoSortField_WRP is a wrapper of User sort fields e.g.:
+// UserMgoSortField_WRP{UserMgoSortField_X_Asc, UserMgoSortField_Y_DESC}
+type UserMgoSortField_WRP = primitive.D
+
+var (
+	UserMgoSortFieldIDAsc   = primitive.E{Key: "_id", Value: 1}
+	UserMgoSortFieldIDDesc  = primitive.E{Key: "_id", Value: -1}
+	UserMgoSortFieldAgeAsc  = primitive.E{Key: "Age", Value: 1}
+	UserMgoSortFieldAgeDesc = primitive.E{Key: "Age", Value: -1}
 )
 
 func (p *User) GetNameSpace() string {

@@ -147,9 +147,9 @@ func (o *{{$field.Foreign}}) Count{{$obj.Name}}() (count int) {
 	return {{$obj.Name}}Mgr.Count(query)
 }
 
-func (o *{{$field.Foreign}}) Find{{$obj.Name}}(limit, offset int, sortFields ...string) (result []*{{$obj.Name}}, err error) {
+func (o *{{$field.Foreign}}) Find{{$obj.Name}}(limit, offset int, sortFields interface{}) (result []*{{$obj.Name}}, err error) {
 	query := bson.M{"{{$field.Foreign}}ID": o.ID.Hex()}
-	return {{$obj.Name}}Mgr.Find(query, limit, offset, sortFields...)
+	return {{$obj.Name}}Mgr.Find(query, limit, offset, sortFields)
 }
 
 {{end -}}
@@ -161,14 +161,12 @@ func (o *{{$field.Foreign}}) Find{{$obj.Name}}(limit, offset int, sortFields ...
 // COLLECTION
 // =====================================
 
-func (o *_{{.Name}}Mgr) FindOne(query interface{}, sortFields ...string) (result *{{$obj.Name}}, err error) {
+func (o *_{{.Name}}Mgr) FindOne(query interface{}, sortFields interface{}) (result *{{$obj.Name}}, err error) {
     col := o.GetCol()
     opts := options.FindOne()
 
-    if len(sortFields) > 0 {
-	    sfs := make([]string, 0, len(sortFields))
-	    sfs = append(sfs, sortFields...)
-        opts.SetSort(sfs)
+    if sortFields != nil {
+        opts.SetSort(sortFields)
     }
 
     ret := col.FindOne(context.TODO(), query, opts)
@@ -179,7 +177,7 @@ func (o *_{{.Name}}Mgr) FindOne(query interface{}, sortFields ...string) (result
     return
 }
 
-func (o *_{{.Name}}Mgr) Query(query interface{}, limit, offset int, sortFields []string) (*mongo.Cursor, error) {
+func (o *_{{.Name}}Mgr) Query(query interface{}, limit, offset int, sortFields interface{}) (*mongo.Cursor, error) {
     col := o.GetCol()
     opts := options.Find()
 
@@ -189,7 +187,7 @@ func (o *_{{.Name}}Mgr) Query(query interface{}, limit, offset int, sortFields [
     if offset > 0 {
         opts.SetLimit(int64(offset))
     }
-    if len(sortFields) > 0 {
+    if sortFields != nil {
         opts.SetSort(sortFields)
     }
 
@@ -235,7 +233,7 @@ func (o *_{{$obj.Name}}Mgr) RemoveBy{{$index.Name}}({{$index.GetFuncParam}}) (er
 
 {{- else}}
 
-func (o *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, limit int, offset int, sortFields ...string) (result []*{{$obj.Name}}, err error) {
+func (o *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, limit int, offset int, sortFields interface{}) (result []*{{$obj.Name}}, err error) {
 	query := bson.M{
 		{{- range $field := $index.Fields}}
 		"{{$field.Name}}": {{$field.Name}},
@@ -252,7 +250,7 @@ func (o *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, limit
 {{end -}}
 {{end -}}
 
-func (o *_{{.Name}}Mgr) Find(query interface{}, limit int, offset int, sortFields ...string) (result []*{{$obj.Name}}, err error) {
+func (o *_{{.Name}}Mgr) Find(query interface{}, limit int, offset int, sortFields interface{}) (result []*{{$obj.Name}}, err error) {
     cursor, err := {{.Name}}Mgr.Query(query, limit, offset, sortFields)
     if err != nil {
         return nil, err
@@ -261,7 +259,7 @@ func (o *_{{.Name}}Mgr) Find(query interface{}, limit int, offset int, sortField
     return
 }
 
-func (o *_{{.Name}}Mgr) FindAll(query interface{}, sortFields ...string) (result []*{{$obj.Name}}, err error) {
+func (o *_{{.Name}}Mgr) FindAll(query interface{}, sortFields interface{}) (result []*{{$obj.Name}}, err error) {
     cursor, err := {{.Name}}Mgr.Query(query, -1, -1, sortFields)
     if err != nil {
         return nil, err
@@ -289,14 +287,14 @@ func (o *_{{.Name}}Mgr) CountE(query interface{}) (int, error) {
     return int(count), err
 }
 
-func (o *_{{.Name}}Mgr) FindByIDs(id []string, sortFields ...string) (result []*{{$obj.Name}}, err error) {
+func (o *_{{.Name}}Mgr) FindByIDs(id []string, sortFields interface{}) (result []*{{$obj.Name}}, err error) {
 	ids := make([]primitive.ObjectID, 0, len(id))
 	for _, i := range id {
 		if oid, err := primitive.ObjectIDFromHex(i); err == nil {
 			ids = append(ids, oid)
 		}
 	}
-    return o.FindAll(bson.M{"_id": bson.M{"$in": ids}}, sortFields...)
+    return o.FindAll(bson.M{"_id": bson.M{"$in": ids}}, sortFields)
 }
 
 func (o *_{{.Name}}Mgr) FindByID(id string) (result *{{$obj.Name}}, err error) {
