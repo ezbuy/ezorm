@@ -156,7 +156,7 @@ func (o *_UserMgr) FindByUsernameAge(Username string, Age int32, limit int, offs
 		"Username": Username,
 		"Age":      Age,
 	}
-	cursor, err := UserMgr.Query(query, limit, offset, sortFields)
+	cursor, err := o.Query(query, limit, offset, sortFields)
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +168,7 @@ func (o *_UserMgr) FindByUsername(Username string, limit int, offset int, sortFi
 	query := bson.M{
 		"Username": Username,
 	}
-	cursor, err := UserMgr.Query(query, limit, offset, sortFields)
+	cursor, err := o.Query(query, limit, offset, sortFields)
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +180,7 @@ func (o *_UserMgr) FindByAge(Age int32, limit int, offset int, sortFields interf
 	query := bson.M{
 		"Age": Age,
 	}
-	cursor, err := UserMgr.Query(query, limit, offset, sortFields)
+	cursor, err := o.Query(query, limit, offset, sortFields)
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +189,7 @@ func (o *_UserMgr) FindByAge(Age int32, limit int, offset int, sortFields interf
 }
 
 func (o *_UserMgr) Find(query interface{}, limit int, offset int, sortFields interface{}) (result []*User, err error) {
-	cursor, err := UserMgr.Query(query, limit, offset, sortFields)
+	cursor, err := o.Query(query, limit, offset, sortFields)
 	if err != nil {
 		return nil, err
 	}
@@ -198,7 +198,7 @@ func (o *_UserMgr) Find(query interface{}, limit int, offset int, sortFields int
 }
 
 func (o *_UserMgr) FindAll(query interface{}, sortFields interface{}) (result []*User, err error) {
-	cursor, err := UserMgr.Query(query, -1, -1, sortFields)
+	cursor, err := o.Query(query, -1, -1, sortFields)
 	if err != nil {
 		return nil, err
 	}
