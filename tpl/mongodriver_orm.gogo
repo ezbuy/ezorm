@@ -203,7 +203,7 @@ func (o *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (r
 		"{{$field.Name}}": {{$field.Name}},
 		{{- end}}
 	}
-    return o.FindOne(query)
+    return o.FindOne(query, nil)
 }
 
 // MustFindOneBy{{$index.Name}} only use it when you should not trust the query result
