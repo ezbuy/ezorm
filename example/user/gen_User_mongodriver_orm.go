@@ -87,7 +87,7 @@ func (o *User) InsertUnique(query interface{}) (saved bool, err error) {
 	if err != nil {
 		return false, err
 	}
-	if ret.UpsertedCount == 0 {
+	if ret.UpsertedCount != 0 {
 		saved = true
 	}
 
