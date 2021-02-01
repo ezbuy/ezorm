@@ -14,11 +14,15 @@ import (
 
 func init() {
     orm.RegisterEzOrmObjByID("{{.Package}}", "{{.Name}}", new{{.Name}}FindByID)
-	orm.RegisterEzOrmObjRemove("{{.Package}}", "{{.Name}}", {{.Name}}Mgr.RemoveByID)
+	orm.RegisterEzOrmObjRemove("{{.Package}}", "{{.Name}}", new{{.Name}}RemoveByID)
 }
 
 func new{{.Name}}FindByID(id string) (result orm.EzOrmObj, err error) {
-	return {{.Name}}Mgr.FindByID(id)
+	return {{.Name}}Mgr.FindByID(context.TODO(), id)
+}
+
+func new{{.Name}}RemoveByID(id string) error {
+    return {{.Name}}Mgr.RemoveByID(context.TODO(), id)
 }
 
 // =====================================
@@ -42,7 +46,7 @@ func (o *{{.Name}}) Id() string {
     return o.ID.Hex()
 }
 
-func (o *{{.Name}}) Save() (*mongo.UpdateResult, error) {
+func (o *{{.Name}}) Save(ctx context.Context) (*mongo.UpdateResult, error) {
     isNew := o.isNew
 
 	{{range $field := .Fields}}
@@ -69,7 +73,7 @@ func (o *{{.Name}}) Save() (*mongo.UpdateResult, error) {
 
     opts := options.Update().SetUpsert(true)
     col := {{.Name}}Mgr.GetCol()
-    ret, err := col.UpdateOne(context.TODO(), filter, update, opts)
+    ret, err := col.UpdateOne(ctx, filter, update, opts)
     if err != nil {
         return ret, err
     }
@@ -83,7 +87,7 @@ func (o *{{.Name}}) Save() (*mongo.UpdateResult, error) {
     return ret, err
 }
 
-func (o *{{.Name}}) InsertUnique(query interface{}) (saved bool, err error) {
+func (o *{{.Name}}) InsertUnique(ctx context.Context, query interface{}) (saved bool, err error) {
     update := bson.M{
         "$setOnInsert": bson.M{
         {{- range $field := .Fields}}
@@ -94,7 +98,7 @@ func (o *{{.Name}}) InsertUnique(query interface{}) (saved bool, err error) {
 
     opts := options.Update().SetUpsert(true)
     col := {{.Name}}Mgr.GetCol()
-    ret, err := col.UpdateOne(context.TODO(), query, update, opts)
+    ret, err := col.UpdateOne(ctx, query, update, opts)
     if err != nil {
         return false, err
     }
@@ -128,8 +132,8 @@ func {{.Name}}UpdateCallback(o *{{.Name}}) {
 
 {{range $field := $obj.Fields}}
 {{if $field.HasForeign}}
-func (p *{{$obj.Name}}) Get{{$field.Foreign}}() (result *{{$field.ForeignType}}, err error) {
-    return {{$field.ForeignType}}Mgr.FindByID(p.{{$field.Name}})
+func (p *{{$obj.Name}}) Get{{$field.Foreign}}(ctx context.Context) (result *{{$field.ForeignType}}, err error) {
+    return {{$field.ForeignType}}Mgr.FindByID(ctx, p.{{$field.Name}})
 }
 
 func (p *{{$obj.Name}}) Set{{$field.Foreign}}(obj *{{$field.ForeignType}}) {
@@ -137,19 +141,19 @@ func (p *{{$obj.Name}}) Set{{$field.Foreign}}(obj *{{$field.ForeignType}}) {
 }
 
 {{if eq $field.Foreign $field.ForeignType}}
-func (o *{{$field.Foreign}}) GetAll{{$obj.Name}}() (result []*{{$obj.Name}}, err error) {
+func (o *{{$field.Foreign}}) GetAll{{$obj.Name}}(ctx context.Context) (result []*{{$obj.Name}}, err error) {
 	query := bson.M{"{{$field.Foreign}}ID": o.ID.Hex()}
-    return {{$obj.Name}}Mgr.FindAll(query)
+    return {{$obj.Name}}Mgr.FindAll(ctx, query)
 }
 
-func (o *{{$field.Foreign}}) Count{{$obj.Name}}() (count int) {
+func (o *{{$field.Foreign}}) Count{{$obj.Name}}(ctx context.Context) (count int) {
 	query := bson.M{"{{$field.Foreign}}ID": o.ID.Hex()}
-	return {{$obj.Name}}Mgr.Count(query)
+	return {{$obj.Name}}Mgr.Count(ctx, query)
 }
 
-func (o *{{$field.Foreign}}) Find{{$obj.Name}}(limit, offset int, sortFields interface{}) (result []*{{$obj.Name}}, err error) {
+func (o *{{$field.Foreign}}) Find{{$obj.Name}}(ctx context.Context, limit, offset int, sortFields interface{}) (result []*{{$obj.Name}}, err error) {
 	query := bson.M{"{{$field.Foreign}}ID": o.ID.Hex()}
-	return {{$obj.Name}}Mgr.Find(query, limit, offset, sortFields)
+	return {{$obj.Name}}Mgr.Find(ctx, query, limit, offset, sortFields)
 }
 
 {{end -}}
@@ -161,7 +165,7 @@ func (o *{{$field.Foreign}}) Find{{$obj.Name}}(limit, offset int, sortFields int
 // COLLECTION
 // =====================================
 
-func (o *_{{.Name}}Mgr) FindOne(query interface{}, sortFields interface{}) (result *{{$obj.Name}}, err error) {
+func (o *_{{.Name}}Mgr) FindOne(ctx context.Context, query interface{}, sortFields interface{}) (result *{{$obj.Name}}, err error) {
     col := o.GetCol()
     opts := options.FindOne()
 
@@ -169,7 +173,7 @@ func (o *_{{.Name}}Mgr) FindOne(query interface{}, sortFields interface{}) (resu
         opts.SetSort(sortFields)
     }
 
-    ret := col.FindOne(context.TODO(), query, opts)
+    ret := col.FindOne(ctx, query, opts)
     if err = ret.Err(); err != nil {
         return nil, err
     }
@@ -177,7 +181,7 @@ func (o *_{{.Name}}Mgr) FindOne(query interface{}, sortFields interface{}) (resu
     return
 }
 
-func (o *_{{.Name}}Mgr) Query(query interface{}, limit, offset int, sortFields interface{}) (*mongo.Cursor, error) {
+func (o *_{{.Name}}Mgr) Query(ctx context.Context, query interface{}, limit, offset int, sortFields interface{}) (*mongo.Cursor, error) {
     col := o.GetCol()
     opts := options.Find()
 
@@ -185,41 +189,41 @@ func (o *_{{.Name}}Mgr) Query(query interface{}, limit, offset int, sortFields i
         opts.SetLimit(int64(limit))
     }
     if offset > 0 {
-        opts.SetLimit(int64(offset))
+        opts.SetSkip(int64(offset))
     }
     if sortFields != nil {
         opts.SetSort(sortFields)
     }
 
-    return col.Find(context.TODO(), query, opts)
+    return col.Find(ctx, query, opts)
 }
 
 {{- range $index := $obj.Indexes}}
 {{- if $index.IsUnique}}
 
-func (o *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (result *{{$obj.Name}}, err error) {
+func (o *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}(ctx context.Context, {{$index.GetFuncParam}}) (result *{{$obj.Name}}, err error) {
 	query := bson.M{
 		{{- range $field := $index.Fields}}
 		"{{$field.Name}}": {{$field.Name}},
 		{{- end}}
 	}
-    return o.FindOne(query, nil)
+    return o.FindOne(ctx, query, nil)
 }
 
 // MustFindOneBy{{$index.Name}} only use it when you should not trust the query result
-func (o *_{{$obj.Name}}Mgr) MustFindOneBy{{$index.Name}}({{$index.GetFuncParam}}) (result *{{$obj.Name}}) {
+func (o *_{{$obj.Name}}Mgr) MustFindOneBy{{$index.Name}}(ctx context.Context, {{$index.GetFuncParam}}) (result *{{$obj.Name}}) {
     result, _ = o.FindOneBy{{$index.Name}}({{$index.GetFuncParamNames}})
     if result == nil {
         result = o.New{{$obj.Name}}()
 		{{- range $field := $index.Fields}}
 		result.{{$field.Name}} = {{$field.Name}}
 		{{- end}}
-		result.Save()
+		result.Save(ctx)
     }
     return
 }
 
-func (o *_{{$obj.Name}}Mgr) RemoveBy{{$index.Name}}({{$index.GetFuncParam}}) (err error) {
+func (o *_{{$obj.Name}}Mgr) RemoveBy{{$index.Name}}(ctx context.Context, {{$index.GetFuncParam}}) (err error) {
     col := o.GetCol()
 
 	query := bson.M{
@@ -227,84 +231,84 @@ func (o *_{{$obj.Name}}Mgr) RemoveBy{{$index.Name}}({{$index.GetFuncParam}}) (er
 		"{{$field.Name}}": {{$field.Name}},
 		{{- end}}
 	}
-	_, err = col.DeleteOne(context.TODO(), query)
+	_, err = col.DeleteOne(ctx, query)
     return err
 }
 
 {{- else}}
 
-func (o *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}({{$index.GetFuncParam}}, limit int, offset int, sortFields interface{}) (result []*{{$obj.Name}}, err error) {
+func (o *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}(ctx context.Context, {{$index.GetFuncParam}}, limit int, offset int, sortFields interface{}) (result []*{{$obj.Name}}, err error) {
 	query := bson.M{
 		{{- range $field := $index.Fields}}
 		"{{$field.Name}}": {{$field.Name}},
 		{{- end}}
 	}
-	cursor, err := o.Query(query, limit, offset, sortFields)
+	cursor, err := o.Query(ctx, query, limit, offset, sortFields)
     if err != nil {
         return nil, err
     }
-    err = cursor.All(context.TODO(), &result)
+    err = cursor.All(ctx, &result)
     return
 }
 
 {{end -}}
 {{end -}}
 
-func (o *_{{.Name}}Mgr) Find(query interface{}, limit int, offset int, sortFields interface{}) (result []*{{$obj.Name}}, err error) {
-    cursor, err := o.Query(query, limit, offset, sortFields)
+func (o *_{{.Name}}Mgr) Find(ctx context.Context, query interface{}, limit int, offset int, sortFields interface{}) (result []*{{$obj.Name}}, err error) {
+    cursor, err := o.Query(ctx, query, limit, offset, sortFields)
     if err != nil {
         return nil, err
     }
-    err = cursor.All(context.TODO(), &result)
+    err = cursor.All(ctx, &result)
     return
 }
 
-func (o *_{{.Name}}Mgr) FindAll(query interface{}, sortFields interface{}) (result []*{{$obj.Name}}, err error) {
-    cursor, err := o.Query(query, -1, -1, sortFields)
+func (o *_{{.Name}}Mgr) FindAll(ctx context.Context, query interface{}, sortFields interface{}) (result []*{{$obj.Name}}, err error) {
+    cursor, err := o.Query(ctx, query, -1, -1, sortFields)
     if err != nil {
         return nil, err
     }
-    err = cursor.All(context.TODO(), &result)
+    err = cursor.All(ctx, &result)
     return
 }
 
-func (o *_{{.Name}}Mgr) Has(query interface{}) bool {
-    count, err := o.CountE(query)
+func (o *_{{.Name}}Mgr) Has(ctx context.Context, query interface{}) bool {
+    count, err := o.CountE(ctx, query)
     if err != nil || count == 0 {
         return false
     }
     return true
 }
 
-func (o *_{{.Name}}Mgr) Count(query interface{}) int {
-    count, _ := o.CountE(query)
+func (o *_{{.Name}}Mgr) Count(ctx context.Context, query interface{}) int {
+    count, _ := o.CountE(ctx, query)
     return count
 }
 
-func (o *_{{.Name}}Mgr) CountE(query interface{}) (int, error) {
+func (o *_{{.Name}}Mgr) CountE(ctx context.Context, query interface{}) (int, error) {
     col := o.GetCol()
-    count, err := col.CountDocuments(context.TODO(), query)
+    count, err := col.CountDocuments(ctx, query)
     return int(count), err
 }
 
-func (o *_{{.Name}}Mgr) FindByIDs(id []string, sortFields interface{}) (result []*{{$obj.Name}}, err error) {
+func (o *_{{.Name}}Mgr) FindByIDs(ctx context.Context, id []string, sortFields interface{}) (result []*{{$obj.Name}}, err error) {
 	ids := make([]primitive.ObjectID, 0, len(id))
 	for _, i := range id {
 		if oid, err := primitive.ObjectIDFromHex(i); err == nil {
 			ids = append(ids, oid)
 		}
 	}
-    return o.FindAll(bson.M{"_id": bson.M{"$in": ids}}, sortFields)
+    return o.FindAll(ctx, bson.M{"_id": bson.M{"$in": ids}}, sortFields)
 }
 
-func (o *_{{.Name}}Mgr) FindByID(id string) (result *{{$obj.Name}}, err error) {
+func (o *_{{.Name}}Mgr) FindByID(ctx context.Context, id string) (result *{{$obj.Name}}, err error) {
     oid, err := primitive.ObjectIDFromHex(id)
     if err != nil {
         return nil, mongo.ErrNoDocuments
     }
 
     col := o.GetCol()
-    ret := col.FindOne(context.TODO(), bson.M{"_id": oid})
+    ret := col.FindOne(ctx, bson.M{"_id": oid})
     if err = ret.Err(); err != nil {
         return nil, err
     }
@@ -312,27 +316,27 @@ func (o *_{{.Name}}Mgr) FindByID(id string) (result *{{$obj.Name}}, err error) {
     return
 }
 
-func (o *_{{.Name}}Mgr) RemoveAll(query interface{}) (int64, error) {
+func (o *_{{.Name}}Mgr) RemoveAll(ctx context.Context, query interface{}) (int64, error) {
     if query == nil {
         query = bson.M{}
     }
 
     col := o.GetCol()
-    ret, err := col.DeleteMany(context.TODO(), query)
+    ret, err := col.DeleteMany(ctx, query)
     if err != nil {
         return 0, err
     }
     return ret.DeletedCount, nil
 }
 
-func (o *_{{.Name}}Mgr) RemoveByID(id string) (err error) {
+func (o *_{{.Name}}Mgr) RemoveByID(ctx context.Context, id string) (err error) {
     oid, err := primitive.ObjectIDFromHex(id)
     if err != nil {
         return mongo.ErrNoDocuments
     }
 
     col := o.GetCol()
-    _, err = col.DeleteOne(context.TODO(), bson.M{"_id": oid})
+    _, err = col.DeleteOne(ctx, bson.M{"_id": oid})
     return err
 }
 
