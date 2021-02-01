@@ -41,6 +41,11 @@ jobs:
            ezorm gen -i ./example/blog/blog.yaml -o example/blog -p blog --goPackage test
            go test -v ./example/blog/...
       - run:
+          name: mongodriver
+          command: |
+            ezorm gen -i example/user/user.yaml -o example/user -p user --goPackage user
+            go test -v ./example/user/...
+      - run:
           name: mysql
           command: |
             ezorm gen -i ./example/mysql_people/people.yaml -o ./example/mysql_people -p people --goPackage test
