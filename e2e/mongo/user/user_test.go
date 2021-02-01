@@ -136,6 +136,24 @@ func TestFindOne(t *testing.T) {
 	}
 }
 
+type removeFn func(ctx context.Context) error
+
+func initUsersHelper(t *testing.T, users ...*user.User) (removeFn removeFn) {
+	ctx := context.Background()
+	for _, u := range users {
+		if _, e := u.Save(ctx); e != nil {
+			t.Fatalf("failed to create user: %s", e)
+		}
+	}
+
+	return func(ctx context.Context) error {
+		if _, err := user.Get_UserMgr().RemoveAll(ctx, nil); err != nil {
+			t.Fatalf("failed to remove all users: %s", err)
+		}
+		return nil
+	}
+}
+
 func TestQuery(t *testing.T) {
 	const (
 		uid1      = 1
@@ -144,22 +162,15 @@ func TestQuery(t *testing.T) {
 	)
 
 	ctx := context.TODO()
-	{
-		u1 := user.Get_UserMgr().NewUser()
-		u1.UserId = uid1
-		u1.Age = globalAge
-		if _, err := u1.Save(ctx); err != nil {
-			t.Fatalf("failed to save uid=1 user: %s", err)
-		}
-	}
-	{
-		u2 := user.Get_UserMgr().NewUser()
-		u2.UserId = uid2
-		u2.Age = globalAge
-		if _, err := u2.Save(ctx); err != nil {
-			t.Fatalf("failed to save uid=1 user: %s", err)
-		}
-	}
+	u1 := user.Get_UserMgr().NewUser()
+	u1.UserId = uid1
+	u1.Age = globalAge
+
+	u2 := user.Get_UserMgr().NewUser()
+	u2.UserId = uid2
+	u2.Age = globalAge
+
+	cleanFn := initUsersHelper(t, u1, u2)
 
 	{
 		cursor, err := user.Get_UserMgr().Query(ctx, bson.M{
@@ -210,7 +221,108 @@ func TestQuery(t *testing.T) {
 			t.Fatalf("unexpected users[0], got uid: %d, expect uid: %d", uid, uid2)
 		}
 	}
-	if _, err := user.Get_UserMgr().RemoveAll(ctx, nil); err != nil {
+
+	if err := cleanFn(ctx); err != nil {
+		t.Fatalf("failed to remove all users: %s", err)
+	}
+}
+
+func TestFindByIndexes(t *testing.T) {
+	const (
+		uid1   = 1
+		uname1 = "John"
+
+		uid2   = 2
+		uname2 = "Mike"
+
+		globalAge = 30
+	)
+
+	ctx := context.TODO()
+	u1 := user.Get_UserMgr().NewUser()
+	u1.UserId = uid1
+	u1.Username = uname1
+	u1.Age = globalAge
+
+	u2 := user.Get_UserMgr().NewUser()
+	u2.UserId = uid2
+	u2.Username = uname2
+	u2.Age = globalAge
+
+	cleanFn := initUsersHelper(t, u1, u2)
+	{
+		users, err := user.Get_UserMgr().FindByUsernameAge(ctx, uname1, globalAge, 10, 0, nil)
+		if err != nil {
+			t.Fatalf("failed to find by username and age: %s", err)
+		}
+		if l := len(users); l != 1 {
+			t.Fatalf("unexpected length of users, got %d, expect: %d", l, 1)
+		} else if uid := users[0].UserId; uid != uid1 {
+			t.Fatalf("unexpected uid of users, got: %d, expect: %d", uid, uid1)
+		}
+	}
+	{
+		users, err := user.Get_UserMgr().FindByUsernameAge(ctx, uname2, 0, 10, 0, nil)
+		if err != nil {
+			t.Fatalf("failed to find by username and age: %s", err)
+		}
+		if l := len(users); l != 0 {
+			t.Fatalf("unexpected length of users, got %d, expect: %d", l, 0)
+		}
+	}
+
+	if err := cleanFn(ctx); err != nil {
+		t.Fatalf("failed to remove all users: %s", err)
+	}
+}
+func TestCount(t *testing.T) {
+	const (
+		uid1   = 1
+		uname1 = "John"
+
+		uid2   = 2
+		uname2 = "Mike"
+
+		globalAge = 30
+	)
+
+	ctx := context.TODO()
+	u1 := user.Get_UserMgr().NewUser()
+	u1.UserId = uid1
+	u1.Username = uname1
+	u1.Age = globalAge
+
+	u2 := user.Get_UserMgr().NewUser()
+	u2.UserId = uid2
+	u2.Username = uname2
+	u2.Age = globalAge
+
+	cleanFn := initUsersHelper(t, u1, u2)
+
+	{
+		count, err := user.Get_UserMgr().CountE(ctx, bson.M{
+			user.UserMgoFieldAge: globalAge,
+		})
+		if err != nil {
+			t.Fatalf("failed to count users: %s", err)
+		}
+		if count != 2 {
+			t.Fatalf("unexpected count of users, got: %d, expect: %d", count, 2)
+		}
+	}
+	{
+		count, err := user.Get_UserMgr().CountE(ctx, bson.M{
+			user.UserMgoFieldUsername: "",
+		})
+		if err != nil {
+			t.Fatalf("failed to count users: %s", err)
+		}
+		if count != 0 {
+			t.Fatalf("unexpected count of users, got: %d, expect: %d", count, 0)
+		}
+	}
+
+	if err := cleanFn(ctx); err != nil {
 		t.Fatalf("failed to remove all users: %s", err)
 	}
 }
