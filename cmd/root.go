@@ -1,4 +1,4 @@
-// Copyright © 2016 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2021 NAME HERE ezbuy TEAM
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,24 +15,65 @@
 package cmd
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"io/fs"
+	"log"
 	"os"
+	"path/filepath"
 
+	"github.com/ezbuy/ezorm/v2/internal/template"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+
+	"gopkg.in/yaml.v2"
 )
 
-var cfgFile string
+var driver string
+var outputDirpath string
+var inputDirpath string
 
-// This represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "ezorm",
 	Short: "ezorm",
-	Long: `ezorm is an code-generation based ORM lib for golang, supporting mongodb/sql server/mysql. 
+	Long: `ezorm is an code-generation based ORM lib for golang, supporting mongodb/sql server/mysql.
 data model is defined with YAML file`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	//	Run: func(cmd *cobra.Command, args []string) { },
+	Run: func(_ *cobra.Command, _ []string) {
+		if err := filepath.WalkDir(inputDirpath, func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+			ext := filepath.Ext(path)
+			if ext != ".yaml" && ext != ".yml" {
+				return nil
+			}
+			data, err := os.ReadFile(d.Name())
+			if err != nil {
+				return err
+			}
+			value := make(map[string]interface{})
+			if err := yaml.Unmarshal(data, value); err != nil {
+				return err
+			}
+			g := template.NewGenerator(outputDirpath)
+			dname, ok := value["driver"]
+			if !ok {
+				return errors.New("parse yaml: driver field not set")
+			}
+			dr, err := template.GetDriver(dname.(string))
+			if err != nil {
+				return err
+			}
+			ll := filepath.SplitList(outputDirpath)
+			value["GoPackage"] = ll[len(ll)-1]
+			if err := g.Generate(context.TODO(), dr, value); err != nil {
+				return err
+			}
+			return nil
+		}); err != nil {
+			log.Fatal(err)
+		}
+	},
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.
@@ -45,30 +86,7 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
-
-	// Here you will define your flags and configuration settings.
-	// Cobra supports Persistent Flags, which, if defined here,
-	// will be global for your application.
-
-	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ezorm.yaml)")
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-}
-
-// initConfig reads in config file and ENV variables if set.
-func initConfig() {
-	if cfgFile != "" { // enable ability to specify config file via flag
-		viper.SetConfigFile(cfgFile)
-	}
-
-	viper.SetConfigName(".ezorm") // name of config file (without extension)
-	viper.AddConfigPath("$HOME")  // adding home directory as first search path
-	viper.AutomaticEnv()          // read in environment variables that match
-
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
-	}
+	RootCmd.PersistentFlags().StringVarP(&driver, "driver", "D", "", "The driver of ezorm generate template")
+	RootCmd.PersistentFlags().StringVarP(&outputDirpath, "output", "O", "", "output directory path")
+	RootCmd.PersistentFlags().StringVarP(&inputDirpath, "input", "I", "", "input directory path")
 }

@@ -11,8 +11,8 @@ require (
 	github.com/onsi/gomega v1.11.0 // indirect
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/spf13/cobra v0.0.5
-	github.com/spf13/viper v1.5.0
 	github.com/stretchr/testify v1.5.1
+	github.com/valyala/fasttemplate v1.2.1
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
 	gopkg.in/redis.v5 v5.2.9
 	gopkg.in/yaml.v2 v2.4.0

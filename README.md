@@ -2,7 +2,7 @@
 
 **WORK IN PROGRESS**
 
-> NOTE: v2 is not compatible with the previous [ezorm(v1)](https://github.com/ezbuy/ezorm/tree/v1)
+> NOTE: v2 is not fully compatible with the previous [ezorm(v1)](https://github.com/ezbuy/ezorm/tree/v1)
 
 Supported Drivers:
 > ⭐️ : NEW features in v2 and **RECOMMEND TO USE**

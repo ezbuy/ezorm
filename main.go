@@ -14,7 +14,10 @@
 
 package main
 
-import "github.com/ezbuy/ezorm/cmd"
+import (
+	"github.com/ezbuy/ezorm/v2/cmd"
+	_ "github.com/ezbuy/ezorm/v2/internal/template/mysql/v2"
+)
 
 func main() {
 	cmd.Execute()
