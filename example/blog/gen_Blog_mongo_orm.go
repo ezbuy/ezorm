@@ -147,6 +147,7 @@ func (o *_BlogMgr) FindOne(query interface{}, sortFields ...string) (result *Blo
 	return
 }
 
+// _BlogSort 将排序字段应用到查询对象中，如果找不到有效的排序字段，则默认使用 `-_id` 作为排序字段
 func _BlogSort(q *mgo.Query, sortFields []string) {
 	sortFields = XSortFieldsFilter(sortFields)
 	if len(sortFields) > 0 {
@@ -157,6 +158,10 @@ func _BlogSort(q *mgo.Query, sortFields []string) {
 	q.Sort("-_id")
 }
 
+// Query 按照查询条件、分页、排序等构建 MongoDB 查询对象，默认情况按照插入倒序返回全量数据
+//   - 如果 limit 小于等于 0，则忽略该参数
+//   - 如果 offset 小于等于 0，则忽略该参数
+//   - 排序字段参数为空或非法，则使用 `-_id` 作为排序条件（注意：如果表数据量很大，请显式传递排序字段，否则会发生慢查询）
 func (o *_BlogMgr) Query(query interface{}, limit, offset int, sortFields []string) (*mgo.Session, *mgo.Query) {
 	session, col := BlogMgr.GetCol()
 	q := col.Find(query)
@@ -171,6 +176,12 @@ func (o *_BlogMgr) Query(query interface{}, limit, offset int, sortFields []stri
 	return session, q
 }
 
+// NQuery 按照查询条件、分页、排序等构建 MongoDB 查询对象，如果不指定排序字段，则可能无法保证返回数据的顺序，
+// 建议在保证返回数据唯一的情况下使用
+// Ref: https://docs.mongodb.com/manual/reference/method/cursor.sort/#return-in-natural-order
+//   - 如果 limit 小于等于 0，则忽略该参数
+//   - 如果 offset 小于等于 0，则忽略该参数
+//   - 排序字段参数为空或非法，则忽略该参数
 func (o *_BlogMgr) NQuery(query interface{}, limit, offset int, sortFields []string) (*mgo.Session, *mgo.Query) {
 	session, col := BlogMgr.GetCol()
 	q := col.Find(query)

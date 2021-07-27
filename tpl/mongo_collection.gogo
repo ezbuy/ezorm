@@ -42,7 +42,8 @@ func (o *_{{.Name}}Mgr) Query(query interface{}, limit, offset int, sortFields [
 	return session, q
 }
 
-// NQuery 按照查询条件、分页、排序等构建 MongoDB 查询对象，如果不指定排序字段，则无法保证返回数据的顺序
+// NQuery 按照查询条件、分页、排序等构建 MongoDB 查询对象，如果不指定排序字段，则可能无法保证返回数据的顺序，
+// 建议在保证返回数据唯一的情况下使用
 // Ref: https://docs.mongodb.com/manual/reference/method/cursor.sort/#return-in-natural-order
 //   - 如果 limit 小于等于 0，则忽略该参数
 //   - 如果 offset 小于等于 0，则忽略该参数
