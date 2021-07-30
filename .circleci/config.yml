@@ -9,7 +9,7 @@ jobs:
           MSSQL_USER: sa
           MSSQL_DATABASE: test
           MSSQL_HOST: localhost
-      - image: microsoft/mssql-server-linux
+      - image: mcr.microsoft.com/mssql/server
         environment:
           ACCEPT_EULA: Y
           SA_PASSWORD: ezbuy@ezbuyIsTheBest2019
