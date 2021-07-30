@@ -1,0 +1,57 @@
+methods:
+  ListUserBlogsByName:
+    args: [userName string, offset int32, limit int32]
+    ret: list<*UserBlog>
+    sql: |
+      SELECT
+        {{ .Blog.BlogId }} BlogId,
+        {{ .Blog.Title }},
+        {{ .Blog.Slug }},
+        {{ .Blog.Body }},
+        {{ .Blog.IsPublished }},
+        {{ .User.UserNumber }} UserNumber
+      FROM {{ .User }}
+      JOIN {{ .Blog }} ON {{ .Blog.User }}={{ .User.UserId }}
+      WHERE {{ .User.Name }}={{ .args.userName }}
+      LIMIT {{ .args.offset }}, {{ .args.limit }}
+
+  GetBlogById:
+    args: [bid int64]
+    ret: Blog
+    sql: |
+      SELECT
+        {{ .Blog.Title }}, {{ .Blog.Body }}
+      FROM {{ .Blog }}
+      WHERE {{ .Blog.BlogId }}={{ .args.bid }}
+
+  GetUserDetailById:
+    args: [id int64]
+    ret: UserDetailResult
+    sql: |
+      SELECT
+        {{ .User.UserId }} Id,
+        {{ .User.Name }},
+        {{ .UserDetail.Desc }},
+        {{ .UserDetail.Age }},
+        {{ .UserDetail.Phone }},
+        {{ .UserDetail.Email }}
+      FROM {{ .User }}
+      JOIN {{ .UserDetail }} ON {{ .User.UserId }}={{ .UserDetail.UserId }}
+      WHERE {{ .User.UserId }}={{.args.id}}
+
+  ListUserDetails:
+    args: [offset int32, limit int32]
+    ret: list<UserDetailResult>
+    sql: |
+      SELECT
+        {{ .User.UserId }} Id,
+        {{ .User.Name }},
+        {{ .UserDetail.Desc }},
+        {{ .UserDetail.Age }},
+        {{ .UserDetail.Phone }},
+        {{ .UserDetail.Email }}
+      FROM {{ .User }}
+      JOIN {{ .UserDetail }} ON {{ .User.UserId }}={{ .UserDetail.UserId }}
+      LIMIT {{ .args.offset }}, {{ .args.limit }}
+
+

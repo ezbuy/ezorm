@@ -1,0 +1,74 @@
+{{define "sql_method"}}package {{.GoPackage}}
+{{$obj := .}}
+
+import (
+	"time"
+	"database/sql"
+	"github.com/ezbuy/ezorm/sqlm"
+)
+
+var _ *time.Time
+var _ *sql.Rows
+var _ sqlm.Execable
+
+type _{{$obj.Namespace}} struct{}
+
+var {{$obj.Namespace}} = _{{$obj.Namespace}}{}
+
+
+{{- range $m := $obj.Methods}}
+{{ if $m.RetFields}}
+// {{$m.RetName}} is the auto-generated struct for method {{$m.Name}}
+type {{$m.RetName}} struct {
+{{- range $f := $m.RetFields}}
+	{{$f.Name}} {{$f.Type}} {{$f.Tag}}
+{{- end}}
+}
+{{- end}}
+
+const _{{$m.Name}}Sql = "{{$m.Sql}}"
+
+func (_{{ $obj.Namespace }}) {{$m.Name}}(db {{$m.DB}}{{$m.ArgsDef}}) (ret {{$m.RetDef}}, err error) {
+{{- if $m.ExecResult}}
+	ret, err = db.Exec(_{{$m.Name}}Sql, {{$m.ArgsUse}}...)
+	return
+{{- else if $m.ExecLastId}}
+	ret, err = sqlm.ExecLastId(db, _{{$m.Name}}Sql, {{$m.ArgsUse}})
+	return
+{{- else if $m.ExecAffected}}
+	ret, err = sqlm.ExecAffected(db, _{{$m.Name}}Sql, {{$m.ArgsUse}})
+	return
+{{- else if $m.QueryOne}}
+	err = sqlm.QueryOne(db, _{{$m.Name}}Sql, {{$m.ArgsUse}}, func(rows *sql.Rows) error {
+		var v {{$m.QueryType}}
+		if err := rows.Scan({{$m.QueryScan}}); err != nil {
+			return err
+		}
+	{{- if $m.QueryPointer}}
+		ret = &v
+	{{- else}}
+		ret = v
+	{{- end}}
+		return nil
+	})
+	return
+{{- else}}
+	err = sqlm.QueryMany(db, _{{$m.Name}}Sql, {{$m.ArgsUse}}, func(rows *sql.Rows) error {
+		var v {{$m.QueryType}}
+		err = rows.Scan({{$m.QueryScan}})
+		if err != nil {
+			return err
+		}
+	{{- if $m.QueryPointer}}
+		ret = append(ret, &v)
+	{{- else}}
+		ret = append(ret, v)
+	{{- end}}
+		return nil
+	})
+	return
+{{- end}}
+}
+{{- end}}
+
+{{end}}
