@@ -55,6 +55,7 @@ var genCmd = &cobra.Command{
 
 		databases := make(map[string]*parser.Obj)
 
+		var allTables []*parser.Obj
 		for key, obj := range objs {
 			xwMetaObj := new(parser.Obj)
 			xwMetaObj.Package = genPackageName
@@ -71,6 +72,7 @@ var genCmd = &cobra.Command{
 				fileAbsPath := output + "/gen_" + xwMetaObj.Name + "_" + genType + ".go"
 				executeTpl(fileAbsPath, genType, xwMetaObj)
 			}
+			allTables = append(allTables, xwMetaObj)
 		}
 
 		for _, obj := range databases {
@@ -80,19 +82,33 @@ var genCmd = &cobra.Command{
 			}
 		}
 
+		if inputSql != "" {
+			sqlObj, err := parser.ReadSqlFile(
+				inputSql, genGoPackageName, allTables)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			fileAbsPath := output + "/gen_" +
+				sqlObj.Namespace + "_sqls.go"
+			executeTpl(fileAbsPath, "sql_method", sqlObj)
+		}
+
 		oscmd := exec.Command("gofmt", "-w", output)
 		oscmd.Run()
 
 	},
 }
 
-func executeTpl(fileAbsPath, tplName string, xwMetaObj *parser.Obj) {
+func executeTpl(fileAbsPath, tplName string, obj interface{}) {
 	file, err := os.OpenFile(fileAbsPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		panic(err)
 	}
-	xwMetaObj.TplWriter = file
-	err = parser.Tpl.ExecuteTemplate(file, tplName, xwMetaObj)
+	if xwMetaObj, ok := obj.(*parser.Obj); ok {
+		xwMetaObj.TplWriter = file
+	}
+	err = parser.Tpl.ExecuteTemplate(file, tplName, obj)
 	file.Close()
 	if err != nil {
 		panic(err)
@@ -104,6 +120,8 @@ var output string
 var genPackageName string
 var genGoPackageName string
 
+var inputSql string
+
 func init() {
 	RootCmd.AddCommand(genCmd)
 
@@ -111,7 +129,8 @@ func init() {
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	genCmd.PersistentFlags().StringVarP(&input, "input", "i", "", "input file")
+	genCmd.PersistentFlags().StringVarP(&input, "input", "i", "", "input orm file")
+	genCmd.PersistentFlags().StringVarP(&inputSql, "input-sql", "s", "", "input sql file")
 	genCmd.PersistentFlags().StringVarP(&output, "output", "o", "", "output path")
 	genCmd.PersistentFlags().StringVarP(&genPackageName, "package name", "p", "", "package name")
 	genCmd.PersistentFlags().StringVar(&genGoPackageName, "goPackage", "", "go package name")
