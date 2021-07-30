@@ -178,9 +178,10 @@ func ReadSqlFile(path, goPackage string, tables []*Obj) (*SqlObj, error) {
 	if len(file.Methods) == 0 {
 		return nil, fmt.Errorf("method is empty")
 	}
-	file.generatedStructMap = make(map[string]struct{}, len(tables))
 	for _, table := range tables {
-		file.generatedStructMap[table.Name] = struct{}{}
+		if table.Table == "" {
+			table.Table = camel2name(table.Name)
+		}
 	}
 
 	meta := buildSqlMethodMeta(tables)

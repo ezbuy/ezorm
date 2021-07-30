@@ -1,0 +1,35 @@
+User:
+  db: mysql
+  dbname: test
+  fields:
+    - Id: int64
+    - Name: string
+    - Phone: string
+    - Password: string
+
+UserDetail:
+  db: mysql
+  dbname: test
+  fields:
+    - Id: int64
+    - UserId: int64
+    - Email: string
+    - Introduction: string
+    - Age: int32
+    - Avatar: string
+
+
+RoleUser:
+  db: mysql
+  dbname: test
+  table: role_user
+  fields:
+    - UserId: int64
+    - RoleId: int64
+
+Role:
+  db: mysql
+  dbname: test
+  fields:
+    - Id: int64
+    - Name: string

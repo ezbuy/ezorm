@@ -1,0 +1,39 @@
+methods:
+  FindRolesByUser:
+    args: [userId int64]
+    ret: list<*Role>
+    sql: |
+      SELECT
+        {{ .Role.Id }},
+        {{ .Role.Name }}
+      FROM {{ .Role }}
+      JOIN {{ .RoleUser }} ON {{ .RoleUser.RoleId }}={{ .Role.Id }}
+      WHERE {{ .RoleUser.UserId }}={{ .args.userId }}
+
+  FindUsersByRole:
+    args: [roleId int64]
+    ret: list<*User>
+    sql: |
+      SELECT {{ .User.allFields }}
+      FROM {{ .User }}
+      JOIN {{ .RoleUser }} ON {{ .RoleUser.UserId }}={{ .User.Id }}
+      WHERE {{ .RoleUser.RoleId }}={{ .args.roleId }}
+
+  ListUserDetails:
+    args: [offset int32, limit int32]
+    ret: list<*UserDetailResult>
+    sql: |
+      SELECT
+        {{ .User.Id }},
+        {{ .User.Name }},
+        {{ .User.Phone  }},
+        {{ .User.Password }},
+        {{ .UserDetail.Email }},
+        {{ .UserDetail.Introduction }},
+        {{ .UserDetail.Age }},
+        {{ .UserDetail.Avatar }}
+      FROM {{ .User }}
+      JOIN {{ .UserDetail }} ON {{ .User.Id }}={{ .UserDetail.UserId }}
+      LIMIT {{ .args.offset }}, {{ .args.limit }}
+
+
