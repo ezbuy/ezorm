@@ -1,0 +1,56 @@
+package {{.GoPackage}}
+{{$obj := .}}
+
+import (
+	"time"
+	"database/sql"
+	"github.com/ezbuy/ezorm/orm"
+)
+
+var _ *time.Time
+var _ *sql.Rows
+var _ orm.Execable
+
+type _{{$obj.Namespace}} struct{}
+
+var {{$obj.Namespace}} = _{{$obj.Namespace}}{}
+
+{{range $m := $obj.Methods}}
+{{- if $m.Query}}
+type {{$m.RetName}} struct {
+{{- range $model := $m.Models}}
+	{{$model}}
+{{- end}}
+{{- range $field := $m.Fields}}
+	{{$field.Name}} {{$field.Type}} {{$field.Tags}}
+{{- end}}
+}
+{{ end}}
+
+const _{{$m.Name}}SQL = "{{$m.SQL}}"
+
+func (_{{$obj.Namespace}}) {{$m.Name}}(db {{$m.DB}}{{$m.ArgsDef}}) (ret {{$m.RetDef}}, err error) {
+{{- if $m.ExecResult}}
+	ret, err = db.Exec(_{{$m.Name}}SQL, {{$m.ArgsUse}}...)
+	return
+{{- else if $m.ExecLastId}}
+	ret, err = orm.ExecLastId(db, _{{$m.Name}}SQL, {{$m.ArgsUse}})
+	return
+{{- else if $m.ExecAffected}}
+	ret, err = orm.ExecAffected(db, _{{$m.Name}}SQL, {{$m.ArgsUse}})
+	return
+{{- else}}
+	err = orm.ExecQuery(db, _{{$m.Name}}SQL, {{$m.ArgsUse}}, func(rows *sql.Rows) error {
+		var e {{$m.RetName}}
+		if err := rows.Scan({{$m.Scan}}); err != nil {
+			return err
+		}
+		ret = append(ret, &e)
+		return nil
+	})
+	return
+{{- end}}
+}
+
+{{- end}}
+

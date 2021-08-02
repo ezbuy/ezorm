@@ -60,6 +60,10 @@ func strDefault(a, b string) string {
 	return a
 }
 
+func Camel2name(s string) string {
+	return camel2name(s)
+}
+
 func camel2name(s string) string {
 	nameBuf := bytes.NewBuffer(nil)
 	afterSpace := false

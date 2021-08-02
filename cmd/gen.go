@@ -20,10 +20,13 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"text/template"
 
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/ezbuy/ezorm/parser"
+	"github.com/ezbuy/ezorm/parser/sqlm"
+	"github.com/ezbuy/ezorm/tpl"
 	"github.com/spf13/cobra"
 )
 
@@ -55,6 +58,7 @@ var genCmd = &cobra.Command{
 
 		databases := make(map[string]*parser.Obj)
 
+		allObjs := make([]*parser.Obj, 0, len(objs))
 		for key, obj := range objs {
 			xwMetaObj := new(parser.Obj)
 			xwMetaObj.Package = genPackageName
@@ -71,6 +75,7 @@ var genCmd = &cobra.Command{
 				fileAbsPath := output + "/gen_" + xwMetaObj.Name + "_" + genType + ".go"
 				executeTpl(fileAbsPath, genType, xwMetaObj)
 			}
+			allObjs = append(allObjs, xwMetaObj)
 		}
 
 		for _, obj := range databases {
@@ -78,6 +83,16 @@ var genCmd = &cobra.Command{
 				fileAbsPath := output + "/gen_" + t + ".go"
 				executeTpl(fileAbsPath, t, obj)
 			}
+		}
+
+		if inputSql != "" {
+			obj, err := sqlm.Parse(inputSql, genGoPackageName, allObjs)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			path := output + "/gen_" + obj.Namespace + "_sqls.go"
+			executeSQLTpl(path, obj)
 		}
 
 		oscmd := exec.Command("gofmt", "-w", output)
@@ -99,10 +114,31 @@ func executeTpl(fileAbsPath, tplName string, xwMetaObj *parser.Obj) {
 	}
 }
 
+func executeSQLTpl(path string, obj *sqlm.Obj) {
+	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		panic(err)
+	}
+	tplText := tpl.MustAsset("tpl/sql_method.gogo")
+	tpl, err := template.New("sql-tpl").Parse(string(tplText))
+	if err != nil {
+		fmt.Printf("parse template failed: %v\n", err)
+		os.Exit(1)
+	}
+	err = tpl.Execute(file, obj)
+	if err != nil {
+		fmt.Printf("execute template failed: %v\n", err)
+		os.Exit(1)
+	}
+	file.Close()
+}
+
 var input string
 var output string
 var genPackageName string
 var genGoPackageName string
+
+var inputSql string
 
 func init() {
 	RootCmd.AddCommand(genCmd)
@@ -111,7 +147,8 @@ func init() {
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	genCmd.PersistentFlags().StringVarP(&input, "input", "i", "", "input file")
+	genCmd.PersistentFlags().StringVarP(&input, "input", "i", "", "input model file")
+	genCmd.PersistentFlags().StringVarP(&inputSql, "input-sql", "s", "", "input sql file")
 	genCmd.PersistentFlags().StringVarP(&output, "output", "o", "", "output path")
 	genCmd.PersistentFlags().StringVarP(&genPackageName, "package name", "p", "", "package name")
 	genCmd.PersistentFlags().StringVar(&genGoPackageName, "goPackage", "", "go package name")

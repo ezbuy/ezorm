@@ -1,0 +1,86 @@
+# 这里可以定义一些sql片段，在后面的方法中可以进行复用
+# 片段中也可以加入各种占位符，书写和一般的sql没有差别
+sqls:
+  userFields: |
+    {{ .User.Id }},
+    {{ .User.Name }},
+    {{ .User.Phone }},
+    {{ .User.Password }}
+
+  limit: LIMIT {{ .args.offset }}, {{ .args.limit }}
+
+
+# 每个方法会生成一个Go调用函数
+methods:
+  # 示例一：根据Id查询用户，关联User和UserDetail
+  # 使用Alias功能
+  GetUserById:
+    args:
+      - id: int64
+    sql: |
+      SELECT
+        {{ .u.Id }},
+        {{ .u.Name }},
+        {{ .u.Phone }},
+        {{ .u.Password }},
+        {{ .ud.Email }},
+        {{ .ud.Text }}
+      FROM {{ .User }} u
+      JOIN {{ .UserDetail }} ud ON {{ .u.Id }}={{ .ud.UserId }}
+      WHERE {{ .u.Id }}={{ .args.id }}
+
+  # 示例二：关联User和UserDetail，使用allFields表示所有字段
+  ListUsers:
+    args:
+      - offset: int
+      - limit: int
+    sql: |
+      SELECT 
+        {{ .User.allFields }},
+        {{ .UserDetail.Email }} Email
+      FROM {{ .User }}
+      JOIN {{ .UserDetail }} ON {{ .User.Id }}={{ .UserDetail.UserId }}
+      LIMIT {{ .args.offset }}, {{ .args.limit }}
+
+  # 示例三：关联User，UserRole，Role，使用Alias+allFields
+  GetUsersByRoles:
+    args:
+      - roleId: int64
+    sql: |
+      SELECT
+        {{ .u.allFields }},
+        {{ .r.allFields }}
+      FROM {{ .User }} AS u
+      JOIN {{ .UserRole }} AS ur ON {{ .u.Id }}={{ .ur.UserId }}
+      JOIN {{ .Role }} AS r ON {{ .r.Id }}={{ .ur.RoleId }}
+      WHERE {{ .r.Id }}={{ .args.roleId }}
+
+  # 示例四：统计
+  CountUsers:
+    sql: |
+      SELECT COUNT(1)
+      FROM {{.User}}
+
+  # 示例五：使用函数（目前只支持IFNULL和COUNT，后续可以增加）
+  ListUserIfNull:
+    sql: |
+      SELECT
+        {{ .User.Name }},
+        {{ .User.Phone }},
+        {{ .User.Password }},
+        IFNULL({{ .UserDetail.Email }}, '') Email,
+        IFNULL({{ .UserDetail.Text }}, '') Text
+      FROM {{ .User }}
+      LEFT JOIN {{ .UserDetail }} ON {{ .User.Id }}={{ .UserDetail.UserId }}
+
+  # 示例六：使用sql片段
+  ListUserSnippet:
+    args:
+      - offset: int
+      - limit: int
+    sql: |
+      SELECT {{ .sqls.userFields }}
+      FROM {{ .User }}
+      {{ .sqls.limit }}
+
+
