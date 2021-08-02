@@ -109,6 +109,9 @@ func (file *yamlFile) convert2obj(pkg string) (*Obj, error) {
 func (m *yamlMethod) convert2obj(name string, file *yamlFile) (*Method, error) {
 	obj := new(Method)
 	obj.Name = name
+	if err := checkPhs(m.SQL); err != nil {
+		return nil, err
+	}
 
 	sql := strings.Replace(m.SQL, "\n", " ", -1)
 	sql = strings.Replace(sql, "\t", " ", -1)
@@ -124,7 +127,7 @@ func (m *yamlMethod) convert2obj(name string, file *yamlFile) (*Method, error) {
 			}
 		}
 		return "", &Error{
-			full:  sql,
+			full:  m.SQL,
 			wrong: name,
 			desc:  fmt.Sprintf("cannot find sql named %q", name),
 		}
@@ -164,7 +167,7 @@ func (m *yamlMethod) convert2obj(name string, file *yamlFile) (*Method, error) {
 		}
 		if !found {
 			return "", &Error{
-				full:  sql,
+				full:  m.SQL,
 				wrong: name,
 				desc:  fmt.Sprintf("cannot find arg named %q", name),
 			}
@@ -183,7 +186,7 @@ func (m *yamlMethod) convert2obj(name string, file *yamlFile) (*Method, error) {
 	}
 
 	// Parse SQL.
-	cs, err := split(sql)
+	cs, err := split(sql, m.SQL)
 	if err != nil {
 		return nil, err
 	}
@@ -244,7 +247,7 @@ func (m *yamlMethod) convert2obj(name string, file *yamlFile) (*Method, error) {
 		fmap := md.fmap[f.TableFull]
 		if model == nil || fmap == nil {
 			return nil, &Error{
-				full:  sql,
+				full:  m.SQL,
 				wrong: f.TableFull,
 				desc: fmt.Sprintf("cannot find "+
 					"model %q in models file", f.TableFull),
@@ -262,7 +265,7 @@ func (m *yamlMethod) convert2obj(name string, file *yamlFile) (*Method, error) {
 		mf := fmap[f.Name]
 		if mf == nil {
 			return nil, &Error{
-				full:  sql,
+				full:  m.SQL,
 				wrong: f.Name,
 				desc: fmt.Sprintf("cannot find field %q in model %q",
 					f.Name, model.Name),
@@ -389,6 +392,22 @@ func handlePhs(sql, prefix string, fn phHandler) (r string, err error) {
 		return val
 	})
 	return
+}
+
+func checkPhs(sql string) error {
+	phs := placeholderRe.FindAllString(sql, -1)
+	for _, ph := range phs {
+		val := trimPlaceholder(ph)
+		if !strings.HasPrefix(val, ".") {
+			return &Error{
+				full:  sql,
+				wrong: ph,
+				desc: fmt.Sprintf("missing '.', "+
+					"do you mean %q?", "."+val),
+			}
+		}
+	}
+	return nil
 }
 
 func trimPlaceholder(s string) string {

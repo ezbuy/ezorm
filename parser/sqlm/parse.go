@@ -40,7 +40,7 @@ var (
 // different clauses. We mainly focus on the SELECT, FROM,
 // and JOIN clauses of the query sql for subsequent analysis
 // and template data generation.
-func split(sql string) (*clause, error) {
+func split(sql, raw string) (*clause, error) {
 	tokens := strings.Fields(sql)
 	if len(tokens) == 0 {
 		return nil, errors.New("sql is empty")
@@ -62,7 +62,7 @@ func split(sql string) (*clause, error) {
 			}
 			// FROM not found
 			return nil, &Error{
-				full:  sql,
+				full:  raw,
 				wrong: last,
 				desc:  "FROM not found in sql",
 			}
@@ -78,13 +78,13 @@ func split(sql string) (*clause, error) {
 	}
 	if len(selectTokens) == 0 {
 		return nil, &Error{
-			full:  sql,
+			full:  raw,
 			wrong: master,
 			desc:  "SELECT is empty",
 		}
 	}
 	cs := new(clause)
-	cs.Full = sql
+	cs.Full = raw
 	cs.Select = strings.Join(selectTokens, " ")
 	fromToken := tokens[idx]
 	tokens = tokens[idx+1:]
@@ -131,7 +131,7 @@ func split(sql string) (*clause, error) {
 			idx++
 			if idx == len(tokens) {
 				return nil, &Error{
-					full:  sql,
+					full:  raw,
 					wrong: t,
 					desc:  "missing 'ON' after 'JOIN'",
 				}

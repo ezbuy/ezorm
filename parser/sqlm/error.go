@@ -1,6 +1,10 @@
 package sqlm
 
-import "fmt"
+import (
+	"fmt"
+	"runtime"
+	"strings"
+)
 
 type Error struct {
 	full  string
@@ -9,7 +13,23 @@ type Error struct {
 }
 
 func (e *Error) Error() string {
-	return fmt.Sprintf("full: %s, wrong: %s, desc: %s", e.full, e.wrong, e.desc)
+	start := strings.Index(e.full, e.wrong)
+	end := start + len(e.wrong)
+	var sql string
+	if start > 0 {
+		if end > len(e.full) {
+			end = len(e.full)
+		}
+		sql = e.full[:start]
+		sql += mark(e.full[start:end])
+		if end < len(e.full) {
+			sql += e.full[end:]
+		}
+	}
+	if sql == "" {
+		sql = e.full
+	}
+	return fmt.Sprintf("%s:\n%s", red(e.desc), sql)
 }
 
 type MethodError struct {
@@ -18,6 +38,32 @@ type MethodError struct {
 }
 
 func (e *MethodError) Error() string {
-	return fmt.Sprintf("parse method %q failed: %v",
-		e.Method, e.Err)
+	return fmt.Sprintf("parse method %s failed: %v",
+		cyan(e.Method), e.Err)
+}
+
+var colorEnable = func() bool {
+	return runtime.GOOS == "darwin" || runtime.GOOS == "linux"
+}()
+
+func mark(s string) string {
+	if !colorEnable {
+		// mark donot support in windows os.
+		return s
+	}
+	return fmt.Sprintf("\033[31;4m%s\033[0m", s)
+}
+
+func red(s string) string {
+	if !colorEnable {
+		return s
+	}
+	return fmt.Sprintf("\033[31;1m%s\033[0m", s)
+}
+
+func cyan(s string) string {
+	if !colorEnable {
+		return s
+	}
+	return fmt.Sprintf("\033[36;1m%s\033[0m", s)
 }
