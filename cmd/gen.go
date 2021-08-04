@@ -119,6 +119,7 @@ func executeSQLTpl(path string, obj *sqlm.Obj) {
 	if err != nil {
 		panic(err)
 	}
+	defer file.Close()
 	tplText := tpl.MustAsset("tpl/sql_method.gogo")
 	tpl, err := template.New("sql-tpl").Parse(string(tplText))
 	if err != nil {
@@ -130,7 +131,6 @@ func executeSQLTpl(path string, obj *sqlm.Obj) {
 		fmt.Printf("execute template failed: %v\n", err)
 		os.Exit(1)
 	}
-	file.Close()
 }
 
 var input string

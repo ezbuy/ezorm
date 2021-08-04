@@ -10,12 +10,14 @@ genexample:
 	ezorm gen -i ./example/blog/blog.yaml -o ./example/blog -p blog --goPackage test
 	ezorm gen -i ./example/mysql_people/people.yaml -o ./example/mysql_people -p people --goPackage test
 	ezorm gen -i ./example/redis_people/people.yaml -o ./example/redis_people -p people --goPackage test
+	ezorm gen -i ./example/sql_user/model.yaml -s example/sql_user/sql.yaml -o example/sql_user/model
 
 clean:
 	rm ./example/mssql_people/gen_*.go
 	rm ./example/blog/gen_*.go
 	rm ./example/mysql_people/gen_*.go
 	rm ./example/redis_people/gen_*.go
+	rm ./example/sql_user/model/gen_*.go
 
 genmongo:
 	rm example/blog/gen_*.go
