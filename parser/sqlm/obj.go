@@ -137,10 +137,12 @@ func (m *yamlMethod) convert2obj(name string, file *yamlFile) (*Method, error) {
 	}
 
 	m.args = make([]string, 0, len(m.ArgsMaps))
+	argNames := make([]string, 0, len(m.ArgsMaps))
 	for _, argMap := range m.ArgsMaps {
 		for k, v := range argMap {
 			m.args = append(m.args,
 				fmt.Sprintf("%s %s", k, v))
+			argNames = append(argNames, k)
 		}
 	}
 
@@ -152,7 +154,7 @@ func (m *yamlMethod) convert2obj(name string, file *yamlFile) (*Method, error) {
 	var args []string
 	sql, err = handlePhs(sql, ".args.", func(name string) (string, error) {
 		var found bool
-		for _, arg := range m.args {
+		for _, arg := range argNames {
 			// The prefix instead of equality is used here
 			// because the arg defined in yaml may be a
 			// struct or map, and when used in sql, it may
@@ -160,7 +162,7 @@ func (m *yamlMethod) convert2obj(name string, file *yamlFile) (*Method, error) {
 			// For example, the arg defined by yaml is
 			// 		"m map[string]string"
 			// "{{.args.m["name"]}}" is used in sql
-			if strings.HasPrefix(arg, name) {
+			if strings.HasPrefix(name, arg) {
 				found = true
 				break
 			}

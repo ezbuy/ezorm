@@ -78,6 +78,34 @@ func (_Methods) ListUserIfNull(ctx context.Context, db orm.Queryable) (ret []*Li
 	return
 }
 
+const _InsertUserRoleSQL = "INSERT INTO `user_role`(`user_role`.`user_id`, `user_role`.`role_id`) VALUES (?, ?)"
+
+func (_Methods) InsertUserRole(ctx context.Context, db orm.Execable, uid int64, rid int64) (ret sql.Result, err error) {
+	ret, err = db.ExecContext(ctx, _InsertUserRoleSQL, []interface{}{uid, rid}...)
+	return
+}
+
+const _InsertUserDetailSQL = "INSERT INTO `user_detail`( `user_detail`.`user_id`, `user_detail`.`email`, `user_detail`.`text` ) VALUES ( ?, ?, ? )"
+
+func (_Methods) InsertUserDetail(ctx context.Context, db orm.Execable, ud *UserDetail) (ret int64, err error) {
+	ret, err = orm.ExecAffected(ctx, db, _InsertUserDetailSQL, []interface{}{ud.UserId, ud.Email, ud.Text})
+	return
+}
+
+const _InsertUserSQL = "INSERT INTO `user`( `user`.`name`, `user`.`phone`, `user`.`password` ) VALUES ( ?, ?, ? )"
+
+func (_Methods) InsertUser(ctx context.Context, db orm.Execable, u *User) (ret int64, err error) {
+	ret, err = orm.ExecLastId(ctx, db, _InsertUserSQL, []interface{}{u.Name, u.Phone, u.Password})
+	return
+}
+
+const _InsertRoleSQL = "INSERT INTO `role`(`role`.`name`) VALUES (?)"
+
+func (_Methods) InsertRole(ctx context.Context, db orm.Execable, name string) (ret sql.Result, err error) {
+	ret, err = db.ExecContext(ctx, _InsertRoleSQL, []interface{}{name}...)
+	return
+}
+
 type GetUsersByRolesResp struct {
 	User
 	Role

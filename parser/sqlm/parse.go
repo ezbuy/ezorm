@@ -31,8 +31,9 @@ var (
 
 	// Keywords after 'FROM' clause.
 	afterFroms = map[string]struct{}{
-		"LEFT": {}, "RIGHT": {}, "INNER": {}, "JOIN": {},
+		"LEFT": {}, "RIGHT": {}, "INNER": {}, "FULL": {}, "JOIN": {},
 		"WHERE": {}, "ORDER": {}, "LIMIT": {}, "GROUP": {},
+		"STRAIGHT_JOIN": {},
 	}
 )
 
@@ -98,7 +99,7 @@ func split(sql, raw string) (*clause, error) {
 			break
 		}
 		t := tokens[idx]
-		if _, ok := afterFroms[t]; ok {
+		if _, ok := afterFroms[strings.ToUpper(t)]; ok {
 			// meet end keyword.
 			break
 		}
@@ -142,6 +143,7 @@ func split(sql, raw string) (*clause, error) {
 			}
 			joinTokens = append(joinTokens, subt)
 		}
+		// FIXME: here WHERE/LIMIT/GROUP BY will stored in the last join.
 		join := strings.Join(joinTokens, " ")
 		cs.Joins = append(cs.Joins, join)
 		idx++

@@ -84,4 +84,39 @@ methods:
       FROM {{ .User }}
       {{ .sqls.limit }}
 
+  # 示例七：执行sql插入语句
+  InsertUser:
+    args:
+      - u: '*User'
+    lastid: true
+    sql: |
+      INSERT INTO {{ .User }}(
+        {{ .User.Name }}, {{ .User.Phone }}, {{ .User.Password }}
+      ) VALUES (
+        {{ .args.u.Name }}, {{ .args.u.Phone }}, {{ .args.u.Password }}
+      )
+  InsertUserDetail:
+    args:
+      - ud: '*UserDetail'
+    affected: true
+    sql: |
+      INSERT INTO {{ .UserDetail }}(
+        {{ .UserDetail.UserId }}, {{ .UserDetail.Email }}, {{ .UserDetail.Text }}
+      ) VALUES (
+        {{ .args.ud.UserId }}, {{ .args.ud.Email }}, {{ .args.ud.Text }}
+      )
+  InsertUserRole:
+    args:
+      - uid: int64
+      - rid: int64
+    sql: |
+      INSERT INTO {{ .UserRole }}({{ .UserRole.UserId }}, {{ .UserRole.RoleId }})
+      VALUES ({{ .args.uid }}, {{ .args.rid }})
+  InsertRole:
+    args:
+      - name: string
+    sql: |
+      INSERT INTO {{ .Role }}({{ .Role.Name }})
+      VALUES ({{ .args.name }})
+
 
