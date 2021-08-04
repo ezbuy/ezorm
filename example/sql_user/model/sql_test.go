@@ -12,7 +12,7 @@ import (
 
 func TestMain(m *testing.M) {
 	db.MysqlInit(&db.MysqlConfig{
-		DataSource: "root:19971008@tcp(localhost:3306)/?multiStatements=true",
+		DataSource: "root@tcp(localhost:3306)/?multiStatements=true",
 	})
 
 	table, err := ioutil.ReadFile("user.sql")
