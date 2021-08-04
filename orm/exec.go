@@ -1,33 +1,36 @@
 package orm
 
-import "database/sql"
+import (
+	"context"
+	"database/sql"
+)
 
 type Execable interface {
-	Exec(sql string, args ...interface{}) (sql.Result, error)
+	ExecContext(ctx context.Context, sql string, args ...interface{}) (sql.Result, error)
 }
 
 type Queryable interface {
-	Query(sql string, args ...interface{}) (*sql.Rows, error)
+	QueryContext(ctx context.Context, sql string, args ...interface{}) (*sql.Rows, error)
 }
 
-func ExecLastId(db Execable, sql string, args []interface{}) (int64, error) {
-	r, err := db.Exec(sql, args...)
+func ExecLastId(ctx context.Context, db Execable, sql string, args []interface{}) (int64, error) {
+	r, err := db.ExecContext(ctx, sql, args...)
 	if err != nil {
 		return 0, err
 	}
 	return r.LastInsertId()
 }
 
-func ExecAffected(db Execable, sql string, args []interface{}) (int64, error) {
-	r, err := db.Exec(sql, args...)
+func ExecAffected(ctx context.Context, db Execable, sql string, args []interface{}) (int64, error) {
+	r, err := db.ExecContext(ctx, sql, args...)
 	if err != nil {
 		return 0, err
 	}
 	return r.RowsAffected()
 }
 
-func ExecQuery(db Queryable, sql string, args []interface{}, fn func(rows *sql.Rows) error) error {
-	rows, err := db.Query(sql, args...)
+func ExecQuery(ctx context.Context, db Queryable, sql string, args []interface{}, fn func(rows *sql.Rows) error) error {
+	rows, err := db.QueryContext(ctx, sql, args...)
 	if err != nil {
 		return err
 	}

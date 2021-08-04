@@ -2,6 +2,7 @@ package {{.GoPackage}}
 {{$obj := .}}
 
 import (
+	"context"
 	"time"
 	"database/sql"
 	"github.com/ezbuy/ezorm/orm"
@@ -10,6 +11,7 @@ import (
 var _ *time.Time
 var _ *sql.Rows
 var _ orm.Execable
+var _ *context.Context
 
 type _{{$obj.Namespace}} struct{}
 
@@ -29,18 +31,18 @@ type {{$m.RetName}} struct {
 
 const _{{$m.Name}}SQL = "{{$m.SQL}}"
 
-func (_{{$obj.Namespace}}) {{$m.Name}}(db {{$m.DB}}{{$m.ArgsDef}}) (ret {{$m.RetDef}}, err error) {
+func (_{{$obj.Namespace}}) {{$m.Name}}(ctx context.Context, db {{$m.DB}}{{$m.ArgsDef}}) (ret {{$m.RetDef}}, err error) {
 {{- if $m.ExecResult}}
-	ret, err = db.Exec(_{{$m.Name}}SQL, {{$m.ArgsUse}}...)
+	ret, err = db.ExecContext(ctx, _{{$m.Name}}SQL, {{$m.ArgsUse}}...)
 	return
 {{- else if $m.ExecLastId}}
-	ret, err = orm.ExecLastId(db, _{{$m.Name}}SQL, {{$m.ArgsUse}})
+	ret, err = orm.ExecLastId(ctx, db, _{{$m.Name}}SQL, {{$m.ArgsUse}})
 	return
 {{- else if $m.ExecAffected}}
-	ret, err = orm.ExecAffected(db, _{{$m.Name}}SQL, {{$m.ArgsUse}})
+	ret, err = orm.ExecAffected(ctx, db, _{{$m.Name}}SQL, {{$m.ArgsUse}})
 	return
 {{- else}}
-	err = orm.ExecQuery(db, _{{$m.Name}}SQL, {{$m.ArgsUse}}, func(rows *sql.Rows) error {
+	err = orm.ExecQuery(ctx, db, _{{$m.Name}}SQL, {{$m.ArgsUse}}, func(rows *sql.Rows) error {
 		var e {{$m.RetName}}
 		if err := rows.Scan({{$m.Scan}}); err != nil {
 			return err

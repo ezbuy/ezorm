@@ -1,6 +1,7 @@
 package model
 
 import (
+	"context"
 	"database/sql"
 	"github.com/ezbuy/ezorm/orm"
 	"time"
@@ -9,6 +10,7 @@ import (
 var _ *time.Time
 var _ *sql.Rows
 var _ orm.Execable
+var _ *context.Context
 
 type _Methods struct{}
 
@@ -21,8 +23,8 @@ type ListUsersResp struct {
 
 const _ListUsersSQL = "SELECT `user`.`id`, `user`.`name`, `user`.`phone`, `user`.`password`, `user_detail`.`email` Email FROM `user` JOIN `user_detail` ON `user`.`id`=`user_detail`.`user_id` LIMIT ?, ?"
 
-func (_Methods) ListUsers(db orm.Queryable, offset int, limit int) (ret []*ListUsersResp, err error) {
-	err = orm.ExecQuery(db, _ListUsersSQL, []interface{}{offset, limit}, func(rows *sql.Rows) error {
+func (_Methods) ListUsers(ctx context.Context, db orm.Queryable, offset int, limit int) (ret []*ListUsersResp, err error) {
+	err = orm.ExecQuery(ctx, db, _ListUsersSQL, []interface{}{offset, limit}, func(rows *sql.Rows) error {
 		var e ListUsersResp
 		if err := rows.Scan(&e.User.Id, &e.User.Name, &e.User.Phone, &e.User.Password, &e.Email); err != nil {
 			return err
@@ -42,8 +44,8 @@ type ListUserSnippetResp struct {
 
 const _ListUserSnippetSQL = "SELECT `user`.`id`, `user`.`name`, `user`.`phone`, `user`.`password` FROM `user` LIMIT ?, ?"
 
-func (_Methods) ListUserSnippet(db orm.Queryable, offset int, limit int) (ret []*ListUserSnippetResp, err error) {
-	err = orm.ExecQuery(db, _ListUserSnippetSQL, []interface{}{offset, limit}, func(rows *sql.Rows) error {
+func (_Methods) ListUserSnippet(ctx context.Context, db orm.Queryable, offset int, limit int) (ret []*ListUserSnippetResp, err error) {
+	err = orm.ExecQuery(ctx, db, _ListUserSnippetSQL, []interface{}{offset, limit}, func(rows *sql.Rows) error {
 		var e ListUserSnippetResp
 		if err := rows.Scan(&e.UserId, &e.UserName, &e.UserPhone, &e.UserPassword); err != nil {
 			return err
@@ -64,8 +66,8 @@ type ListUserIfNullResp struct {
 
 const _ListUserIfNullSQL = "SELECT `user`.`name`, `user`.`phone`, `user`.`password`, IFNULL(`user_detail`.`email`, '') Email, IFNULL(`user_detail`.`text`, '') Text FROM `user` LEFT JOIN `user_detail` ON `user`.`id`=`user_detail`.`user_id`"
 
-func (_Methods) ListUserIfNull(db orm.Queryable) (ret []*ListUserIfNullResp, err error) {
-	err = orm.ExecQuery(db, _ListUserIfNullSQL, []interface{}{}, func(rows *sql.Rows) error {
+func (_Methods) ListUserIfNull(ctx context.Context, db orm.Queryable) (ret []*ListUserIfNullResp, err error) {
+	err = orm.ExecQuery(ctx, db, _ListUserIfNullSQL, []interface{}{}, func(rows *sql.Rows) error {
 		var e ListUserIfNullResp
 		if err := rows.Scan(&e.UserName, &e.UserPhone, &e.UserPassword, &e.Email, &e.Text); err != nil {
 			return err
@@ -83,8 +85,8 @@ type GetUsersByRolesResp struct {
 
 const _GetUsersByRolesSQL = "SELECT u.`id`, u.`name`, u.`phone`, u.`password`, r.`id`, r.`name` FROM `user` AS u JOIN `user_role` AS ur ON u.`id`=ur.`user_id` JOIN `role` AS r ON r.`id`=ur.`role_id` WHERE r.`id`=?"
 
-func (_Methods) GetUsersByRoles(db orm.Queryable, roleId int64) (ret []*GetUsersByRolesResp, err error) {
-	err = orm.ExecQuery(db, _GetUsersByRolesSQL, []interface{}{roleId}, func(rows *sql.Rows) error {
+func (_Methods) GetUsersByRoles(ctx context.Context, db orm.Queryable, roleId int64) (ret []*GetUsersByRolesResp, err error) {
+	err = orm.ExecQuery(ctx, db, _GetUsersByRolesSQL, []interface{}{roleId}, func(rows *sql.Rows) error {
 		var e GetUsersByRolesResp
 		if err := rows.Scan(&e.User.Id, &e.User.Name, &e.User.Phone, &e.User.Password, &e.Role.Id, &e.Role.Name); err != nil {
 			return err
@@ -106,8 +108,8 @@ type GetUserByIdResp struct {
 
 const _GetUserByIdSQL = "SELECT u.`id`, u.`name`, u.`phone`, u.`password`, ud.`email`, ud.`text` FROM `user` u JOIN `user_detail` ud ON u.`id`=ud.`user_id` WHERE u.`id`=?"
 
-func (_Methods) GetUserById(db orm.Queryable, id int64) (ret []*GetUserByIdResp, err error) {
-	err = orm.ExecQuery(db, _GetUserByIdSQL, []interface{}{id}, func(rows *sql.Rows) error {
+func (_Methods) GetUserById(ctx context.Context, db orm.Queryable, id int64) (ret []*GetUserByIdResp, err error) {
+	err = orm.ExecQuery(ctx, db, _GetUserByIdSQL, []interface{}{id}, func(rows *sql.Rows) error {
 		var e GetUserByIdResp
 		if err := rows.Scan(&e.UserId, &e.UserName, &e.UserPhone, &e.UserPassword, &e.UserDetailEmail, &e.UserDetailText); err != nil {
 			return err
@@ -124,8 +126,8 @@ type CountUsersResp struct {
 
 const _CountUsersSQL = "SELECT COUNT(1) FROM `user`"
 
-func (_Methods) CountUsers(db orm.Queryable) (ret []*CountUsersResp, err error) {
-	err = orm.ExecQuery(db, _CountUsersSQL, []interface{}{}, func(rows *sql.Rows) error {
+func (_Methods) CountUsers(ctx context.Context, db orm.Queryable) (ret []*CountUsersResp, err error) {
+	err = orm.ExecQuery(ctx, db, _CountUsersSQL, []interface{}{}, func(rows *sql.Rows) error {
 		var e CountUsersResp
 		if err := rows.Scan(&e.Count0); err != nil {
 			return err
