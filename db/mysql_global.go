@@ -7,24 +7,32 @@ import (
 )
 
 var (
-	mysqlCfg      MysqlConfig
 	mysqlInstance *Mysql
 	mysqlConnOnce sync.Once
 )
 
+func MysqlInitByField(cfg *MysqlFieldConfig) {
+	MysqlInit(cfg.Convert())
+}
+
 func MysqlInit(cfg *MysqlConfig) {
-	mysqlCfg = *cfg
+	mysqlConnOnce.Do(func() {
+		var err error
+		mysqlInstance, err = NewMysql(cfg)
+		if err != nil {
+			panic("init mysql: " + err.Error())
+		}
+		err = mysqlInstance.DB.Ping()
+		if err != nil {
+			panic("ping mysql: " + err.Error())
+		}
+	})
 }
 
 func getMysqlInstance() *Mysql {
-	var err error
-	mysqlConnOnce.Do(func() {
-		mysqlInstance, err = NewMysql(&mysqlCfg)
-		if err != nil {
-			panic(err)
-		}
-	})
-
+	if mysqlInstance == nil {
+		panic("mysql no init, please call MysqlInit first.")
+	}
 	return mysqlInstance
 }
 

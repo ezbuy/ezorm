@@ -11,7 +11,11 @@ type User struct {
 	isNew      bool
 }
 
-const ()
+const (
+	UserMysqlFieldUserId     = "user_id"
+	UserMysqlFieldUserNumber = "user_number"
+	UserMysqlFieldName       = "name"
+)
 
 func (p *User) GetNameSpace() string {
 	return "people"

@@ -16,7 +16,16 @@ type Blog struct {
 	isNew     bool
 }
 
-const ()
+const (
+	BlogMysqlFieldId        = "id"
+	BlogMysqlFieldUserId    = "user_id"
+	BlogMysqlFieldTitle     = "title"
+	BlogMysqlFieldContent   = "content"
+	BlogMysqlFieldStatus    = "status"
+	BlogMysqlFieldReaded    = "readed"
+	BlogMysqlFieldCreatedAt = "created_at"
+	BlogMysqlFieldUpdatedAt = "updated_at"
+)
 
 func (p *Blog) GetNameSpace() string {
 	return "people"

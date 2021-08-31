@@ -1,6 +1,7 @@
 package db
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
 	"sync"
@@ -30,6 +31,49 @@ func (cfg *MysqlConfig) init() {
 	}
 }
 
+// MysqlFieldConfig uses fields to config mysql, it can be converted
+// to DSN style.
+type MysqlFieldConfig struct {
+	Addr     string
+	UserName string
+	Password string
+	Database string
+
+	PoolSize        int
+	ConnMaxLifeTime time.Duration
+
+	Options map[string]string
+}
+
+func (cfg *MysqlFieldConfig) Convert() *MysqlConfig {
+	var userDSN string
+	if cfg.Password == "" {
+		userDSN = cfg.UserName
+	} else if cfg.UserName != "" {
+		userDSN = fmt.Sprintf("%s:%s", cfg.UserName, cfg.Password)
+	}
+	if userDSN != "" {
+		userDSN += "@"
+	}
+	var buf bytes.Buffer
+	for key, val := range cfg.Options {
+		param := fmt.Sprintf("&%s=%s", key, val)
+		buf.WriteString(param)
+	}
+	dsn := fmt.Sprintf("%stcp(%s)/%s?charset=utf8mb4%s",
+		userDSN,
+		cfg.Addr,
+		cfg.Database,
+		buf.String())
+	mysqlCfg := &MysqlConfig{
+		DataSource:      dsn,
+		PoolSize:        cfg.PoolSize,
+		ConnMaxLifeTime: cfg.ConnMaxLifeTime,
+	}
+	mysqlCfg.init()
+	return mysqlCfg
+}
+
 func NewMysql(cfg *MysqlConfig) (*Mysql, error) {
 	if cfg == nil {
 		cfg = new(MysqlConfig)
@@ -38,7 +82,7 @@ func NewMysql(cfg *MysqlConfig) (*Mysql, error) {
 
 	db, err := sql.Open("mysql", cfg.DataSource)
 	if err != nil {
-		return nil, fmt.Errorf("sql.Open:", err)
+		return nil, fmt.Errorf("sql.Open: %v", err)
 	}
 	db.SetConnMaxLifetime(time.Hour)
 	db.SetMaxIdleConns(cfg.PoolSize)

@@ -10,7 +10,10 @@ type UserBlog struct {
 	isNew bool
 }
 
-const ()
+const (
+	UserBlogMysqlFieldKey   = "key"
+	UserBlogMysqlFieldValue = "value"
+)
 
 func (p *UserBlog) GetNameSpace() string {
 	return "people"
