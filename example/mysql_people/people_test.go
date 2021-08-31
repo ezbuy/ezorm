@@ -20,6 +20,10 @@ func TestMain(m *testing.M) {
 		UserName: "root",
 		Password: "",
 		Database: "",
+
+		ExtractFields: map[string]string{
+			"multiStatements": "true",
+		},
 	})
 
 	// initialize mysql database environment for running test below

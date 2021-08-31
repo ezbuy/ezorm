@@ -1,6 +1,7 @@
 package db
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
 	"sync"
@@ -40,6 +41,8 @@ type MysqlFieldConfig struct {
 	Database        string
 	PoolSize        int
 	ConnMaxLifeTime time.Duration
+
+	ExtractFields map[string]string
 }
 
 func (cfg *MysqlFieldConfig) Convert() *MysqlConfig {
@@ -49,11 +52,17 @@ func (cfg *MysqlFieldConfig) Convert() *MysqlConfig {
 	} else {
 		userDSN = fmt.Sprintf("%s:%s", cfg.UserName, cfg.Password)
 	}
-	dsn := fmt.Sprintf("%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True",
+	var buf bytes.Buffer
+	for key, val := range cfg.ExtractFields {
+		param := fmt.Sprintf("&%s=%s", key, val)
+		buf.WriteString(param)
+	}
+	dsn := fmt.Sprintf("%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True%s",
 		userDSN,
 		cfg.Host,
 		cfg.Port,
-		cfg.Database)
+		cfg.Database,
+		buf.String())
 	mysqlCfg := &MysqlConfig{
 		DataSource:      dsn,
 		PoolSize:        cfg.PoolSize,
