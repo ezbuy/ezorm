@@ -12,7 +12,12 @@ type UserLocation struct {
 	isNew     bool
 }
 
-const ()
+const (
+	UserLocationMysqlFieldKey       = "key"
+	UserLocationMysqlFieldLongitude = "longitude"
+	UserLocationMysqlFieldLatitude  = "latitude"
+	UserLocationMysqlFieldValue     = "value"
+)
 
 func (p *UserLocation) GetNameSpace() string {
 	return "people"

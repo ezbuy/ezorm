@@ -154,6 +154,10 @@ func (f *Field) BsonTagName() string {
 	return f.Name
 }
 
+func (f *Field) DbName() string {
+	return camel2name(f.Name)
+}
+
 func (f *Field) GetTag() string {
 	tags := map[string]bool{}
 	for _, db := range f.Obj.Dbs {

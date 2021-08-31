@@ -11,7 +11,11 @@ type SortUserBlog struct {
 	isNew bool
 }
 
-const ()
+const (
+	SortUserBlogMysqlFieldKey   = "key"
+	SortUserBlogMysqlFieldScore = "score"
+	SortUserBlogMysqlFieldValue = "value"
+)
 
 func (p *SortUserBlog) GetNameSpace() string {
 	return "people"

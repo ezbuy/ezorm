@@ -20,7 +20,20 @@ type User struct {
 	isNew       bool
 }
 
-const ()
+const (
+	UserMysqlFieldId          = "id"
+	UserMysqlFieldName        = "name"
+	UserMysqlFieldMailbox     = "mailbox"
+	UserMysqlFieldSex         = "sex"
+	UserMysqlFieldLongitude   = "longitude"
+	UserMysqlFieldLatitude    = "latitude"
+	UserMysqlFieldDescription = "description"
+	UserMysqlFieldPassword    = "password"
+	UserMysqlFieldHeadUrl     = "head_url"
+	UserMysqlFieldStatus      = "status"
+	UserMysqlFieldCreatedAt   = "created_at"
+	UserMysqlFieldUpdatedAt   = "updated_at"
+)
 
 func (p *User) GetNameSpace() string {
 	return "people"
