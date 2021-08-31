@@ -57,7 +57,7 @@ func (cfg *MysqlFieldConfig) Convert() *MysqlConfig {
 		param := fmt.Sprintf("&%s=%s", key, val)
 		buf.WriteString(param)
 	}
-	dsn := fmt.Sprintf("%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True%s",
+	dsn := fmt.Sprintf("%s@tcp(%s:%d)/%s?charset=utf8mb4%s",
 		userDSN,
 		cfg.Host,
 		cfg.Port,
