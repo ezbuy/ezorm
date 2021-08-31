@@ -5,10 +5,7 @@ import (
 	"database/sql"
 )
 
-var (
-	mysqlCfg      MysqlConfig
-	mysqlInstance *Mysql
-)
+var mysqlInstance *Mysql
 
 func MysqlInitByField(cfg *MysqlFieldConfig) {
 	MysqlInit(cfg.Convert())
@@ -16,7 +13,7 @@ func MysqlInitByField(cfg *MysqlFieldConfig) {
 
 func MysqlInit(cfg *MysqlConfig) {
 	var err error
-	mysqlInstance, err = NewMysql(&mysqlCfg)
+	mysqlInstance, err = NewMysql(cfg)
 	if err != nil {
 		panic(err)
 	}
