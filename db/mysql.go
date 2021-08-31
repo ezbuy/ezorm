@@ -43,17 +43,24 @@ type MysqlFieldConfig struct {
 }
 
 func (cfg *MysqlFieldConfig) Convert() *MysqlConfig {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True",
-		cfg.UserName,
-		cfg.Password,
+	var userDSN string
+	if cfg.Password == "" {
+		userDSN = cfg.UserName
+	} else {
+		userDSN = fmt.Sprintf("%s:%s", cfg.UserName, cfg.Password)
+	}
+	dsn := fmt.Sprintf("%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True",
+		userDSN,
 		cfg.Host,
 		cfg.Port,
 		cfg.Database)
-	return &MysqlConfig{
+	mysqlCfg := &MysqlConfig{
 		DataSource:      dsn,
 		PoolSize:        cfg.PoolSize,
 		ConnMaxLifeTime: cfg.ConnMaxLifeTime,
 	}
+	mysqlCfg.init()
+	return mysqlCfg
 }
 
 func NewMysql(cfg *MysqlConfig) (*Mysql, error) {

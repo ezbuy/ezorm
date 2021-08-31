@@ -11,8 +11,15 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	db.MysqlInit(&db.MysqlConfig{
-		DataSource: "root@tcp(localhost:3306)/?multiStatements=true",
+	// db.MysqlInit(&db.MysqlConfig{
+	// DataSource: "root@tcp(localhost:3306)/?multiStatements=true",
+	// })
+	db.MysqlInitByField(&db.MysqlFieldConfig{
+		Host:     "localhost",
+		Port:     3306,
+		UserName: "root",
+		Password: "",
+		Database: "",
 	})
 
 	// initialize mysql database environment for running test below
