@@ -30,6 +30,32 @@ func (cfg *MysqlConfig) init() {
 	}
 }
 
+// MysqlFieldConfig uses fields to config mysql, it can be converted
+// to DSN style.
+type MysqlFieldConfig struct {
+	Host            string
+	Port            int
+	UserName        string
+	Password        string
+	Database        string
+	PoolSize        int
+	ConnMaxLifeTime time.Duration
+}
+
+func (cfg *MysqlFieldConfig) Convert() *MysqlConfig {
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True",
+		cfg.UserName,
+		cfg.Password,
+		cfg.Host,
+		cfg.Port,
+		cfg.Database)
+	return &MysqlConfig{
+		DataSource:      dsn,
+		PoolSize:        cfg.PoolSize,
+		ConnMaxLifeTime: cfg.ConnMaxLifeTime,
+	}
+}
+
 func NewMysql(cfg *MysqlConfig) (*Mysql, error) {
 	if cfg == nil {
 		cfg = new(MysqlConfig)
@@ -38,7 +64,7 @@ func NewMysql(cfg *MysqlConfig) (*Mysql, error) {
 
 	db, err := sql.Open("mysql", cfg.DataSource)
 	if err != nil {
-		return nil, fmt.Errorf("sql.Open:", err)
+		return nil, fmt.Errorf("sql.Open: %v", err)
 	}
 	db.SetConnMaxLifetime(time.Hour)
 	db.SetMaxIdleConns(cfg.PoolSize)

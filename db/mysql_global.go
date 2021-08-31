@@ -3,28 +3,29 @@ package db
 import (
 	"context"
 	"database/sql"
-	"sync"
 )
 
 var (
 	mysqlCfg      MysqlConfig
 	mysqlInstance *Mysql
-	mysqlConnOnce sync.Once
 )
 
+func MysqlInitByField(cfg *MysqlFieldConfig) {
+	MysqlInit(cfg.Convert())
+}
+
 func MysqlInit(cfg *MysqlConfig) {
-	mysqlCfg = *cfg
+	var err error
+	mysqlInstance, err = NewMysql(&mysqlCfg)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func getMysqlInstance() *Mysql {
-	var err error
-	mysqlConnOnce.Do(func() {
-		mysqlInstance, err = NewMysql(&mysqlCfg)
-		if err != nil {
-			panic(err)
-		}
-	})
-
+	if mysqlInstance == nil {
+		panic("mysql no init, please call MysqlInit first.")
+	}
 	return mysqlInstance
 }
 
