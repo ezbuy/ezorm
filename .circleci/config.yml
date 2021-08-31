@@ -45,4 +45,8 @@ jobs:
           command: |
             ezorm gen -i ./example/mysql_people/people.yaml -o ./example/mysql_people -p people --goPackage test
             go test -v ./example/mysql_people/...
+      - run:
+          name: test-db
+          command: |
+            go test -v ./db/mysql_test.go ./db/mysql.go
 
