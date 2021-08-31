@@ -35,7 +35,7 @@ func TestMysqlConfigConvert(t *testing.T) {
 				Addr:     "192.168.12.3",
 				Database: "test",
 			},
-			dsn: "@tcp(192.168.12.3)/test?charset=utf8mb4",
+			dsn: "tcp(192.168.12.3)/test?charset=utf8mb4",
 		},
 		{
 			cfg: &MysqlFieldConfig{

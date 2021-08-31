@@ -52,12 +52,15 @@ func (cfg *MysqlFieldConfig) Convert() *MysqlConfig {
 	} else if cfg.UserName != "" {
 		userDSN = fmt.Sprintf("%s:%s", cfg.UserName, cfg.Password)
 	}
+	if userDSN != "" {
+		userDSN += "@"
+	}
 	var buf bytes.Buffer
 	for key, val := range cfg.Options {
 		param := fmt.Sprintf("&%s=%s", key, val)
 		buf.WriteString(param)
 	}
-	dsn := fmt.Sprintf("%s@tcp(%s)/%s?charset=utf8mb4%s",
+	dsn := fmt.Sprintf("%stcp(%s)/%s?charset=utf8mb4%s",
 		userDSN,
 		cfg.Addr,
 		cfg.Database,
