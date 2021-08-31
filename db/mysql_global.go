@@ -3,20 +3,30 @@ package db
 import (
 	"context"
 	"database/sql"
+	"sync"
 )
 
-var mysqlInstance *Mysql
+var (
+	mysqlInstance *Mysql
+	mysqlConnOnce sync.Once
+)
 
 func MysqlInitByField(cfg *MysqlFieldConfig) {
 	MysqlInit(cfg.Convert())
 }
 
 func MysqlInit(cfg *MysqlConfig) {
-	var err error
-	mysqlInstance, err = NewMysql(cfg)
-	if err != nil {
-		panic(err)
-	}
+	mysqlConnOnce.Do(func() {
+		var err error
+		mysqlInstance, err = NewMysql(cfg)
+		if err != nil {
+			panic("init mysql: " + err.Error())
+		}
+		err = mysqlInstance.DB.Ping()
+		if err != nil {
+			panic("ping mysql: " + err.Error())
+		}
+	})
 }
 
 func getMysqlInstance() *Mysql {

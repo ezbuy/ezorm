@@ -34,33 +34,32 @@ func (cfg *MysqlConfig) init() {
 // MysqlFieldConfig uses fields to config mysql, it can be converted
 // to DSN style.
 type MysqlFieldConfig struct {
-	Host            string
-	Port            int
-	UserName        string
-	Password        string
-	Database        string
+	Addr     string
+	UserName string
+	Password string
+	Database string
+
 	PoolSize        int
 	ConnMaxLifeTime time.Duration
 
-	ExtractFields map[string]string
+	Options map[string]string
 }
 
 func (cfg *MysqlFieldConfig) Convert() *MysqlConfig {
 	var userDSN string
 	if cfg.Password == "" {
 		userDSN = cfg.UserName
-	} else {
+	} else if cfg.UserName != "" {
 		userDSN = fmt.Sprintf("%s:%s", cfg.UserName, cfg.Password)
 	}
 	var buf bytes.Buffer
-	for key, val := range cfg.ExtractFields {
+	for key, val := range cfg.Options {
 		param := fmt.Sprintf("&%s=%s", key, val)
 		buf.WriteString(param)
 	}
-	dsn := fmt.Sprintf("%s@tcp(%s:%d)/%s?charset=utf8mb4%s",
+	dsn := fmt.Sprintf("%s@tcp(%s)/%s?charset=utf8mb4%s",
 		userDSN,
-		cfg.Host,
-		cfg.Port,
+		cfg.Addr,
 		cfg.Database,
 		buf.String())
 	mysqlCfg := &MysqlConfig{

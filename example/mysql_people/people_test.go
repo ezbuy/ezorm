@@ -15,13 +15,12 @@ func TestMain(m *testing.M) {
 	// DataSource: "root@tcp(localhost:3306)/?multiStatements=true",
 	// })
 	db.MysqlInitByField(&db.MysqlFieldConfig{
-		Host:     "localhost",
-		Port:     3306,
+		Addr:     "localhost:3306",
 		UserName: "root",
 		Password: "",
 		Database: "",
 
-		ExtractFields: map[string]string{
+		Options: map[string]string{
 			"multiStatements": "true",
 		},
 	})
