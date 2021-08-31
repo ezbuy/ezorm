@@ -32,7 +32,7 @@ const (
         {{- if or ($obj.DbContains "mongo") ($field.AttrsContains "bsonTag")}}
             {{$obj.Name}}MgoField{{$field.Name}} = "{{$field.BsonTagName}}"
         {{- end}}
-        {{- if or ($obj.DbContains "mysql")}}
+        {{- if ($obj.DbContains "mysql")}}
             {{$obj.Name}}MysqlField{{$field.Name}} = "{{$field.DbName}}"
         {{- end}}
     {{- end}}
