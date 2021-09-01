@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS `blog` (
   `update` datetime DEFAULT NULL,
   `column_10` timestamp NULL DEFAULT NULL,
   `time_stamp` bigint DEFAULT NULL,
+  `group_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`blog_id`),
   UNIQUE KEY `Blog_Slug_uindex` (`slug`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;

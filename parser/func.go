@@ -42,6 +42,8 @@ func toIds(bufName, typeName, name string) string {
 		return "boolToIds(" + bufName + "," + name + ")"
 	case "string":
 		return "stringToIds(" + bufName + "," + name + ")"
+	case "int64":
+		return "int64ToIds(" + bufName + "," + name + ")"
 	}
 	return name
 }
