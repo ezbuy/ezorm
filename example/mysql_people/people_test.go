@@ -58,6 +58,7 @@ func TestPeople(t *testing.T) {
 		Slug:        "blog-title",
 		Body:        "hello! everybody!!!",
 		User:        1,
+		GroupId:     1,
 		IsPublished: true,
 		Create:      now,
 		Update:      now,
@@ -74,6 +75,7 @@ func TestPeople(t *testing.T) {
 			Title:       "BlogTitile2",
 			Slug:        "blog-title-2",
 			User:        2,
+			GroupId:     1,
 			IsPublished: false,
 			Create:      now,
 			Update:      now,
@@ -89,6 +91,7 @@ func TestPeople(t *testing.T) {
 			Title:       "BlogTitle3",
 			Slug:        "blog-title-3",
 			User:        1,
+			GroupId:     2,
 			IsPublished: true,
 			Create:      now,
 			Update:      now,
@@ -123,6 +126,37 @@ func TestPeople(t *testing.T) {
 		}
 		if blog.Update.Unix() != now.Unix() {
 			t.Fatal("not expected updatetime")
+		}
+	}
+	{
+		blogs, err := BlogMgr.FindInGroupId([]int64{1, 2})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(blogs) != 3 {
+			t.Fatal("not expected")
+		}
+
+		for _, blog := range blogs {
+			switch blog.BlogId {
+			case 1:
+				if blog.Slug != "blog-title-1" {
+					t.Fatal("not expected id 1")
+				}
+
+			case 2:
+				if blog.Slug != "blog-title-2" {
+					t.Fatal("not expected id 2")
+				}
+
+			case 3:
+				if blog.Slug != "blog-title-3" {
+					t.Fatal("not expected id 3")
+				}
+
+			default:
+				t.Fatalf("not expected id %d", blog.BlogId)
+			}
 		}
 	}
 	testForeignKey(t)

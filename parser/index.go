@@ -24,7 +24,7 @@ func (i *Index) GetFirstField() *Field {
 
 func (i *Index) IsFindInType(field *Field) bool {
 	switch field.Type {
-	case "int", "int32", "string":
+	case "int", "int32", "string", "int64":
 		return true
 	default:
 		return false

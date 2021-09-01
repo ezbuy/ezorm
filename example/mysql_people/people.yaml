@@ -16,6 +16,8 @@ Blog:
       fk: User.UserNumber
     - IsPublished: bool
       flags: [index]
+    - GroupId: int64
+      flags: [index]
     - Create: timestamp
       flags: [index]
     - Update: datetime

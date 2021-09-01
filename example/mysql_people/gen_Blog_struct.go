@@ -12,6 +12,7 @@ type Blog struct {
 	Body        string    `db:"body"`
 	User        int32     `db:"user"`
 	IsPublished bool      `db:"is_published"`
+	GroupId     int64     `db:"group_id"`
 	Create      time.Time `db:"create"`
 	Update      time.Time `db:"update"`
 	isNew       bool
@@ -25,6 +26,7 @@ const (
 	BlogMysqlFieldBody        = "body"
 	BlogMysqlFieldUser        = "user"
 	BlogMysqlFieldIsPublished = "is_published"
+	BlogMysqlFieldGroupId     = "group_id"
 	BlogMysqlFieldCreate      = "create"
 	BlogMysqlFieldUpdate      = "update"
 )

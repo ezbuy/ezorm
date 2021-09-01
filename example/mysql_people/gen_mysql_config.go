@@ -22,6 +22,22 @@ func int32ToIds(buf *bytes.Buffer, ids []int32) {
 	buf.WriteString(")")
 }
 
+func int64ToIds(buf *bytes.Buffer, ids []int64) {
+	buf.WriteString("(")
+	set := make(map[int64]struct{}, len(ids))
+	for idx, id := range ids {
+		if _, ok := set[id]; ok {
+			continue
+		}
+		set[id] = struct{}{}
+		if idx > 0 {
+			buf.WriteString(",")
+		}
+		buf.WriteString(strconv.Itoa(int(id)))
+	}
+	buf.WriteString(")")
+}
+
 func intToIds(buf *bytes.Buffer, ids []int) {
 	buf.WriteString("(")
 	set := make(map[int]struct{}, len(ids))
