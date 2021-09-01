@@ -314,16 +314,6 @@ func (m *_PeopleMgr) getSplitIds(ids []int32) [][]int32 {
 	return re
 }
 
-func (m *_PeopleMgr) FindOneByUniquePart1UniquePart2(UniquePart1 int32, UniquePart2 int32) (*People, error) {
-	query := "SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate FROM [dbo].[People] WHERE UniquePart1=? AND UniquePart2=?"
-	return m.queryOne(query, UniquePart1, UniquePart2)
-}
-
-func (m *_PeopleMgr) FindOneByUniquePart1UniquePart2Context(ctx context.Context, UniquePart1 int32, UniquePart2 int32) (*People, error) {
-	query := "SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate FROM [dbo].[People] WHERE UniquePart1=? AND UniquePart2=?"
-	return m.queryOneContext(ctx, query, UniquePart1, UniquePart2)
-}
-
 func (m *_PeopleMgr) FindByIndexAPart1IndexAPart2IndexAPart3(IndexAPart1 int64, IndexAPart2 int32, IndexAPart3 int32, offset int, limit int, sortFields ...string) ([]*People, error) {
 	orderBy := "ORDER BY %s"
 	if len(sortFields) != 0 {
@@ -384,6 +374,16 @@ func (m *_PeopleMgr) CountByIndexAPart1IndexAPart2IndexAPart3Context(ctx context
 	}
 
 	return count, err
+}
+
+func (m *_PeopleMgr) FindOneByUniquePart1UniquePart2(UniquePart1 int32, UniquePart2 int32) (*People, error) {
+	query := "SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate FROM [dbo].[People] WHERE UniquePart1=? AND UniquePart2=?"
+	return m.queryOne(query, UniquePart1, UniquePart2)
+}
+
+func (m *_PeopleMgr) FindOneByUniquePart1UniquePart2Context(ctx context.Context, UniquePart1 int32, UniquePart2 int32) (*People, error) {
+	query := "SELECT NonIndexA, NonIndexB, PeopleId, Age, Name, IndexAPart1, IndexAPart2, IndexAPart3, UniquePart1, UniquePart2, CreateDate, UpdateDate FROM [dbo].[People] WHERE UniquePart1=? AND UniquePart2=?"
+	return m.queryOneContext(ctx, query, UniquePart1, UniquePart2)
 }
 
 func (m *_PeopleMgr) FindByAge(Age int32, offset int, limit int, sortFields ...string) ([]*People, error) {
