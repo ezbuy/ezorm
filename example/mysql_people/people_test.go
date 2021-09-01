@@ -140,7 +140,7 @@ func TestPeople(t *testing.T) {
 		for _, blog := range blogs {
 			switch blog.BlogId {
 			case 1:
-				if blog.Slug != "blog-title-1" {
+				if blog.Slug != "blog-title" {
 					t.Fatal("not expected id 1")
 				}
 
