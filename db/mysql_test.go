@@ -44,11 +44,10 @@ func TestMysqlConfigConvert(t *testing.T) {
 				Password: "product_123",
 
 				Options: map[string]string{
-					"parseTime":  "true",
-					"autocommit": "true",
+					"parseTime": "true",
 				},
 			},
-			dsn: "product:product_123@tcp(192.168.12.68)/?charset=utf8mb4&parseTime=true&autocommit=true",
+			dsn: "product:product_123@tcp(192.168.12.68)/?charset=utf8mb4&parseTime=true",
 		},
 		{
 			cfg: &MysqlFieldConfig{
