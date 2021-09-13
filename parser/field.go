@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"sort"
@@ -43,6 +44,9 @@ type Field struct {
 	Order        string
 	Tag          string
 	Type         string
+	Size         int    // The field size, use for DDL generation.
+	Decimal      int    // The decimal size, only use for "float64" type.
+	Default      string // The default value for this field, use for DDL generation.
 	Widget       string
 	Remark       string
 	FK           *ForeignKey
@@ -407,12 +411,29 @@ func (f *Field) Read(data map[interface{}]interface{}) error {
 				f.Remark = val
 			case "comment":
 				f.Comment = val
+			case "default":
+				f.Default = fmt.Sprintf("'%s'", val)
+			case "size":
+				size, err := strconv.Atoi(val)
+				if err != nil {
+					return fmt.Errorf("size %s is not a number", val)
+				}
+				f.Size = size
 			default:
 				return errors.New("invalid field name: " + key)
 			}
 		case int:
-			f.Name = key
-			f.Tag = strconv.Itoa(val)
+			switch key {
+			case "default":
+				f.Default = strconv.Itoa(val)
+			case "size":
+				f.Size = val
+			case "decimal":
+				f.Decimal = val
+			default:
+				f.Name = key
+				f.Tag = strconv.Itoa(val)
+			}
 		case []interface{}:
 			switch key {
 			case "flags":
@@ -438,8 +459,90 @@ func (f *Field) Read(data map[interface{}]interface{}) error {
 	return nil
 }
 
+func (f *Field) IsAutoInc() bool {
+	return f.Flags.Contains("autoinc")
+}
+
 func (f *Field) DisableAutoInc() bool {
 	return f.Flags.Contains("noinc")
+}
+
+func (f *Field) MysqlCreation() string {
+	var buffer bytes.Buffer
+	name := fmt.Sprintf("`%s` ", camel2name(f.Name))
+	buffer.WriteString(name)
+	buffer.WriteString(f.mysqlDbType())
+
+	if !f.IsNullable() {
+		buffer.WriteString(" NOT NULL ")
+	}
+	if f.Default != "" {
+		buffer.WriteString(" DEFAULT ")
+		buffer.WriteString(f.Default)
+		buffer.WriteByte(' ')
+	}
+	if f.IsAutoInc() {
+		buffer.WriteString(" AUTO_INCREMENT ")
+	}
+	if f.Comment != "" {
+		comment := fmt.Sprintf(" COMMENT '%s' ", f.Comment)
+		buffer.WriteString(comment)
+	}
+	line := buffer.String()
+	line = strings.TrimSpace(line)
+
+	return strings.Join(strings.Fields(line), " ")
+}
+
+func (f *Field) mysqlDbType() string {
+	var basic string
+	switch f.Type {
+	case "int8":
+		basic = "smallint"
+	case "int32":
+		basic = "int"
+	case "int64":
+		basic = "bigint"
+	case "float64", "float32":
+		decimal := f.Decimal
+		if decimal <= 0 {
+			decimal = 4
+		}
+		size := f.Size
+		if size <= 0 {
+			size = 11
+		}
+		if size < decimal {
+			// For mysql, Size cannot smaller than Decimal
+			size = decimal + 4
+		}
+		return fmt.Sprintf("DECIMAL(%d, %d)", size, decimal)
+
+	case "string":
+		basic = "varchar"
+
+	case "[]byte":
+		basic = "binary"
+
+	case "bool":
+		basic = "bit"
+
+	case "time.Time", "*time.Time":
+		return "datetime"
+
+	default:
+		return strings.ToUpper(f.Type)
+	}
+
+	if f.Size > 0 {
+		basic = fmt.Sprintf("%s(%d)", basic, f.Size)
+	} else {
+		if f.Type == "string" || f.Type == "[]byte" {
+			basic = fmt.Sprintf("%s(200)", basic)
+		}
+	}
+
+	return strings.ToUpper(basic)
 }
 
 func DbToGoType(colType string) string {
