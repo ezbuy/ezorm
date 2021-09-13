@@ -10,6 +10,7 @@ genexample:
 	ezorm gen -i ./example/blog/blog.yaml -o ./example/blog -p blog --goPackage test
 	ezorm gen -i ./example/mysql_people/people.yaml -o ./example/mysql_people -p people --goPackage test
 	ezorm gen -i ./example/redis_people/people.yaml -o ./example/redis_people -p people --goPackage test
+	ezorm gen -i ./example/mysql_user/user.yaml -o ./example/mysql_user/ -p user --goPackage test
 
 clean:
 	rm ./example/mssql_people/gen_*.go

@@ -582,6 +582,9 @@ func (o *Obj) Read(data map[string]interface{}) error {
 			return errors.New("please specify `storetype` to " + o.Name)
 		}
 	}
+	if o.DbContains("mysql") && o.Table == "" {
+		o.Table = camel2name(o.Name)
+	}
 	// all mysql dbs share the same connection pool
 	if o.DbContains("mysql") && o.DbName == "" {
 		return errors.New("please specify `dbname` to " + o.Name)
