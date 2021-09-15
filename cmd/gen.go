@@ -84,11 +84,15 @@ var genCmd = &cobra.Command{
 
 		for db, objs := range dbObjs {
 			switch db {
+			default:
+				continue
+
 			case "mysql":
-				path := fmt.Sprintf("%s/create_%s.sql", output, db)
-				genType := db + "_script"
-				executeTpl(path, genType, objs)
 			}
+
+			path := fmt.Sprintf("%s/create_%s.sql", output, db)
+			genType := db + "_script"
+			executeTpl(path, genType, objs)
 		}
 
 		oscmd := exec.Command("gofmt", "-w", output)
