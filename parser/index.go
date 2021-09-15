@@ -93,3 +93,33 @@ func (i *Index) GetFuncParamNames(prefixs ...string) string {
 	}
 	return string(buf.Bytes()[:length-1])
 }
+
+func (i *Index) MysqlCreation(obj *Obj) string {
+	var buffer bytes.Buffer
+	buffer.WriteString("CREATE ")
+	if i.IsUnique {
+		buffer.WriteString(" UNIQUE ")
+	}
+
+	fnames := make([]string, len(i.Fields))
+	for idx, f := range i.Fields {
+		fnames[idx] = camel2name(f.Name)
+	}
+
+	idxName := fmt.Sprintf("idx_%s_%s", obj.Table,
+		strings.Join(fnames, "_"))
+	idxName = fmt.Sprintf("`%s`", idxName)
+	buffer.WriteString(" INDEX " + idxName)
+	buffer.WriteString(" ON `" + obj.Table + "`(")
+
+	for idx, f := range fnames {
+		fnames[idx] = fmt.Sprintf("`%s`", f)
+	}
+
+	buffer.WriteString(strings.Join(fnames, ", "))
+	buffer.WriteByte(')')
+
+	line := buffer.String()
+	line = strings.TrimSpace(line)
+	return strings.Join(strings.Fields(line), " ")
+}

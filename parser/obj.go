@@ -44,6 +44,7 @@ func init() {
 		"tpl/redis_config.gogo",
 		"tpl/redis_orm.gogo",
 		"tpl/mongo_config.gogo",
+		"tpl/mysql_script.sql",
 	}
 	for _, fname := range files {
 		data, err := tpl.Asset(fname)
@@ -580,6 +581,9 @@ func (o *Obj) Read(data map[string]interface{}) error {
 		default:
 			return errors.New("please specify `storetype` to " + o.Name)
 		}
+	}
+	if o.DbContains("mysql") && o.Table == "" {
+		o.Table = camel2name(o.Name)
 	}
 	// all mysql dbs share the same connection pool
 	if o.DbContains("mysql") && o.DbName == "" {

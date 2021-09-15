@@ -54,6 +54,7 @@ var genCmd = &cobra.Command{
 		}
 
 		databases := make(map[string]*parser.Obj)
+		dbObjs := make(map[string][]*parser.Obj)
 
 		for key, obj := range objs {
 			xwMetaObj := new(parser.Obj)
@@ -67,6 +68,7 @@ var genCmd = &cobra.Command{
 			}
 
 			databases[xwMetaObj.Db] = xwMetaObj
+			dbObjs[xwMetaObj.Db] = append(dbObjs[xwMetaObj.Db], xwMetaObj)
 			for _, genType := range xwMetaObj.GetGenTypes() {
 				fileAbsPath := output + "/gen_" + xwMetaObj.Name + "_" + genType + ".go"
 				executeTpl(fileAbsPath, genType, xwMetaObj)
@@ -80,19 +82,34 @@ var genCmd = &cobra.Command{
 			}
 		}
 
+		for db, objs := range dbObjs {
+			switch db {
+			default:
+				continue
+
+			case "mysql":
+			}
+
+			path := fmt.Sprintf("%s/create_%s.sql", output, db)
+			genType := db + "_script"
+			executeTpl(path, genType, objs)
+		}
+
 		oscmd := exec.Command("gofmt", "-w", output)
 		oscmd.Run()
 
 	},
 }
 
-func executeTpl(fileAbsPath, tplName string, xwMetaObj *parser.Obj) {
+func executeTpl(fileAbsPath, tplName string, obj interface{}) {
 	file, err := os.OpenFile(fileAbsPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		panic(err)
 	}
-	xwMetaObj.TplWriter = file
-	err = parser.Tpl.ExecuteTemplate(file, tplName, xwMetaObj)
+	if xwMetaObj, ok := obj.(*parser.Obj); ok {
+		xwMetaObj.TplWriter = file
+	}
+	err = parser.Tpl.ExecuteTemplate(file, tplName, obj)
 	file.Close()
 	if err != nil {
 		panic(err)
