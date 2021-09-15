@@ -528,7 +528,7 @@ func (f *Field) mysqlDbType() string {
 		basic = "binary"
 
 	case "bool":
-		basic = "bit"
+		basic = "tinyint"
 
 	case "time.Time", "datetime":
 		return "DATETIME"
