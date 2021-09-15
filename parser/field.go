@@ -544,6 +544,9 @@ func (f *Field) mysqlDbType() string {
 		basic = fmt.Sprintf("%s(%d)", basic, f.Size)
 	} else {
 		if f.Type == "string" || f.Type == "[]byte" {
+			fmt.Printf("WARNING: [mysql-script] Use default size 200 for "+
+				"field %s.%s, please consider add size for it.\n",
+				f.Obj.Name, f.Name)
 			basic = fmt.Sprintf("%s(200)", basic)
 		}
 	}
