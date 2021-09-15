@@ -1,16 +1,16 @@
 
 -- DDL for object Blog.
 CREATE TABLE `blog` (
-  `blog_id` INT NOT NULL,
-  `title` VARCHAR(200) NOT NULL,
-  `hits` INT NOT NULL,
-  `slug` VARCHAR(200) NOT NULL,
+  `blog_id` INT NOT NULL DEFAULT 0,
+  `title` VARCHAR(200) NOT NULL DEFAULT '',
+  `hits` INT NOT NULL DEFAULT 0,
+  `slug` VARCHAR(200) NOT NULL DEFAULT '',
   `body` VARCHAR(200),
-  `user` INT NOT NULL,
-  `is_published` BIT NOT NULL,
-  `group_id` BIGINT NOT NULL,
-  `create` TIMESTAMP NOT NULL,
-  `update` DATETIME NOT NULL,
+  `user` INT NOT NULL DEFAULT 0,
+  `is_published` BIT NOT NULL DEFAULT 0,
+  `group_id` BIGINT NOT NULL DEFAULT 0,
+  `create` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `update` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`blog_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT '';
 
@@ -26,9 +26,9 @@ CREATE INDEX `idx_blog_update` ON `blog`(`update`);
 
 -- DDL for object User.
 CREATE TABLE `test_user` (
-  `user_id` INT NOT NULL,
-  `user_number` INT NOT NULL,
-  `name` VARCHAR(200) NOT NULL,
+  `user_id` INT NOT NULL DEFAULT 0,
+  `user_number` INT NOT NULL DEFAULT 0,
+  `name` VARCHAR(200) NOT NULL DEFAULT '',
   PRIMARY KEY (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT '';
 

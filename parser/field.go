@@ -475,6 +475,9 @@ func (f *Field) MysqlCreation() string {
 
 	if !f.IsNullable() {
 		buffer.WriteString(" NOT NULL ")
+		if f.Default == "" && !f.IsAutoInc() {
+			f.Default = f.mysqlDefaultValue()
+		}
 	}
 	if f.Default != "" {
 		buffer.WriteString(" DEFAULT ")
@@ -527,8 +530,11 @@ func (f *Field) mysqlDbType() string {
 	case "bool":
 		basic = "bit"
 
-	case "time.Time", "*time.Time":
-		return "datetime"
+	case "time.Time", "datetime":
+		return "DATETIME"
+
+	case "timestamp":
+		return "TIMESTAMP"
 
 	default:
 		return strings.ToUpper(f.Type)
@@ -543,6 +549,20 @@ func (f *Field) mysqlDbType() string {
 	}
 
 	return strings.ToUpper(basic)
+}
+
+func (f *Field) mysqlDefaultValue() string {
+	switch f.Type {
+	case "int8", "int32", "int64", "bool":
+		return "0"
+	case "string", "[]byte":
+		return "''"
+	case "float32", "float64":
+		return "'0.00'"
+	case "timestamp", "datetime":
+		return "CURRENT_TIMESTAMP"
+	}
+	return "''"
 }
 
 func DbToGoType(colType string) string {

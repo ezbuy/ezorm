@@ -3,11 +3,11 @@
 CREATE TABLE `user` (
   `user_id` BIGINT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(255) NOT NULL DEFAULT 'DefaultName',
-  `phone` VARCHAR(20) NOT NULL,
+  `phone` VARCHAR(20) NOT NULL DEFAULT '',
   `age` INT NOT NULL DEFAULT 3,
-  `balance` DECIMAL(20, 4) NOT NULL,
+  `balance` DECIMAL(20, 4) NOT NULL DEFAULT '0.00',
   `text` VARCHAR(400) DEFAULT 'Hello, user!',
-  `create_date` BIGINT NOT NULL,
+  `create_date` BIGINT NOT NULL DEFAULT 0,
   PRIMARY KEY (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT '';
 
