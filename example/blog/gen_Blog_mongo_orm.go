@@ -17,6 +17,7 @@ var _ time.Time
 func init() {
 
 	db.SetOnEnsureIndex(initBlogIndex)
+	addMgoIndexFunc(initBlogIndex)
 
 	RegisterEzOrmObjByID("blog", "Blog", newBlogFindByID)
 	RegisterEzOrmObjRemove("blog", "Blog", BlogMgr.RemoveByID)

@@ -22,6 +22,7 @@ var _ time.Time
 func init() {
 	{{if .NeedIndex}}
 	db.SetOnEnsureIndex(init{{.Name}}Index)
+	addMgoIndexFunc(init{{.Name}}Index)
 	{{end}}
 	{{if .NeedMapping}}
 	db.SetOnFinishInit(init{{.Name}}Mapping)
