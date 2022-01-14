@@ -16,6 +16,7 @@ var (
 	mgoConfig        *db.MongoConfig
 	mgoInstanceOnce  sync.Once
 	mgoInstanceIndex uint32
+	mgoIndexFunc     []func()
 )
 
 var ErrOperaBeforeInit = errors.New("please set db.SetOnFinishInit when needed operating db in init()")
@@ -49,4 +50,14 @@ func getCol(dbName, col string) (*mgo.Session, *mgo.Collection) {
 		mgoCol = session.DB(dbName).C(col)
 	}
 	return session, mgoCol
+}
+
+func addMgoIndexFunc(f func()) {
+	mgoIndexFunc = append(mgoIndexFunc, f)
+}
+
+func EnsureIndex() {
+	for _, f := range mgoIndexFunc {
+		f()
+	}
 }
