@@ -19,6 +19,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	yaml "gopkg.in/yaml.v2"
@@ -82,6 +83,7 @@ var genCmd = &cobra.Command{
 			}
 		}
 
+		sqlObjs := make(map[string]*parser.Obj, len(dbObjs))
 		for db, objs := range dbObjs {
 			switch db {
 			default:
@@ -93,12 +95,70 @@ var genCmd = &cobra.Command{
 			path := fmt.Sprintf("%s/create_%s.sql", output, db)
 			genType := db + "_script"
 			executeTpl(path, genType, objs)
+
+			for _, obj := range objs {
+				sqlObjs[obj.Table] = obj
+			}
+		}
+
+		if !disableSQLs {
+			err = handleSQL(sqlObjs, genGoPackageName)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
 		}
 
 		oscmd := exec.Command("gofmt", "-w", output)
 		oscmd.Run()
 
 	},
+}
+
+func handleSQL(objs map[string]*parser.Obj, pkg string) error {
+	inputDir := filepath.Dir(input)
+	sqlsDir := filepath.Join(inputDir, "sqls")
+	stat, err := os.Stat(sqlsDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+	if !stat.IsDir() {
+		return nil
+	}
+
+	p := parser.NewSQL(objs)
+	es, err := os.ReadDir(sqlsDir)
+	if err != nil {
+		return err
+	}
+
+	methods := make([]*parser.SQLMethod, 0, len(es))
+	for _, e := range es {
+		if e.IsDir() {
+			continue
+		}
+		path := filepath.Join(sqlsDir, e.Name())
+		m, err := p.Read(path)
+		if err != nil {
+			return err
+		}
+		methods = append(methods, m)
+	}
+	if len(methods) == 0 {
+		return nil
+	}
+
+	file := &parser.SQLFile{
+		GoPackage: pkg,
+		Methods:   methods,
+	}
+	genPath := filepath.Join(output, "gen_methods.go")
+	executeTpl(genPath, "sql_method", file)
+
+	return nil
 }
 
 func executeTpl(fileAbsPath, tplName string, obj interface{}) {
@@ -120,6 +180,7 @@ var input string
 var output string
 var genPackageName string
 var genGoPackageName string
+var disableSQLs bool
 
 func init() {
 	RootCmd.AddCommand(genCmd)
@@ -132,6 +193,7 @@ func init() {
 	genCmd.PersistentFlags().StringVarP(&output, "output", "o", "", "output path")
 	genCmd.PersistentFlags().StringVarP(&genPackageName, "package name", "p", "", "package name")
 	genCmd.PersistentFlags().StringVar(&genGoPackageName, "goPackage", "", "go package name")
+	genCmd.PersistentFlags().BoolVarP(&disableSQLs, "disable-sql", "", false, "disable sql generate")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:

@@ -1,7 +1,6 @@
 all:
 
 buildTpl:
-	go get -u github.com/jteeuwen/go-bindata/go-bindata@master
 	go-bindata -nometadata -o tpl/bindata.go -ignore bindata.go -pkg tpl tpl
 
 genexample:
