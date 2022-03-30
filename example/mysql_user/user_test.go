@@ -21,8 +21,8 @@ func TestMain(m *testing.M) {
 	db.MysqlInitByField(&db.MysqlFieldConfig{
 		Addr:     "localhost:3306",
 		UserName: "root",
-		Password: "19971008",
-		Database: "test",
+		Password: "",
+		Database: "",
 
 		Options: map[string]string{
 			"multiStatements": "true",
