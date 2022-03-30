@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/golang:1.16
+      - image: circleci/golang:1.17
         environment:
           GO111MODULE: "on"
           MSSQL_PASSWORD: ezbuy@ezbuyIsTheBest2019
@@ -35,6 +35,11 @@ jobs:
          command: |
            ezorm gen -i ./example/mssql_people/people_mssql.yaml -o ./example/mssql_people -p people --goPackage test
            go test -v ./example/mssql_people/...
+      - run:
+         name: mongo
+         command: |
+           ezorm gen -i ./example/blog/blog.yaml -o example/blog -p blog --goPackage test
+           go test -v ./example/blog/...
       - run:
           name: mysql
           command: |
