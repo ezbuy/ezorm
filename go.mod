@@ -1,12 +1,13 @@
 module github.com/ezbuy/ezorm
 
+go 1.16
+
 require (
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 	github.com/denisenkom/go-mssqldb v0.0.0-20191124224453-732737034ffd
 	github.com/ezbuy/utils v0.0.0-20170609090716-8ac4beef008f
 	github.com/go-sql-driver/mysql v1.5.0
-	github.com/golang/protobuf v1.3.4 // indirect
-	github.com/iancoleman/strcase v0.2.0 // indirect
+	github.com/iancoleman/strcase v0.2.0
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/lib/pq v1.1.1 // indirect
 	github.com/mattn/go-sqlite3 v2.0.1+incompatible // indirect
@@ -34,5 +35,3 @@ require (
 	gopkg.in/yaml.v2 v2.2.8
 	honnef.co/go/tools v0.0.1-2020.1.3 // indirect
 )
-
-go 1.15
