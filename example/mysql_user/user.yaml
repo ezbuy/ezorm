@@ -21,3 +21,15 @@ User:
     - CreateDate: int64
       flags: [index]
   indexes: [[Name, Phone]]
+
+UserDetail:
+  db: mysql
+  dbname: test
+  fields:
+    - Id: int64
+      flags: [primary, autoinc]
+    - UserId: int64
+      flags: [index]
+    - Score: int32
+    - Balance: int32
+    - Text: string

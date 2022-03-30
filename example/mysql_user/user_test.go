@@ -14,14 +14,15 @@ const tablePrefix = `
 USE test;
 
 DROP TABLE IF EXISTS user;
+DROP TABLE IF EXISTS user_detail;
 `
 
 func TestMain(m *testing.M) {
 	db.MysqlInitByField(&db.MysqlFieldConfig{
 		Addr:     "localhost:3306",
 		UserName: "root",
-		Password: "",
-		Database: "",
+		Password: "19971008",
+		Database: "test",
 
 		Options: map[string]string{
 			"multiStatements": "true",
@@ -73,4 +74,54 @@ func TestUser(t *testing.T) {
 	if user.Age != 24 || user.Balance != 10.23 || user.Text != "" {
 		t.Fatalf("user info not expected")
 	}
+}
+
+func TestFindUserByName(t *testing.T) {
+	u1 := &User{
+		Name:       "lihua",
+		Phone:      "117",
+		Age:        12,
+		Balance:    44.3,
+		Text:       "user text",
+		CreateDate: time.Now().Unix(),
+	}
+	r, err := UserMgr.Save(u1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	id, err := r.LastInsertId()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ud1 := &UserDetail{
+		UserId:  id,
+		Score:   332,
+		Balance: 123,
+		Text:    "detail text",
+	}
+	_, err = UserDetailMgr.Save(ud1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	userResps, err := SQL.FindUsersByName("lihua", 0, 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	countResps, err := SQL.CountUsersByName("lihua")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(countResps) != 1 {
+		t.Fatal("unexpect countResps len: ", len(countResps))
+	}
+	if countResps[0].Count0 != 1 {
+		t.Fatal("unexpect count: ", countResps[0].Count0)
+	}
+
+	if len(userResps) != 1 {
+		t.Fatal("unexpect userResps len: ", len(userResps))
+	}
+	userResp := userResps[0]
+	fmt.Printf("result = %#v\n", userResp)
 }
