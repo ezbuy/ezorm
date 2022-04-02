@@ -1,6 +1,7 @@
 package test
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -104,11 +105,12 @@ func TestFindUserByName(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	userResps, err := SQL.FindUsersByName("lihua", 0, 10)
+	ctx := context.Background()
+	userResps, err := SQL.FindUsersByName(ctx, "lihua", 0, 10)
 	if err != nil {
 		t.Fatal(err)
 	}
-	countResps, err := SQL.CountUsersByName("lihua")
+	countResps, err := SQL.CountUsersByName(ctx, "lihua")
 	if err != nil {
 		t.Fatal(err)
 	}
