@@ -2,12 +2,14 @@
 
 import (
 	"time"
+	"context"
 
 	"github.com/ezbuy/ezorm/db"
 )
 
 var (
 	_ time.Time
+	_ context.Context
 )
 
 type sqlMethods struct {}
@@ -23,7 +25,7 @@ type {{$method.Name}}Resp struct {
 
 const _{{$method.Name}}SQL = "{{$method.SQL}}"
 
-func (*sqlMethods) {{$method.Name}}(args ...interface{}) ([]*{{$method.Name}}Resp, error) {
+func (*sqlMethods) {{$method.Name}}(ctx context.Context, args ...interface{}) ([]*{{$method.Name}}Resp, error) {
 	rows, err := db.MysqlQuery(_{{$method.Name}}SQL, args...)
 	if err != nil {
 		return nil, err

@@ -1,6 +1,7 @@
 package test
 
 import (
+	"context"
 	"time"
 
 	"github.com/ezbuy/ezorm/db"
@@ -8,6 +9,7 @@ import (
 
 var (
 	_ time.Time
+	_ context.Context
 )
 
 type sqlMethods struct{}
@@ -20,7 +22,7 @@ type CountUsersByNameResp struct {
 
 const _CountUsersByNameSQL = "SELECT /* count_users_by_name */ COUNT(1) FROM user WHERE name LIKE ?"
 
-func (*sqlMethods) CountUsersByName(args ...interface{}) ([]*CountUsersByNameResp, error) {
+func (*sqlMethods) CountUsersByName(ctx context.Context, args ...interface{}) ([]*CountUsersByNameResp, error) {
 	rows, err := db.MysqlQuery(_CountUsersByNameSQL, args...)
 	if err != nil {
 		return nil, err
@@ -45,7 +47,7 @@ type CountUsersByPhoneResp struct {
 
 const _CountUsersByPhoneSQL = "SELECT /* count_users_by_phone */ COUNT(0) user_count FROM user WHERE phone LIKE ?"
 
-func (*sqlMethods) CountUsersByPhone(args ...interface{}) ([]*CountUsersByPhoneResp, error) {
+func (*sqlMethods) CountUsersByPhone(ctx context.Context, args ...interface{}) ([]*CountUsersByPhoneResp, error) {
 	rows, err := db.MysqlQuery(_CountUsersByPhoneSQL, args...)
 	if err != nil {
 		return nil, err
@@ -79,7 +81,7 @@ type FindUsersByNameResp struct {
 
 const _FindUsersByNameSQL = "SELECT /* find_users_by_name */ u.user_id id, u.name, u.phone, u.age, u.balance, u.text, u.create_date, IFNULL(ud.score, 0), IFNULL(ud.balance, 0), IFNULL(ud.text, '') detail_text FROM user u JOIN user_detail ud ON u.user_id=ud.user_id WHERE u.name LIKE ? LIMIT ?, ?"
 
-func (*sqlMethods) FindUsersByName(args ...interface{}) ([]*FindUsersByNameResp, error) {
+func (*sqlMethods) FindUsersByName(ctx context.Context, args ...interface{}) ([]*FindUsersByNameResp, error) {
 	rows, err := db.MysqlQuery(_FindUsersByNameSQL, args...)
 	if err != nil {
 		return nil, err
@@ -113,7 +115,7 @@ type GetUserByPhoneResp struct {
 
 const _GetUserByPhoneSQL = "SELECT /* get_user_by_phone */ u.user_id id, u.name, u.phone, u.age, u.balance, u.text, u.create_date, IFNULL(ud.score, 0), IFNULL(ud.balance, 0), IFNULL(ud.text, '') detail_text FROM user u JOIN user_detail ud ON u.user_id=ud.user_id WHERE u.phone LIKE ?"
 
-func (*sqlMethods) GetUserByPhone(args ...interface{}) ([]*GetUserByPhoneResp, error) {
+func (*sqlMethods) GetUserByPhone(ctx context.Context, args ...interface{}) ([]*GetUserByPhoneResp, error) {
 	rows, err := db.MysqlQuery(_GetUserByPhoneSQL, args...)
 	if err != nil {
 		return nil, err

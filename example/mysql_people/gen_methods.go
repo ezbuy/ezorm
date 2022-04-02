@@ -1,6 +1,7 @@
 package test
 
 import (
+	"context"
 	"time"
 
 	"github.com/ezbuy/ezorm/db"
@@ -8,6 +9,7 @@ import (
 
 var (
 	_ time.Time
+	_ context.Context
 )
 
 type sqlMethods struct{}
@@ -20,7 +22,7 @@ type CountBlogsResp struct {
 
 const _CountBlogsSQL = "SELECT /* count_blogs */ COUNT(1) FROM test_user u JOIN blog b ON u.user_id=b.blog_id WHERE u.name = ?"
 
-func (*sqlMethods) CountBlogs(args ...interface{}) ([]*CountBlogsResp, error) {
+func (*sqlMethods) CountBlogs(ctx context.Context, args ...interface{}) ([]*CountBlogsResp, error) {
 	rows, err := db.MysqlQuery(_CountBlogsSQL, args...)
 	if err != nil {
 		return nil, err
@@ -56,7 +58,7 @@ type FindBlogsResp struct {
 
 const _FindBlogsSQL = "SELECT /* find_blogs */ b.blog_id ID, b.title, b.hits, b.slug, IFNULL(b.body, ''), IFNULL(b.is_published, 0) published, b.group_id, b.create, b.update, u.user_id, u.user_number, u.name FROM test_user u JOIN blog b ON u.user_id=b.blog_id WHERE u.name = ? LIMIT ?, ?"
 
-func (*sqlMethods) FindBlogs(args ...interface{}) ([]*FindBlogsResp, error) {
+func (*sqlMethods) FindBlogs(ctx context.Context, args ...interface{}) ([]*FindBlogsResp, error) {
 	rows, err := db.MysqlQuery(_FindBlogsSQL, args...)
 	if err != nil {
 		return nil, err
