@@ -1,14 +1,79 @@
 package parser
 
 import (
+	"bytes"
+	"context"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/pingcap/parser"
 	"github.com/pingcap/parser/ast"
 	_ "github.com/pingcap/parser/test_driver"
 )
+
+type T uint8
+
+const (
+	T_PLACEHOLDER T = iota
+	T_INT
+	T_STRING
+	T_ARRAY_STRING
+	T_ARRAY_INT
+)
+
+func (t T) String() string {
+	switch t {
+	case T_PLACEHOLDER:
+		return "?"
+	case T_INT:
+		return "int64"
+	case T_STRING:
+		return "string"
+	case T_ARRAY_STRING:
+		return "[]string"
+	case T_ARRAY_INT:
+		return "[]int64"
+	}
+	panic("parser: unknown type")
+}
+
+type QueryField struct {
+	Name string
+	Type T
+}
+
+var _ fmt.Stringer = (*QueryMetadata)(nil)
+
+type QueryMetadata struct {
+	params []*QueryField
+	result []*QueryField
+}
+
+func (qm *QueryMetadata) String() string {
+	var buffer bytes.Buffer
+	for _, p := range qm.params {
+		buffer.WriteString(fmt.Sprintf("param: name: %s, type: %s\n", p.Name, p.Type))
+	}
+	for _, r := range qm.result {
+		buffer.WriteString(fmt.Sprintf("result: name: %s, type: %s\n", r.Name, r.Type))
+	}
+	return buffer.String()
+}
+
+type QueryBuilder struct {
+	raw string
+}
+
+func (q *QueryBuilder) rebuild() (string, error) {
+	return "", nil
+}
+
+// RawQueryParser is a parser to extract metedata from sql query
+type RawQueryParser interface {
+	Parse(context.Context, string) (*QueryMetadata, error)
+}
 
 type SelectStmt struct {
 	Fields []*SelectField
@@ -91,9 +156,14 @@ func ParseSelect(sql string) (*SelectStmt, error) {
 	}
 
 	p := parser.New()
-	nodes, _, err := p.Parse(sql, "", "")
+	nodes, warns, err := p.Parse(sql, "", "")
 	if err != nil {
 		return nil, err
+	}
+	if len(warns) > 0 {
+		for _, warn := range warns {
+			fmt.Fprintf(os.Stdout, "parser: WARN %q\n", warn)
+		}
 	}
 	if len(nodes) == 0 {
 		return nil, errors.New("parser: internal: empty nodes")
