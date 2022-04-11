@@ -90,6 +90,7 @@ func TestParseSelectRaw(t *testing.T) {
 				for _, v := range op.List {
 					println(v.(*driver.ValueExpr).GetType().String())
 				}
+
 			case *ast.PatternLikeExpr:
 			case *ast.PatternRegexpExpr:
 			}

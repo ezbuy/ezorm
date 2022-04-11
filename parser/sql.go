@@ -47,6 +47,10 @@ type QueryField struct {
 
 var _ fmt.Stringer = (*QueryMetadata)(nil)
 
+type LimitOption struct {
+	count, offset bool
+}
+
 type QueryMetadata struct {
 	params []*QueryField
 	result []*QueryField
@@ -87,9 +91,13 @@ func (qb *QueryBuilder) rebuild() string {
 	for _, lo := range los {
 		e := lo.start
 		rebuildQuery.WriteString(query[s:e])
-		if ins, ok := qb.raw.ins[reversed[lo]]; ok {
+		ins, ok := qb.raw.ins[reversed[lo]]
+		switch {
+		case ok:
 			rebuildQuery.WriteString(ins.String())
-		} else {
+		case reversed[lo] == "LIMIT" && qb.raw.limit.count && qb.raw.limit.offset:
+			rebuildQuery.WriteString("?,?")
+		default:
 			rebuildQuery.WriteString("?")
 		}
 		s = lo.end
@@ -103,8 +111,9 @@ type LocationOffset struct {
 }
 
 type Raw struct {
-	ins map[string]*InBuilder
-	lo  map[string]LocationOffset
+	ins   map[string]*InBuilder
+	lo    map[string]LocationOffset
+	limit *LimitOption
 }
 
 type InBuilder struct {
