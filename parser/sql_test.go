@@ -37,7 +37,7 @@ SELECT
 	u.id
 FROM
 	user u
-WHERE u.name IN ("me") AND u.id = 1 AND u.phone = "123"
+WHERE u.name IN ('me') AND u.id = 1 AND u.phone = '123'
 LIMIT 0,10
 `
 
@@ -80,6 +80,9 @@ func TestParseSelectRaw(t *testing.T) {
 				fmt.Fprintf(os.Stdout, "op type : %v\n", op.Op == opcode.LogicAnd)
 				fmt.Fprintf(os.Stdout, "L: op type : %T\n", op.L)
 				fmt.Fprintf(os.Stdout, "R: op type : %T\n", op.R)
+
+				ctx := format.NewRestoreCtx(format.DefaultRestoreFlags, os.Stdout)
+				op.R.Restore(ctx)
 				// assert.Equal(t, op.L.(*ast.ColumnNameExpr).Name.String(), "u.name")
 				// assert.Equal(t, op.R.(*driver.ValueExpr).GetType().String(), "var_string(2)")
 			case *ast.PatternInExpr:

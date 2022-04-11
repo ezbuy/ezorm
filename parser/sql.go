@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/pingcap/parser"
@@ -63,11 +64,71 @@ func (qm *QueryMetadata) String() string {
 }
 
 type QueryBuilder struct {
-	raw string
+	*bytes.Buffer
+	raw *Raw
 }
 
-func (q *QueryBuilder) rebuild() (string, error) {
-	return "", nil
+func (qb *QueryBuilder) rebuild() string {
+	query := qb.String()
+	rebuildQuery := bytes.NewBuffer(nil)
+	los := make([]LocationOffset, len(qb.raw.lo))
+	reversed := make(map[LocationOffset]string)
+	var index int
+	for col, lo := range qb.raw.lo {
+		los[index] = lo
+		index++
+		reversed[lo] = col
+	}
+	sort.SliceStable(los, func(i, j int) bool {
+		return los[i].start < los[j].start
+	})
+
+	var s int
+	for _, lo := range los {
+		e := lo.start
+		rebuildQuery.WriteString(query[s:e])
+		if ins, ok := qb.raw.ins[reversed[lo]]; ok {
+			rebuildQuery.WriteString(ins.String())
+		} else {
+			rebuildQuery.WriteString("?")
+		}
+		s = lo.end
+	}
+	rebuildQuery.WriteString(query[s:])
+	return rebuildQuery.String()
+}
+
+type LocationOffset struct {
+	start, end int
+}
+
+type Raw struct {
+	ins map[string]*InBuilder
+	lo  map[string]LocationOffset
+}
+
+type InBuilder struct {
+	col    string
+	params []any
+}
+
+func NewIn(col string, params []any) *InBuilder {
+	return &InBuilder{
+		col:    col,
+		params: params,
+	}
+}
+
+func (in *InBuilder) String() string {
+	var placeholders []string
+	for range in.params {
+		placeholders = append(placeholders, "?")
+	}
+	var query string
+	if len(placeholders) > 0 {
+		query = strings.Join(placeholders, ",")
+	}
+	return query
 }
 
 // RawQueryParser is a parser to extract metedata from sql query
