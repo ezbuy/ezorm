@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ezbuy/ezorm/db"
+	"github.com/ezbuy/ezorm/v2/db"
 
 	"gopkg.in/mgo.v2"
 )

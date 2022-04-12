@@ -17,7 +17,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/ezbuy/ezorm/db"
+	"github.com/ezbuy/ezorm/v2/db"
 	"github.com/spf13/cobra"
 )
 

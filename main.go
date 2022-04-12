@@ -14,7 +14,7 @@
 
 package main
 
-import "github.com/ezbuy/ezorm/cmd"
+import "github.com/ezbuy/ezorm/v2/cmd"
 
 func main() {
 	cmd.Execute()

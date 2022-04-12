@@ -3,8 +3,9 @@ package test
 ///////////// JSON & HASH /////////////////////////////////////////////////////
 import (
 	"fmt"
-	"github.com/ezbuy/ezorm/db"
 	"time"
+
+	"github.com/ezbuy/ezorm/v2/db"
 )
 
 var (

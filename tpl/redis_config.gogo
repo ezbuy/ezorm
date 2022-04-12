@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"fmt"
 	"errors"
-	"github.com/ezbuy/ezorm/db"
+	"github.com/ezbuy/ezorm/v2/db"
 	redis "gopkg.in/redis.v5"
 )
 
@@ -120,25 +120,25 @@ func (p *RedisPipeline) IndexSet(obj Object, indexName string, indexValue interf
 
 func (p *RedisPipeline) SetAdd(obj Object, key string, value interface{}) error {
 	return p.Process(redis.NewBoolCmd("sadd", keyOfClass(obj, key), fmt.Sprint(value)))
-}	
+}
 
 func (p *RedisPipeline) ZAdd(obj Object, key string, score float64, value interface{}) error {
 	return p.Process(redis.NewBoolCmd("zadd", keyOfClass(obj, key), score, value))
-}	
+}
 
 func (p *RedisPipeline) GeoAdd(obj Object, key string, longitude float64, latitude float64, value interface{}) error {
 	return p.Process(redis.NewBoolCmd("geoadd", keyOfClass(obj, key), longitude, latitude, value))
-}	
+}
 
 func (p *RedisPipeline) ListLPush(obj Object, listName string, value interface{}) error {
 	return p.Process(redis.NewIntCmd("lpush", listOfObject(obj, listName), value))
-}	
+}
 
 func (p *RedisPipeline) ListRPush(obj Object, listName string, value interface{}) error {
 	return p.Process(redis.NewIntCmd("rpush", listOfObject(obj, listName), value))
-}	
+}
 
-///////////// 
+/////////////
 func redisRename(obj Object, oldkey, newkey string) error {
 	return _redis_store.Rename(keyOfClass(obj, oldkey), keyOfClass(obj, newkey)).Err()
 }

@@ -8,7 +8,7 @@
 {{if or (eq $obj.StoreType "set")}}
 import (
 	{{- if $obj.ValueField.IsNeedTransform}}
-	"github.com/ezbuy/ezorm/db"
+	"github.com/ezbuy/ezorm/v2/db"
 	{{- end}}
 	"time"
 	"fmt"
@@ -28,7 +28,7 @@ func (m *_{{$obj.Name}}Mgr) AddBySQL(sql string, args ...interface{}) error {
 		if err := m.SetAdd(obj.Key, obj); err != nil {
 			return err
 		}
-	}	
+	}
 	return nil
 }
 
@@ -42,12 +42,12 @@ func (m *_{{$obj.Name}}Mgr) DelBySQL(sql string, args ...interface{}) error {
 		if err := m.SetRem(obj.Key, obj); err != nil {
 			return err
 		}
-	}	
+	}
 	return nil
 }
 
 {{- if ne $obj.ImportSQL ""}}
-func (m *_{{$obj.Name}}Mgr) Import() error {	
+func (m *_{{$obj.Name}}Mgr) Import() error {
 	return m.AddBySQL("{{$obj.ImportSQL}}")
 }
 {{- end}}
@@ -57,7 +57,7 @@ func (m *_{{$obj.Name}}Mgr) Import() error {
 
 ///////////// SET /////////////////////////////////////////////////////
 func (m *_{{$obj.Name}}Mgr) SetAdd(key string, obj *{{$obj.Name}}) error {
-	
+
 	{{- if $obj.ValueField.IsNeedTransform}}
 		transformed_{{$obj.ValueField.Name}} := {{- printf $obj.ValueField.GetTransformType.ConvertBack (printf "obj.%s" $obj.ValueField.Name)}}
 		return redisSetAdd(obj, key, transformed_{{$obj.ValueField.Name}})
@@ -67,7 +67,7 @@ func (m *_{{$obj.Name}}Mgr) SetAdd(key string, obj *{{$obj.Name}}) error {
 }
 
 func (m *_{{$obj.Name}}Mgr) SetGet(key string) ([]*{{$obj.Name}}, error) {
-	
+
 	strs, err := redisSetGet(m.New{{$obj.Name}}(), key)
 	if err != nil {
 		return nil, err
@@ -94,7 +94,7 @@ func (m *_{{$obj.Name}}Mgr) SetGet(key string) ([]*{{$obj.Name}}, error) {
 }
 
 func (m *_{{$obj.Name}}Mgr) SetRem(key string, obj *{{$obj.Name}}) error {
-	
+
 	{{- if $obj.ValueField.IsNeedTransform}}
 		transformed_{{$obj.ValueField.Name}} := {{- printf $obj.ValueField.GetTransformType.ConvertBack (printf "obj.%s" $obj.ValueField.Name)}}
 		return redisSetRem(obj, key, transformed_{{$obj.ValueField.Name}})
@@ -113,7 +113,7 @@ func (m *_{{$obj.Name}}Mgr) Clear() error {
 
 {{- if ne $obj.ModelType ""}}
 func (m *_{{$obj.Name}}Mgr) Related{{$obj.ModelType}}s(key interface{}) ([]*{{$obj.ModelType}}, error) {
-	
+
 	strs, err := redisSetGet(m.New{{$obj.Name}}(), fmt.Sprint(key))
 	if err != nil {
 		return nil, err
@@ -151,7 +151,7 @@ func (m *_{{$obj.Name}}Mgr) Related{{$obj.ModelType}}s(key interface{}) ([]*{{$o
 {{if or (eq $obj.StoreType "zset")}}
 import (
 	{{- if $obj.ValueField.IsNeedTransform}}
-	"github.com/ezbuy/ezorm/db"
+	"github.com/ezbuy/ezorm/v2/db"
 	{{- end}}
 	"time"
 )
@@ -165,7 +165,7 @@ func (m *_{{$obj.Name}}Mgr) AddBySQL(sql string, args ...interface{}) error {
 	if err != nil {
 		return err
 	}
-	
+
 	for _, obj := range objs {
 		if err := m.ZAdd(obj.Key, obj); err != nil {
 			return err
@@ -184,12 +184,12 @@ func (m *_{{$obj.Name}}Mgr) DelBySQL(sql string, args ...interface{}) error {
 		if err := m.ZRem(obj.Key, obj); err != nil {
 			return err
 		}
-	}	
+	}
 	return nil
 }
 
 {{- if ne $obj.ImportSQL ""}}
-func (m *_{{$obj.Name}}Mgr) Import() error {	
+func (m *_{{$obj.Name}}Mgr) Import() error {
 	return m.AddBySQL("{{$obj.ImportSQL}}")
 }
 {{- end}}
@@ -199,7 +199,7 @@ func (m *_{{$obj.Name}}Mgr) Import() error {
 
 ///////////// ZSET /////////////////////////////////////////////////////
 func (m *_{{$obj.Name}}Mgr) ZAdd(key string, obj *{{$obj.Name}}) error {
-	
+
 	{{- if $obj.ValueField.IsNeedTransform}}
 		transformed_{{$obj.ValueField.Name}} := {{- printf $obj.ValueField.GetTransformType.ConvertBack (printf "obj.%s" $obj.ValueField.Name)}}
 		return redisZSetAdd(obj, key, obj.Score, transformed_{{$obj.ValueField.Name}})
@@ -209,7 +209,7 @@ func (m *_{{$obj.Name}}Mgr) ZAdd(key string, obj *{{$obj.Name}}) error {
 }
 
 func (m *_{{$obj.Name}}Mgr) ZRangeByScore(key string, min, max int64) ([]*{{$obj.Name}}, error) {
-	
+
 	strs, err := redisZSetRangeByScore(m.New{{$obj.Name}}(), key, min, max)
 	if err != nil {
 		return nil, err
@@ -236,7 +236,7 @@ func (m *_{{$obj.Name}}Mgr) ZRangeByScore(key string, min, max int64) ([]*{{$obj
 }
 
 func (m *_{{$obj.Name}}Mgr) ZRem(key string, obj *{{$obj.Name}}) error {
-	
+
 	{{- if $obj.ValueField.IsNeedTransform}}
 		transformed_{{$obj.ValueField.Name}} := {{- printf $obj.ValueField.GetTransformType.ConvertBack (printf "obj.%s" $obj.ValueField.Name)}}
 		return redisZSetRem(obj, key, transformed_{{$obj.ValueField.Name}})
@@ -245,7 +245,7 @@ func (m *_{{$obj.Name}}Mgr) ZRem(key string, obj *{{$obj.Name}}) error {
 	{{- end}}
 }
 
-func (m *_{{$obj.Name}}Mgr) ZDel(key string) error {	
+func (m *_{{$obj.Name}}Mgr) ZDel(key string) error {
 	return redisZSetDel(m.New{{$obj.Name}}(), key)
 }
 
@@ -255,7 +255,7 @@ func (m *_{{$obj.Name}}Mgr) Clear() error {
 
 {{- if ne $obj.ModelType ""}}
 func (m *_{{$obj.Name}}Mgr) ZRangeRelated{{$obj.ModelType}}(key string, min, max int64) ([]*{{$obj.ModelType}}, error) {
-	
+
 	strs, err := redisZSetRangeByScore(m.New{{$obj.Name}}(), key, min, max)
 	if err != nil {
 		return nil, err
@@ -293,7 +293,7 @@ func (m *_{{$obj.Name}}Mgr) ZRangeRelated{{$obj.ModelType}}(key string, min, max
 {{if or (eq $obj.StoreType "geo")}}
 import (
 	{{- if $obj.ValueField.IsNeedTransform}}
-	"github.com/ezbuy/ezorm/db"
+	"github.com/ezbuy/ezorm/v2/db"
 	{{- end}}
 	"time"
 	redis "gopkg.in/redis.v5"
@@ -313,7 +313,7 @@ func (m *_{{$obj.Name}}Mgr) AddBySQL(sql string, args ...interface{}) error {
 		if err := m.GeoAdd(obj.Key, obj); err != nil {
 			return err
 		}
-	}	
+	}
 	return nil
 }
 
@@ -327,12 +327,12 @@ func (m *_{{$obj.Name}}Mgr) DelBySQL(sql string, args ...interface{}) error {
 		if err := m.GeoRem(obj.Key, obj); err != nil {
 			return err
 		}
-	}	
+	}
 	return nil
 }
 
 {{- if ne $obj.ImportSQL ""}}
-func (m *_{{$obj.Name}}Mgr) Import() error {	
+func (m *_{{$obj.Name}}Mgr) Import() error {
 	return m.AddBySQL("{{$obj.ImportSQL}}")
 }
 {{- end}}
@@ -342,7 +342,7 @@ func (m *_{{$obj.Name}}Mgr) Import() error {
 
 ///////////// GEO /////////////////////////////////////////////////////
 func (m *_{{$obj.Name}}Mgr) GeoAdd(key string, obj *{{$obj.Name}}) error {
-	
+
 	{{- if $obj.ValueField.IsNeedTransform}}
 		transformed_{{$obj.ValueField.Name}} := {{- printf $obj.ValueField.GetTransformType.ConvertBack (printf "obj.%s" $obj.ValueField.Name)}}
 		return redisGeoAdd(obj, key, obj.Longitude, obj.Latitude, transformed_{{$obj.ValueField.Name}})
@@ -352,7 +352,7 @@ func (m *_{{$obj.Name}}Mgr) GeoAdd(key string, obj *{{$obj.Name}}) error {
 }
 
 func (m *_{{$obj.Name}}Mgr) GeoRadius(key string, longitude float64, latitude float64, query *redis.GeoRadiusQuery) ([]*{{$obj.Name}}, error) {
-	
+
 	strs, err := redisGeoRadius(m.New{{$obj.Name}}(), key, longitude, latitude, query)
 	if err != nil {
 		return nil, err
@@ -380,7 +380,7 @@ func (m *_{{$obj.Name}}Mgr) GeoRadius(key string, longitude float64, latitude fl
 
 {{- if ne $obj.ModelType ""}}
 func (m *_{{$obj.Name}}Mgr) GeoRadiusRelated{{$obj.ModelType}}s(key string, longitude float64, latitude float64, query *redis.GeoRadiusQuery) ([]*{{$obj.ModelType}}, error) {
-	
+
 	strs, err := redisGeoRadius(m.New{{$obj.Name}}(), key, longitude, latitude, query)
 	if err != nil {
 		return nil, err
@@ -414,12 +414,12 @@ func (m *_{{$obj.Name}}Mgr) GeoRadiusRelated{{$obj.ModelType}}s(key string, long
 {{- end}}
 
 func (m *_{{$obj.Name}}Mgr) GeoRem(key string, obj *{{$obj.Name}}) error {
-	
+
 	return redisZSetRem(m.New{{$obj.Name}}(), key, obj)
 }
 
 func (m *_{{$obj.Name}}Mgr) GeoDel(key string) error {
-	
+
 	return redisGeoDel(m.New{{$obj.Name}}(), key)
 }
 
@@ -432,7 +432,7 @@ func (m *_{{$obj.Name}}Mgr) Clear() error {
 {{if or (eq $obj.StoreType "list")}}
 import (
 	{{- if $obj.ValueField.IsNeedTransform}}
-	"github.com/ezbuy/ezorm/db"
+	"github.com/ezbuy/ezorm/v2/db"
 	{{- end}}
 	"time"
 )
@@ -451,7 +451,7 @@ func (m *_{{$obj.Name}}Mgr) AddBySQL(sql string, args ...interface{}) error {
 		if _, err := m.ListLPush(obj.Key, obj); err != nil {
 			return err
 		}
-	}	
+	}
 	return nil
 }
 
@@ -465,12 +465,12 @@ func (m *_{{$obj.Name}}Mgr) DelBySQL(sql string, args ...interface{}) error {
 		if err := m.ListRem(obj.Key, obj); err != nil {
 			return err
 		}
-	}	
+	}
 	return nil
 }
 
 {{- if ne $obj.ImportSQL ""}}
-func (m *_{{$obj.Name}}Mgr) Import() error {	
+func (m *_{{$obj.Name}}Mgr) Import() error {
 	return m.AddBySQL("{{$obj.ImportSQL}}")
 }
 {{- end}}
@@ -480,7 +480,7 @@ func (m *_{{$obj.Name}}Mgr) Import() error {
 
 ///////////// LIST /////////////////////////////////////////////////////
 func (m *_{{$obj.Name}}Mgr) ListLPush(key string, obj *{{$obj.Name}}) (int64, error) {
-	
+
 	{{- if $obj.ValueField.IsNeedTransform}}
 		transformed_{{$obj.ValueField.Name}} := {{- printf $obj.ValueField.GetTransformType.ConvertBack (printf "obj.%s" $obj.ValueField.Name)}}
 		return redisListLPush(obj, key, transformed_{{$obj.ValueField.Name}})
@@ -490,7 +490,7 @@ func (m *_{{$obj.Name}}Mgr) ListLPush(key string, obj *{{$obj.Name}}) (int64, er
 }
 
 func (m *_{{$obj.Name}}Mgr) ListRPush(key string, obj *{{$obj.Name}}) (int64, error) {
-	
+
 	{{- if $obj.ValueField.IsNeedTransform}}
 		transformed_{{$obj.ValueField.Name}} := {{- printf $obj.ValueField.GetTransformType.ConvertBack (printf "obj.%s" $obj.ValueField.Name)}}
 		return redisListRPush(obj, key, transformed_{{$obj.ValueField.Name}})
@@ -500,7 +500,7 @@ func (m *_{{$obj.Name}}Mgr) ListRPush(key string, obj *{{$obj.Name}}) (int64, er
 }
 
 func (m *_{{$obj.Name}}Mgr) ListLPop(key string, obj *{{$obj.Name}}) (error) {
-	
+
 	obj.Key = key
 	{{- if $obj.ValueField.IsNeedTransform}}
 		var val {{$obj.ValueField.GetTransformType.TypeOrigin}}
@@ -515,7 +515,7 @@ func (m *_{{$obj.Name}}Mgr) ListLPop(key string, obj *{{$obj.Name}}) (error) {
 }
 
 func (m *_{{$obj.Name}}Mgr) ListRPop(key string, obj *{{$obj.Name}}) (error) {
-	
+
 	obj.Key = key
 	{{- if $obj.ValueField.IsNeedTransform}}
 		var val {{$obj.ValueField.GetTransformType.TypeOrigin}}
@@ -530,7 +530,7 @@ func (m *_{{$obj.Name}}Mgr) ListRPop(key string, obj *{{$obj.Name}}) (error) {
 }
 
 func (m *_{{$obj.Name}}Mgr) ListInsertBefore(key string, pivot, obj *{{$obj.Name}}) (int64, error) {
-	
+
 	{{- if $obj.ValueField.IsNeedTransform}}
 		transformed_{{$obj.ValueField.Name}}_pivot := {{- printf $obj.ValueField.GetTransformType.ConvertBack (printf "pivot.%s" $obj.ValueField.Name)}}
 		transformed_{{$obj.ValueField.Name}}_obj := {{- printf $obj.ValueField.GetTransformType.ConvertBack (printf "obj.%s" $obj.ValueField.Name)}}
@@ -541,7 +541,7 @@ func (m *_{{$obj.Name}}Mgr) ListInsertBefore(key string, pivot, obj *{{$obj.Name
 }
 
 func (m *_{{$obj.Name}}Mgr) ListInsertAfter(key string, pivot, obj *{{$obj.Name}}) (int64, error) {
-	
+
 	{{- if $obj.ValueField.IsNeedTransform}}
 		transformed_{{$obj.ValueField.Name}}_pivot := {{- printf $obj.ValueField.GetTransformType.ConvertBack (printf "pivot.%s" $obj.ValueField.Name)}}
 		transformed_{{$obj.ValueField.Name}}_obj := {{- printf $obj.ValueField.GetTransformType.ConvertBack (printf "obj.%s" $obj.ValueField.Name)}}
@@ -552,7 +552,7 @@ func (m *_{{$obj.Name}}Mgr) ListInsertAfter(key string, pivot, obj *{{$obj.Name}
 }
 
 func (m *_{{$obj.Name}}Mgr) ListRange(key string, start, stop int64) ([]*{{$obj.Name}}, error) {
-	
+
 	strs, err := redisListRange(m.New{{$obj.Name}}(), key, start, stop)
 	if err != nil {
 		return nil, err
@@ -575,12 +575,12 @@ func (m *_{{$obj.Name}}Mgr) ListRange(key string, start, stop int64) ([]*{{$obj.
 		{{- end}}
 		objs = append(objs, obj)
 	}
-	return objs, nil	
+	return objs, nil
 }
 
 {{- if ne $obj.ModelType ""}}
 func (m *_{{$obj.Name}}Mgr) ListRangeRelated{{$obj.ModelType}}s(key string, start, stop int64) ([]*{{$obj.ModelType}}, error) {
-	
+
 	strs, err := redisListRange(m.New{{$obj.Name}}(), key, start, stop)
 	if err != nil {
 		return nil, err
@@ -614,17 +614,17 @@ func (m *_{{$obj.Name}}Mgr) ListRangeRelated{{$obj.ModelType}}s(key string, star
 {{- end}}
 
 func (m *_{{$obj.Name}}Mgr) ListCount(key string) (int64, error) {
-	
+
 	return redisListCount(m.New{{$obj.Name}}(), key)
 }
 
 func (m *_{{$obj.Name}}Mgr) ListRem(key string, obj *{{$obj.Name}}) error {
-	
+
 	return redisListRemove(m.New{{$obj.Name}}(), key, obj)
 }
 
 func (m *_{{$obj.Name}}Mgr) ListDel(key string) error {
-	
+
 	return redisListDel(m.New{{$obj.Name}}(), key)
 }
 
@@ -638,7 +638,7 @@ func (m *_{{$obj.Name}}Mgr) Clear() error {
 {{if or (eq $obj.StoreType "json") (eq $obj.StoreType "hash")}}
 ///////////// JSON & HASH /////////////////////////////////////////////////////
 import (
-	"github.com/ezbuy/ezorm/db"
+	"github.com/ezbuy/ezorm/v2/db"
 	"time"
 	"fmt"
 )
@@ -657,7 +657,7 @@ func (m *_{{$obj.Name}}Mgr) AddBySQL(sql string, args ...interface{}) error {
 		if err := m.Set(obj); err != nil {
 			return err
 		}
-	}	
+	}
 	return nil
 }
 
@@ -671,19 +671,19 @@ func (m *_{{$obj.Name}}Mgr) DelBySQL(sql string, args ...interface{}) error {
 		if err := m.Remove(obj); err != nil {
 			return err
 		}
-	}	
+	}
 	return nil
 }
 
 {{- if ne $obj.ImportSQL ""}}
-func (m *_{{$obj.Name}}Mgr) Import() error {	
+func (m *_{{$obj.Name}}Mgr) Import() error {
 	return m.AddBySQL("{{$obj.ImportSQL}}")
 }
 {{- end}}
 {{- end}}
 
 func (m *_{{$obj.Name}}Mgr) Set(obj *{{$obj.Name}}) error {
-	
+
 	{{- if eq $obj.StoreType "json"}}
 	pipeline := redisPipeline()
 	if err := pipeline.JsonSet(obj); err != nil {
@@ -763,12 +763,12 @@ func (m *_{{$obj.Name}}Mgr) Set(obj *{{$obj.Name}}) error {
 		_, err := pipeline.Exec()
 		return err
 	{{- else}}
-	return errors.New("unsupport object store type")	
+	return errors.New("unsupport object store type")
 	{{- end}}
 }
 
 func (m *_{{$obj.Name}}Mgr) Remove(obj *{{$obj.Name}}) error {
-	
+
 	{{- if or (eq $obj.StoreType "json") (eq $obj.StoreType "hash")}}
 		if err := redisDelObject(obj); err != nil {
 			return err
@@ -782,7 +782,7 @@ func (m *_{{$obj.Name}}Mgr) Remove(obj *{{$obj.Name}}) error {
 		{{- end}}
 		return redisListRemove(obj, "{{$idFieldName}}", obj.{{$idField.Name}})
 	{{- else}}
-		return errors.New("unsupport object store type")	
+		return errors.New("unsupport object store type")
 	{{- end}}
 }
 
@@ -791,7 +791,7 @@ func (m *_{{$obj.Name}}Mgr) Clear() error {
 }
 
 func (m *_{{$obj.Name}}Mgr) Get(obj *{{$obj.Name}}) error {
-	
+
 	{{- if eq $obj.StoreType "json"}}
 	return redisJsonGet(obj)
 	{{- else}}
@@ -814,7 +814,7 @@ func (m *_{{$obj.Name}}Mgr) Get(obj *{{$obj.Name}}) error {
 }
 
 func (m *_{{$obj.Name}}Mgr) GetById(id {{$idField.Type}}) (*{{$obj.Name}}, error) {
-	
+
 	obj := m.New{{$obj.Name}}()
 	obj.{{$idFieldName}} = id
 	if err := m.Get(obj); err != nil {
@@ -824,7 +824,7 @@ func (m *_{{$obj.Name}}Mgr) GetById(id {{$idField.Type}}) (*{{$obj.Name}}, error
 }
 
 func (m *_{{$obj.Name}}Mgr) GetByIds(ids []{{$idField.Type}}) ([]*{{$obj.Name}}, error) {
-	
+
 	objs := make([]*{{$obj.Name}}, 0, len(ids))
 	for _, id := range ids {
 		obj, err := m.GetById(id)
@@ -832,16 +832,16 @@ func (m *_{{$obj.Name}}Mgr) GetByIds(ids []{{$idField.Type}}) ([]*{{$obj.Name}},
 			return objs, err
 		}
 		objs = append(objs, obj)
-	} 
+	}
 	return objs, nil
 }
 
 
-{{- range $field := .Fields}} 
+{{- range $field := .Fields}}
 {{- if $field.HasIndex}}
 
 func (m *_{{$obj.Name}}Mgr) GetBy{{$field.Name}}(val {{$field.GetGoType}}) ([]*{{$obj.Name}}, error) {
-	
+
 	strs, err := redisIndexGet(m.New{{$obj.Name}}(), "{{$field.Name}}", val)
 	if err != nil {
 		return nil, err
@@ -869,10 +869,10 @@ func (m *_{{$obj.Name}}Mgr) GetBy{{$field.Name}}(val {{$field.GetGoType}}) ([]*{
 
 {{if gt (len $obj.Indexes) 0}}
 func (m *_{{$obj.Name}}Mgr) GetByIndexes(indexes map[string]interface{}) ([]*{{$obj.Name}}, error) {
-	
+
 	index_keys := []string{}
 	{{- range $index, $field := $obj.Fields}}
-	{{- if $field.HasIndex}}	
+	{{- if $field.HasIndex}}
 		{{- if $field.IsNeedTransform}}
 			if val, ok := indexes["{{$field.Name}}"]; ok {
 				transformed_{{$field.Name}}_field := {{- printf $field.GetTransformType.ConvertBack (printf "val.(%s)" $field.GetTransformType.TypeTarget)}}
@@ -886,7 +886,7 @@ func (m *_{{$obj.Name}}Mgr) GetByIndexes(indexes map[string]interface{}) ([]*{{$
 	{{- end}}
 	{{- end}}
 
-	
+
 	strs, err :=  redisMultiIndexesGet(m.New{{$obj.Name}}(), index_keys...)
 	if err != nil {
 		return nil, err
@@ -907,11 +907,11 @@ func (m *_{{$obj.Name}}Mgr) GetByIndexes(indexes map[string]interface{}) ([]*{{$
 		objs = append(objs, obj)
 	}
 	return objs, nil
-} 
+}
 {{end}}
 
 func (m *_{{$obj.Name}}Mgr) ListRange(start, stop int64) ([]*{{$obj.Name}}, error) {
-	
+
 	strs, err := redisListRange(m.New{{$obj.Name}}(), "{{$idFieldName}}", start, stop)
 	if err != nil {
 		return nil, err
@@ -931,7 +931,7 @@ func (m *_{{$obj.Name}}Mgr) ListRange(start, stop int64) ([]*{{$obj.Name}}, erro
 
 		objs = append(objs, obj)
 	}
-	return objs, nil	
+	return objs, nil
 }
 
 func (m *_{{$obj.Name}}Mgr) ListCount() (int64, error) {

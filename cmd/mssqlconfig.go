@@ -20,7 +20,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ezbuy/ezorm/parser"
+	"github.com/ezbuy/ezorm/v2/parser"
 	"github.com/spf13/cobra"
 )
 

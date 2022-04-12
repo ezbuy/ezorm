@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	_ "github.com/denisenkom/go-mssqldb"
-	"github.com/ezbuy/ezorm/db"
+	"github.com/ezbuy/ezorm/v2/db"
 	"github.com/jmoiron/sqlx"
 )
 

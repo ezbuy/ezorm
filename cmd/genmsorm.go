@@ -25,8 +25,8 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/ezbuy/ezorm/db"
-	"github.com/ezbuy/ezorm/parser"
+	"github.com/ezbuy/ezorm/v2/db"
+	"github.com/ezbuy/ezorm/v2/parser"
 	"github.com/spf13/cobra"
 )
 

@@ -1,4 +1,4 @@
-// Copyright © 2016 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2022 ezbuy & LITB team
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/ezbuy/ezorm/parser"
+	"github.com/ezbuy/ezorm/v2/parser"
 	"github.com/spf13/cobra"
 )
 
@@ -32,19 +32,17 @@ import (
 var genCmd = &cobra.Command{
 	Use:   "gen",
 	Short: "Generate orm code from yaml file",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		var objs map[string]map[string]interface{}
 		data, _ := ioutil.ReadFile(input)
 		stat, err := os.Stat(input)
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			return err
 		}
 		err = yaml.Unmarshal([]byte(data), &objs)
 
 		if err != nil {
-			println(err.Error())
-			return
+			return err
 		}
 
 		if genPackageName == "" {
@@ -64,8 +62,7 @@ var genCmd = &cobra.Command{
 			xwMetaObj.Name = key
 			err := xwMetaObj.Read(obj)
 			if err != nil {
-				println(err.Error())
-				return
+				return err
 			}
 
 			databases[xwMetaObj.Db] = xwMetaObj
@@ -104,14 +101,13 @@ var genCmd = &cobra.Command{
 		if !disableSQLs {
 			err = handleSQL(sqlObjs, genGoPackageName)
 			if err != nil {
-				fmt.Println(err)
-				return
+				return err
 			}
 		}
 
 		oscmd := exec.Command("gofmt", "-w", output)
 		oscmd.Run()
-
+		return nil
 	},
 }
 

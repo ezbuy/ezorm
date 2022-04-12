@@ -1,4 +1,4 @@
-module github.com/ezbuy/ezorm
+module github.com/ezbuy/ezorm/v2
 
 go 1.18
 

@@ -9,7 +9,7 @@ import (
 
 	"fmt"
 
-	"github.com/ezbuy/ezorm/tpl"
+	"github.com/ezbuy/ezorm/v2/tpl"
 	"github.com/ezbuy/utils/container/set"
 )
 

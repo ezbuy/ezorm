@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ezbuy/ezorm/db"
-	redis "gopkg.in/redis.v5"
 	"reflect"
 	"strings"
+
+	"github.com/ezbuy/ezorm/v2/db"
+	redis "gopkg.in/redis.v5"
 )
 
 var (

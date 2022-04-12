@@ -6,8 +6,8 @@ import (
 	"gopkg.in/mgo.v2/bson"
 
 	//Own libs
-	"github.com/ezbuy/ezorm/db"
-	. "github.com/ezbuy/ezorm/orm"
+	"github.com/ezbuy/ezorm/v2/db"
+	. "github.com/ezbuy/ezorm/v2/orm"
 )
 
 func init() {
