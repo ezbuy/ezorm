@@ -74,7 +74,6 @@ type QueryBuilder struct {
 
 func (qb *QueryBuilder) rebuild() string {
 	query := qb.String()
-	rebuildQuery := bytes.NewBuffer(nil)
 	los := make([]LocationOffset, len(qb.raw.lo))
 	reversed := make(map[LocationOffset]string)
 	var index int
@@ -88,6 +87,7 @@ func (qb *QueryBuilder) rebuild() string {
 	})
 
 	var s int
+	rebuildQuery := bytes.NewBuffer(nil)
 	for _, lo := range los {
 		e := lo.start
 		rebuildQuery.WriteString(query[s:e])

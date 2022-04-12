@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/pingcap/parser"
@@ -63,18 +62,20 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 
 	switch x := node.(type) {
 	case *ast.SelectStmt:
-		if err := x.Restore(ctx); err != nil {
-			return err
-		}
-		if x.Fields != nil && n == 0 {
-			for _, f := range x.Fields.Fields {
-				if _, ok := f.Expr.(*ast.ColumnNameExpr); ok {
-					field := &QueryField{}
-					ff := &strings.Builder{}
-					f.Expr.(*ast.ColumnNameExpr).Format(ff)
-					field.Name = ff.String()
-					field.Type = T_PLACEHOLDER
-					tp.meta.result = append(tp.meta.result, field)
+		if n == 0 {
+			if err := x.Restore(ctx); err != nil {
+				return err
+			}
+			if x.Fields != nil {
+				for _, f := range x.Fields.Fields {
+					if _, ok := f.Expr.(*ast.ColumnNameExpr); ok {
+						field := &QueryField{}
+						ff := &strings.Builder{}
+						f.Expr.(*ast.ColumnNameExpr).Format(ff)
+						field.Name = ff.String()
+						field.Type = T_PLACEHOLDER
+						tp.meta.result = append(tp.meta.result, field)
+					}
 				}
 			}
 		}
@@ -86,9 +87,17 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 		if x.Limit != nil {
 			if _, ok := x.Limit.Count.(*driver.ValueExpr); ok {
 				tp.b.raw.limit.count = true
+				tp.meta.params = append(tp.meta.params, &QueryField{
+					Name: "limit:count",
+					Type: T_INT,
+				})
 			}
 			if _, ok := x.Limit.Offset.(*driver.ValueExpr); ok {
 				tp.b.raw.limit.offset = true
+				tp.meta.params = append(tp.meta.params, &QueryField{
+					Name: "limit:offset",
+					Type: T_INT,
+				})
 			}
 			limitBuffer := bytes.NewBuffer(nil)
 			subCtx := format.NewRestoreCtx(format.DefaultRestoreFlags, limitBuffer)
@@ -97,7 +106,6 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 			}
 			start := strings.Index(tp.b.String(), limitBuffer.String())
 			end := start + limitBuffer.Len()
-			log.Println(limitBuffer.String())
 			tp.b.raw.lo["LIMIT"] = LocationOffset{
 				// FIXME: solve no well-formated query
 				start: start + 5 + 1,
@@ -133,16 +141,22 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 					return errors.New("parser: unknown datum type, only support string and int for now")
 				}
 			}
+			field.Name = fmt.Sprintf("col:%s", field.Name)
 			tp.meta.params = append(tp.meta.params, field)
 		}
 	case *ast.PatternInExpr:
-		if expr, ok := x.Expr.(*ast.ColumnNameExpr); ok {
-			nameBuilder := &strings.Builder{}
-			expr.Format(nameBuilder)
-			field := &QueryField{
-				Name: nameBuilder.String(),
+		switch {
+		case x.Sel != nil:
+			if err := tp.parse(x.Sel, n+1); err != nil {
+				return err
 			}
-			if len(x.List) > 0 {
+		case len(x.List) > 0:
+			if expr, ok := x.Expr.(*ast.ColumnNameExpr); ok {
+				nameBuilder := &strings.Builder{}
+				expr.Format(nameBuilder)
+				field := &QueryField{
+					Name: nameBuilder.String(),
+				}
 				if _, ok := x.List[0].(*driver.ValueExpr); ok {
 					switch x.List[0].(*driver.ValueExpr).Kind() {
 					case types.KindString:
@@ -158,14 +172,19 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 					start: start + len(field.Name) + 5,
 					end:   end - 1,
 				}
+				field.Name = fmt.Sprintf("col:%s", field.Name)
+				tp.meta.params = append(tp.meta.params, field)
 			}
 
-			tp.meta.params = append(tp.meta.params, field)
 		}
 	case *ast.PatternLikeExpr:
 		// TODO
+	case *ast.SubqueryExpr:
+		if err := tp.parse(x.Query, n+1); err != nil {
+			return err
+		}
 	default:
-		return errors.New("parser: unknown node type")
+		return fmt.Errorf("parser: unknown node type; %T", node)
 	}
 	return nil
 }
