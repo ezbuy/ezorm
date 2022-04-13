@@ -16,13 +16,13 @@ import (
 )
 
 type TiDBParser struct {
-	meta *QueryMetadata
+	meta TableMetadata
 	b    *QueryBuilder
 }
 
 func NewTiDBParser() *TiDBParser {
 	return &TiDBParser{
-		meta: &QueryMetadata{},
+		meta: make(map[Table]*QueryMetadata),
 		b: &QueryBuilder{
 			Buffer: bytes.NewBuffer(nil),
 			raw: &Raw{
@@ -61,43 +61,80 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 	end := start + buffer.Len()
 
 	switch x := node.(type) {
+	case *ast.Join:
+		if x.Left != nil {
+			tp.parse(x.Left, n+1)
+		}
+		if x.Right != nil {
+			tp.parse(x.Right, n+1)
+		}
+	case *ast.TableSource:
+		var alias string
+		if x.AsName.String() != "" {
+			alias = x.AsName.String()
+		}
+		if table, ok := x.Source.(*ast.TableName); ok {
+			tb := Table{
+				Alias: alias,
+				Name:  table.Name.String(),
+			}
+			if _, ok := tp.meta[tb]; !ok {
+				tp.meta[tb] = &QueryMetadata{
+					table: tb.Name,
+				}
+			}
+		}
+	// SELECT
 	case *ast.SelectStmt:
+		if x.From != nil {
+			// FROM
+			tp.parse(x.From.TableRefs, n+1)
+		}
 		if n == 0 {
 			if err := x.Restore(ctx); err != nil {
 				return err
 			}
+			// Field Ref
 			if x.Fields != nil {
 				for _, f := range x.Fields.Fields {
-					if _, ok := f.Expr.(*ast.ColumnNameExpr); ok {
+					if expr, ok := f.Expr.(*ast.ColumnNameExpr); ok {
 						field := &QueryField{}
 						ff := &strings.Builder{}
-						f.Expr.(*ast.ColumnNameExpr).Format(ff)
+						expr.Format(ff)
 						field.Name = ff.String()
 						field.Type = T_PLACEHOLDER
-						tp.meta.result = append(tp.meta.result, field)
+						tp.meta.AppendResult(expr.Name.Table.String(), field)
 					}
 				}
 			}
 		}
+		// WHERE
 		if x.Where != nil {
 			if err := tp.parse(x.Where, n+1); err != nil {
 				return err
 			}
 		}
+		// LIMIT
 		if x.Limit != nil {
 			if _, ok := x.Limit.Count.(*driver.ValueExpr); ok {
 				tp.b.raw.limit.count = true
-				tp.meta.params = append(tp.meta.params, &QueryField{
-					Name: "limit:count",
-					Type: T_INT,
-				})
+				// FIXME
+				for t := range tp.meta {
+					tp.meta[t].params = append(tp.meta[t].params, &QueryField{
+						Name: "limit:count",
+						Type: T_INT,
+					})
+				}
 			}
 			if _, ok := x.Limit.Offset.(*driver.ValueExpr); ok {
 				tp.b.raw.limit.offset = true
-				tp.meta.params = append(tp.meta.params, &QueryField{
-					Name: "limit:offset",
-					Type: T_INT,
-				})
+				// FIXME
+				for t := range tp.meta {
+					tp.meta[t].params = append(tp.meta[t].params, &QueryField{
+						Name: "limit:offset",
+						Type: T_INT,
+					})
+				}
 			}
 			limitBuffer := bytes.NewBuffer(nil)
 			subCtx := format.NewRestoreCtx(format.DefaultRestoreFlags, limitBuffer)
@@ -142,7 +179,8 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 				}
 			}
 			field.Name = fmt.Sprintf("col:%s", field.Name)
-			tp.meta.params = append(tp.meta.params, field)
+			t := l.Name.Table.String()
+			tp.meta.AppendParams(t, field)
 		}
 	case *ast.PatternInExpr:
 		switch {
@@ -173,7 +211,8 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 					end:   end - 1,
 				}
 				field.Name = fmt.Sprintf("col:%s", field.Name)
-				tp.meta.params = append(tp.meta.params, field)
+				t := expr.Name.Table.String()
+				tp.meta.AppendParams(t, field)
 			}
 
 		}
@@ -190,14 +229,15 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 }
 
 func (tp *TiDBParser) Parse(ctx context.Context,
-	query string) error {
+	query string) (TableMetadata, *QueryBuilder, error) {
 	queries := strings.Split(query, ";")
 	for _, q := range queries {
 		if err := tp.parseOne(ctx, q); err != nil {
-			return err
+			return nil, nil, err
 		}
 	}
-	return nil
+
+	return tp.meta, tp.b, nil
 }
 
 func (tp *TiDBParser) parseOne(ctx context.Context,

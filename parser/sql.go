@@ -52,8 +52,101 @@ type LimitOption struct {
 }
 
 type QueryMetadata struct {
+	table  string
 	params []*QueryField
 	result []*QueryField
+}
+
+type Table struct {
+	Name  string
+	Alias string
+}
+
+type TableMetadata map[Table]*QueryMetadata
+
+func (t TableMetadata) String() string {
+	var buffer bytes.Buffer
+	for table, qm := range t {
+		buffer.WriteString(fmt.Sprintf("table: %s\n", table))
+		buffer.WriteString(qm.String())
+	}
+	return buffer.String()
+}
+
+func (t TableMetadata) AppendParams(table string, params ...*QueryField) {
+	var key Table
+	for tb := range t {
+		if tb.Name == table || tb.Alias == table {
+			key = tb
+		}
+	}
+	if key.Alias == "" && key.Name == "" {
+		return
+	}
+	if _, ok := t[key]; ok {
+		t[key].params = append(t[key].params, params...)
+	}
+}
+
+func (t TableMetadata) AppendResult(table string, result ...*QueryField) {
+	var key Table
+	for tb := range t {
+		if tb.Name == table || tb.Alias == table {
+			key = tb
+		}
+	}
+	if key.Alias == "" && key.Name == "" {
+		return
+	}
+	if _, ok := t[key]; ok {
+		t[key].result = append(t[key].result, result...)
+	}
+}
+
+func uglify(col string) string {
+	if strings.Contains(col, ":") {
+		parts := strings.Split(col, ":")
+		if len(parts) != 2 {
+			return col
+		}
+		col = parts[1]
+	}
+	if strings.Contains(col, ".") {
+		parts := strings.Split(col, ".")
+		if len(parts) != 2 {
+			return col
+		}
+		col = parts[1]
+	}
+	col = strings.ReplaceAll(col, "`", "")
+	return col
+}
+
+func (tm TableMetadata) Validate(tableRef map[string]map[string]*Field) error {
+	for t, f := range tm {
+		name := uglify(t.Name)
+		ff, ok := tableRef[name]
+		if !ok {
+			return fmt.Errorf("metadata: table %s not found in tableRef(YAML)", name)
+		}
+		for _, p := range f.params {
+			pName := uglify(p.Name)
+			col, ok := ff[pName]
+			if !ok {
+				return fmt.Errorf("metadata: param %s not found in table %s", pName, name)
+			}
+			if col.GetGoType() != p.Type.String() {
+				return fmt.Errorf("metadata: param %s type mismatch, expect %s, got %s", pName, col.GetGoType(), p.Type.String())
+			}
+		}
+		for _, r := range f.result {
+			rName := uglify(r.Name)
+			if _, ok := ff[rName]; !ok {
+				return fmt.Errorf("metadata: result %s not found in table %s", r.Name, name)
+			}
+		}
+	}
+	return nil
 }
 
 func (qm *QueryMetadata) String() string {
@@ -142,7 +235,7 @@ func (in *InBuilder) String() string {
 
 // RawQueryParser is a parser to extract metedata from sql query
 type RawQueryParser interface {
-	Parse(context.Context, string) (*QueryMetadata, error)
+	Parse(context.Context, string) (TableMetadata, *QueryBuilder, error)
 }
 
 type SelectStmt struct {

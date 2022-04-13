@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -11,7 +12,8 @@ import (
 )
 
 type SQL struct {
-	fieldMap map[string]map[string]*Field
+	fieldMap       map[string]map[string]*Field
+	RawQueryParser RawQueryParser
 }
 
 type SQLFile struct {
@@ -22,6 +24,7 @@ type SQLFile struct {
 type SQLMethod struct {
 	Name   string
 	Fields []*SQLMethodField
+	Result []*SQLMethodField
 	SQL    string
 
 	Assign string
@@ -29,6 +32,7 @@ type SQLMethod struct {
 
 type SQLMethodField struct {
 	Name string
+	Raw  string
 	Type string
 }
 
@@ -42,7 +46,22 @@ func NewSQL(objs map[string]*Obj) *SQL {
 			fieldMap[name][fname] = f
 		}
 	}
-	return &SQL{fieldMap: fieldMap}
+	return &SQL{
+		fieldMap:       fieldMap,
+		RawQueryParser: NewTiDBParser(),
+	}
+}
+
+func (p *SQL) retypeResult(table string, col string) (string, error) {
+	t, ok := p.fieldMap[table]
+	if !ok {
+		return "", fmt.Errorf("res: retype: table: %s not found", table)
+	}
+	f, ok := t[col]
+	if !ok {
+		return "", fmt.Errorf("res: retype: field: %s not found", col)
+	}
+	return f.GetGoType(), nil
 }
 
 func (p *SQL) Read(path string) (*SQLMethod, error) {
@@ -50,24 +69,11 @@ func (p *SQL) Read(path string) (*SQLMethod, error) {
 	if err != nil {
 		return nil, err
 	}
-	// Trim the comment lines.
-	raws := strings.Split(string(data), "\n")
-	lines := make([]string, 0, len(raws))
-	for _, line := range raws {
-		line = strings.TrimSpace(line)
-		if line == "" {
-			continue
-		}
-		if strings.HasPrefix(line, "--") {
-			continue
-		}
-		lines = append(lines, line)
-	}
-	sql := strings.Join(lines, " ")
-
-	stmt, err := ParseSelect(sql)
+	sql := string(data)
+	ctx := context.Background()
+	meta, builder, err := p.RawQueryParser.Parse(ctx, sql)
 	if err != nil {
-		return nil, fmt.Errorf("parse sql %s: %v", path, err)
+		return nil, err
 	}
 
 	// Insert the name to the raw sql as an internal comment.
@@ -76,67 +82,40 @@ func (p *SQL) Read(path string) (*SQLMethod, error) {
 	if name == "" {
 		return nil, errors.New("parse sql: the filename is empty")
 	}
-	sql = insertCommentToSQL(sql, name)
+
 	name = strcase.ToCamel(name)
 
 	result := &SQLMethod{
-		Name:   name,
-		SQL:    sql,
-		Fields: make([]*SQLMethodField, len(stmt.Fields)),
+		Name: name,
+		SQL:  sql,
 	}
-	var aggregateIdx int
-	for i, rawField := range stmt.Fields {
-		if rawField.IsAggregate {
-			name := strcase.ToCamel(rawField.Alias)
-			if name == "" {
-				name = fmt.Sprintf("%s%d", strcase.ToCamel(rawField.Name),
-					aggregateIdx)
-				aggregateIdx++
+	// validation: validate if every table and column are defined in yaml file(TableRef).
+	if err := meta.Validate(p.fieldMap); err != nil {
+		return nil, err
+	}
+	for t, f := range meta {
+		for _, c := range f.params {
+			name := uglify(c.Name)
+			result.Fields = append(result.Fields, &SQLMethodField{
+				Name: strcase.ToCamel(name),
+				Raw:  name,
+				Type: c.Type.String(),
+			})
+		}
+		for _, c := range f.result {
+			name := uglify(c.Name)
+			tp, err := p.retypeResult(t.Name, name)
+			if err != nil {
+				return nil, err
 			}
-			result.Fields[i] = &SQLMethodField{
-				Name: name,
-				Type: "int64",
-			}
-			continue
-		}
-		m := p.fieldMap[rawField.Table]
-		if m == nil {
-			return nil, fmt.Errorf("parse %s: cannot find table `%s` in your yaml file",
-				path, rawField.Table)
-		}
-		objField := m[rawField.Name]
-		if objField == nil {
-			return nil, fmt.Errorf("parse %s: cannot find field `%s` in table `%s`",
-				path, rawField.Name, rawField.Table)
-		}
-		var fullname = strcase.ToCamel(rawField.Alias)
-		if fullname == "" {
-			fullname = strcase.ToCamel(rawField.Table) + strcase.ToCamel(rawField.Name)
-		}
-		result.Fields[i] = &SQLMethodField{
-			Name: fullname,
-			Type: objField.GetGoType(),
+			result.Result = append(result.Result, &SQLMethodField{
+				Name: strcase.ToCamel(name),
+				Raw:  name,
+				Type: tp,
+			})
 		}
 	}
 
-	assigns := make([]string, len(result.Fields))
-	for i, f := range result.Fields {
-		assigns[i] = fmt.Sprintf("&o.%s", f.Name)
-	}
-	result.Assign = strings.Join(assigns, ", ")
-
+	result.SQL = builder.rebuild()
 	return result, nil
-}
-
-func insertCommentToSQL(sql, comment string) string {
-	rawFields := strings.Fields(sql)
-	switch len(rawFields) {
-	case 0:
-		return sql
-
-	case 1:
-		return fmt.Sprintf("%s /* %s */", sql, comment)
-	}
-	return fmt.Sprintf("%s /* %s */ %s", rawFields[0],
-		comment, strings.Join(rawFields[1:], " "))
 }
