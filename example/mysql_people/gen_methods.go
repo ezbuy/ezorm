@@ -110,3 +110,45 @@ func (*sqlMethods) GetUserIn(ctx context.Context, req *GetUserInReq) ([]*GetUser
 	}
 	return results, nil
 }
+
+type UserJoinBlogResp struct {
+	UserId int32 `sql:"user_id"`
+	BlogId int32 `sql:"blog_id"`
+}
+
+type UserJoinBlogReq struct {
+	Name string `sql:"name"`
+}
+
+func (req *UserJoinBlogReq) Params() []any {
+	var params []any
+
+	params = append(params, req.Name)
+
+	return params
+}
+
+const _UserJoinBlogSQL = "SELECT `u`.`user_id`,`b`.`blog_id` FROM `test_user` AS `u` JOIN `blog` AS `b` ON `u`.`user_id`=`b`.`user` WHERE `u`.`name`=?"
+
+// UserJoinBlog is a raw query handler generated function for `example/mysql_people/sqls/user_join_blog.sql`.
+func (*sqlMethods) UserJoinBlog(ctx context.Context, req *UserJoinBlogReq) ([]*UserJoinBlogResp, error) {
+
+	query := _UserJoinBlogSQL
+
+	rows, err := db.MysqlQuery(query, req.Params()...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []*UserJoinBlogResp
+	for rows.Next() {
+		var o UserJoinBlogResp
+		err = rows.Scan(&o.UserId, &o.BlogId)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, &o)
+	}
+	return results, nil
+}
