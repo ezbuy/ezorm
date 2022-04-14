@@ -4,9 +4,11 @@ package test
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/ezbuy/ezorm/v2/db"
+	"github.com/ezbuy/ezorm/v2/pkg/sql"
 )
 
 var (
@@ -27,15 +29,21 @@ type GetUserReq struct {
 }
 
 func (req *GetUserReq) Params() []any {
-	return []any{
-		req.Name}
+	var params []any
+
+	params = append(params, req.Name)
+
+	return params
 }
 
 const _GetUserSQL = "SELECT `name` FROM `test_user` WHERE `name`=?"
 
 // GetUser is a raw query handler generated function for `example/mysql_people/sqls/get_user.sql`.
 func (*sqlMethods) GetUser(ctx context.Context, req *GetUserReq) ([]*GetUserResp, error) {
-	rows, err := db.MysqlQuery(_GetUserSQL, req.Params()...)
+
+	query := _GetUserSQL
+
+	rows, err := db.MysqlQuery(query, req.Params()...)
 	if err != nil {
 		return nil, err
 	}
@@ -62,15 +70,30 @@ type GetUserInReq struct {
 }
 
 func (req *GetUserInReq) Params() []any {
-	return []any{
-		req.Name}
+	var params []any
+
+	for _, v := range req.Name {
+		params = append(params, v)
+	}
+
+	return params
 }
 
-const _GetUserInSQL = "SELECT `user_id` FROM `test_user` WHERE `name` IN (?,?)"
+func (req *GetUserInReq) QueryIn() []any {
+	var qs []any
+
+	qs = append(qs, sql.NewIn(len(req.Name)).String())
+	return qs
+}
+
+const _GetUserInSQL = "SELECT `user_id` FROM `test_user` WHERE `name` IN %s"
 
 // GetUserIn is a raw query handler generated function for `example/mysql_people/sqls/get_user_in.sql`.
 func (*sqlMethods) GetUserIn(ctx context.Context, req *GetUserInReq) ([]*GetUserInResp, error) {
-	rows, err := db.MysqlQuery(_GetUserInSQL, req.Params()...)
+
+	query := fmt.Sprintf(_GetUserInSQL, req.QueryIn()...)
+
+	rows, err := db.MysqlQuery(query, req.Params()...)
 	if err != nil {
 		return nil, err
 	}

@@ -7,7 +7,7 @@ import (
 
 	//Own libs
 	"github.com/ezbuy/ezorm/v2/db"
-	. "github.com/ezbuy/ezorm/v2/orm"
+	. "github.com/ezbuy/ezorm/v2/pkg/orm"
 )
 
 func init() {

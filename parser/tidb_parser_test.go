@@ -75,10 +75,10 @@ func TestTiDBParserParseQuery(t *testing.T) {
 		query  string
 		expect string
 	}{
-		{"query", query, "SELECT `id` FROM `user` WHERE `name` IN (?) AND `id`=? AND `phone`=? LIMIT ?,?"},
-		{"queryIn", queryIn, "SELECT `id` FROM `user` WHERE `name` IN (?,?)"},
-		{"queryOneLimit", queryOneLimit, "SELECT `id` FROM `user` WHERE `name` IN (?) AND `id`=? AND `phone`=? LIMIT ?"},
-		{"queryNoLimit", queryNoLimit, "SELECT `id` FROM `user` WHERE `name` IN (?) AND `id`=? AND `phone`=?"},
+		{"query", query, "SELECT `id` FROM `user` WHERE `name` IN %s AND `id`=? AND `phone`=? LIMIT ?,?"},
+		{"queryIn", queryIn, "SELECT `id` FROM `user` WHERE `name` IN %s"},
+		{"queryOneLimit", queryOneLimit, "SELECT `id` FROM `user` WHERE `name` IN %s AND `id`=? AND `phone`=? LIMIT ?"},
+		{"queryNoLimit", queryNoLimit, "SELECT `id` FROM `user` WHERE `name` IN %s AND `id`=? AND `phone`=?"},
 		{"queryWithTableJoin", queryWithTableJoin, "SELECT `u`.`id`,`b`.`id` FROM `user` AS `u` JOIN `blog` AS `b` ON `u`.`id`=`b`.`user_id` WHERE `u`.`name`=?"},
 		{"queryWithSubquery", queryWithSubquery, "SELECT `id` FROM `user` WHERE `name` IN (SELECT `name` FROM `user` WHERE `id`=?)"},
 	}

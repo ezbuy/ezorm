@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-
-	_ "github.com/pingcap/parser/test_driver"
 )
 
 type T uint8
@@ -186,6 +184,10 @@ type QueryBuilder struct {
 	raw *Raw
 }
 
+func (qb *QueryBuilder) IsQueryIn() bool {
+	return len(qb.raw.ins) > 0
+}
+
 func (qb *QueryBuilder) rebuild() string {
 	query := qb.String()
 	los := make([]LocationOffset, len(qb.raw.lo))
@@ -205,10 +207,10 @@ func (qb *QueryBuilder) rebuild() string {
 	for _, lo := range los {
 		e := lo.start
 		rebuildQuery.WriteString(query[s:e])
-		ins, ok := qb.raw.ins[reversed[lo]]
+		_, ok := qb.raw.ins[reversed[lo]]
 		switch {
 		case ok:
-			rebuildQuery.WriteString(ins.String())
+			rebuildQuery.WriteString("%s")
 		case reversed[lo] == "LIMIT" && qb.raw.limit.count && qb.raw.limit.offset:
 			rebuildQuery.WriteString("?,?")
 		default:
@@ -225,33 +227,9 @@ type LocationOffset struct {
 }
 
 type Raw struct {
-	ins   map[string]*InBuilder
+	ins   map[string]struct{}
 	lo    map[string]LocationOffset
 	limit *LimitOption
-}
-
-type InBuilder struct {
-	col    string
-	params int
-}
-
-func NewIn(col string, params int) *InBuilder {
-	return &InBuilder{
-		col:    col,
-		params: params,
-	}
-}
-
-func (in *InBuilder) String() string {
-	var placeholders []string
-	for i := 0; i < in.params; i++ {
-		placeholders = append(placeholders, "?")
-	}
-	var query string
-	if len(placeholders) > 0 {
-		query = strings.Join(placeholders, ",")
-	}
-	return query
 }
 
 // RawQueryParser is a parser to extract metedata from sql query

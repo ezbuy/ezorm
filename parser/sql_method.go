@@ -31,6 +31,7 @@ type SQLMethod struct {
 
 	Assign   string
 	FromFile string
+	QueryIn  bool
 }
 
 type SQLMethodField struct {
@@ -118,6 +119,7 @@ func (p *SQL) Read(path string) (*SQLMethod, error) {
 				Type: tp,
 			})
 		}
+		result.QueryIn = builder.IsQueryIn()
 	}
 
 	var scan bytes.Buffer

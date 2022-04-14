@@ -26,19 +26,12 @@ func NewTiDBParser() *TiDBParser {
 		b: &QueryBuilder{
 			Buffer: bytes.NewBuffer(nil),
 			raw: &Raw{
-				ins:   map[string]*InBuilder{},
+				ins:   map[string]struct{}{},
 				lo:    map[string]LocationOffset{},
 				limit: &LimitOption{},
 			},
 		},
 	}
-}
-
-func (tp *TiDBParser) InParams(builders ...*InBuilder) *TiDBParser {
-	for _, b := range builders {
-		tp.b.raw.ins[b.col] = b
-	}
-	return tp
 }
 
 func (tp *TiDBParser) Metadata() string {
@@ -205,12 +198,10 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 						return errors.New("parser: unknown array datum type, only support string and int for now")
 					}
 				}
-
-				tp.b.raw.ins[field.Name] = NewIn(field.Name, len(x.List))
+				tp.b.raw.ins[field.Name] = struct{}{}
 				tp.b.raw.lo[field.Name] = LocationOffset{
-					// FIXME: solve no well-formated query
-					start: start + len(field.Name) + 5,
-					end:   end - 1,
+					start: start + len(field.Name) + 4,
+					end:   end,
 				}
 				field.Name = fmt.Sprintf("col:%s", field.Name)
 				t := expr.Name.Table.String()
@@ -245,7 +236,7 @@ func (tp *TiDBParser) Parse(ctx context.Context,
 func (tp *TiDBParser) Flush() {
 	tp.b.raw = &Raw{
 		lo:    make(map[string]LocationOffset),
-		ins:   map[string]*InBuilder{},
+		ins:   map[string]struct{}{},
 		limit: &LimitOption{},
 	}
 	tp.b.Reset()

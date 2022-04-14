@@ -5,7 +5,9 @@ package {{.GoPackage}}
 import (
 	"time"
 	"context"
+	 "fmt"
 
+	"github.com/ezbuy/ezorm/v2/pkg/sql"
 	"github.com/ezbuy/ezorm/v2/db"
 )
 
@@ -22,28 +24,53 @@ var SQL = &sqlMethods{}
 type {{$method.Name}}Resp struct {
 	{{- range $field := $method.Result}}
 	{{$field.Name}} {{$field.Type}} `sql:"{{$field.Raw}}"`
-	{{- end -}}
+	{{- end }}
 }
 
 type {{$method.Name}}Req struct {
 	{{- range $field := $method.Fields}}
 	{{$field.Name}} {{$field.Type}} `sql:"{{$field.Raw}}"`
-	{{- end -}}
+	{{- end }}
 }
 
 func (req *{{$method.Name}}Req) Params() []any {
-	return []any{
-		{{- range $field := $method.Fields}}
-		req.{{$field.Name}},
-		{{- end -}}
+	var params []any
+	{{- range $field := $method.Fields}}
+	{{if or (eq $field.Type "[]string") (eq $field.Type "[]int64")}}
+	for _, v := range req.{{$field.Name}} {
+		params = append(params, v)
 	}
+	{{else}}
+	params = append(params, req.{{$field.Name}})
+	{{end}}
+	{{- end }}
+	return params
 }
+
+{{if $method.QueryIn}}
+
+func (req *{{$method.Name}}Req) QueryIn() []any {
+		var qs []any
+		{{- range $field := $method.Fields}}
+		{{if or (eq $field.Type "[]string") (eq $field.Type "[]int64")}}
+			qs = append(qs, sql.NewIn(len(req.{{$field.Name}})).String())
+		{{- end }}
+		{{- end }}
+		return qs
+}
+{{end}}
 
 const _{{$method.Name}}SQL = "{{$method.SQL}}"
 
 // {{$method.Name}} is a raw query handler generated function for `{{$.Dir}}/{{$method.FromFile}}`.
 func (*sqlMethods) {{$method.Name}}(ctx context.Context, req *{{$method.Name}}Req ) ([]*{{$method.Name}}Resp, error) {
-	rows, err := db.MysqlQuery(_{{$method.Name}}SQL, req.Params()...)
+	{{if $method.QueryIn }}
+	query := fmt.Sprintf(_{{$method.Name}}SQL,req.QueryIn()...)
+	{{else}}
+	query := _{{$method.Name}}SQL
+	{{end}}
+
+	rows, err := db.MysqlQuery(query, req.Params()...)
 	if err != nil {
 		return nil, err
 	}
