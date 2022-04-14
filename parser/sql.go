@@ -62,9 +62,18 @@ type TableMetadata map[Table]*QueryMetadata
 
 func (t TableMetadata) String() string {
 	var buffer bytes.Buffer
-	for table, qm := range t {
-		buffer.WriteString(fmt.Sprintf("table: %s\n", table))
-		buffer.WriteString(qm.String())
+	var tables []Table
+	for table := range t {
+		tables = append(tables, table)
+	}
+	sort.SliceStable(tables, func(i, j int) bool {
+		return tables[i].Name < tables[j].Name
+	})
+	for _, table := range tables {
+		if qm, ok := t[table]; !ok {
+			buffer.WriteString(fmt.Sprintf("table: %s\n", table))
+			buffer.WriteString(qm.String())
+		}
 	}
 	return buffer.String()
 }
