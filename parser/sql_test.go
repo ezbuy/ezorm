@@ -41,18 +41,6 @@ WHERE u.name IN ('me') AND u.id = 1 AND u.phone = '123'
 LIMIT 0,10
 `
 
-func TestParseSelect(t *testing.T) {
-	stmt, err := ParseSelect(parseSQL)
-	if err != nil {
-		t.Fatal(err)
-	}
-	fmt.Println("====== Fields ======")
-	for _, f := range stmt.Fields {
-		fmt.Printf("Table = %s, Field = %s, Alias = %s\n",
-			f.Table, f.Name, f.Alias)
-	}
-}
-
 type condition struct{}
 
 func (c condition) Enter(in ast.Node) (ast.Node, bool) {
