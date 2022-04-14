@@ -36,6 +36,18 @@ func (t T) String() string {
 	panic("parser: unknown type")
 }
 
+func (t T) BaseType() string {
+	switch t {
+	case T_PLACEHOLDER:
+		return "?"
+	case T_INT, T_ARRAY_INT:
+		return "int64"
+	case T_STRING, T_ARRAY_STRING:
+		return "string"
+	}
+	panic("parser: unknown type")
+}
+
 type QueryField struct {
 	Name string
 	Type T
@@ -127,6 +139,10 @@ func uglify(col string) string {
 	return col
 }
 
+func typeMatch(fromAST T, fromSchema *Field) bool {
+	return fromAST.BaseType() == fromSchema.GetGoType()
+}
+
 func (tm TableMetadata) Validate(tableRef map[string]map[string]*Field) error {
 	for t, f := range tm {
 		name := uglify(t.Name)
@@ -140,8 +156,8 @@ func (tm TableMetadata) Validate(tableRef map[string]map[string]*Field) error {
 			if !ok {
 				return fmt.Errorf("metadata: param %s not found in table %s", pName, name)
 			}
-			if col.GetGoType() != p.Type.String() {
-				return fmt.Errorf("metadata: param %s type mismatch, expect %s, got %s", pName, col.GetGoType(), p.Type.String())
+			if !typeMatch(p.Type, col) {
+				return fmt.Errorf("metadata: param %s type mismatch, expect %s, got %s", pName, col.GetGoType(), p.Type.BaseType())
 			}
 		}
 		for _, r := range f.result {
@@ -216,10 +232,10 @@ type Raw struct {
 
 type InBuilder struct {
 	col    string
-	params []any
+	params int
 }
 
-func NewIn(col string, params []any) *InBuilder {
+func NewIn(col string, params int) *InBuilder {
 	return &InBuilder{
 		col:    col,
 		params: params,
@@ -228,7 +244,7 @@ func NewIn(col string, params []any) *InBuilder {
 
 func (in *InBuilder) String() string {
 	var placeholders []string
-	for range in.params {
+	for i := 0; i < in.params; i++ {
 		placeholders = append(placeholders, "?")
 	}
 	var query string
@@ -241,4 +257,5 @@ func (in *InBuilder) String() string {
 // RawQueryParser is a parser to extract metedata from sql query
 type RawQueryParser interface {
 	Parse(context.Context, string) (TableMetadata, *QueryBuilder, error)
+	Flush()
 }

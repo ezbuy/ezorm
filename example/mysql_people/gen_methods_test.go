@@ -9,8 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const _GetUserSQL_Mock = "SELECT `name` FROM `test_user` WHERE `name`= (.*)"
-
 func TestGetUser(t *testing.T) {
 	mockDB, mock, err := mock.New()
 	if !assert.NoError(t, err) {

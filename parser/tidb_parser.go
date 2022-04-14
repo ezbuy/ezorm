@@ -205,6 +205,8 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 						return errors.New("parser: unknown array datum type, only support string and int for now")
 					}
 				}
+
+				tp.b.raw.ins[field.Name] = NewIn(field.Name, len(x.List))
 				tp.b.raw.lo[field.Name] = LocationOffset{
 					// FIXME: solve no well-formated query
 					start: start + len(field.Name) + 5,
@@ -238,6 +240,16 @@ func (tp *TiDBParser) Parse(ctx context.Context,
 	}
 
 	return tp.meta, tp.b, nil
+}
+
+func (tp *TiDBParser) Flush() {
+	tp.b.raw = &Raw{
+		lo:    make(map[string]LocationOffset),
+		ins:   map[string]*InBuilder{},
+		limit: &LimitOption{},
+	}
+	tp.b.Reset()
+	tp.meta = make(map[Table]*QueryMetadata)
 }
 
 func (tp *TiDBParser) parseOne(ctx context.Context,

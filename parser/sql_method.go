@@ -78,6 +78,7 @@ func (p *SQL) Read(path string) (*SQLMethod, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer p.RawQueryParser.Flush()
 
 	// Insert the name to the raw sql as an internal comment.
 	name := filepath.Base(path)

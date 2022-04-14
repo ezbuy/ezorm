@@ -20,13 +20,13 @@ var SQL = &sqlMethods{}
 
 {{- range $method := .Methods}}
 type {{$method.Name}}Resp struct {
-	{{- range $field := $method.Fields}}
+	{{- range $field := $method.Result}}
 	{{$field.Name}} {{$field.Type}} `sql:"{{$field.Raw}}"`
 	{{- end -}}
 }
 
 type {{$method.Name}}Req struct {
-	{{- range $field := $method.Result}}
+	{{- range $field := $method.Fields}}
 	{{$field.Name}} {{$field.Type}} `sql:"{{$field.Raw}}"`
 	{{- end -}}
 }

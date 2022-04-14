@@ -1,7 +1,7 @@
 all:
 
 build:
-	go build -ldflags "-X main.Version=${VERSION}" -o bin/ezorm
+	go build -ldflags "-X main.Version=$(shell git rev-parse --short HEAD)" -o bin/ezorm
 
 buildTpl:
 	go-bindata -nometadata -o tpl/bindata.go -ignore bindata.go -pkg tpl tpl
