@@ -141,6 +141,7 @@ func handleSQL(objs map[string]*parser.Obj, pkg string) error {
 		if err != nil {
 			return err
 		}
+		m.FromFile = e.Name()
 		methods = append(methods, m)
 	}
 	if len(methods) == 0 {
@@ -150,6 +151,7 @@ func handleSQL(objs map[string]*parser.Obj, pkg string) error {
 	file := &parser.SQLFile{
 		GoPackage: pkg,
 		Methods:   methods,
+		Dir:       sqlsDir,
 	}
 	genPath := filepath.Join(output, "gen_methods.go")
 	executeTpl(genPath, "sql_method", file)

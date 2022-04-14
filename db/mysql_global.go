@@ -15,6 +15,20 @@ func MysqlInitByField(cfg *MysqlFieldConfig) {
 	MysqlInit(cfg.Convert())
 }
 
+func MySQLInitByRawDB(db *sql.DB) {
+	mysqlConnOnce.Do(func() {
+		var err error
+		mysqlInstance, err = NewMysql(nil, WithRawDB(db))
+		if err != nil {
+			panic("init mysql: " + err.Error())
+		}
+		err = mysqlInstance.Ping()
+		if err != nil {
+			panic("ping mysql: " + err.Error())
+		}
+	})
+}
+
 func MysqlInit(cfg *MysqlConfig) {
 	mysqlConnOnce.Do(func() {
 		var err error

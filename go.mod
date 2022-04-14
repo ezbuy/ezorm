@@ -23,6 +23,7 @@ require (
 require (
 	cloud.google.com/go/storage v1.18.2 // indirect
 	github.com/BurntSushi/toml v0.4.1 // indirect
+	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
 	github.com/aws/aws-sdk-go v1.40.37 // indirect
 	github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548 // indirect

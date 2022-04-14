@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -19,6 +20,7 @@ type SQL struct {
 type SQLFile struct {
 	GoPackage string
 	Methods   []*SQLMethod
+	Dir       string
 }
 
 type SQLMethod struct {
@@ -27,7 +29,8 @@ type SQLMethod struct {
 	Result []*SQLMethodField
 	SQL    string
 
-	Assign string
+	Assign   string
+	FromFile string
 }
 
 type SQLMethodField struct {
@@ -116,6 +119,12 @@ func (p *SQL) Read(path string) (*SQLMethod, error) {
 		}
 	}
 
+	var scan bytes.Buffer
+	for _, r := range result.Result {
+		scan.WriteString(fmt.Sprintf("&o.%s, ", r.Name))
+	}
+
+	result.Assign = scan.String()
 	result.SQL = builder.rebuild()
 	return result, nil
 }

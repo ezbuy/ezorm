@@ -1,4 +1,6 @@
-{{define "sql_method"}}package {{.GoPackage}}
+{{define "sql_method"}}// Package {{.GoPackage}} is generated from {{.Dir}} directory
+// by github.com/ezbuy/ezorm/v2 , DO NOT EDIT!
+package {{.GoPackage}}
 
 import (
 	"time"
@@ -39,6 +41,7 @@ func (req *{{$method.Name}}Req) Params() []any {
 
 const _{{$method.Name}}SQL = "{{$method.SQL}}"
 
+// {{$method.Name}} is a raw query handler generated function for `{{$.Dir}}/{{$method.FromFile}}`.
 func (*sqlMethods) {{$method.Name}}(ctx context.Context, req *{{$method.Name}}Req ) ([]*{{$method.Name}}Resp, error) {
 	rows, err := db.MysqlQuery(_{{$method.Name}}SQL, req.Params()...)
 	if err != nil {
