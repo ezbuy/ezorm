@@ -15,7 +15,7 @@ func mysqlConfigFromEnv() *db.MysqlFieldConfig {
 		Addr:     fmt.Sprintf("%s:%s", os.Getenv("MYSQL_HOST"), os.Getenv("MYSQL_PORT")),
 		UserName: "ezbuy",
 		Password: "ezbuyisthebest",
-		Database: "testing",
+		Database: "test",
 
 		Options: map[string]string{
 			"multiStatements": "true",

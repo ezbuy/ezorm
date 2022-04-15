@@ -24,7 +24,7 @@ jobs:
           MYSQL_USER: ezbuy
           MYSQL_PASSWORD: ezbuyisthebest
           MYSQL_ROOT_PASSWORD: ezbuyisthebest
-          MYSQL_DATABASE: testing
+          MYSQL_DATABASE: test
         options: >-
           --health-cmd="mysqladmin ping"
           --health-interval=10s
