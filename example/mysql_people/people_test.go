@@ -2,39 +2,40 @@ package test
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 	"testing"
 	"time"
+
+	"github.com/ezbuy/ezorm/v2/db"
 )
 
-// func TestMain(m *testing.M) {
-// 	// db.MysqlInit(&db.MysqlConfig{
-// 	// DataSource: "root@tcp(localhost:3306)/?multiStatements=true",
-// 	// })
-// 	db.MysqlInitByField(&db.MysqlFieldConfig{
-// 		Addr:     "localhost:3306",
-// 		UserName: "root",
-// 		Password: "",
-// 		Database: "",
+func TestMain(m *testing.M) {
+	db.MysqlInitByField(&db.MysqlFieldConfig{
+		Addr:     "localhost:3306",
+		UserName: "root",
+		Password: "",
+		Database: "",
 
-// 		Options: map[string]string{
-// 			"multiStatements": "true",
-// 		},
-// 	})
+		Options: map[string]string{
+			"multiStatements": "true",
+		},
+	})
 
-// 	// initialize mysql database environment for running test below
-// 	table, err := ioutil.ReadFile("people.sql")
-// 	if err != nil {
-// 		panic(fmt.Errorf("failed to read people table script: %s", err))
-// 	}
-// 	if _, err := db.MysqlExec("CREATE DATABASE IF NOT EXISTS test"); err != nil {
-// 		panic(fmt.Errorf("failed to create database: %s", err))
-// 	}
-// 	if _, err := db.MysqlExec(string(table)); err != nil {
-// 		panic(fmt.Errorf("failed to create table: %s", err))
-// 	}
+	// initialize mysql database environment for running test below
+	table, err := ioutil.ReadFile("people.sql")
+	if err != nil {
+		panic(fmt.Errorf("failed to read people table script: %s", err))
+	}
+	if _, err := db.MysqlExec("CREATE DATABASE IF NOT EXISTS test"); err != nil {
+		panic(fmt.Errorf("failed to create database: %s", err))
+	}
+	if _, err := db.MysqlExec(string(table)); err != nil {
+		panic(fmt.Errorf("failed to create table: %s", err))
+	}
 
-// 	os.Exit(m.Run())
-// }
+	os.Exit(m.Run())
+}
 
 func TestPeople(t *testing.T) {
 

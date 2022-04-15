@@ -1,0 +1,44 @@
+name: "e2e"
+
+on:
+  pull_request:
+    branches:
+      - feature/v2
+      - master
+      - v2
+jobs:
+  build:
+    name: "e2e Test"
+    strategy:
+      matrix:
+        go: [1.18]
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:5.7
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_USER: ezbuy
+          MYSQL_PASSWORD: ezbuyisthebest
+          MYSQL_ROOT_PASSWORD: ezbuyisthebest
+          MYSQL_DATABASE: testing
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: get dependencies
+        run: |
+          go get -v -t -d ./...
+      - name: generate template
+        run: |
+          GO111MODULE=off go get -u github.com/jteeuwen/go-bindata/...
+          make buildTpl
+          make genexample
+      - name: template testing
+        run: |
+          make testmysql

@@ -21,4 +21,3 @@ jobs:
       - name: run parser tests
         run: |
           go test -v ./parser/...
-# TODO: services
