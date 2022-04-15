@@ -17,15 +17,21 @@ var (
 	_ context.Context
 )
 
-type sqlMethods struct {
+var SQL = &sqlMethods{}
+
+type sqlMethods struct {}
+
+type RawQueryOption struct{
 	db *sql_driver.DB
 }
 
-var SQL = &sqlMethods{}
+type RawQueryOptionHandler func(*RawQueryOption)
 
-func (m *sqlMethods) WithDB(db *sql_driver.DB) *sqlMethods {
-	m.db = db
-	return m
+
+func WithDB(db *sql_driver.DB) RawQueryOptionHandler {
+	return func(o *RawQueryOption) {
+		o.db = db
+	}
 }
 
 {{- range $method := .Methods}}
@@ -71,14 +77,21 @@ func (req *{{$method.Name}}Req) QueryIn() []any {
 const _{{$method.Name}}SQL = "{{$method.SQL}}"
 
 // {{$method.Name}} is a raw query handler generated function for `{{$.Dir}}/{{$method.FromFile}}`.
-func (m *sqlMethods) {{$method.Name}}(ctx context.Context, req *{{$method.Name}}Req ) ([]*{{$method.Name}}Resp, error) {
+func (m *sqlMethods) {{$method.Name}}(ctx context.Context, req *{{$method.Name}}Req , opts ...RawQueryOptionHandler) ([]*{{$method.Name}}Resp, error) {
+
+	rawQueryOption := &RawQueryOption{}
+
+	for _, o := range opts {
+		o(rawQueryOption)
+	}
+
 	{{if $method.QueryIn }}
 	query := fmt.Sprintf(_{{$method.Name}}SQL,req.QueryIn()...)
 	{{else}}
 	query := _{{$method.Name}}SQL
 	{{end}}
 
-	rows, err := db.GetMysql(db.WithDB(m.db)).QueryContext(ctx, query, req.Params()...)
+	rows, err := db.GetMysql(db.WithDB(rawQueryOption.db)).QueryContext(ctx, query, req.Params()...)
 	if err != nil {
 		return nil, err
 	}

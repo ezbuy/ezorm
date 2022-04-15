@@ -17,15 +17,20 @@ var (
 	_ context.Context
 )
 
-type sqlMethods struct {
+var SQL = &sqlMethods{}
+
+type sqlMethods struct{}
+
+type RawQueryOption struct {
 	db *sql_driver.DB
 }
 
-var SQL = &sqlMethods{}
+type RawQueryOptionHandler func(*RawQueryOption)
 
-func (m *sqlMethods) WithDB(db *sql_driver.DB) *sqlMethods {
-	m.db = db
-	return m
+func WithDB(db *sql_driver.DB) RawQueryOptionHandler {
+	return func(o *RawQueryOption) {
+		o.db = db
+	}
 }
 
 type GetUserResp struct {
@@ -47,11 +52,17 @@ func (req *GetUserReq) Params() []any {
 const _GetUserSQL = "SELECT `name` FROM `test_user` WHERE `name`=?"
 
 // GetUser is a raw query handler generated function for `e2e/mysql/sqls/get_user.sql`.
-func (m *sqlMethods) GetUser(ctx context.Context, req *GetUserReq) ([]*GetUserResp, error) {
+func (m *sqlMethods) GetUser(ctx context.Context, req *GetUserReq, opts ...RawQueryOptionHandler) ([]*GetUserResp, error) {
+
+	rawQueryOption := &RawQueryOption{}
+
+	for _, o := range opts {
+		o(rawQueryOption)
+	}
 
 	query := _GetUserSQL
 
-	rows, err := db.GetMysql(db.WithDB(m.db)).QueryContext(ctx, query, req.Params()...)
+	rows, err := db.GetMysql(db.WithDB(rawQueryOption.db)).QueryContext(ctx, query, req.Params()...)
 	if err != nil {
 		return nil, err
 	}
@@ -97,11 +108,17 @@ func (req *GetUserInReq) QueryIn() []any {
 const _GetUserInSQL = "SELECT `user_id` FROM `test_user` WHERE `name` IN %s"
 
 // GetUserIn is a raw query handler generated function for `e2e/mysql/sqls/get_user_in.sql`.
-func (m *sqlMethods) GetUserIn(ctx context.Context, req *GetUserInReq) ([]*GetUserInResp, error) {
+func (m *sqlMethods) GetUserIn(ctx context.Context, req *GetUserInReq, opts ...RawQueryOptionHandler) ([]*GetUserInResp, error) {
+
+	rawQueryOption := &RawQueryOption{}
+
+	for _, o := range opts {
+		o(rawQueryOption)
+	}
 
 	query := fmt.Sprintf(_GetUserInSQL, req.QueryIn()...)
 
-	rows, err := db.GetMysql(db.WithDB(m.db)).QueryContext(ctx, query, req.Params()...)
+	rows, err := db.GetMysql(db.WithDB(rawQueryOption.db)).QueryContext(ctx, query, req.Params()...)
 	if err != nil {
 		return nil, err
 	}
@@ -139,11 +156,17 @@ func (req *UserJoinBlogReq) Params() []any {
 const _UserJoinBlogSQL = "SELECT `u`.`user_id`,`b`.`blog_id` FROM `test_user` AS `u` JOIN `blog` AS `b` ON `u`.`user_id`=`b`.`user` WHERE `u`.`name`=?"
 
 // UserJoinBlog is a raw query handler generated function for `e2e/mysql/sqls/user_join_blog.sql`.
-func (m *sqlMethods) UserJoinBlog(ctx context.Context, req *UserJoinBlogReq) ([]*UserJoinBlogResp, error) {
+func (m *sqlMethods) UserJoinBlog(ctx context.Context, req *UserJoinBlogReq, opts ...RawQueryOptionHandler) ([]*UserJoinBlogResp, error) {
+
+	rawQueryOption := &RawQueryOption{}
+
+	for _, o := range opts {
+		o(rawQueryOption)
+	}
 
 	query := _UserJoinBlogSQL
 
-	rows, err := db.GetMysql(db.WithDB(m.db)).QueryContext(ctx, query, req.Params()...)
+	rows, err := db.GetMysql(db.WithDB(rawQueryOption.db)).QueryContext(ctx, query, req.Params()...)
 	if err != nil {
 		return nil, err
 	}
