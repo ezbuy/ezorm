@@ -44,8 +44,31 @@ func SetupRawDB(db *sql.DB) {
 	}
 }
 
-func GetMysql() *Mysql {
-	return getMysqlInstance()
+type GetMySQLOption struct {
+	db *sql.DB
+}
+
+type GetMySQLOptionFunc func(*GetMySQLOption)
+
+func WithDB(db *sql.DB) GetMySQLOptionFunc {
+	return func(opt *GetMySQLOption) {
+		opt.db = db
+	}
+}
+
+func GetMysql(opts ...GetMySQLOptionFunc) *Mysql {
+	getOption := &GetMySQLOption{}
+	for _, opt := range opts {
+		opt(getOption)
+	}
+	if getOption.db == nil {
+		return getMysqlInstance()
+	}
+	s, err := NewMysql(nil, WithRawDB(getOption.db))
+	if err != nil {
+		panic(err)
+	}
+	return s
 }
 
 func MysqlQuery(query string, args ...interface{}) (*sql.Rows, error) {

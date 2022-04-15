@@ -4,6 +4,7 @@ package test
 
 import (
 	"context"
+	sql_driver "database/sql"
 	"fmt"
 	"time"
 
@@ -16,9 +17,16 @@ var (
 	_ context.Context
 )
 
-type sqlMethods struct{}
+type sqlMethods struct {
+	db *sql_driver.DB
+}
 
 var SQL = &sqlMethods{}
+
+func (m *sqlMethods) WithDB(db *sql_driver.DB) *sqlMethods {
+	m.db = db
+	return m
+}
 
 type GetUserResp struct {
 	Name string `sql:"name"`
@@ -39,11 +47,11 @@ func (req *GetUserReq) Params() []any {
 const _GetUserSQL = "SELECT `name` FROM `test_user` WHERE `name`=?"
 
 // GetUser is a raw query handler generated function for `example/mysql_people/sqls/get_user.sql`.
-func (*sqlMethods) GetUser(ctx context.Context, req *GetUserReq) ([]*GetUserResp, error) {
+func (m *sqlMethods) GetUser(ctx context.Context, req *GetUserReq) ([]*GetUserResp, error) {
 
 	query := _GetUserSQL
 
-	rows, err := db.MysqlQuery(query, req.Params()...)
+	rows, err := db.GetMysql(db.WithDB(m.db)).QueryContext(ctx, query, req.Params()...)
 	if err != nil {
 		return nil, err
 	}
@@ -89,11 +97,11 @@ func (req *GetUserInReq) QueryIn() []any {
 const _GetUserInSQL = "SELECT `user_id` FROM `test_user` WHERE `name` IN %s"
 
 // GetUserIn is a raw query handler generated function for `example/mysql_people/sqls/get_user_in.sql`.
-func (*sqlMethods) GetUserIn(ctx context.Context, req *GetUserInReq) ([]*GetUserInResp, error) {
+func (m *sqlMethods) GetUserIn(ctx context.Context, req *GetUserInReq) ([]*GetUserInResp, error) {
 
 	query := fmt.Sprintf(_GetUserInSQL, req.QueryIn()...)
 
-	rows, err := db.MysqlQuery(query, req.Params()...)
+	rows, err := db.GetMysql(db.WithDB(m.db)).QueryContext(ctx, query, req.Params()...)
 	if err != nil {
 		return nil, err
 	}
@@ -131,11 +139,11 @@ func (req *UserJoinBlogReq) Params() []any {
 const _UserJoinBlogSQL = "SELECT `u`.`user_id`,`b`.`blog_id` FROM `test_user` AS `u` JOIN `blog` AS `b` ON `u`.`user_id`=`b`.`user` WHERE `u`.`name`=?"
 
 // UserJoinBlog is a raw query handler generated function for `example/mysql_people/sqls/user_join_blog.sql`.
-func (*sqlMethods) UserJoinBlog(ctx context.Context, req *UserJoinBlogReq) ([]*UserJoinBlogResp, error) {
+func (m *sqlMethods) UserJoinBlog(ctx context.Context, req *UserJoinBlogReq) ([]*UserJoinBlogResp, error) {
 
 	query := _UserJoinBlogSQL
 
-	rows, err := db.MysqlQuery(query, req.Params()...)
+	rows, err := db.GetMysql(db.WithDB(m.db)).QueryContext(ctx, query, req.Params()...)
 	if err != nil {
 		return nil, err
 	}

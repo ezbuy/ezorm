@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	mock "github.com/DATA-DOG/go-sqlmock"
-	"github.com/ezbuy/ezorm/v2/db"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,9 +17,8 @@ func TestGetUser(t *testing.T) {
 		mock.NewRows([]string{"name"}).AddRow("me"),
 	)
 
-	db.SetupRawDB(mockDB)
 	ctx := context.TODO()
-	resp, err := SQL.GetUser(ctx, &GetUserReq{
+	resp, err := SQL.WithDB(mockDB).GetUser(ctx, &GetUserReq{
 		Name: "me",
 	})
 	if !assert.NoError(t, err) {

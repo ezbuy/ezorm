@@ -6,6 +6,7 @@ import (
 	"time"
 	"context"
 	 "fmt"
+	sql_driver "database/sql"
 
 	"github.com/ezbuy/ezorm/v2/pkg/sql"
 	"github.com/ezbuy/ezorm/v2/db"
@@ -16,9 +17,16 @@ var (
 	_ context.Context
 )
 
-type sqlMethods struct {}
+type sqlMethods struct {
+	db *sql_driver.DB
+}
 
 var SQL = &sqlMethods{}
+
+func (m *sqlMethods) WithDB(db *sql_driver.DB) *sqlMethods {
+	m.db = db
+	return m
+}
 
 {{- range $method := .Methods}}
 type {{$method.Name}}Resp struct {
@@ -63,14 +71,14 @@ func (req *{{$method.Name}}Req) QueryIn() []any {
 const _{{$method.Name}}SQL = "{{$method.SQL}}"
 
 // {{$method.Name}} is a raw query handler generated function for `{{$.Dir}}/{{$method.FromFile}}`.
-func (*sqlMethods) {{$method.Name}}(ctx context.Context, req *{{$method.Name}}Req ) ([]*{{$method.Name}}Resp, error) {
+func (m *sqlMethods) {{$method.Name}}(ctx context.Context, req *{{$method.Name}}Req ) ([]*{{$method.Name}}Resp, error) {
 	{{if $method.QueryIn }}
 	query := fmt.Sprintf(_{{$method.Name}}SQL,req.QueryIn()...)
 	{{else}}
 	query := _{{$method.Name}}SQL
 	{{end}}
 
-	rows, err := db.MysqlQuery(query, req.Params()...)
+	rows, err := db.GetMysql(db.WithDB(m.db)).QueryContext(ctx, query, req.Params()...)
 	if err != nil {
 		return nil, err
 	}
