@@ -18,7 +18,7 @@ func TestGetUser(t *testing.T) {
 		mock.NewRows([]string{"name"}).AddRow("me"),
 	)
 
-	db.MySQLInitByRawDB(mockDB)
+	db.SetupRawDB(mockDB)
 	ctx := context.TODO()
 	resp, err := SQL.GetUser(ctx, &GetUserReq{
 		Name: "me",

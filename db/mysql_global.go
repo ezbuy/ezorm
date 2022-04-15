@@ -15,20 +15,6 @@ func MysqlInitByField(cfg *MysqlFieldConfig) {
 	MysqlInit(cfg.Convert())
 }
 
-func MySQLInitByRawDB(db *sql.DB) {
-	mysqlConnOnce.Do(func() {
-		var err error
-		mysqlInstance, err = NewMysql(nil, WithRawDB(db))
-		if err != nil {
-			panic("init mysql: " + err.Error())
-		}
-		err = mysqlInstance.Ping()
-		if err != nil {
-			panic("ping mysql: " + err.Error())
-		}
-	})
-}
-
 func MysqlInit(cfg *MysqlConfig) {
 	mysqlConnOnce.Do(func() {
 		var err error
@@ -48,6 +34,14 @@ func getMysqlInstance() *Mysql {
 		panic("mysql no init, please call MysqlInit first.")
 	}
 	return mysqlInstance
+}
+
+func SetupRawDB(db *sql.DB) {
+	var err error
+	mysqlInstance, err = NewMysql(nil, WithRawDB(db))
+	if err != nil {
+		panic("init mysql: " + err.Error())
+	}
 }
 
 func GetMysql() *Mysql {
