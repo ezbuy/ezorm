@@ -31,13 +31,11 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
-      - name: get dependencies
+      - name: install-go-bindata
         run: |
-          go get -v -t -d ./...
+          sudo apt-get install -y go-bindata
       - name: generate template
         run: |
-          GO111MODULE=off go get -u github.com/jteeuwen/go-bindata/...
-          GO111MODULE=off go install github.com/jteeuwen/go-bindata/go-bindata
           make buildTpl
           make genexample
       - name: template testing
