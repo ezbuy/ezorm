@@ -45,3 +45,6 @@ jobs:
       - name: template testing
         run: |
           make testmysql
+        env:
+          MYSQL_HOST: mysql
+          MYSQL_PORT: ${{ job.services.mysql.ports[3306] }}
