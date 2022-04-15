@@ -13,6 +13,8 @@ jobs:
       matrix:
         go: [1.18]
     runs-on: ubuntu-latest
+    container:
+        image: golang:${{ matrix.go }}-stretch
     services:
       mysql:
         image: mysql:5.7
