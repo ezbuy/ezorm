@@ -10,17 +10,21 @@ import (
 	"github.com/ezbuy/ezorm/v2/db"
 )
 
-func TestMain(m *testing.M) {
-	db.MysqlInitByField(&db.MysqlFieldConfig{
-		Addr:     "localhost:3306",
-		UserName: "root",
-		Password: "",
-		Database: "",
+func mysqlConfigFromEnv() *db.MysqlFieldConfig {
+	return &db.MysqlFieldConfig{
+		Addr:     fmt.Sprintf("%s:%s", os.Getenv("MYSQL_HOST"), os.Getenv("MYSQL_PORT")),
+		UserName: "ezbuy",
+		Password: "ezbuyisthebest",
+		Database: "testing",
 
 		Options: map[string]string{
 			"multiStatements": "true",
 		},
-	})
+	}
+}
+
+func TestMain(m *testing.M) {
+	db.MysqlInitByField(mysqlConfigFromEnv())
 
 	// initialize mysql database environment for running test below
 	table, err := ioutil.ReadFile("people.sql")
