@@ -1,4 +1,4 @@
-name: build-pr
+name: parser
 
 on:
   pull_request:
