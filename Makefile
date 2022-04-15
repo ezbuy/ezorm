@@ -7,7 +7,6 @@ buildTpl:
 	go-bindata -nometadata -o tpl/bindata.go -ignore bindata.go -pkg tpl tpl
 
 genexample:
-	go install
 	bin/ezorm gen -i ./example/mssql_people/people_mssql.yaml -o ./example/mssql_people -p people --goPackage test
 	bin/ezorm gen -i ./example/blog/blog.yaml -o ./example/blog -p blog --goPackage test
 	bin/ezorm gen -i ./example/mysql_people/people.yaml -o ./example/mysql_people -p people --goPackage test
@@ -18,7 +17,7 @@ genmongo:
 	rm example/blog/gen_*.go
 	bin/ezorm gen -i example/blog/blog.yaml -o example/blog -p blog --goPackage test
 
-test: genexample testmssql testmongo testmysql
+test: build genexample testmssql testmongo testmysql
 
 testmssql:
 	go test -v ./example/mssql_people/...

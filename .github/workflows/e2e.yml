@@ -37,6 +37,7 @@ jobs:
       - name: generate template
         run: |
           make buildTpl
+          make build
           make genexample
       - name: template testing
         run: |
