@@ -1,0 +1,50 @@
+name: "e2e"
+
+on:
+  pull_request:
+    branches:
+      - feature/v2
+      - master
+      - v2
+jobs:
+  build:
+    name: "e2e Test"
+    strategy:
+      matrix:
+        go: [1.18]
+    runs-on: ubuntu-latest
+    container:
+        image: golang:${{ matrix.go }}-stretch
+    services:
+      mysql:
+        image: mysql:5.7
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_USER: ezbuy
+          MYSQL_PASSWORD: ezbuyisthebest
+          MYSQL_ROOT_PASSWORD: ezbuyisthebest
+          MYSQL_DATABASE: test
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: install-go-bindata
+        run: |
+          apt update && apt install sudo
+          sudo apt-get install -y go-bindata
+      - name: generate template
+        run: |
+          make buildTpl
+          make build
+          make genexample
+      - name: template testing
+        run: |
+          make testmysql
+        env:
+          MYSQL_HOST: mysql
+          MYSQL_PORT: ${{ job.services.mysql.ports[3306] }}

@@ -1,4 +1,4 @@
-name: build-pr
+name: parser
 
 on:
   pull_request:
@@ -21,4 +21,3 @@ jobs:
       - name: run parser tests
         run: |
           go test -v ./parser/...
-# TODO: services

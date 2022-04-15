@@ -1,4 +1,4 @@
-package test
+package mysql
 
 import "time"
 
@@ -32,7 +32,7 @@ const (
 )
 
 func (p *Blog) GetNameSpace() string {
-	return "people"
+	return "mysql"
 }
 
 func (p *Blog) GetClassName() string {

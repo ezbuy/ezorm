@@ -16,6 +16,7 @@ package cmd
 
 import (
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -34,15 +35,41 @@ var genCmd = &cobra.Command{
 	Short: "Generate orm code from yaml file",
 	RunE: func(_ *cobra.Command, _ []string) error {
 		var objs map[string]map[string]interface{}
-		data, _ := ioutil.ReadFile(input)
 		stat, err := os.Stat(input)
 		if err != nil {
 			return err
 		}
-		err = yaml.Unmarshal([]byte(data), &objs)
-
-		if err != nil {
-			return err
+		if stat.IsDir() {
+			if err := filepath.WalkDir(input, func(path string, d fs.DirEntry, err error) error {
+				if err != nil {
+					return err
+				}
+				if d.IsDir() {
+					return nil
+				}
+				if strings.HasSuffix(d.Name(), ".yaml") {
+					data, err := ioutil.ReadFile(path)
+					if err != nil {
+						return err
+					}
+					err = yaml.Unmarshal(data, &objs)
+					if err != nil {
+						return err
+					}
+				}
+				return nil
+			}); err != nil {
+				return err
+			}
+		} else {
+			data, err := ioutil.ReadFile(input)
+			if err != nil {
+				return err
+			}
+			err = yaml.Unmarshal([]byte(data), &objs)
+			if err != nil {
+				return err
+			}
 		}
 
 		if genPackageName == "" {
@@ -112,7 +139,16 @@ var genCmd = &cobra.Command{
 }
 
 func handleSQL(objs map[string]*parser.Obj, pkg string) error {
-	inputDir := filepath.Dir(input)
+	var inputDir string
+	f, err := os.Stat(input)
+	if err != nil {
+		return err
+	}
+	if f.IsDir() {
+		inputDir = input
+	} else {
+		inputDir = filepath.Dir(input)
+	}
 	sqlsDir := filepath.Join(inputDir, "sqls")
 	stat, err := os.Stat(sqlsDir)
 	if err != nil {
