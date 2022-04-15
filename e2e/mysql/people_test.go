@@ -28,15 +28,17 @@ func mysqlConfigFromEnv() *db.MysqlFieldConfig {
 func TestMain(m *testing.M) {
 	db.MysqlInitByField(mysqlConfigFromEnv())
 
+	ctx := context.Background()
+
 	// initialize mysql database environment for running test below
 	table, err := ioutil.ReadFile("people.sql")
 	if err != nil {
 		panic(fmt.Errorf("failed to read people table script: %s", err))
 	}
-	if _, err := db.MysqlExec("CREATE DATABASE IF NOT EXISTS test"); err != nil {
+	if _, err := db.MysqlExec(ctx, "CREATE DATABASE IF NOT EXISTS test"); err != nil {
 		panic(fmt.Errorf("failed to create database: %s", err))
 	}
-	if _, err := db.MysqlExec(string(table)); err != nil {
+	if _, err := db.MysqlExec(ctx, string(table)); err != nil {
 		panic(fmt.Errorf("failed to create table: %s", err))
 	}
 
@@ -44,7 +46,8 @@ func TestMain(m *testing.M) {
 }
 
 func TestPeople(t *testing.T) {
-	ret, err := BlogMgr.Del("1 = 1")
+	ctx := context.Background()
+	ret, err := BlogMgr.Del(ctx, "1 = 1")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -66,7 +69,7 @@ func TestPeople(t *testing.T) {
 		Update:      now,
 	}
 
-	if _, err := BlogMgr.Save(&blog); err != nil {
+	if _, err := BlogMgr.Save(ctx, &blog); err != nil {
 		t.Fatal(err)
 		return
 	}
@@ -82,7 +85,7 @@ func TestPeople(t *testing.T) {
 			Create:      now,
 			Update:      now,
 		}
-		if _, err := BlogMgr.Save(blog2); err != nil {
+		if _, err := BlogMgr.Save(ctx, blog2); err != nil {
 			t.Fatal(err)
 			return
 		}
@@ -98,14 +101,14 @@ func TestPeople(t *testing.T) {
 			Create:      now,
 			Update:      now,
 		}
-		if _, err := BlogMgr.Save(blog3); err != nil {
+		if _, err := BlogMgr.Save(ctx, blog3); err != nil {
 			t.Fatal(err)
 			return
 		}
 	}
 
 	{
-		b, err := BlogMgr.FindByUser(1, 0, 1, "-slug")
+		b, err := BlogMgr.FindByUser(ctx, 1, 0, 1, "-slug")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -115,7 +118,7 @@ func TestPeople(t *testing.T) {
 	}
 
 	{
-		blog, err := BlogMgr.FindOneBySlug("blog-title")
+		blog, err := BlogMgr.FindOneBySlug(ctx, "blog-title")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -131,7 +134,7 @@ func TestPeople(t *testing.T) {
 		}
 	}
 	{
-		blogs, err := BlogMgr.FindInGroupId([]int64{1, 2})
+		blogs, err := BlogMgr.FindInGroupId(ctx, []int64{1, 2})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -161,11 +164,12 @@ func TestPeople(t *testing.T) {
 			}
 		}
 	}
-	testForeignKey(t)
+	testForeignKey(ctx, t)
 }
 
-func testForeignKey(t *testing.T) {
-	if _, err := UserMgr.Del("1=1"); err != nil {
+func testForeignKey(ctx context.Context, t *testing.T) {
+
+	if _, err := UserMgr.Del(ctx, "1=1"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -177,19 +181,19 @@ func testForeignKey(t *testing.T) {
 		UserNumber: 2,
 		Name:       "user2",
 	}
-	if _, err := UserMgr.Save(user1); err != nil {
+	if _, err := UserMgr.Save(ctx, user1); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := UserMgr.Save(user2); err != nil {
+	if _, err := UserMgr.Save(ctx, user2); err != nil {
 		t.Fatal(err)
 	}
 
-	blogs, err := BlogMgr.FindAll()
+	blogs, err := BlogMgr.FindAll(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
 	userNumbers := BlogMgr.ToFieldUser(blogs)
-	users, err := UserMgr.FindListUserNumber(userNumbers)
+	users, err := UserMgr.FindListUserNumber(ctx, userNumbers)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -202,7 +206,7 @@ func testForeignKey(t *testing.T) {
 
 func TestRawQuery(t *testing.T) {
 	ctx := context.Background()
-	if _, err := UserMgr.Del("1=1"); err != nil {
+	if _, err := UserMgr.Del(ctx, "1=1"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -210,7 +214,7 @@ func TestRawQuery(t *testing.T) {
 		UserNumber: 1,
 		Name:       "user1",
 	}
-	if _, err := UserMgr.Save(user1); err != nil {
+	if _, err := UserMgr.Save(ctx, user1); err != nil {
 		t.Fatal(err)
 	}
 	resp, err := SQL.GetUser(ctx, &GetUserReq{

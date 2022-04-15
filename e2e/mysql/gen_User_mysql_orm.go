@@ -34,16 +34,12 @@ func (m *_UserMgr) query(ctx context.Context, query string, args ...interface{})
 	return m.queryLimit(ctx, query, -1, args...)
 }
 
-func (m *_UserMgr) Query(query string, args ...interface{}) (results []*User, err error) {
-	return m.QueryContext(context.Background(), query, args...)
-}
-
-func (m *_UserMgr) QueryContext(ctx context.Context, query string, args ...interface{}) (results []*User, err error) {
+func (m *_UserMgr) Query(ctx context.Context, query string, args ...interface{}) (results []*User, err error) {
 	return m.queryLimit(ctx, query, -1, args...)
 }
 
 func (*_UserMgr) queryLimit(ctx context.Context, query string, limit int, args ...interface{}) (results []*User, err error) {
-	rows, err := db.MysqlQueryContext(ctx, query, args...)
+	rows, err := db.MysqlQuery(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("test.User query error: %v", err)
 	}
@@ -74,16 +70,16 @@ func (*_UserMgr) queryLimit(ctx context.Context, query string, limit int, args .
 	return
 }
 
-func (m *_UserMgr) Save(obj *User) (sql.Result, error) {
+func (m *_UserMgr) Save(ctx context.Context, obj *User) (sql.Result, error) {
 	if obj.UserId == 0 {
-		return m.saveInsert(obj)
+		return m.saveInsert(ctx, obj)
 	}
-	return m.saveUpdate(obj)
+	return m.saveUpdate(ctx, obj)
 }
 
-func (m *_UserMgr) saveInsert(obj *User) (sql.Result, error) {
+func (m *_UserMgr) saveInsert(ctx context.Context, obj *User) (sql.Result, error) {
 	query := "INSERT INTO test.test_user (`user_number`, `name`) VALUES (?, ?)"
-	result, err := db.MysqlExec(query, obj.UserNumber, obj.Name)
+	result, err := db.MysqlExec(ctx, query, obj.UserNumber, obj.Name)
 	if err != nil {
 		return result, err
 	}
@@ -98,12 +94,12 @@ func (m *_UserMgr) saveInsert(obj *User) (sql.Result, error) {
 	return result, err
 }
 
-func (m *_UserMgr) saveUpdate(obj *User) (sql.Result, error) {
+func (m *_UserMgr) saveUpdate(ctx context.Context, obj *User) (sql.Result, error) {
 	query := "UPDATE test.test_user SET `user_number`=?, `name`=? WHERE `user_id`=?"
-	return db.MysqlExec(query, obj.UserNumber, obj.Name, obj.UserId)
+	return db.MysqlExec(ctx, query, obj.UserNumber, obj.Name, obj.UserId)
 }
 
-func (m *_UserMgr) InsertBatch(objs []*User) (sql.Result, error) {
+func (m *_UserMgr) InsertBatch(ctx context.Context, objs []*User) (sql.Result, error) {
 	if len(objs) == 0 {
 		return nil, fmt.Errorf("Empty insert")
 	}
@@ -115,23 +111,15 @@ func (m *_UserMgr) InsertBatch(objs []*User) (sql.Result, error) {
 		params = append(params, obj.UserNumber, obj.Name)
 	}
 	query := fmt.Sprintf("INSERT INTO test.test_user (`user_number`, `name`) VALUES %s", strings.Join(values, ","))
-	return db.MysqlExec(query, params...)
+	return db.MysqlExec(ctx, query, params...)
 }
 
-func (m *_UserMgr) FindByID(id int32) (*User, error) {
-	return m.FindByIDContext(context.Background(), id)
-}
-
-func (m *_UserMgr) FindByIDContext(ctx context.Context, id int32) (*User, error) {
+func (m *_UserMgr) FindByID(ctx context.Context, id int32) (*User, error) {
 	query := "SELECT `user_id`, `user_number`, `name` FROM test.test_user WHERE user_id=?"
 	return m.queryOne(ctx, query, id)
 }
 
-func (m *_UserMgr) FindByIDs(ids []int32) ([]*User, error) {
-	return m.FindByIDsContext(context.Background(), ids)
-}
-
-func (m *_UserMgr) FindByIDsContext(ctx context.Context, ids []int32) ([]*User, error) {
+func (m *_UserMgr) FindByIDs(ctx context.Context, ids []int32) ([]*User, error) {
 	idsLen := len(ids)
 	placeHolders := make([]string, 0, idsLen)
 	args := make([]interface{}, 0, idsLen)
@@ -146,20 +134,12 @@ func (m *_UserMgr) FindByIDsContext(ctx context.Context, ids []int32) ([]*User, 
 	return m.query(ctx, query, args...)
 }
 
-func (m *_UserMgr) FindInUserId(ids []int32, sortFields ...string) ([]*User, error) {
-	return m.FindInUserIdContext(context.Background(), ids, sortFields...)
+func (m *_UserMgr) FindInUserId(ctx context.Context, ids []int32, sortFields ...string) ([]*User, error) {
+	return m.FindByIDs(ctx, ids)
 }
 
-func (m *_UserMgr) FindInUserIdContext(ctx context.Context, ids []int32, sortFields ...string) ([]*User, error) {
-	return m.FindByIDsContext(ctx, ids)
-}
-
-func (m *_UserMgr) FindListUserId(UserId []int32) ([]*User, error) {
-	return m.FindListUserIdContext(context.Background(), UserId)
-}
-
-func (m *_UserMgr) FindListUserIdContext(ctx context.Context, UserId []int32) ([]*User, error) {
-	retmap, err := m.FindMapUserIdContext(ctx, UserId)
+func (m *_UserMgr) FindListUserId(ctx context.Context, UserId []int32) ([]*User, error) {
+	retmap, err := m.FindMapUserId(ctx, UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -170,12 +150,8 @@ func (m *_UserMgr) FindListUserIdContext(ctx context.Context, UserId []int32) ([
 	return ret, nil
 }
 
-func (m *_UserMgr) FindMapUserId(UserId []int32, sortFields ...string) (map[int32]*User, error) {
-	return m.FindMapUserIdContext(context.Background(), UserId)
-}
-
-func (m *_UserMgr) FindMapUserIdContext(ctx context.Context, UserId []int32, sortFields ...string) (map[int32]*User, error) {
-	ret, err := m.FindInUserIdContext(ctx, UserId, sortFields...)
+func (m *_UserMgr) FindMapUserId(ctx context.Context, UserId []int32, sortFields ...string) (map[int32]*User, error) {
+	ret, err := m.FindInUserId(ctx, UserId, sortFields...)
 	if err != nil {
 		return nil, err
 	}
@@ -186,8 +162,8 @@ func (m *_UserMgr) FindMapUserIdContext(ctx context.Context, UserId []int32, sor
 	return retmap, nil
 }
 
-func (m *_UserMgr) FindListUserNumber(UserNumber []int32) ([]*User, error) {
-	retmap, err := m.FindMapUserNumber(UserNumber)
+func (m *_UserMgr) FindListUserNumber(ctx context.Context, UserNumber []int32) ([]*User, error) {
+	retmap, err := m.FindMapUserNumber(ctx, UserNumber)
 	if err != nil {
 		return nil, err
 	}
@@ -198,8 +174,8 @@ func (m *_UserMgr) FindListUserNumber(UserNumber []int32) ([]*User, error) {
 	return ret, nil
 }
 
-func (m *_UserMgr) FindMapUserNumber(UserNumber []int32) (map[int32]*User, error) {
-	ret, err := m.FindInUserNumber(UserNumber)
+func (m *_UserMgr) FindMapUserNumber(ctx context.Context, UserNumber []int32) (map[int32]*User, error) {
+	ret, err := m.FindInUserNumber(ctx, UserNumber)
 	if err != nil {
 		return nil, err
 	}
@@ -210,22 +186,22 @@ func (m *_UserMgr) FindMapUserNumber(UserNumber []int32) (map[int32]*User, error
 	return retmap, nil
 }
 
-func (m *_UserMgr) FindInUserNumber(UserNumber []int32, sortFields ...string) ([]*User, error) {
+func (m *_UserMgr) FindInUserNumber(ctx context.Context, UserNumber []int32, sortFields ...string) ([]*User, error) {
 	buf := bytes.NewBuffer(nil)
 	buf.WriteString("SELECT `user_id`, `user_number`, `name` FROM test.test_user WHERE ")
 
 	buf.WriteString("`user_number` in ")
 	int32ToIds(buf, UserNumber)
-	return m.query(context.Background(), buf.String()+m.GetSort(sortFields))
+	return m.query(ctx, buf.String()+m.GetSort(sortFields))
 }
 
-func (m *_UserMgr) FindOneByUserNumber(UserNumber int32) (*User, error) {
+func (m *_UserMgr) FindOneByUserNumber(ctx context.Context, UserNumber int32) (*User, error) {
 	query := "SELECT `user_id`, `user_number`, `name` FROM test.test_user WHERE user_number=?"
-	return m.queryOne(context.Background(), query, UserNumber)
+	return m.queryOne(ctx, query, UserNumber)
 }
 
-func (m *_UserMgr) FindListName(Name []string) ([]*User, error) {
-	retmap, err := m.FindMapName(Name)
+func (m *_UserMgr) FindListName(ctx context.Context, Name []string) ([]*User, error) {
+	retmap, err := m.FindMapName(ctx, Name)
 	if err != nil {
 		return nil, err
 	}
@@ -236,8 +212,8 @@ func (m *_UserMgr) FindListName(Name []string) ([]*User, error) {
 	return ret, nil
 }
 
-func (m *_UserMgr) FindMapName(Name []string) (map[string]*User, error) {
-	ret, err := m.FindInName(Name)
+func (m *_UserMgr) FindMapName(ctx context.Context, Name []string) (map[string]*User, error) {
+	ret, err := m.FindInName(ctx, Name)
 	if err != nil {
 		return nil, err
 	}
@@ -248,52 +224,40 @@ func (m *_UserMgr) FindMapName(Name []string) (map[string]*User, error) {
 	return retmap, nil
 }
 
-func (m *_UserMgr) FindInName(Name []string, sortFields ...string) ([]*User, error) {
+func (m *_UserMgr) FindInName(ctx context.Context, Name []string, sortFields ...string) ([]*User, error) {
 	buf := bytes.NewBuffer(nil)
 	buf.WriteString("SELECT `user_id`, `user_number`, `name` FROM test.test_user WHERE ")
 
 	buf.WriteString("`name` in ")
 	stringToIds(buf, Name)
-	return m.query(context.Background(), buf.String()+m.GetSort(sortFields))
+	return m.query(ctx, buf.String()+m.GetSort(sortFields))
 }
 
-func (m *_UserMgr) FindAllByName(Name string, sortFields ...string) ([]*User, error) {
-	return m.FindByName(Name, -1, -1, sortFields...)
+func (m *_UserMgr) FindAllByName(ctx context.Context, Name string, sortFields ...string) ([]*User, error) {
+	return m.FindByName(ctx, Name, -1, -1, sortFields...)
 }
 
-func (m *_UserMgr) FindByName(Name string, offset int, limit int, sortFields ...string) ([]*User, error) {
+func (m *_UserMgr) FindByName(ctx context.Context, Name string, offset int, limit int, sortFields ...string) ([]*User, error) {
 	query := fmt.Sprintf("SELECT `user_id`, `user_number`, `name` FROM test.test_user WHERE `name`=? %s%s", m.GetSort(sortFields), m.GetLimit(offset, limit))
 
-	return m.query(context.Background(), query, Name)
+	return m.query(ctx, query, Name)
 }
 
-func (m *_UserMgr) FindOne(where string, args ...interface{}) (*User, error) {
-	return m.FindOneContext(context.Background(), where, args...)
-}
-
-func (m *_UserMgr) FindOneContext(ctx context.Context, where string, args ...interface{}) (*User, error) {
+func (m *_UserMgr) FindOne(ctx context.Context, where string, args ...interface{}) (*User, error) {
 	query := m.GetQuerysql(where) + m.GetLimit(0, 1)
 	return m.queryOne(ctx, query, args...)
 }
 
-func (m *_UserMgr) Find(where string, args ...interface{}) ([]*User, error) {
-	return m.FindContext(context.Background(), where, args...)
-}
-
-func (m *_UserMgr) FindContext(ctx context.Context, where string, args ...interface{}) ([]*User, error) {
+func (m *_UserMgr) Find(ctx context.Context, where string, args ...interface{}) ([]*User, error) {
 	query := m.GetQuerysql(where)
 	return m.query(ctx, query, args...)
 }
 
-func (m *_UserMgr) FindAll() (results []*User, err error) {
-	return m.Find("")
+func (m *_UserMgr) FindAll(ctx context.Context) (results []*User, err error) {
+	return m.Find(ctx, "")
 }
 
-func (m *_UserMgr) FindWithOffset(where string, offset int, limit int, args ...interface{}) ([]*User, error) {
-	return m.FindWithOffsetContext(context.Background(), where, offset, limit, args...)
-}
-
-func (m *_UserMgr) FindWithOffsetContext(ctx context.Context, where string, offset int, limit int, args ...interface{}) ([]*User, error) {
+func (m *_UserMgr) FindWithOffset(ctx context.Context, where string, offset int, limit int, args ...interface{}) ([]*User, error) {
 	query := m.GetQuerysql(where)
 
 	query = query + " LIMIT ?, ?"
@@ -321,37 +285,33 @@ func (m *_UserMgr) GetQuerysql(where string) string {
 	return query
 }
 
-func (m *_UserMgr) Del(where string, params ...interface{}) (sql.Result, error) {
+func (m *_UserMgr) Del(ctx context.Context, where string, params ...interface{}) (sql.Result, error) {
 	if where != "" {
 		where = "WHERE " + where
 	}
 	query := "DELETE FROM test.test_user " + where
-	return db.MysqlExec(query, params...)
+	return db.MysqlExec(ctx, query, params...)
 }
 
 // argument example:
 // set:"a=?, b=?"
 // where:"c=? and d=?"
 // params:[]interface{}{"a", "b", "c", "d"}...
-func (m *_UserMgr) Update(set, where string, params ...interface{}) (sql.Result, error) {
+func (m *_UserMgr) Update(ctx context.Context, set, where string, params ...interface{}) (sql.Result, error) {
 	query := fmt.Sprintf("UPDATE test.test_user SET %s", set)
 	if where != "" {
 		query = fmt.Sprintf("UPDATE test.test_user SET %s WHERE %s", set, where)
 	}
-	return db.MysqlExec(query, params...)
+	return db.MysqlExec(ctx, query, params...)
 }
 
-func (m *_UserMgr) Count(where string, args ...interface{}) (int32, error) {
-	return m.CountContext(context.Background(), where, args...)
-}
-
-func (m *_UserMgr) CountContext(ctx context.Context, where string, args ...interface{}) (int32, error) {
+func (m *_UserMgr) Count(ctx context.Context, where string, args ...interface{}) (int32, error) {
 	query := "SELECT COUNT(*) FROM test.test_user"
 	if where != "" {
 		query = query + " WHERE " + where
 	}
 
-	rows, err := db.MysqlQueryContext(ctx, query, args...)
+	rows, err := db.MysqlQuery(ctx, query, args...)
 	if err != nil {
 		return 0, err
 	}
