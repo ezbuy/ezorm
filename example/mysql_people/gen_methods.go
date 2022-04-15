@@ -1,10 +1,14 @@
+// Package test is generated from example/mysql_people/sqls directory
+// by github.com/ezbuy/ezorm/v2 , DO NOT EDIT!
 package test
 
 import (
 	"context"
+	"fmt"
 	"time"
 
-	"github.com/ezbuy/ezorm/db"
+	"github.com/ezbuy/ezorm/v2/db"
+	"github.com/ezbuy/ezorm/v2/pkg/sql"
 )
 
 var (
@@ -16,23 +20,39 @@ type sqlMethods struct{}
 
 var SQL = &sqlMethods{}
 
-type CountBlogsResp struct {
-	Count0 int64
+type GetUserResp struct {
+	Name string `sql:"name"`
 }
 
-const _CountBlogsSQL = "SELECT /* count_blogs */ COUNT(1) FROM test_user u JOIN blog b ON u.user_id=b.blog_id WHERE u.name = ?"
+type GetUserReq struct {
+	Name string `sql:"name"`
+}
 
-func (*sqlMethods) CountBlogs(ctx context.Context, args ...interface{}) ([]*CountBlogsResp, error) {
-	rows, err := db.MysqlQuery(_CountBlogsSQL, args...)
+func (req *GetUserReq) Params() []any {
+	var params []any
+
+	params = append(params, req.Name)
+
+	return params
+}
+
+const _GetUserSQL = "SELECT `name` FROM `test_user` WHERE `name`=?"
+
+// GetUser is a raw query handler generated function for `example/mysql_people/sqls/get_user.sql`.
+func (*sqlMethods) GetUser(ctx context.Context, req *GetUserReq) ([]*GetUserResp, error) {
+
+	query := _GetUserSQL
+
+	rows, err := db.MysqlQuery(query, req.Params()...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var results []*CountBlogsResp
+	var results []*GetUserResp
 	for rows.Next() {
-		var o CountBlogsResp
-		err = rows.Scan(&o.Count0)
+		var o GetUserResp
+		err = rows.Scan(&o.Name)
 		if err != nil {
 			return nil, err
 		}
@@ -41,34 +61,90 @@ func (*sqlMethods) CountBlogs(ctx context.Context, args ...interface{}) ([]*Coun
 	return results, nil
 }
 
-type FindBlogsResp struct {
-	Id                 int32
-	BlogTitle          string
-	BlogHits           int32
-	BlogSlug           string
-	BlogBody           string
-	Published          bool
-	BlogGroupId        int64
-	BlogCreate         time.Time
-	BlogUpdate         time.Time
-	TestUserUserId     int32
-	TestUserUserNumber int32
-	TestUserName       string
+type GetUserInResp struct {
+	UserId int32 `sql:"user_id"`
 }
 
-const _FindBlogsSQL = "SELECT /* find_blogs */ b.blog_id ID, b.title, b.hits, b.slug, IFNULL(b.body, ''), IFNULL(b.is_published, 0) published, b.group_id, b.create, b.update, u.user_id, u.user_number, u.name FROM test_user u JOIN blog b ON u.user_id=b.blog_id WHERE u.name = ? LIMIT ?, ?"
+type GetUserInReq struct {
+	Name []string `sql:"name"`
+}
 
-func (*sqlMethods) FindBlogs(ctx context.Context, args ...interface{}) ([]*FindBlogsResp, error) {
-	rows, err := db.MysqlQuery(_FindBlogsSQL, args...)
+func (req *GetUserInReq) Params() []any {
+	var params []any
+
+	for _, v := range req.Name {
+		params = append(params, v)
+	}
+
+	return params
+}
+
+func (req *GetUserInReq) QueryIn() []any {
+	var qs []any
+
+	qs = append(qs, sql.NewIn(len(req.Name)).String())
+	return qs
+}
+
+const _GetUserInSQL = "SELECT `user_id` FROM `test_user` WHERE `name` IN %s"
+
+// GetUserIn is a raw query handler generated function for `example/mysql_people/sqls/get_user_in.sql`.
+func (*sqlMethods) GetUserIn(ctx context.Context, req *GetUserInReq) ([]*GetUserInResp, error) {
+
+	query := fmt.Sprintf(_GetUserInSQL, req.QueryIn()...)
+
+	rows, err := db.MysqlQuery(query, req.Params()...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var results []*FindBlogsResp
+	var results []*GetUserInResp
 	for rows.Next() {
-		var o FindBlogsResp
-		err = rows.Scan(&o.Id, &o.BlogTitle, &o.BlogHits, &o.BlogSlug, &o.BlogBody, &o.Published, &o.BlogGroupId, &o.BlogCreate, &o.BlogUpdate, &o.TestUserUserId, &o.TestUserUserNumber, &o.TestUserName)
+		var o GetUserInResp
+		err = rows.Scan(&o.UserId)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, &o)
+	}
+	return results, nil
+}
+
+type UserJoinBlogResp struct {
+	UserId int32 `sql:"user_id"`
+	BlogId int32 `sql:"blog_id"`
+}
+
+type UserJoinBlogReq struct {
+	Name string `sql:"name"`
+}
+
+func (req *UserJoinBlogReq) Params() []any {
+	var params []any
+
+	params = append(params, req.Name)
+
+	return params
+}
+
+const _UserJoinBlogSQL = "SELECT `u`.`user_id`,`b`.`blog_id` FROM `test_user` AS `u` JOIN `blog` AS `b` ON `u`.`user_id`=`b`.`user` WHERE `u`.`name`=?"
+
+// UserJoinBlog is a raw query handler generated function for `example/mysql_people/sqls/user_join_blog.sql`.
+func (*sqlMethods) UserJoinBlog(ctx context.Context, req *UserJoinBlogReq) ([]*UserJoinBlogResp, error) {
+
+	query := _UserJoinBlogSQL
+
+	rows, err := db.MysqlQuery(query, req.Params()...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []*UserJoinBlogResp
+	for rows.Next() {
+		var o UserJoinBlogResp
+		err = rows.Scan(&o.UserId, &o.BlogId)
 		if err != nil {
 			return nil, err
 		}

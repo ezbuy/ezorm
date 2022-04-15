@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ezbuy/ezorm/db"
+	"github.com/ezbuy/ezorm/v2/db"
 	"github.com/stretchr/testify/assert"
 )
 

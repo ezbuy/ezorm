@@ -1,0 +1,11 @@
+User:
+  db: mysql
+  table: test_blog
+  dbname: test
+  fields:
+    - Id: int32
+      flags: [primary,autoinc]
+    - AuthorId: int32
+      flags: [index]
+    - Title: string
+    - Content: string

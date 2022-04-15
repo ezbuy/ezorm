@@ -1,4 +1,4 @@
-// Copyright © 2016 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2022 ezbuy & LITB team
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/ezbuy/ezorm/parser"
+	"github.com/ezbuy/ezorm/v2/parser"
 	"github.com/spf13/cobra"
 )
 
@@ -32,19 +32,17 @@ import (
 var genCmd = &cobra.Command{
 	Use:   "gen",
 	Short: "Generate orm code from yaml file",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		var objs map[string]map[string]interface{}
 		data, _ := ioutil.ReadFile(input)
 		stat, err := os.Stat(input)
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			return err
 		}
 		err = yaml.Unmarshal([]byte(data), &objs)
 
 		if err != nil {
-			println(err.Error())
-			return
+			return err
 		}
 
 		if genPackageName == "" {
@@ -64,8 +62,7 @@ var genCmd = &cobra.Command{
 			xwMetaObj.Name = key
 			err := xwMetaObj.Read(obj)
 			if err != nil {
-				println(err.Error())
-				return
+				return err
 			}
 
 			databases[xwMetaObj.Db] = xwMetaObj
@@ -104,14 +101,13 @@ var genCmd = &cobra.Command{
 		if !disableSQLs {
 			err = handleSQL(sqlObjs, genGoPackageName)
 			if err != nil {
-				fmt.Println(err)
-				return
+				return err
 			}
 		}
 
 		oscmd := exec.Command("gofmt", "-w", output)
 		oscmd.Run()
-
+		return nil
 	},
 }
 
@@ -145,6 +141,7 @@ func handleSQL(objs map[string]*parser.Obj, pkg string) error {
 		if err != nil {
 			return err
 		}
+		m.FromFile = e.Name()
 		methods = append(methods, m)
 	}
 	if len(methods) == 0 {
@@ -154,6 +151,7 @@ func handleSQL(objs map[string]*parser.Obj, pkg string) error {
 	file := &parser.SQLFile{
 		GoPackage: pkg,
 		Methods:   methods,
+		Dir:       sqlsDir,
 	}
 	genPath := filepath.Join(output, "gen_methods.go")
 	executeTpl(genPath, "sql_method", file)
@@ -185,18 +183,9 @@ var disableSQLs bool
 func init() {
 	RootCmd.AddCommand(genCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
 	genCmd.PersistentFlags().StringVarP(&input, "input", "i", "", "input file")
 	genCmd.PersistentFlags().StringVarP(&output, "output", "o", "", "output path")
 	genCmd.PersistentFlags().StringVarP(&genPackageName, "package name", "p", "", "package name")
 	genCmd.PersistentFlags().StringVar(&genGoPackageName, "goPackage", "", "go package name")
 	genCmd.PersistentFlags().BoolVarP(&disableSQLs, "disable-sql", "", false, "disable sql generate")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// genCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-
 }

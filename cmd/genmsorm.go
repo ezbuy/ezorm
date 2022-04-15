@@ -1,4 +1,4 @@
-// Copyright © 2016 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2022 ezbuy & LITB Team
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,8 +25,8 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/ezbuy/ezorm/db"
-	"github.com/ezbuy/ezorm/parser"
+	"github.com/ezbuy/ezorm/v2/db"
+	"github.com/ezbuy/ezorm/v2/parser"
 	"github.com/spf13/cobra"
 )
 
