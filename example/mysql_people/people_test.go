@@ -43,14 +43,6 @@ func TestMain(m *testing.M) {
 
 func TestPeople(t *testing.T) {
 
-	ret, err := BlogMgr.Del("1 = 1")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err := ret.RowsAffected(); err != nil {
-		t.Fatal(err)
-	}
-
 	now := time.Now()
 
 	blog := Blog{
@@ -164,9 +156,6 @@ func TestPeople(t *testing.T) {
 }
 
 func testForeignKey(t *testing.T) {
-	if _, err := UserMgr.Del("1=1"); err != nil {
-		t.Fatal(err)
-	}
 
 	user1 := &User{
 		UserNumber: 1,
@@ -194,7 +183,7 @@ func testForeignKey(t *testing.T) {
 	}
 	for idx, b := range blogs {
 		if b.User != users[idx].UserNumber {
-			t.Fatal(fmt.Sprintf("result not expected: %v", idx))
+			t.Fatalf("result not expected: %d", idx)
 		}
 	}
 }
