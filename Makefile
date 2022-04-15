@@ -9,9 +9,8 @@ buildTpl:
 genexample:
 	bin/ezorm gen -i ./example/mssql_people/people_mssql.yaml -o ./example/mssql_people -p people --goPackage test
 	bin/ezorm gen -i ./example/blog/blog.yaml -o ./example/blog -p blog --goPackage test
-	bin/ezorm gen -i ./example/mysql_people/people.yaml -o ./example/mysql_people -p people --goPackage test
+	bin/ezorm gen -i ./e2e/mysql -o ./e2e/mysql --goPackage mysql
 	bin/ezorm gen -i ./example/redis_people/people.yaml -o ./example/redis_people -p people --goPackage test
-	bin/ezorm gen -i ./example/mysql_user/user.yaml -o ./example/mysql_user/ -p user --goPackage test
 
 genmongo:
 	rm example/blog/gen_*.go
@@ -26,7 +25,7 @@ testmongo:
 	go test -v ./example/blog/...
 
 testmysql:
-	go test -v ./example/mysql_people/...
+	go test -v ./e2e/mysql/...
 
 testredis:
 	go test -v ./example/redis_people/...

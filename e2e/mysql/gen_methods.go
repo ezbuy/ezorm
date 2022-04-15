@@ -1,6 +1,6 @@
-// Package test is generated from example/mysql_people/sqls directory
+// Package mysql is generated from e2e/mysql/sqls directory
 // by github.com/ezbuy/ezorm/v2 , DO NOT EDIT!
-package test
+package mysql
 
 import (
 	"context"
@@ -46,7 +46,7 @@ func (req *GetUserReq) Params() []any {
 
 const _GetUserSQL = "SELECT `name` FROM `test_user` WHERE `name`=?"
 
-// GetUser is a raw query handler generated function for `example/mysql_people/sqls/get_user.sql`.
+// GetUser is a raw query handler generated function for `e2e/mysql/sqls/get_user.sql`.
 func (m *sqlMethods) GetUser(ctx context.Context, req *GetUserReq) ([]*GetUserResp, error) {
 
 	query := _GetUserSQL
@@ -96,7 +96,7 @@ func (req *GetUserInReq) QueryIn() []any {
 
 const _GetUserInSQL = "SELECT `user_id` FROM `test_user` WHERE `name` IN %s"
 
-// GetUserIn is a raw query handler generated function for `example/mysql_people/sqls/get_user_in.sql`.
+// GetUserIn is a raw query handler generated function for `e2e/mysql/sqls/get_user_in.sql`.
 func (m *sqlMethods) GetUserIn(ctx context.Context, req *GetUserInReq) ([]*GetUserInResp, error) {
 
 	query := fmt.Sprintf(_GetUserInSQL, req.QueryIn()...)
@@ -138,7 +138,7 @@ func (req *UserJoinBlogReq) Params() []any {
 
 const _UserJoinBlogSQL = "SELECT `u`.`user_id`,`b`.`blog_id` FROM `test_user` AS `u` JOIN `blog` AS `b` ON `u`.`user_id`=`b`.`user` WHERE `u`.`name`=?"
 
-// UserJoinBlog is a raw query handler generated function for `example/mysql_people/sqls/user_join_blog.sql`.
+// UserJoinBlog is a raw query handler generated function for `e2e/mysql/sqls/user_join_blog.sql`.
 func (m *sqlMethods) UserJoinBlog(ctx context.Context, req *UserJoinBlogReq) ([]*UserJoinBlogResp, error) {
 
 	query := _UserJoinBlogSQL

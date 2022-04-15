@@ -1,4 +1,4 @@
-package test
+package mysql
 
 import "time"
 
@@ -18,7 +18,7 @@ const (
 )
 
 func (p *User) GetNameSpace() string {
-	return "people"
+	return "mysql"
 }
 
 func (p *User) GetClassName() string {

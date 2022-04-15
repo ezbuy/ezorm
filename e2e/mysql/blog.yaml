@@ -1,11 +1,25 @@
-User:
+Blog:
   db: mysql
-  table: test_blog
   dbname: test
+  table: blog
   fields:
-    - Id: int32
-      flags: [primary,autoinc]
-    - AuthorId: int32
-      flags: [index]
+    - BlogId: int32
+      flags: [noinc]
     - Title: string
-    - Content: string
+    - Hits: int32
+    - Slug: string
+      flags: [unique]
+    - Body: string
+      flags: [nullable]
+    - User: int32
+      flags: [index]
+      fk: User.UserNumber
+    - IsPublished: bool
+      flags: [index]
+    - GroupId: int64
+      flags: [index]
+    - Create: timestamp
+      flags: [index]
+    - Update: datetime
+      flags: [index]
+  indexes: [[User, IsPublished]]

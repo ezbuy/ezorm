@@ -3,8 +3,7 @@ User:
   table: test_user
   dbname: test
   fields:
-    - Id: int32
-      flags: [primary,autoinc]
+    - UserId: int32
     - UserNumber: int32
       flags: [unique]
     - Name: string

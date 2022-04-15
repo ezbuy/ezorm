@@ -1,6 +1,7 @@
-package test
+package mysql
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -8,6 +9,7 @@ import (
 	"time"
 
 	"github.com/ezbuy/ezorm/v2/db"
+	"github.com/stretchr/testify/assert"
 )
 
 func mysqlConfigFromEnv() *db.MysqlFieldConfig {
@@ -196,4 +198,27 @@ func testForeignKey(t *testing.T) {
 			t.Fatalf("result not expected: %d", idx)
 		}
 	}
+}
+
+func TestRawQuery(t *testing.T) {
+	ctx := context.Background()
+	if _, err := UserMgr.Del("1=1"); err != nil {
+		t.Fatal(err)
+	}
+
+	user1 := &User{
+		UserNumber: 1,
+		Name:       "user1",
+	}
+	if _, err := UserMgr.Save(user1); err != nil {
+		t.Fatal(err)
+	}
+	resp, err := SQL.GetUser(ctx, &GetUserReq{
+		Name: "user1",
+	})
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.Equal(t, len(resp), 1)
+	assert.Equal(t, resp[0].Name, "user1")
 }

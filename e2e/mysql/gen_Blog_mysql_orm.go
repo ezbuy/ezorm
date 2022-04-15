@@ -1,4 +1,4 @@
-package test
+package mysql
 
 import (
 	"bytes"
