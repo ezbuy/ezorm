@@ -14,7 +14,7 @@ import (
 
 var Tpl *template.Template
 
-//go:embed tpl/*.gogo
+//go:embed tpl/*.gogo tpl/*.sql
 var content embed.FS
 
 func init() {
