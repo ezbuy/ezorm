@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"embed"
 	"errors"
 	"fmt"
 	"io"
@@ -8,11 +9,13 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/ezbuy/ezorm/v2/tpl"
 	"github.com/ezbuy/utils/container/set"
 )
 
 var Tpl *template.Template
+
+//go:embed tpl/*.gogo tpl/*.sql
+var content embed.FS
 
 func init() {
 	funcMap := template.FuncMap{
@@ -27,7 +30,7 @@ func init() {
 		"strif":         strif,
 		"toids":         toIds,
 	}
-	Tpl = template.New("ezorm").Funcs(funcMap)
+
 	files := []string{
 		"tpl/mongo_collection.gogo",
 		"tpl/mongo_foreign_key.gogo",
@@ -42,16 +45,13 @@ func init() {
 		"tpl/mysql_script.sql",
 		"tpl/sql_method.gogo",
 	}
-	for _, fname := range files {
-		data, err := tpl.Asset(fname)
-		if err != nil {
-			panic(err)
-		}
-		_, err = Tpl.Parse(string(data))
-		if err != nil {
-			panic(err)
-		}
+
+	Tpl = template.New("ezorm").Funcs(funcMap)
+
+	if _, err := Tpl.ParseFS(content, files...); err != nil {
+		panic(err)
 	}
+
 }
 
 func (f *Field) BJTag() string {
