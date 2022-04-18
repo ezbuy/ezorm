@@ -55,14 +55,54 @@ Inspired by [sqlc](https://github.com/kyleconroy/sqlc)'s great AST analysis , we
 
 ```SQL
 SELECT
-  id
-FROM user
+  name
+FROM test_user
 WHERE name = "me";
 ```
 
 and generates the following Go Code :
 
-```Go
+```go
+type GetUserResp struct {
+	Name string `sql:"name"`
+}
+
+type GetUserReq struct {
+	Name string `sql:"name"`
+}
+
+func (req *GetUserReq) Params() []any {
+	var params []any
+
+	params = append(params, req.Name)
+
+	return params
+}
+
+const _GetUserSQL = "SELECT `name` FROM `test_user` WHERE `name`=?"
+
+// GetUser is a raw query handler generated function for `example/mysql_people/sqls/get_user.sql`.
+func (*sqlMethods) GetUser(ctx context.Context, req *GetUserReq) ([]*GetUserResp, error) {
+
+	query := _GetUserSQL
+
+	rows, err := db.MysqlQuery(query, req.Params()...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []*GetUserResp
+	for rows.Next() {
+		var o GetUserResp
+		err = rows.Scan(&o.Name)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, &o)
+	}
+	return results, nil
+}
 ```
 
 ## Usage
