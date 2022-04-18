@@ -57,27 +57,6 @@ func (p *{{.Name}}) GetNameSpace() string {
 func (p *{{.Name}}) GetClassName() string {
 	return "{{.Name}}"
 }
-{{- if ($obj.DbContains "redis")}}
-func (p *{{.Name}}) GetStoreType() string {
-	return "{{$obj.StoreType}}"
-}
-
-func (p *{{.Name}}) GetPrimaryKey() string {
-	return "{{.GetPrimaryKeyName}}"
-}
-
-func (p *{{.Name}}) GetIndexes() []string {
-	idx := []string{
-	{{- range $field := .Fields}}
-	{{- if $field.HasIndex}}
-		"{{$field.Name}}",
-	{{- end}}
-	{{- end}}
-	}
-	return idx
-}
-
-{{- end}}
 
 type _{{.Name}}Mgr struct {
 }
