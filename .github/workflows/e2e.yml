@@ -7,8 +7,8 @@ on:
       - master
       - v2
 jobs:
-  build:
-    name: "e2e Test"
+  mysql:
+    name: "mysql"
     strategy:
       matrix:
         go: [1.18]
@@ -41,10 +41,46 @@ jobs:
         run: |
           make buildTpl
           make build
-          make genexample
+          make gene2e
       - name: template testing
         run: |
           make testmysql
         env:
           MYSQL_HOST: mysql
           MYSQL_PORT: ${{ job.services.mysql.ports[3306] }}
+  mongo:
+    name: "mongo"
+    strategy:
+      matrix:
+        go: [1.18]
+    runs-on: ubuntu-latest
+    container:
+        image: golang:${{ matrix.go }}-stretch
+    services:
+      mongo:
+        image: mongo:4.0.22
+        ports:
+          - 27017:27017
+        env:
+          MONGO_INITDB_ROOT_USERNAME: ezbuy
+          MONGO_INITDB_ROOT_PASSWORD: ezbuyisthebest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: install-go-bindata
+        run: |
+          apt update && apt install sudo
+          sudo apt-get install -y go-bindata
+      - name: generate template
+        run: |
+          make buildTpl
+          make build
+          make gene2e
+      - name: template testing
+        run: |
+          make testmongo
+        env:
+          MONGO_HOST: mongo
+          MONGO_PORT: ${{ job.services.mongo.ports[27017] }}
+          MONGO_USER: ezbuy
+          MONGO_PASSWORD: ezbuyisthebest

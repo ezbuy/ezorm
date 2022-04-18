@@ -1,7 +1,8 @@
-package test
+package blog
 
 import (
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -9,11 +10,21 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func getConfigFromEnv() *db.MongoConfig {
+	return &db.MongoConfig{
+		DBName: "ezorm",
+		MongoDB: fmt.Sprintf(
+			"mongodb://%s:%s@%s:%s",
+			os.Getenv("MONGO_USER"),
+			os.Getenv("MONGO_PASSWORD"),
+			os.Getenv("MONGO_HOST"),
+			os.Getenv("MONGO_PORT"),
+		),
+	}
+}
+
 func init() {
-	conf := new(db.MongoConfig)
-	conf.DBName = "ezorm"
-	conf.MongoDB = "mongodb://127.0.0.1"
-	db.Setup(conf)
+	db.Setup(getConfigFromEnv())
 }
 
 func TestBlogSave(t *testing.T) {
