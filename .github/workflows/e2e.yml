@@ -3,9 +3,12 @@ name: "e2e"
 on:
   pull_request:
     branches:
-      - feature/v2
-      - master
+      - main
       - v2
+  push:
+    branches:
+      - v2
+      - main
 jobs:
   mysql:
     name: "mysql"
