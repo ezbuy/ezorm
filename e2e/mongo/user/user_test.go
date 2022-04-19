@@ -7,18 +7,28 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ezbuy/ezorm/db"
-	"github.com/ezbuy/ezorm/e2e/mongo/user"
+	"github.com/ezbuy/ezorm/v2/db"
+	"github.com/ezbuy/ezorm/v2/e2e/mongo/user"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+func getConfigFromEnv() *db.MongoConfig {
+	return &db.MongoConfig{
+		DBName: "ezorm",
+		MongoDB: fmt.Sprintf(
+			"mongodb://%s:%s@%s:%s",
+			os.Getenv("MONGO_USER"),
+			os.Getenv("MONGO_PASSWORD"),
+			os.Getenv("MONGO_HOST"),
+			os.Getenv("MONGO_PORT"),
+		),
+	}
+}
+
 func TestMain(m *testing.M) {
-	user.MgoSetup(&db.MongoConfig{
-		MongoDB:   "mongodb://127.0.0.1:27017",
-		DBName:    "test",
-		PoolLimit: 2,
-	})
+	user.MgoSetup(getConfigFromEnv())
 	os.Exit(m.Run())
 }
 
