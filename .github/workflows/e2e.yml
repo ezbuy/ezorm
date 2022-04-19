@@ -43,7 +43,7 @@ jobs:
           make gene2e
       - name: template testing
         run: |
-          make testmysql
+          make test-mysql
         env:
           MYSQL_HOST: mysql
           MYSQL_PORT: ${{ job.services.mysql.ports[3306] }}
