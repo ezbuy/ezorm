@@ -2,7 +2,6 @@ package orm
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/url"
 	"time"
@@ -14,56 +13,6 @@ var (
 	ezOrmObjsRemove = make(map[string]func(id string) (err error))
 	Indexers        = make(map[string]func())
 )
-
-func RegisterEzOrmObj(namespace, classname string, constructor func() EzOrmObj) {
-	ezOrmObjs[namespace+"."+classname] = constructor
-}
-
-func RegisterEzOrmObjByID(namespace, classname string, f func(id string) (result EzOrmObj, err error)) {
-	ezOrmObjsByID[namespace+"."+classname] = f
-}
-
-func RegisterEzOrmObjRemove(namespace, classname string, f func(id string) (err error)) {
-	ezOrmObjsRemove[namespace+"."+classname] = f
-}
-
-func RegisterIndexer(namespace, classname string, indexer func()) {
-	Indexers[namespace+"."+classname] = indexer
-}
-
-func NewEzOrmObjObj(namespace, classname string) EzOrmObj {
-	constructor, ok := ezOrmObjs[namespace+"."+classname]
-	if !ok {
-		return nil
-	}
-
-	return constructor()
-}
-
-func NewEzOrmObjByID(namespace, classname, id string) (result EzOrmObj, err error) {
-	f, ok := ezOrmObjsByID[namespace+"."+classname]
-	if !ok {
-		return nil, nil
-	}
-
-	return f(id)
-}
-
-func RemoveEzOrmObj(namespace, classname, id string) (err error) {
-	f, ok := ezOrmObjsRemove[namespace+"."+classname]
-	if !ok {
-		return errors.New(namespace + "." + classname + " remove func not found")
-
-	}
-
-	return f(id)
-}
-
-type EzOrmObj interface {
-	Id() string
-	GetClassName() string
-	GetNameSpace() string
-}
 
 type SearchObj interface {
 	IsSearchEnabled() bool
