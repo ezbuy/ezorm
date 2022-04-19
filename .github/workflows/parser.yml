@@ -1,10 +1,14 @@
 name: parser
 
 on:
+  push:
+    branches:
+      - main
+      - v2
   pull_request:
     branches:
-      - feature/v2
-      - master
+      - main
+      - v2
 
 jobs:
   build:

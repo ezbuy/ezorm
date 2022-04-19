@@ -6,9 +6,6 @@ import (
 	"fmt"
 	"net/url"
 	"time"
-
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 )
 
 var (
@@ -71,10 +68,6 @@ type EzOrmObj interface {
 type SearchObj interface {
 	IsSearchEnabled() bool
 	GetSearchTip() string
-}
-
-type OrmObj interface {
-	Save() (info *mgo.ChangeInfo, err error)
 }
 
 var DateTimeLayout = "2006-01-02 15:04"
@@ -315,32 +308,6 @@ func XSortFieldsFilter(sortFields []string) (rtn []string) {
 		}
 	}
 	return
-}
-
-func ParseSort(sortFields []string) bson.D {
-	sort := make(bson.D, 0, len(sortFields))
-	for _, field := range sortFields {
-		n := 1
-		if field == "" {
-			continue
-		}
-		switch field[0] {
-		case '-':
-			n = -1
-			field = field[1:]
-		case '+':
-			field = field[1:]
-		}
-		if field == "" {
-			continue
-		}
-		sort = append(sort, bson.DocElem{field, n})
-	}
-	if len(sort) == 0 {
-		return nil
-	}
-
-	return sort
 }
 
 func UniqURLParams(url_ string) string {
