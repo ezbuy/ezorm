@@ -1,9 +1,8 @@
-### EzOrm
+## ezorm.v2
 
-#### v0.0.2
-##### 修复
--   出现生成代码编译时可能提示 `redeclared method` 的问题
+### v2.0.0
 
-
-#### v0.0.1
--   初始版本
+* mysql query raw (as schema) support. (#127,#133)
+* migrate go-bindata template generate engine into //go:embed. (#146)
+* drop the support (driver) of mssql , redis , and mongo mgo. (#142,#148).
+* drop the no-context template functions . (#143)
