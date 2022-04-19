@@ -32,11 +32,6 @@ func init() {
 	}
 
 	files := []string{
-		"tpl/mongo_collection.gogo",
-		"tpl/mongo_foreign_key.gogo",
-		"tpl/mongo_mongo.gogo",
-		"tpl/mongo_orm.gogo",
-		"tpl/mongo_search.gogo",
 		"tpl/struct.gogo",
 		"tpl/mysql_config.gogo",
 		"tpl/mysql_orm.gogo",
@@ -44,6 +39,8 @@ func init() {
 		"tpl/mongo_config.gogo",
 		"tpl/mysql_script.sql",
 		"tpl/sql_method.gogo",
+		"tpl/mongo_config.gogo",
+		"tpl/mongo_orm.gogo",
 	}
 
 	Tpl = template.New("ezorm").Funcs(funcMap)
@@ -243,7 +240,7 @@ func (o *Obj) GetGenTypes() []string {
 		gens["struct"] = true
 	}
 
-	result := []string{}
+	result := make([]string, 0, len(gens))
 	for k := range gens {
 		result = append(result, k)
 	}
@@ -259,6 +256,7 @@ func (o *Obj) GetConfigTemplates() []string {
 
 		case "mongo":
 			tpls = append(tpls, "mongo_config")
+
 		}
 	}
 	return tpls

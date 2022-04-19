@@ -43,7 +43,7 @@ jobs:
           make gene2e
       - name: template testing
         run: |
-          make testmysql
+          make test-mysql
         env:
           MYSQL_HOST: mysql
           MYSQL_PORT: ${{ job.services.mysql.ports[3306] }}
@@ -74,9 +74,9 @@ jobs:
         run: |
           make build
           make gene2e
-      - name: template testing
+      - name: template testing (mongo-go-driver)
         run: |
-          make testmongo
+          make test-mongo-go-driver
         env:
           MONGO_HOST: mongo
           MONGO_PORT: ${{ job.services.mongo.ports[27017] }}
