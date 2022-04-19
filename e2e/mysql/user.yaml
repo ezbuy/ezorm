@@ -1,0 +1,11 @@
+User:
+  db: mysql
+  table: test_user
+  dbname: test
+  fields:
+    - UserId: int32
+    - UserNumber: int32
+      flags: [unique]
+    - Name: string
+      flags: [index]
+

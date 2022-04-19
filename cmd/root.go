@@ -1,4 +1,4 @@
-// Copyright © 2016 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2022 ezbuy & LITB Team
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ var cfgFile string
 var RootCmd = &cobra.Command{
 	Use:   "ezorm",
 	Short: "ezorm",
-	Long: `ezorm is an code-generation based ORM lib for golang, supporting mongodb/sql server/mysql. 
+	Long: `ezorm is an code-generation based ORM lib for golang, supporting mongodb/sql server/mysql.
 data model is defined with YAML file`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:

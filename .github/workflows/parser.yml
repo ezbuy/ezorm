@@ -1,0 +1,23 @@
+name: parser
+
+on:
+  pull_request:
+    branches:
+      - feature/v2
+      - master
+
+jobs:
+  build:
+    name: build-pr
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: [1.18]
+    container:
+        image: golang:${{ matrix.go }}-stretch
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: run parser tests
+        run: |
+          go test -v ./parser/...

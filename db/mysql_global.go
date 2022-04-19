@@ -36,18 +36,45 @@ func getMysqlInstance() *Mysql {
 	return mysqlInstance
 }
 
-func GetMysql() *Mysql {
-	return getMysqlInstance()
+func SetupRawDB(db *sql.DB) {
+	var err error
+	mysqlInstance, err = NewMysql(nil, WithRawDB(db))
+	if err != nil {
+		panic("init mysql: " + err.Error())
+	}
 }
 
-func MysqlQuery(query string, args ...interface{}) (*sql.Rows, error) {
+type GetMySQLOption struct {
+	db *sql.DB
+}
+
+type GetMySQLOptionFunc func(*GetMySQLOption)
+
+func WithDB(db *sql.DB) GetMySQLOptionFunc {
+	return func(opt *GetMySQLOption) {
+		opt.db = db
+	}
+}
+
+func GetMysql(opts ...GetMySQLOptionFunc) *Mysql {
+	getOption := &GetMySQLOption{}
+	for _, opt := range opts {
+		opt(getOption)
+	}
+	if getOption.db == nil {
+		return getMysqlInstance()
+	}
+	s, err := NewMysql(nil, WithRawDB(getOption.db))
+	if err != nil {
+		panic(err)
+	}
+	return s
+}
+
+func MysqlQuery(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	return getMysqlInstance().Query(query, args...)
 }
 
-func MysqlQueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
-	return getMysqlInstance().QueryContext(ctx, query, args...)
-}
-
-func MysqlExec(query string, args ...interface{}) (sql.Result, error) {
-	return getMysqlInstance().Exec(query, args...)
+func MysqlExec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	return getMysqlInstance().ExecContext(ctx, query, args...)
 }

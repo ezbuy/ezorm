@@ -102,10 +102,6 @@ func (f *Field) getGoType(typestr string) string {
 	}
 
 	if typestr == "datetime" {
-		// Use pointer type to avoid null value panic
-		if f.Obj.Db == "mssql" {
-			return "*time.Time"
-		}
 		return "int64"
 	}
 
@@ -169,14 +165,8 @@ func (f *Field) GetTag() string {
 		case "mongo":
 			tags["bson"] = true
 			tags["json"] = true
-		case "redis":
-			tags["json"] = false
-		case "elastic":
-			tags["json"] = false
 		case "mysql":
 			tags["db"] = false
-		case "mssql":
-			tags["db"] = true
 		}
 	}
 	if len(tags) == 0 {
@@ -328,18 +318,6 @@ var transformMap = map[string]Transform{
 		"string", "db.TimeParseLocalTime(%v)",
 		"time.Time", "db.TimeToLocalTime(%v)",
 	},
-	"redis_timestamp": { // TIMESTAMP (string, UTC)
-		"string", `db.TimeParse(%v)`,
-		"time.Time", `db.TimeFormat(%v)`,
-	},
-	"redis_timeint": { // INT(11)
-		"int64", "time.Unix(%v, 0)",
-		"time.Time", "%v.Unix()",
-	},
-	"redis_datetime": { // DATETIME (string, localtime)
-		"string", "db.TimeParseLocalTime(%v)",
-		"time.Time", "db.TimeToLocalTime(%v)",
-	},
 }
 
 func (f *Field) AsArgName(prefix string) string {
@@ -389,9 +367,7 @@ func (f *Field) Read(data map[interface{}]interface{}) error {
 				if f.Type == "int" {
 					f.Type = "int32"
 				} else if f.Type == "datetime" {
-					if f.Obj.Db == "mssql" {
-						f.Type = "*time.Time"
-					} else if f.Obj.DbContains("mysql") || f.Obj.DbContains("redis") {
+					if f.Obj.DbContains("mysql") {
 					} else {
 						f.Type = "int64"
 					}

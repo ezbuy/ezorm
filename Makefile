@@ -1,37 +1,19 @@
 all:
 
-buildTpl:
-	go get -u github.com/jteeuwen/go-bindata/go-bindata@master
-	go-bindata -nometadata -o tpl/bindata.go -ignore bindata.go -pkg tpl tpl
+build:
+	go build -ldflags "-X main.Version=$(shell git rev-parse --short HEAD)" -o bin/ezorm
 
-genexample:
-	go install
-	ezorm gen -i ./example/mssql_people/people_mssql.yaml -o ./example/mssql_people -p people --goPackage test
-	ezorm gen -i ./example/blog/blog.yaml -o ./example/blog -p blog --goPackage test
-	ezorm gen -i ./example/mysql_people/people.yaml -o ./example/mysql_people -p people --goPackage test
-	ezorm gen -i ./example/redis_people/people.yaml -o ./example/redis_people -p people --goPackage test
-	ezorm gen -i ./example/mysql_user/user.yaml -o ./example/mysql_user/ -p user --goPackage test
+gene2e:
+	bin/ezorm gen -i ./e2e/mongo/user/user.yaml -o  ./e2e/mongo/user --goPackage user
+	bin/ezorm gen -i ./e2e/mysql -o ./e2e/mysql --goPackage mysql
 
-clean:
-	rm ./example/mssql_people/gen_*.go
-	rm ./example/blog/gen_*.go
-	rm ./example/mysql_people/gen_*.go
-	rm ./example/redis_people/gen_*.go
+test: build gene2e test-mysql test-mongo-go-driver
 
-genmongo:
-	rm example/blog/gen_*.go
-	ezorm gen -i example/blog/blog.yaml -o example/blog -p blog --goPackage test
+.PHONY: test-mongo-go-driver
+test-mongo-go-driver:
+	go test -v ./e2e/mongo/user/...
 
-test: genexample testmssql testmongo testmysql
+.PHONY: test-mysql
+test-mysql:
+	go test -v ./e2e/mysql/...
 
-testmssql:
-	go test -v ./example/mssql_people/...
-
-testmongo:
-	go test -v ./example/blog/...
-
-testmysql:
-	go test -v ./example/mysql_people/...
-
-testredis:
-	go test -v ./example/redis_people/...

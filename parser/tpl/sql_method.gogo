@@ -1,0 +1,113 @@
+{{define "sql_method"}}// Package {{.GoPackage}} is generated from {{.Dir}} directory
+// by github.com/ezbuy/ezorm/v2 , DO NOT EDIT!
+package {{.GoPackage}}
+
+import (
+	"time"
+	"context"
+	 "fmt"
+	sql_driver "database/sql"
+
+	"github.com/ezbuy/ezorm/v2/pkg/sql"
+	"github.com/ezbuy/ezorm/v2/db"
+)
+
+var (
+	_ time.Time
+	_ context.Context
+)
+
+var SQL = &sqlMethods{}
+
+type sqlMethods struct {}
+
+type RawQueryOption struct{
+	db *sql_driver.DB
+}
+
+type RawQueryOptionHandler func(*RawQueryOption)
+
+
+func WithDB(db *sql_driver.DB) RawQueryOptionHandler {
+	return func(o *RawQueryOption) {
+		o.db = db
+	}
+}
+
+{{- range $method := .Methods}}
+type {{$method.Name}}Resp struct {
+	{{- range $field := $method.Result}}
+	{{$field.Name}} {{$field.Type}} `sql:"{{$field.Raw}}"`
+	{{- end }}
+}
+
+type {{$method.Name}}Req struct {
+	{{- range $field := $method.Fields}}
+	{{$field.Name}} {{$field.Type}} `sql:"{{$field.Raw}}"`
+	{{- end }}
+}
+
+func (req *{{$method.Name}}Req) Params() []any {
+	var params []any
+	{{- range $field := $method.Fields}}
+	{{if or (eq $field.Type "[]string") (eq $field.Type "[]int64")}}
+	for _, v := range req.{{$field.Name}} {
+		params = append(params, v)
+	}
+	{{else}}
+	params = append(params, req.{{$field.Name}})
+	{{end}}
+	{{- end }}
+	return params
+}
+
+{{if $method.QueryIn}}
+
+func (req *{{$method.Name}}Req) QueryIn() []any {
+		var qs []any
+		{{- range $field := $method.Fields}}
+		{{if or (eq $field.Type "[]string") (eq $field.Type "[]int64")}}
+			qs = append(qs, sql.NewIn(len(req.{{$field.Name}})).String())
+		{{- end }}
+		{{- end }}
+		return qs
+}
+{{end}}
+
+const _{{$method.Name}}SQL = "{{$method.SQL}}"
+
+// {{$method.Name}} is a raw query handler generated function for `{{$.Dir}}/{{$method.FromFile}}`.
+func (m *sqlMethods) {{$method.Name}}(ctx context.Context, req *{{$method.Name}}Req , opts ...RawQueryOptionHandler) ([]*{{$method.Name}}Resp, error) {
+
+	rawQueryOption := &RawQueryOption{}
+
+	for _, o := range opts {
+		o(rawQueryOption)
+	}
+
+	{{if $method.QueryIn }}
+	query := fmt.Sprintf(_{{$method.Name}}SQL,req.QueryIn()...)
+	{{else}}
+	query := _{{$method.Name}}SQL
+	{{end}}
+
+	rows, err := db.GetMysql(db.WithDB(rawQueryOption.db)).QueryContext(ctx, query, req.Params()...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []*{{$method.Name}}Resp
+	for rows.Next() {
+		var o {{$method.Name}}Resp
+		err = rows.Scan({{$method.Assign}})
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, &o)
+	}
+	return results, nil
+}
+{{- end}}
+
+{{- end -}}

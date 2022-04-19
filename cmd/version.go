@@ -1,4 +1,4 @@
-// Copyright © 2016 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2022 ezbuy & LITB Team
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,9 +16,21 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
-	"github.com/ezbuy/ezorm/global"
 	"github.com/spf13/cobra"
+)
+
+var CommitHash string
+
+func version(commit string) string {
+	return fmt.Sprintf("ezorm v%d.%d.%d-%s", vMajor, vMinor, vPatch, commit)
+}
+
+const (
+	vMajor = 2
+	vMinor = 0
+	vPatch = 0
 )
 
 // versionCmd represents the version command
@@ -27,22 +39,10 @@ var versionCmd = &cobra.Command{
 	Short: "EzOrm 版本信息",
 	Long:  `EzOrm 版本信息`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Work your own magic here
-		fmt.Println(global.Version())
+		fmt.Fprintln(os.Stdout, version(CommitHash))
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(versionCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// versionCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// versionCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-
 }

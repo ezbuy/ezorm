@@ -1,0 +1,87 @@
+{{define "struct"}}package {{.GoPackage}}
+{{$obj := .}}
+{{if eq .Db "mongo"}}
+import "go.mongodb.org/mongo-driver/bson/primitive"
+{{end}}
+import "time"
+
+var _ time.Time
+
+{{- if (ne .Comment "")}}
+// {{.Name}} {{.Comment}}
+{{- end}}
+type {{.Name}} struct {
+	{{- range $field := .Fields}}
+		{{- if and ($obj.DbContains "mongo") (eq $field.Name "ID")}}
+		ID         primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+		{{- else}}
+        {{- if (ne $field.Comment "")}}
+
+        // {{$field.Comment}}
+        {{- end }}
+		{{$field.Name}}  {{$field.GetGoType}} {{$field.GetTag}}
+		{{- end -}}
+	{{- end}}
+	{{- if or ($obj.DbContains "mysql") ($obj.DbContains "mongo") ($obj.DbContains "mongo")}}
+		isNew bool
+	{{- end}}
+}
+
+const (
+    {{- range $field := .Fields}}
+        {{- if or ($obj.DbContains "mongo") ($obj.DbContains "mongo") ($field.AttrsContains "bsonTag")}}
+            {{$obj.Name}}MgoField{{$field.Name}} = "{{$field.BsonTagName}}"
+        {{- end}}
+        {{- if ($obj.DbContains "mysql")}}
+            {{$obj.Name}}MysqlField{{$field.Name}} = "{{$field.DbName}}"
+        {{- end}}
+    {{- end}}
+)
+
+{{- if ($obj.DbContains "mongo")}}
+// {{$obj.Name}}MgoSortField_WRP is a wrapper of {{$obj.Name}} sort fields e.g.:
+// {{$obj.Name}}MgoSortField_WRP{{`{`}}{{$obj.Name}}MgoSortField_X_Asc, {{$obj.Name}}MgoSortField_Y_DESC{{`}`}}
+type {{$obj.Name}}MgoSortField_WRP = primitive.D
+
+var (
+    {{- range $field := .Fields}}
+        {{- if ($field.AsSort)}}
+            {{$obj.Name}}MgoSortField{{$field.Name}}Asc = primitive.E{Key: "{{$field.BsonTagName}}", Value: 1}
+            {{$obj.Name}}MgoSortField{{$field.Name}}Desc = primitive.E{Key: "{{$field.BsonTagName}}", Value: -1}
+        {{- end}}
+    {{- end}}
+)
+{{- end}}
+
+func (p *{{.Name}}) GetNameSpace() string {
+	return "{{.Package}}"
+}
+
+func (p *{{.Name}}) GetClassName() string {
+	return "{{.Name}}"
+}
+
+type _{{.Name}}Mgr struct {
+}
+
+var {{.Name}}Mgr *_{{.Name}}Mgr
+
+// Get_{{.Name}}Mgr returns the orm manager in case of its name starts with lower letter
+func Get_{{.Name}}Mgr() *_{{.Name}}Mgr { return {{.Name}}Mgr }
+
+func (m *_{{.Name}}Mgr) New{{.Name}}() *{{.Name}} {
+	rval := new({{.Name}})
+
+{{- if ($obj.DbContains "mongo")}}
+	rval.isNew = true
+	rval.ID = primitive.NewObjectID()
+{{end -}}
+
+{{- range $field := .Fields}}
+	{{- if $field.HasDefaultValue}}
+	rval.{{$field.Name}} = "{{$field.DefaultValue}}"
+	{{- end -}}
+{{- end}}
+	return rval
+}
+{{end}}

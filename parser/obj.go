@@ -1,19 +1,21 @@
 package parser
 
 import (
+	"embed"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 	"strings"
 	"text/template"
 
-	"fmt"
-
-	"github.com/ezbuy/ezorm/tpl"
 	"github.com/ezbuy/utils/container/set"
 )
 
 var Tpl *template.Template
+
+//go:embed tpl/*.gogo tpl/*.sql
+var content embed.FS
 
 func init() {
 	funcMap := template.FuncMap{
@@ -28,34 +30,25 @@ func init() {
 		"strif":         strif,
 		"toids":         toIds,
 	}
-	Tpl = template.New("ezorm").Funcs(funcMap)
+
 	files := []string{
-		"tpl/mongo_collection.gogo",
-		"tpl/mongo_foreign_key.gogo",
-		"tpl/mongo_mongo.gogo",
-		"tpl/mongo_orm.gogo",
-		"tpl/mongo_search.gogo",
 		"tpl/struct.gogo",
-		"tpl/mssql_orm.gogo",
-		"tpl/mssql_config.gogo",
 		"tpl/mysql_config.gogo",
 		"tpl/mysql_orm.gogo",
 		"tpl/mysql_fk.gogo",
-		"tpl/redis_config.gogo",
-		"tpl/redis_orm.gogo",
 		"tpl/mongo_config.gogo",
 		"tpl/mysql_script.sql",
+		"tpl/sql_method.gogo",
+		"tpl/mongo_config.gogo",
+		"tpl/mongo_orm.gogo",
 	}
-	for _, fname := range files {
-		data, err := tpl.Asset(fname)
-		if err != nil {
-			panic(err)
-		}
-		_, err = Tpl.Parse(string(data))
-		if err != nil {
-			panic(err)
-		}
+
+	Tpl = template.New("ezorm").Funcs(funcMap)
+
+	if _, err := Tpl.ParseFS(content, files...); err != nil {
+		panic(err)
 	}
+
 }
 
 func (f *Field) BJTag() string {
@@ -237,23 +230,17 @@ func (o *Obj) GetGenTypes() []string {
 			gens["mongo_orm"] = true
 		case "enum":
 			gens["enum"] = true
-		case "mssql":
-			gens["struct"] = true
-			gens["mssql_orm"] = true
 		case "mysql":
 			gens["struct"] = true
 			gens["mysql_orm"] = true
 			gens["mysql_fk"] = true
-		case "redis":
-			gens["struct"] = true
-			gens["redis_orm"] = true
 		}
 	}
 	if len(gens) == 0 {
 		gens["struct"] = true
 	}
 
-	result := []string{}
+	result := make([]string, 0, len(gens))
 	for k := range gens {
 		result = append(result, k)
 	}
@@ -264,17 +251,12 @@ func (o *Obj) GetConfigTemplates() []string {
 	tpls := []string{}
 	for _, db := range o.Dbs {
 		switch db {
-		case "mssql":
-			tpls = append(tpls, "mssql_config")
-
 		case "mysql":
 			tpls = append(tpls, "mysql_config")
 
-		case "redis":
-			tpls = append(tpls, "redis_config")
-
 		case "mongo":
 			tpls = append(tpls, "mongo_config")
+
 		}
 	}
 	return tpls
@@ -382,7 +364,7 @@ func (o *Obj) setIndexes() {
 
 func (o *Obj) DbContains(db string) bool {
 	for _, v := range o.Dbs {
-		if strings.ToLower(v) == strings.ToLower(db) {
+		if strings.EqualFold(v, db) {
 			return true
 		}
 	}
@@ -392,7 +374,7 @@ func (o *Obj) DbContains(db string) bool {
 //! for the multiple dbs support struct template switch
 func (o *Obj) DbSwitch(db string) bool {
 	for _, v := range o.Dbs {
-		if strings.ToLower(v) == strings.ToLower(db) {
+		if strings.EqualFold(v, db) {
 			o.Db = db
 			return true
 		}
@@ -518,66 +500,6 @@ func (o *Obj) Read(data map[string]interface{}) error {
 			f2.Type = o.ValueType
 			o.Fields[1] = f2
 			o.ValueField = f2
-		case "zset":
-			o.Fields = make([]*Field, 3)
-			f1 := new(Field)
-			f1.init()
-			f1.Obj = o
-			f1.Name = "Key"
-			f1.Tag = "1"
-			f1.Type = "string"
-			o.Fields[0] = f1
-
-			f2 := new(Field)
-			f2.init()
-			f2.Obj = o
-			f2.Name = "Score"
-			f2.Tag = "2"
-			f2.Type = "float64"
-			o.Fields[1] = f2
-
-			f3 := new(Field)
-			f3.init()
-			f3.Obj = o
-			f3.Name = "Value"
-			f3.Tag = "3"
-			f3.Type = o.ValueType
-			o.Fields[2] = f3
-			o.ValueField = f3
-		case "geo":
-			o.Fields = make([]*Field, 4)
-			f1 := new(Field)
-			f1.init()
-			f1.Obj = o
-			f1.Name = "Key"
-			f1.Tag = "1"
-			f1.Type = "string"
-			o.Fields[0] = f1
-
-			f2 := new(Field)
-			f2.init()
-			f2.Obj = o
-			f2.Name = "Longitude"
-			f2.Tag = "2"
-			f2.Type = "float64"
-			o.Fields[1] = f2
-
-			f3 := new(Field)
-			f3.init()
-			f3.Obj = o
-			f3.Name = "Latitude"
-			f3.Tag = "3"
-			f3.Type = "float64"
-			o.Fields[2] = f3
-
-			f4 := new(Field)
-			f4.init()
-			f4.Obj = o
-			f4.Name = "Value"
-			f4.Tag = "4"
-			f4.Type = o.ValueType
-			o.Fields[3] = f4
-			o.ValueField = f4
 		default:
 			return errors.New("please specify `storetype` to " + o.Name)
 		}
@@ -588,10 +510,6 @@ func (o *Obj) Read(data map[string]interface{}) error {
 	// all mysql dbs share the same connection pool
 	if o.DbContains("mysql") && o.DbName == "" {
 		return errors.New("please specify `dbname` to " + o.Name)
-	}
-
-	if o.DbContains("redis") && o.StoreType == "" {
-		return errors.New("please specify `storetype` to " + o.Name)
 	}
 	o.setIndexes()
 	return nil

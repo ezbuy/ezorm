@@ -1,0 +1,84 @@
+name: "e2e"
+
+on:
+  pull_request:
+    branches:
+      - feature/v2
+      - master
+      - v2
+jobs:
+  mysql:
+    name: "mysql"
+    strategy:
+      matrix:
+        go: [1.18]
+    runs-on: ubuntu-latest
+    container:
+        image: golang:${{ matrix.go }}-stretch
+    services:
+      mysql:
+        image: mysql:5.7
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_USER: ezbuy
+          MYSQL_PASSWORD: ezbuyisthebest
+          MYSQL_ROOT_PASSWORD: ezbuyisthebest
+          MYSQL_DATABASE: test
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: install-go-bindata
+        run: |
+          apt update && apt install sudo
+          sudo apt-get install -y go-bindata
+      - name: generate template
+        run: |
+          make build
+          make gene2e
+      - name: template testing
+        run: |
+          make test-mysql
+        env:
+          MYSQL_HOST: mysql
+          MYSQL_PORT: ${{ job.services.mysql.ports[3306] }}
+  mongo:
+    name: "mongo"
+    strategy:
+      matrix:
+        go: [1.18]
+    runs-on: ubuntu-latest
+    container:
+        image: golang:${{ matrix.go }}-stretch
+    services:
+      mongo:
+        image: mongo:4.0.22
+        ports:
+          - 27017:27017
+        env:
+          MONGO_INITDB_ROOT_USERNAME: ezbuy
+          MONGO_INITDB_ROOT_PASSWORD: ezbuyisthebest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: install-go-bindata
+        run: |
+          apt update && apt install sudo
+          sudo apt-get install -y go-bindata
+      - name: generate template
+        run: |
+          make build
+          make gene2e
+      - name: template testing (mongo-go-driver)
+        run: |
+          make test-mongo-go-driver
+        env:
+          MONGO_HOST: mongo
+          MONGO_PORT: ${{ job.services.mongo.ports[27017] }}
+          MONGO_USER: ezbuy
+          MONGO_PASSWORD: ezbuyisthebest
