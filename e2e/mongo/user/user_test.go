@@ -198,7 +198,7 @@ func TestQuery(t *testing.T) {
 			t.Fatalf("failed to close cursor: %s", err)
 		}
 
-		if l := len(users); 1 != l {
+		if l := len(users); l != 1 {
 			t.Fatalf("unexpected users, got length: %d, expect length: %d", l, 1)
 		}
 		if uid := users[0].UserId; uid != uid1 {
@@ -221,7 +221,7 @@ func TestQuery(t *testing.T) {
 			t.Fatalf("failed to close cursor: %s", err)
 		}
 
-		if l := len(users); 2 != l {
+		if l := len(users); l != 2 {
 			t.Fatalf("unexpected users, got length: %d, expect length: %d", l, 2)
 		}
 		if uid := users[0].UserId; uid != uid1 {

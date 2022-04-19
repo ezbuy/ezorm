@@ -3,8 +3,7 @@ package user
 import (
 	"context"
 
-	"github.com/ezbuy/ezorm/orm"
-
+	"github.com/ezbuy/ezorm/v2/pkg/orm"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"

@@ -32,11 +32,6 @@ func init() {
 	}
 
 	files := []string{
-		"tpl/mongo_collection.gogo",
-		"tpl/mongo_foreign_key.gogo",
-		"tpl/mongo_mongo.gogo",
-		"tpl/mongo_orm.gogo",
-		"tpl/mongo_search.gogo",
 		"tpl/struct.gogo",
 		"tpl/mysql_config.gogo",
 		"tpl/mysql_orm.gogo",
@@ -44,8 +39,8 @@ func init() {
 		"tpl/mongo_config.gogo",
 		"tpl/mysql_script.sql",
 		"tpl/sql_method.gogo",
-		"tpl/mongodriver_config.gogo",
-		"tpl/mongodriver_orm.gogo",
+		"tpl/mongo_config.gogo",
+		"tpl/mongo_orm.gogo",
 	}
 
 	Tpl = template.New("ezorm").Funcs(funcMap)
@@ -233,9 +228,6 @@ func (o *Obj) GetGenTypes() []string {
 		case "mongo":
 			gens["struct"] = true
 			gens["mongo_orm"] = true
-		case "mongodriver":
-			gens["struct"] = true
-			gens["mongodriver_orm"] = true
 		case "enum":
 			gens["enum"] = true
 		case "mysql":
@@ -265,8 +257,6 @@ func (o *Obj) GetConfigTemplates() []string {
 		case "mongo":
 			tpls = append(tpls, "mongo_config")
 
-		case "mongodriver":
-			tpls = append(tpls, "mongodriver_config")
 		}
 	}
 	return tpls
@@ -457,7 +447,7 @@ func (o *Obj) Read(data map[string]interface{}) error {
 			fieldData := val.([]interface{})
 			startPos := 0
 
-			if o.Db == "mongo" || o.Db == "mongodriver" {
+			if o.Db == "mongo" {
 				o.Fields = make([]*Field, len(fieldData)+1)
 				f := new(Field)
 				f.init()

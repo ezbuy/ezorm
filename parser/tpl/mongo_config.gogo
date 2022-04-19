@@ -1,64 +1,27 @@
 {{define "mongo_config"}}package {{.GoPackage}}
+
 import (
-    "sync"
-    "sync/atomic"
-    "errors"
-    "time"
+    "context"
+    "fmt"
 
     "github.com/ezbuy/ezorm/v2/db"
-
-    "gopkg.in/mgo.v2"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var (
-    mgoInstances        []*mgo.Session
-    mgoConfig    *db.MongoConfig
-    mgoInstanceOnce sync.Once
-    mgoInstanceIndex uint32
-	mgoIndexFunc 	 []func()
-)
-
-var ErrOperaBeforeInit = errors.New("please set db.SetOnFinishInit when needed operating db in init()")
-
-const mgoMaxSessions = 8
-
-const defaultRefresheDuration = 3*time.Minute
+var mongoDriver *db.MongoDriver
 
 func MgoSetup(config *db.MongoConfig) {
-    mgoConfig = config
-    mgoInstances = db.MustNewMgoSessions(config)
-	db.SetupIdleSessionRefresher(config, mgoInstances, defaultRefresheDuration)
+    db.Setup(config)
+
+    var err error
+    mongoDriver, err = db.NewMongoDriver(context.Background())
+    if err != nil {
+        panic(fmt.Errorf("failed to create mongodb driver: %s", err))
+    }
 }
 
-func Col(col string) (*mgo.Session, *mgo.Collection) {
-    return getCol("{{.DbName}}", col)
-}
-
-func DbName() string {
-    return "{{.DbName}}"
-}
-
-func getCol(dbName, col string) (*mgo.Session, *mgo.Collection) {
-    i := atomic.AddUint32(&mgoInstanceIndex, 1)
-	i = i % uint32(len(mgoInstances))
-	session := mgoInstances[int(i)].Clone()
-	var mgoCol *mgo.Collection
-	if dbName == "" {
-		mgoCol = session.DB(mgoConfig.DBName).C(col)
-	} else {
-		mgoCol = session.DB(dbName).C(col)
-	}
-	return session, mgoCol
-}
-
-func addMgoIndexFunc(f func()) {
-	mgoIndexFunc = append(mgoIndexFunc, f)
-}
-
-func EnsureIndex() {
-	for _, f := range mgoIndexFunc {
-		f()
-	}
+func Col(col string) *mongo.Collection {
+	return mongoDriver.GetCol(col)
 }
 
 {{end}}

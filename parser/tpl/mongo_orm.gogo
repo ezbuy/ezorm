@@ -1,85 +1,348 @@
 {{define "mongo_orm"}}package {{.GoPackage}}
 {{$obj := .}}
+
 {{if ($obj.DbSwitch "mongo")}}
 import (
-	"time"
+    "context"
 
-	//3rd party libs
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
-
-	//Own libs
-	"github.com/ezbuy/ezorm/v2/db"
-	. "github.com/ezbuy/ezorm/v2/pkg/orm"
-
-	{{range .GetOrmImports}}
-	"{{.}}"
-	{{end}}
+    "github.com/ezbuy/ezorm/v2/pkg/orm"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var _ time.Time
-
 func init() {
-	{{if .NeedIndex}}
-	db.SetOnEnsureIndex(init{{.Name}}Index)
-	addMgoIndexFunc(init{{.Name}}Index)
-	{{end}}
-	{{if .NeedMapping}}
-	db.SetOnFinishInit(init{{.Name}}Mapping)
-	{{end}}
-	RegisterEzOrmObjByID("{{.Package}}", "{{.Name}}", new{{.Name}}FindByID)
-	RegisterEzOrmObjRemove("{{.Package}}", "{{.Name}}", {{.Name}}Mgr.RemoveByID)
-	{{if .NeedSearch}}
-	RegisterIndexer("{{.Package}}", "{{.Name}}", {{.Name}}Mgr.SearchRebuild)
-	{{end}}
+    orm.RegisterEzOrmObjByID("{{.Package}}", "{{.Name}}", new{{.Name}}FindByID)
+	orm.RegisterEzOrmObjRemove("{{.Package}}", "{{.Name}}", new{{.Name}}RemoveByID)
 }
 
-{{if .NeedMapping}}
-func init{{.Name}}Mapping() {
-	opt := indices.MappingOptions{
-		Properties: map[string]interface{}{
-			{{range .GetStringFilterFields}}
-			"{{.Name}}": map[string]string{"index": "not_analyzed", "type": "string"},
-			{{end}}
-		},
+func new{{.Name}}FindByID(id string) (result orm.EzOrmObj, err error) {
+	return {{.Name}}Mgr.FindByID(context.TODO(), id)
+}
+
+func new{{.Name}}RemoveByID(id string) error {
+    return {{.Name}}Mgr.RemoveByID(context.TODO(), id)
+}
+
+// =====================================
+// INSERT METHODS
+// =====================================
+
+var (
+    insert{{.Name}}CBs []func(obj orm.EzOrmObj)
+    update{{.Name}}CBs []func(obj orm.EzOrmObj)
+)
+
+func {{.Name}}AddInsertCallback(cb func(obj orm.EzOrmObj)) {
+    insert{{.Name}}CBs = append(insert{{.Name}}CBs, cb)
+}
+
+func {{.Name}}AddUpdateCallback(cb func(obj orm.EzOrmObj)) {
+    update{{.Name}}CBs = append(update{{.Name}}CBs, cb)
+}
+
+func (o *{{.Name}}) Id() string {
+    return o.ID.Hex()
+}
+
+func (o *{{.Name}}) Save(ctx context.Context) (*mongo.UpdateResult, error) {
+    isNew := o.isNew
+
+	{{range $field := .Fields}}
+	{{if and (ne $field.Name "ID") $field.HasMeta}}
+	{{$field.Name}}_old_metas, _ := o.GetAll{{$field.Meta}}()
+	{{$field.Name}}_new_metas, _ := {{$field.Meta}}FindByIDs(o.{{$field.Name}})
+	for _, meta := range {{$field.Name}}_old_metas {
+		{{$field.Meta}}RemoveByID(meta.ID.Hex())
 	}
-
-	indices.CreateIndex("{{.SearchIndex}}")
-	indices.PutMapping("{{.SearchIndex}}", "{{.SearchType}}", {{.Name}}{}, opt)
-}
-{{end}}
-
-{{if .NeedIndex}}
-func init{{.Name}}Index() {
-	session, collection := {{.Name}}Mgr.GetCol()
-	defer session.Close()
-	{{range $index := $obj.Indexes}}
-	if err := collection.EnsureIndex(mgo.Index{
-		Key: []string{"{{$index.GetFieldList}}"},
-		{{- if $index.IsUnique }}
-		Unique: true,
-		{{- end}}
-		Background: true,
-		{{- if $index.IsSparse }}
-		Sparse: true,
-		{{- end}}
-	}); err != nil {
-		panic("ensureIndex {{$obj.DbName}}.{{$obj.Name}} {{$index.Name}} error:" + err.Error())
+	for _, meta := range {{$field.Name}}_new_metas {
+		meta.Save()
 	}
 	{{end}}
+	{{end}}
+
+    filter := bson.M{"_id": o.ID}
+    update := bson.M{
+        "$set": bson.M{
+        {{- range $field := .Fields}}
+            {{$obj.Name}}MgoField{{$field.Name}}: o.{{$field.Name}},
+        {{- end}}
+        },
+    }
+
+    opts := options.Update().SetUpsert(true)
+    col := {{.Name}}Mgr.GetCol()
+    ret, err := col.UpdateOne(ctx, filter, update, opts)
+    if err != nil {
+        return ret, err
+    }
+
+    o.isNew = false
+    if isNew {
+        {{.Name}}InsertCallback(o)
+    } else {
+        {{.Name}}UpdateCallback(o)
+    }
+    return ret, err
 }
-{{end}}
 
-func new{{.Name}}FindByID(id string) (result EzOrmObj, err error) {
-	return {{.Name}}Mgr.FindByID(id)
+func (o *{{.Name}}) InsertUnique(ctx context.Context, query interface{}) (saved bool, err error) {
+    update := bson.M{
+        "$setOnInsert": bson.M{
+        {{- range $field := .Fields}}
+            {{$obj.Name}}MgoField{{$field.Name}}: o.{{$field.Name}},
+        {{- end}}
+        },
+    }
+
+    opts := options.Update().SetUpsert(true)
+    col := {{.Name}}Mgr.GetCol()
+    ret, err := col.UpdateOne(ctx, query, update, opts)
+    if err != nil {
+        return false, err
+    }
+    if ret.UpsertedCount != 0 {
+        saved = true
+    }
+
+    o.isNew = false
+    if saved {
+        {{.Name}}InsertCallback(o)
+    }
+    return saved, nil
 }
 
-{{ .LoadTpl "mongo_mongo" }}
+func {{.Name}}InsertCallback(o *{{.Name}}) {
+    for _, cb := range insert{{.Name}}CBs {
+        cb(o)
+    }
+}
 
-{{ .LoadTpl "mongo_foreign_key" }}
+func {{.Name}}UpdateCallback(o *{{.Name}}) {
+    for _, cb := range update{{.Name}}CBs {
+        cb(o)
+    }
+}
 
-{{ .LoadTpl "mongo_collection" }}
 
-{{ .LoadTpl "mongo_search" }}
+// =====================================
+// FOREIGN KEYS
+// =====================================
+
+{{range $field := $obj.Fields}}
+{{if $field.HasForeign}}
+func (p *{{$obj.Name}}) Get{{$field.Foreign}}(ctx context.Context) (result *{{$field.ForeignType}}, err error) {
+    return {{$field.ForeignType}}Mgr.FindByID(ctx, p.{{$field.Name}})
+}
+
+func (p *{{$obj.Name}}) Set{{$field.Foreign}}(obj *{{$field.ForeignType}}) {
+    p.{{$field.Name}} = obj.ID.Hex()
+}
+
+{{if eq $field.Foreign $field.ForeignType}}
+func (o *{{$field.Foreign}}) GetAll{{$obj.Name}}(ctx context.Context) (result []*{{$obj.Name}}, err error) {
+	query := bson.M{"{{$field.Foreign}}ID": o.ID.Hex()}
+    return {{$obj.Name}}Mgr.FindAll(ctx, query)
+}
+
+func (o *{{$field.Foreign}}) Count{{$obj.Name}}(ctx context.Context) (count int) {
+	query := bson.M{"{{$field.Foreign}}ID": o.ID.Hex()}
+	return {{$obj.Name}}Mgr.Count(ctx, query)
+}
+
+func (o *{{$field.Foreign}}) Find{{$obj.Name}}(ctx context.Context, limit, offset int, sortFields interface{}) (result []*{{$obj.Name}}, err error) {
+	query := bson.M{"{{$field.Foreign}}ID": o.ID.Hex()}
+	return {{$obj.Name}}Mgr.Find(ctx, query, limit, offset, sortFields)
+}
+
+{{end -}}
+{{end -}}
+{{end -}}
+
+
+// =====================================
+// COLLECTION
+// =====================================
+
+func (o *_{{.Name}}Mgr) FindOne(ctx context.Context, query interface{}, sortFields interface{}) (result *{{$obj.Name}}, err error) {
+    col := o.GetCol()
+    opts := options.FindOne()
+
+    if sortFields != nil {
+        opts.SetSort(sortFields)
+    }
+
+    ret := col.FindOne(ctx, query, opts)
+    if err = ret.Err(); err != nil {
+        return nil, err
+    }
+    err = ret.Decode(&result)
+    return
+}
+
+func (o *_{{.Name}}Mgr) Query(ctx context.Context, query interface{}, limit, offset int, sortFields interface{}) (*mongo.Cursor, error) {
+    col := o.GetCol()
+    opts := options.Find()
+
+    if limit > 0 {
+        opts.SetLimit(int64(limit))
+    }
+    if offset > 0 {
+        opts.SetSkip(int64(offset))
+    }
+    if sortFields != nil {
+        opts.SetSort(sortFields)
+    }
+
+    return col.Find(ctx, query, opts)
+}
+
+{{- range $index := $obj.Indexes}}
+{{- if $index.IsUnique}}
+
+func (o *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}(ctx context.Context, {{$index.GetFuncParam}}) (result *{{$obj.Name}}, err error) {
+	query := bson.M{
+		{{- range $field := $index.Fields}}
+		"{{$field.Name}}": {{$field.Name}},
+		{{- end}}
+	}
+    return o.FindOne(ctx, query, nil)
+}
+
+// MustFindOneBy{{$index.Name}} only use it when you should not trust the query result
+func (o *_{{$obj.Name}}Mgr) MustFindOneBy{{$index.Name}}(ctx context.Context, {{$index.GetFuncParam}}) (result *{{$obj.Name}}) {
+    result, _ = o.FindOneBy{{$index.Name}}({{$index.GetFuncParamNames}})
+    if result == nil {
+        result = o.New{{$obj.Name}}()
+		{{- range $field := $index.Fields}}
+		result.{{$field.Name}} = {{$field.Name}}
+		{{- end}}
+		result.Save(ctx)
+    }
+    return
+}
+
+func (o *_{{$obj.Name}}Mgr) RemoveBy{{$index.Name}}(ctx context.Context, {{$index.GetFuncParam}}) (err error) {
+    col := o.GetCol()
+
+	query := bson.M{
+		{{- range $field := $index.Fields}}
+		"{{$field.Name}}": {{$field.Name}},
+		{{- end}}
+	}
+	_, err = col.DeleteOne(ctx, query)
+    return err
+}
+
+{{- else}}
+
+func (o *_{{$obj.Name}}Mgr) FindBy{{$index.Name}}(ctx context.Context, {{$index.GetFuncParam}}, limit int, offset int, sortFields interface{}) (result []*{{$obj.Name}}, err error) {
+	query := bson.M{
+		{{- range $field := $index.Fields}}
+		"{{$field.Name}}": {{$field.Name}},
+		{{- end}}
+	}
+	cursor, err := o.Query(ctx, query, limit, offset, sortFields)
+    if err != nil {
+        return nil, err
+    }
+    err = cursor.All(ctx, &result)
+    return
+}
+
+{{end -}}
+{{end -}}
+
+func (o *_{{.Name}}Mgr) Find(ctx context.Context, query interface{}, limit int, offset int, sortFields interface{}) (result []*{{$obj.Name}}, err error) {
+    cursor, err := o.Query(ctx, query, limit, offset, sortFields)
+    if err != nil {
+        return nil, err
+    }
+    err = cursor.All(ctx, &result)
+    return
+}
+
+func (o *_{{.Name}}Mgr) FindAll(ctx context.Context, query interface{}, sortFields interface{}) (result []*{{$obj.Name}}, err error) {
+    cursor, err := o.Query(ctx, query, -1, -1, sortFields)
+    if err != nil {
+        return nil, err
+    }
+    err = cursor.All(ctx, &result)
+    return
+}
+
+func (o *_{{.Name}}Mgr) Has(ctx context.Context, query interface{}) bool {
+    count, err := o.CountE(ctx, query)
+    if err != nil || count == 0 {
+        return false
+    }
+    return true
+}
+
+func (o *_{{.Name}}Mgr) Count(ctx context.Context, query interface{}) int {
+    count, _ := o.CountE(ctx, query)
+    return count
+}
+
+func (o *_{{.Name}}Mgr) CountE(ctx context.Context, query interface{}) (int, error) {
+    col := o.GetCol()
+    count, err := col.CountDocuments(ctx, query)
+    return int(count), err
+}
+
+func (o *_{{.Name}}Mgr) FindByIDs(ctx context.Context, id []string, sortFields interface{}) (result []*{{$obj.Name}}, err error) {
+	ids := make([]primitive.ObjectID, 0, len(id))
+	for _, i := range id {
+		if oid, err := primitive.ObjectIDFromHex(i); err == nil {
+			ids = append(ids, oid)
+		}
+	}
+    return o.FindAll(ctx, bson.M{"_id": bson.M{"$in": ids}}, sortFields)
+}
+
+func (o *_{{.Name}}Mgr) FindByID(ctx context.Context, id string) (result *{{$obj.Name}}, err error) {
+    oid, err := primitive.ObjectIDFromHex(id)
+    if err != nil {
+        return nil, mongo.ErrNoDocuments
+    }
+
+    col := o.GetCol()
+    ret := col.FindOne(ctx, bson.M{"_id": oid})
+    if err = ret.Err(); err != nil {
+        return nil, err
+    }
+    err = ret.Decode(&result)
+    return
+}
+
+func (o *_{{.Name}}Mgr) RemoveAll(ctx context.Context, query interface{}) (int64, error) {
+    if query == nil {
+        query = bson.M{}
+    }
+
+    col := o.GetCol()
+    ret, err := col.DeleteMany(ctx, query)
+    if err != nil {
+        return 0, err
+    }
+    return ret.DeletedCount, nil
+}
+
+func (o *_{{.Name}}Mgr) RemoveByID(ctx context.Context, id string) (err error) {
+    oid, err := primitive.ObjectIDFromHex(id)
+    if err != nil {
+        return mongo.ErrNoDocuments
+    }
+
+    col := o.GetCol()
+    _, err = col.DeleteOne(ctx, bson.M{"_id": oid})
+    return err
+}
+
+func (m *_{{.Name}}Mgr) GetCol() *mongo.Collection {
+    return Col({{if eq .Table ""}}"{{.Package}}.{{.Name}}"{{else}}"{{.Table}}"{{end}})
+}
+
 {{end}}
 {{end}}

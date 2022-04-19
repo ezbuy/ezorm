@@ -1,5 +1,5 @@
 User:
-  db: mongodriver
+  db: mongo
   fields:
     - UserId: uint64
       attrs: {bsonTag: "uid", jsonTag: "uid"}
