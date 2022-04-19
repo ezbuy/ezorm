@@ -2,79 +2,14 @@ package orm
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/url"
 	"time"
-
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 )
-
-var (
-	ezOrmObjs       = make(map[string]func() EzOrmObj)
-	ezOrmObjsByID   = make(map[string]func(id string) (result EzOrmObj, err error))
-	ezOrmObjsRemove = make(map[string]func(id string) (err error))
-	Indexers        = make(map[string]func())
-)
-
-func RegisterEzOrmObj(namespace, classname string, constructor func() EzOrmObj) {
-	ezOrmObjs[namespace+"."+classname] = constructor
-}
-
-func RegisterEzOrmObjByID(namespace, classname string, f func(id string) (result EzOrmObj, err error)) {
-	ezOrmObjsByID[namespace+"."+classname] = f
-}
-
-func RegisterEzOrmObjRemove(namespace, classname string, f func(id string) (err error)) {
-	ezOrmObjsRemove[namespace+"."+classname] = f
-}
-
-func RegisterIndexer(namespace, classname string, indexer func()) {
-	Indexers[namespace+"."+classname] = indexer
-}
-
-func NewEzOrmObjObj(namespace, classname string) EzOrmObj {
-	constructor, ok := ezOrmObjs[namespace+"."+classname]
-	if !ok {
-		return nil
-	}
-
-	return constructor()
-}
-
-func NewEzOrmObjByID(namespace, classname, id string) (result EzOrmObj, err error) {
-	f, ok := ezOrmObjsByID[namespace+"."+classname]
-	if !ok {
-		return nil, nil
-	}
-
-	return f(id)
-}
-
-func RemoveEzOrmObj(namespace, classname, id string) (err error) {
-	f, ok := ezOrmObjsRemove[namespace+"."+classname]
-	if !ok {
-		return errors.New(namespace + "." + classname + " remove func not found")
-
-	}
-
-	return f(id)
-}
-
-type EzOrmObj interface {
-	Id() string
-	GetClassName() string
-	GetNameSpace() string
-}
 
 type SearchObj interface {
 	IsSearchEnabled() bool
 	GetSearchTip() string
-}
-
-type OrmObj interface {
-	Save() (info *mgo.ChangeInfo, err error)
 }
 
 var DateTimeLayout = "2006-01-02 15:04"
@@ -315,32 +250,6 @@ func XSortFieldsFilter(sortFields []string) (rtn []string) {
 		}
 	}
 	return
-}
-
-func ParseSort(sortFields []string) bson.D {
-	sort := make(bson.D, 0, len(sortFields))
-	for _, field := range sortFields {
-		n := 1
-		if field == "" {
-			continue
-		}
-		switch field[0] {
-		case '-':
-			n = -1
-			field = field[1:]
-		case '+':
-			field = field[1:]
-		}
-		if field == "" {
-			continue
-		}
-		sort = append(sort, bson.DocElem{field, n})
-	}
-	if len(sort) == 0 {
-		return nil
-	}
-
-	return sort
 }
 
 func UniqURLParams(url_ string) string {
