@@ -494,6 +494,8 @@ func (o *Obj) Read(data map[string]interface{}) error {
 			}
 		case "comment":
 			o.Comment = val.(string)
+		case "package":
+			o.Package = val.(string)
 		default:
 			return errors.New(o.Name + " has invalid obj property: " + key)
 		}
