@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.3.0
+	github.com/ezbuy/wrapper v1.0.0-pre.3
 	github.com/ezbuy/utils v0.0.0-20170609090716-8ac4beef008f
 	github.com/ezbuy/wrapper v1.0.0-pre.3
 	github.com/go-sql-driver/mysql v1.6.0
@@ -93,11 +94,4 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	sourcegraph.com/sourcegraph/appdash v0.0.0-20190731080439-ebfcffb1b5c0 // indirect
-)
-
-replace (
-	github.com/abourget/teamcity => github.com/cockroachdb/teamcity v0.0.0-20180905144921-8ca25c33eb11
-	github.com/cockroachdb/cockroach => github.com/cockroachdb/cockroach-gen v0.0.0-20220201140352-135da6111bcf
-	github.com/cockroachdb/errors v1.9.0 => github.com/cockroachdb/errors v1.8.6
-	vitess.io/vitess => github.com/cockroachdb/vitess v0.0.0-20210218160543-54524729cc82
 )
