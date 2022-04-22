@@ -20,7 +20,6 @@ func NewMongoDriver(ctx context.Context, opts ...MongoDriverOption) (*MongoDrive
 	if !strings.HasPrefix(uri, "mongodb") {
 		uri = "mongodb://" + config.MongoDB
 	}
-	fmt.Println("uri:", uri)
 
 	cliOpts := options.Client().ApplyURI(uri).SetMaxPoolSize(uint64(config.PoolLimit))
 	for _, opt := range opts {

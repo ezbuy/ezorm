@@ -8,6 +8,7 @@ import (
 
 	"github.com/ezbuy/ezorm/v2/db"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/event"
 )
@@ -33,7 +34,7 @@ func Test_MongoDriverConnection(t *testing.T) {
 	)
 
 	col := md.GetCol(collectionName)
-	ret, err := col.InsertOne(ctx, db.M{
+	ret, err := col.InsertOne(ctx, bson.M{
 		"tid":         1,
 		"ezorm":       "mongo_driver_support",
 		"create_date": time.Now().Unix(),
@@ -74,7 +75,7 @@ func Test_MongoDriverConnPool(t *testing.T) {
 
 	const collectionName = "Test"
 	if _, err := md.GetCol(collectionName).
-		InsertOne(context.Background(), db.M{"tid": 2}); err != nil {
+		InsertOne(context.Background(), bson.M{"tid": 2}); err != nil {
 		t.Fatalf("failed to initial query data: %s", err)
 	}
 
@@ -84,7 +85,7 @@ func Test_MongoDriverConnPool(t *testing.T) {
 
 		go func() {
 			defer wg.Done()
-			md.GetCol(collectionName).FindOne(gctx, db.M{"tid": 2})
+			md.GetCol(collectionName).FindOne(gctx, bson.M{"tid": 2})
 		}()
 	}
 

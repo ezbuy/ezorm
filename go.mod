@@ -3,6 +3,7 @@ module github.com/ezbuy/ezorm/v2
 go 1.18
 
 require (
+	github.com/ezbuy/wrapper v1.0.0-pre.3
 	github.com/ezbuy/utils v0.0.0-20170609090716-8ac4beef008f
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/iancoleman/strcase v0.2.0
@@ -11,15 +12,20 @@ require (
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/viper v1.10.1
 	github.com/stretchr/testify v1.7.1
-	go.mongodb.org/mongo-driver v1.5.1
-	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
+	go.mongodb.org/mongo-driver v1.9.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
+	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/ezbuy/statsd v0.0.0-20190521031639-ae237584062d // indirect
+	github.com/prometheus/procfs v0.7.3 // indirect
+)
+
+require (
 	github.com/go-stack/stack v1.8.0 // indirect
-	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/klauspost/compress v1.9.5 // indirect
+	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
