@@ -192,8 +192,8 @@ github.com/ezbuy/statsd v0.0.0-20190521031639-ae237584062d h1:SeHyPo+ykKm5DKcBUD
 github.com/ezbuy/statsd v0.0.0-20190521031639-ae237584062d/go.mod h1:RUr3GtpMTjto7ygeUCLHDs6uBzvV5aHSzGUbr8YZkJU=
 github.com/ezbuy/utils v0.0.0-20170609090716-8ac4beef008f h1:f6mjy3cXO0yeEROA2hs94Gj3iOpQExCZt0bP9O4dW98=
 github.com/ezbuy/utils v0.0.0-20170609090716-8ac4beef008f/go.mod h1:HNO2FlHLy3brAh6/xb1K5/AV4fX6jUYSuzfHxfunSro=
-github.com/ezbuy/wrapper v1.0.0-pre.5 h1:Wr4vMsMXB3lNC5lXel150ZJWjVmmbE3J4rAr7ZfdCYk=
-github.com/ezbuy/wrapper v1.0.0-pre.5/go.mod h1:Mc/t6T5oyGp8bb36u8zaZGSMyGarrErv1bSUJq+vRtE=
+github.com/ezbuy/wrapper v1.0.0-pre.6 h1:6gwTf7IPIytlHh+6G1+AZhMY/YG3I4Y3khRycjwOxm0=
+github.com/ezbuy/wrapper v1.0.0-pre.6/go.mod h1:Mc/t6T5oyGp8bb36u8zaZGSMyGarrErv1bSUJq+vRtE=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/fatih/color v1.9.0/go.mod h1:eQcE1qtQxscV5RaZvpXrrb8Drkc3/DdQ+uUYCNjL+zU=
 github.com/fatih/color v1.13.0 h1:8LOYc1KYPPmyKMuN8QV2DNRWNbLo6LZ0iLs8+mlH53w=
