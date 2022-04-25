@@ -17,7 +17,8 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
         with:
-          branch: actions/track-v2-commits
+          branch: actions/track-v2-commits-${{ github.event.head_commit.id }}
+          delete-branch: true
           title: "auto: cherry-pick v2 commits"
           body: |
             > This PR tracks the commits in the v2 branch into the main branch.
