@@ -20,6 +20,7 @@ jobs:
           author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
           signoff: false
           branch: v2
+          base: main
           delete-branch: true
           title: "Cherry-pick v2 commits"
           body: |
