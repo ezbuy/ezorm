@@ -19,9 +19,9 @@ jobs:
           committer: GitHub <noreply@github.com>
           author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
           signoff: false
-          branch: v2
+          branch: v2-cherry-pick
           base: main
-          delete-branch: false
+          delete-branch: true
           title: "Cherry-pick v2 commits"
           body: |
             > This PR is auto-generated with GitHub Action by [auto-pr](https://github.com/marketplace/actions/create-pull-request)
