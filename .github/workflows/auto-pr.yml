@@ -17,4 +17,11 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
         with:
-          branch: production-promotion
+          branch: actions/track-v2-commits
+          title: "auto: cherry-pick v2 commits"
+          body: |
+            > This PR tracks the commits in the v2 branch into the main branch.
+            Merge me and keep main up to date with the latest v2 commits.
+
+            ![diva.jpeg](https://s2.loli.net/2022/04/25/oCZJkPc583YALE6.jpg)
+          reviewers: scbizu
