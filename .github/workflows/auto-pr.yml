@@ -1,0 +1,28 @@
+name: Auto PR(v2 -> main)
+on:
+  push:
+    branches:
+      - v2
+jobs:
+   autoPR:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: main
+      - name: Reset main branch
+        run: |
+          git fetch origin v2:v2
+          git reset --hard v2
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          branch: actions/track-v2-commits
+          title: "auto: cherry-pick v2 commits"
+          body: |
+            > This PR tracks the commits in the v2 branch into the main branch.
+
+            Merge me and keep main up to date with the latest v2 commits.
+
+            ![diva.jpeg](https://s2.loli.net/2022/04/25/oCZJkPc583YALE6.jpg)
+          reviewers: scbizu
