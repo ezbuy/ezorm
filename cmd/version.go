@@ -29,7 +29,7 @@ func version(commit string) string {
 
 const (
 	vMajor = 2
-	vMinor = 0
+	vMinor = 1
 	vPatch = 0
 )
 

@@ -19,6 +19,6 @@ import "github.com/ezbuy/ezorm/v2/cmd"
 var Commit string
 
 func main() {
-	cmd.Execute()
 	cmd.CommitHash = Commit
+	cmd.Execute()
 }
