@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/pingcap/parser"
@@ -228,6 +229,13 @@ func (tp *TiDBParser) Parse(ctx context.Context,
 		if err := tp.parseOne(ctx, q); err != nil {
 			return nil, nil, err
 		}
+	}
+
+	for n, meta := range tp.meta {
+		sort.SliceStable(meta.params, func(i, j int) bool {
+			return meta.params[i].Name < meta.params[j].Name
+		})
+		tp.meta[n] = meta
 	}
 
 	return tp.meta, tp.b, nil
