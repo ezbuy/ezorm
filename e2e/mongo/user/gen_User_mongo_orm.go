@@ -50,7 +50,6 @@ func (o *User) Save(ctx context.Context) (*mongo.UpdateResult, error) {
 	filter := bson.M{"_id": o.ID}
 	update := bson.M{
 		"$set": bson.M{
-			UserMgoFieldID:           o.ID,
 			UserMgoFieldUserId:       o.UserId,
 			UserMgoFieldUsername:     o.Username,
 			UserMgoFieldAge:          o.Age,
@@ -63,6 +62,11 @@ func (o *User) Save(ctx context.Context) (*mongo.UpdateResult, error) {
 	ret, err := col.UpdateOne(ctx, filter, update, opts)
 	if err != nil {
 		return ret, err
+	}
+	if ret.UpsertedID != nil {
+		if id, ok := ret.UpsertedID.(primitive.ObjectID); ok {
+			o.ID = id
+		}
 	}
 
 	o.isNew = false

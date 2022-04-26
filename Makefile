@@ -1,7 +1,7 @@
 all:
 
 build:
-	go build -ldflags "-X main.Version=$(shell git rev-parse --short HEAD)" -o bin/ezorm
+	go build -ldflags "-X main.Commit=$(shell git rev-parse --short HEAD)" -o bin/ezorm
 
 gene2e:
 	bin/ezorm gen -i ./e2e/mongo/user/user.yaml -o  ./e2e/mongo/user --goPackage user

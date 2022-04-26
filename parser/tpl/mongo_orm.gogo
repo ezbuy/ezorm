@@ -65,7 +65,10 @@ func (o *{{.Name}}) Save(ctx context.Context) (*mongo.UpdateResult, error) {
     filter := bson.M{"_id": o.ID}
     update := bson.M{
         "$set": bson.M{
-        {{- range $field := .Fields}}
+        {{- range $field := .Fields -}}
+        {{- if eq $field.Name "ID" -}}
+            {{continue}}
+        {{- end}}
             {{$obj.Name}}MgoField{{$field.Name}}: o.{{$field.Name}},
         {{- end}}
         },
@@ -77,6 +80,11 @@ func (o *{{.Name}}) Save(ctx context.Context) (*mongo.UpdateResult, error) {
     if err != nil {
         return ret, err
     }
+	if ret.UpsertedID != nil {
+		if id, ok := ret.UpsertedID.(primitive.ObjectID); ok {
+			o.ID = id
+		}
+	}
 
     o.isNew = false
     if isNew {
