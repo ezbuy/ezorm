@@ -47,6 +47,10 @@ func (o *User) Id() string {
 func (o *User) Save(ctx context.Context) (*mongo.UpdateResult, error) {
 	isNew := o.isNew
 
+	if o.ID == primitive.NilObjectID {
+		o.ID = primitive.NewObjectID()
+	}
+
 	filter := bson.M{"_id": o.ID}
 	update := bson.M{
 		"$set": bson.M{
