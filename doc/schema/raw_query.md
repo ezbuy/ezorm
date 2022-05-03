@@ -22,11 +22,10 @@ After that , things are almost done , `ezorm gen` will do the rest for you.
 
 For example , lets write a simple SQL Query like:
 
-> you can find more sql query [here](https://github.com/ezbuy/ezorm/tree/feature/raw-query-cond-parser/example/mysql_people/sqls)
-
-```
+> you can find more sql query [here](https://github.com/ezbuy/ezorm/tree/main/e2e/mysql/sqls)
 
 ```sql
+
 SELECT
 	name
 FROM
