@@ -137,11 +137,11 @@ func uglify(col string) string {
 	return col
 }
 
-func typeMatch(fromAST T, fromSchema *Field) bool {
+func typeMatch(fromAST T, fromSchema IField) bool {
 	return fromAST.BaseType() == fromSchema.GetGoType()
 }
 
-func (tm TableMetadata) Validate(tableRef map[string]map[string]*Field) error {
+func (tm TableMetadata) Validate(tableRef map[string]map[string]IField) error {
 	for t, f := range tm {
 		name := uglify(t.Name)
 		ff, ok := tableRef[name]

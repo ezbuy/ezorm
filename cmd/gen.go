@@ -26,6 +26,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/ezbuy/ezorm/v2/parser"
+	"github.com/ezbuy/ezorm/v2/parser/mysqlr"
 	"github.com/spf13/cobra"
 )
 
@@ -79,49 +80,79 @@ var genCmd = &cobra.Command{
 			genGoPackageName = genPackageName
 		}
 
-		databases := make(map[string]*parser.Obj)
-		dbObjs := make(map[string][]*parser.Obj)
+		databases := make(map[string]parser.IObject)
+		dbObjs := make(map[string][]parser.IObject)
 
 		for key, obj := range objs {
-			xwMetaObj := new(parser.Obj)
-			xwMetaObj.Package = genPackageName
-			xwMetaObj.GoPackage = genGoPackageName
-			xwMetaObj.Name = key
-			err := xwMetaObj.Read(obj)
+			db, ok := obj["db"]
+			if !ok {
+				return fmt.Errorf("%s: db field not found", key)
+			}
+			var metadata parser.IObject
+			switch db {
+			case "mysqlr":
+				metadata = mysqlr.NewMetaObject(genGoPackageName)
+			default:
+				metadata = &parser.Obj{
+					Package:   genPackageName,
+					GoPackage: genGoPackageName,
+					Name:      key,
+				}
+			}
+			err := metadata.Read(key, obj)
 			if err != nil {
 				return err
 			}
-
-			databases[xwMetaObj.Db] = xwMetaObj
-			dbObjs[xwMetaObj.Db] = append(dbObjs[xwMetaObj.Db], xwMetaObj)
-			for _, genType := range xwMetaObj.GetGenTypes() {
-				fileAbsPath := output + "/gen_" + xwMetaObj.Name + "_" + genType + ".go"
-				executeTpl(fileAbsPath, genType, xwMetaObj)
+			dbName := db.(string)
+			databases[dbName] = metadata
+			dbObjs[dbName] = append(dbObjs[dbName], metadata)
+			switch obj := metadata.(type) {
+			case *parser.Obj:
+				for _, genType := range obj.GetGenTypes() {
+					fileAbsPath := output + "/gen_" + key + "_" + genType + ".go"
+					executeTpl(fileAbsPath, genType, obj)
+				}
+			case *mysqlr.MetaObject:
+				if err := mysqlr.GenerateGoTemplate(output, obj); err != nil {
+					return err
+				}
 			}
 		}
 
 		for _, obj := range databases {
-			for _, t := range obj.GetConfigTemplates() {
-				fileAbsPath := output + "/gen_" + t + ".go"
-				executeTpl(fileAbsPath, t, obj)
+			switch obj := obj.(type) {
+			case *parser.Obj:
+				for _, t := range obj.GetConfigTemplates() {
+					fileAbsPath := output + "/gen_" + t + ".go"
+					executeTpl(fileAbsPath, t, obj)
+				}
+			case *mysqlr.MetaObject:
+				if err := mysqlr.GenerateConfTemplate(output, genGoPackageName); err != nil {
+					return err
+				}
 			}
 		}
 
-		sqlObjs := make(map[string]*parser.Obj, len(dbObjs))
+		sqlObjs := make(map[string]parser.IObject, len(dbObjs))
 		for db, objs := range dbObjs {
 			switch db {
 			default:
 				continue
-
+			case "mysqlr":
+				for _, obj := range objs {
+					if err := mysqlr.GenerateScriptTemplate(output, genGoPackageName, obj.(*mysqlr.MetaObject)); err != nil {
+						return err
+					}
+				}
 			case "mysql":
+				path := fmt.Sprintf("%s/create_%s.sql", output, db)
+				genType := db + "_script"
+				executeTpl(path, genType, objs)
+
 			}
 
-			path := fmt.Sprintf("%s/create_%s.sql", output, db)
-			genType := db + "_script"
-			executeTpl(path, genType, objs)
-
 			for _, obj := range objs {
-				sqlObjs[obj.Table] = obj
+				sqlObjs[obj.GetTable()] = obj
 			}
 		}
 
@@ -138,7 +169,7 @@ var genCmd = &cobra.Command{
 	},
 }
 
-func handleSQL(objs map[string]*parser.Obj, pkg string) error {
+func handleSQL(objs map[string]parser.IObject, pkg string) error {
 	var inputDir string
 	f, err := os.Stat(input)
 	if err != nil {

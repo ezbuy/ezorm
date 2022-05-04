@@ -32,6 +32,8 @@ var (
 	}
 )
 
+var _ IField = (*Field)(nil)
+
 type Field struct {
 	Attrs        map[string]string
 	DefaultValue string
@@ -155,6 +157,10 @@ func (f *Field) BsonTagName() string {
 }
 
 func (f *Field) DbName() string {
+	return camel2name(f.Name)
+}
+
+func (f *Field) GetName() string {
 	return camel2name(f.Name)
 }
 

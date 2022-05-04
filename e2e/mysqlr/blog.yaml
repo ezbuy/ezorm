@@ -1,0 +1,16 @@
+
+Blog:
+  db: mysqlr
+  dbname: test
+  dbtable: blogs
+  fields:
+    - Id: int64
+    - UserId: int32
+    - Title: string
+    - Content: string
+    - Status: int32
+      flags: [index]
+    - Readed: int32
+    - CreatedAt: int64
+    - UpdatedAt: int64
+  primary: [Id, UserId]

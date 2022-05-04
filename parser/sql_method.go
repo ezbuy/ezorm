@@ -13,7 +13,7 @@ import (
 )
 
 type SQL struct {
-	fieldMap       map[string]map[string]*Field
+	fieldMap       map[string]map[string]IField
 	RawQueryParser RawQueryParser
 }
 
@@ -40,14 +40,13 @@ type SQLMethodField struct {
 	Type string
 }
 
-func NewSQL(objs map[string]*Obj) *SQL {
-	fieldMap := make(map[string]map[string]*Field, len(objs))
+func NewSQL(objs map[string]IObject) *SQL {
+	fieldMap := make(map[string]map[string]IField, len(objs))
 	for table, obj := range objs {
 		name := camel2name(table)
-		fieldMap[name] = make(map[string]*Field, len(obj.Fields))
-		for _, f := range obj.Fields {
-			fname := camel2name(f.Name)
-			fieldMap[name][fname] = f
+		fieldMap[name] = make(map[string]IField, len(obj.FieldsMap()))
+		for _, f := range obj.FieldsMap() {
+			fieldMap[name][f.GetName()] = f
 		}
 	}
 	return &SQL{
