@@ -1,4 +1,6 @@
 
+USE `test`;
+
 CREATE TABLE `blogs` (
 	`id` BIGINT(20) NOT NULL DEFAULT '0',
 	`user_id` INT(11) NOT NULL DEFAULT '0',

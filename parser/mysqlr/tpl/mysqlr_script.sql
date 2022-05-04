@@ -1,5 +1,8 @@
 {{- define "mysqlr_script"}}{{- $obj := . -}}
 {{- if ne $obj.DbTable ""}}
+
+USE `{{$obj.DbName}}`;
+
 CREATE TABLE `{{$obj.DbTable}}` (
 	{{- range $i, $field := $obj.Fields}}
 	{{$field.SQLColumn "mysql"}},
