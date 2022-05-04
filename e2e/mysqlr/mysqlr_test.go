@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -28,8 +29,13 @@ func TestMain(m *testing.M) {
 	if _, err := MySQL().Exec(ctx, "CREATE DATABASE IF NOT EXISTS test"); err != nil {
 		panic(fmt.Errorf("failed to create database: %s", err))
 	}
-	if _, err := MySQL().Exec(ctx, string(sql)); err != nil {
-		panic(fmt.Errorf("failed to create table: %s", err))
+	for _, q := range strings.Split(string(sql), ";") {
+		if len(strings.TrimSpace(q)) == 0 {
+			continue
+		}
+		if _, err := MySQL().Exec(ctx, q); err != nil {
+			panic(fmt.Errorf("failed to create table: %s", err))
+		}
 	}
 	os.Exit(m.Run())
 }
