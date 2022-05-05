@@ -79,7 +79,7 @@ func (m *_{{$obj.Name}}DBMgr) Create(ctx context.Context,obj *{{$obj.Name}}) (in
 	if err != nil {
 		return 0, err
 	}
-	{{- if $primary.IsAutocrement}}
+	{{- if $primary.IsAutoIncrement}}
 		lastInsertId, err := result.LastInsertId()
 		if err != nil {
 			return 0, err

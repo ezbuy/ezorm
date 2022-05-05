@@ -1,0 +1,11 @@
+User:
+  db: mysqlr
+  dbname: test
+  dbtable: users
+  fields:
+    - Id: int64
+    - UserId: int32
+    - Name: string
+    - CreatedAt: int64
+    - UpdatedAt: int64
+  primary: [Id, UserId]
