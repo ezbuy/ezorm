@@ -140,6 +140,9 @@ func TestBlogsTx(t *testing.T) {
 			UserId: 1,
 		})
 		assert.Error(t, err)
+		if err != nil {
+			tx.SetError(err)
+		}
 		assert.Equal(t, int64(0), af)
 		// rollbacked
 		assert.Equal(t, tx.IsRollback(), true)
