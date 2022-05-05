@@ -18,7 +18,7 @@ func TestGetUser(t *testing.T) {
 	)
 
 	ctx := context.TODO()
-	resp, err := SQL.GetUser(ctx, &GetUserReq{
+	resp, err := GetRawQuery().GetUser(ctx, &GetUserReq{
 		Name: "me",
 	}, WithDB(mockDB))
 	if !assert.NoError(t, err) {

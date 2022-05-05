@@ -226,6 +226,9 @@ func (tp *TiDBParser) Parse(ctx context.Context,
 	query string) (TableMetadata, *QueryBuilder, error) {
 	queries := strings.Split(query, ";")
 	for _, q := range queries {
+		if len(strings.TrimSpace(q)) == 0 {
+			continue
+		}
 		if err := tp.parseOne(ctx, q); err != nil {
 			return nil, nil, err
 		}
@@ -255,7 +258,7 @@ func (tp *TiDBParser) parseOne(ctx context.Context,
 	query string) error {
 	node, err := parser.New().ParseOneStmt(query, "", "")
 	if err != nil {
-		return fmt.Errorf("raw query parser: %w", err)
+		return fmt.Errorf("raw query parser: %w(query: %s)", err, query)
 	}
 	return tp.parse(node, 0)
 }

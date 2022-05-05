@@ -29,7 +29,7 @@ func version(commit string) string {
 
 const (
 	vMajor = 2
-	vMinor = 1
+	vMinor = 2
 	vPatch = 0
 )
 
@@ -38,7 +38,7 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "EzOrm 版本信息",
 	Long:  `EzOrm 版本信息`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		fmt.Fprintln(os.Stdout, version(CommitHash))
 	},
 }

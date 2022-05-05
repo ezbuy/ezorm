@@ -217,7 +217,7 @@ func TestRawQuery(t *testing.T) {
 	if _, err := UserMgr.Save(ctx, user1); err != nil {
 		t.Fatal(err)
 	}
-	resp, err := SQL.GetUser(ctx, &GetUserReq{
+	resp, err := GetRawQuery().GetUser(ctx, &GetUserReq{
 		Name: "user1",
 	})
 	if !assert.NoError(t, err) {

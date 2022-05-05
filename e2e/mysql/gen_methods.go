@@ -6,18 +6,19 @@ import (
 	"context"
 	sql_driver "database/sql"
 	"fmt"
-	"time"
-
 	"github.com/ezbuy/ezorm/v2/db"
 	"github.com/ezbuy/ezorm/v2/pkg/sql"
+	"time"
 )
 
 var (
 	_ time.Time
 	_ context.Context
+	_ sql.InBuilder
+	_ fmt.Stringer
 )
 
-var SQL = &sqlMethods{}
+var rawQuery = &sqlMethods{}
 
 type sqlMethods struct{}
 
@@ -26,6 +27,10 @@ type RawQueryOption struct {
 }
 
 type RawQueryOptionHandler func(*RawQueryOption)
+
+func GetRawQuery() *sqlMethods {
+	return rawQuery
+}
 
 func WithDB(db *sql_driver.DB) RawQueryOptionHandler {
 	return func(o *RawQueryOption) {

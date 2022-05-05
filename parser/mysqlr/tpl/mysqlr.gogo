@@ -1,0 +1,61 @@
+{{define "mysqlr"}}package {{.GoPackage}}
+{{$obj := .}}
+
+import (
+	"fmt"
+	"time"
+	"strings"
+	"database/sql"
+	"context"
+
+	"github.com/ezbuy/ezorm/v2/pkg/orm"
+	"gopkg.in/go-playground/validator.v9"
+)
+var (
+	_ sql.DB
+	_ time.Time
+	_ fmt.Formatter
+	_ strings.Reader
+	_ validator.Validate
+	_ context.Context
+)
+
+type {{.Name}} struct {
+	{{- range $field := .Fields}}
+	{{$field.Name}}  {{$field.GetType}} {{$field.GetTag}}
+	{{- end}}
+}
+
+var {{$obj.Name}}Columns = struct{
+	{{- range $field := .Fields}}
+	{{$field.Name}}  string
+	{{- end}}
+}{
+	{{- range $field := .Fields}}
+	"{{$field.ColumnName}}",
+	{{- end}}
+}
+
+type _{{$obj.Name}}Mgr struct {
+}
+var {{$obj.Name}}Mgr *_{{$obj.Name}}Mgr
+
+func (m *_{{$obj.Name}}Mgr) New{{$obj.Name}}() *{{$obj.Name}} {
+	return &{{$obj.Name}}{}
+}
+
+{{template "mysqlr_object_functions" $obj}}
+
+{{template "mysqlr_object_primary_key" $obj.PrimaryKey}}
+
+{{- range $i, $unique := $obj.Uniques}}
+{{template "mysqlr_object_unique" $unique}}
+{{- end}}
+
+{{- range $i, $index := $obj.Indexes}}
+{{template "mysqlr_object_index" $index}}
+{{- end}}
+
+{{template "mysqlr_object" $obj}}
+
+{{end}}
