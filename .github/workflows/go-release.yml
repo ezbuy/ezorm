@@ -3,8 +3,8 @@ name: goreleaser
 on:
   pull_request:
   push:
-    branches:
-      - "main"
+    tags:
+      - "v*"
 
 jobs:
   goreleaser:
@@ -32,4 +32,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: ezorm
-          path: bin/*
+          path: dist/*
