@@ -1,0 +1,48 @@
+{{define "mysqlr_object_functions"}}
+{{$obj := .}}
+{{$primary := $obj.PrimaryKey}}
+{{$primaryField := $primary.FirstField }}
+func (obj *{{.Name}}) GetNameSpace() string {
+	return "{{.Package}}"
+}
+
+func (obj *{{.Name}}) GetClassName() string {
+	return "{{.Name}}"
+}
+
+func (obj *{{.Name}}) GetTableName() string {
+	return "{{.DbTable}}"
+}
+
+func (obj *{{.Name}}) GetColumns() []string {
+	columns := []string{
+	{{- range $field := .Fields}}
+	"{{$obj.DbTable}}.{{$field.FieldName}}",
+	{{- end}}
+	}
+	return columns
+}
+
+func (obj *{{.Name}}) GetNoneIncrementColumns() []string {
+	columns := []string{
+	{{- range $field := .NoneIncrementFields}}
+	"{{$field.FieldName}}",
+	{{- end}}
+	}
+	return columns
+}
+
+func (obj *{{.Name}}) GetPrimaryKey() PrimaryKey {
+	pk := {{.Name}}Mgr.NewPrimaryKey()
+	{{- range $field := $primary.Fields}}
+	pk.{{$field.Name}} = obj.{{$field.Name}}
+	{{- end}}
+	return pk
+}
+
+func (obj *{{.Name}}) Validate() error {
+	validate := validator.New()
+	return validate.Struct(obj)
+}
+
+{{end}}

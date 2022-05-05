@@ -1,0 +1,53 @@
+{{define "mysqlr_object_unique"}}
+{{$unique := .}}
+{{$obj := .Obj}}
+{{$primaryField := .Obj.PrimaryField}}
+
+type {{$unique.Name}} struct{
+	{{- range $j, $field := $unique.Fields}}
+	{{$field.Name}} {{$field.GetType}}
+	{{- end}}
+}
+
+func (u *{{$unique.Name}}) Key() string {
+	strs := []string{
+		{{- range $j, $field := $unique.Fields}}
+		"{{$field.Name}}",
+			{{- if $field.IsEncode}}
+			orm.Encode(fmt.Sprint(u.{{$field.Name}})),
+			{{- else}}
+			fmt.Sprint(u.{{$field.Name}}),
+			{{- end}}
+		{{- end}}
+	}
+	return fmt.Sprintf("%s", strings.Join(strs, ":"))
+}
+
+func (u *{{$unique.Name}}) SQLFormat(limit bool) string {
+	conditions := []string{
+		{{- range $j, $field := $unique.Fields}}
+		"{{$field.FieldName}} = ?",
+		{{- end}}
+	}
+	return orm.SQLWhere(conditions)
+}
+
+func (u *{{$unique.Name}}) SQLParams() []interface{} {
+	return []interface{}{
+		{{- range $j, $field := $unique.Fields}}
+		u.{{$field.Name}},
+		{{- end}}
+	}
+}
+
+func (u *{{$unique.Name}}) SQLLimit() int {
+	return 1
+}
+
+func (u *{{$unique.Name}}) Limit(n int) {
+}
+
+func (u *{{$unique.Name}}) Offset(n int) {
+}
+
+{{end}}

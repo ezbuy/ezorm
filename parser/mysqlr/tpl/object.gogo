@@ -1,0 +1,11 @@
+{{define "mysqlr_object"}}
+{{$obj := .}}
+{{- if ne $obj.DbSource "" -}}
+    {{- template "mysqlr_object_read" . -}}
+    {{- if ne $obj.DbTable "" -}}
+    {{- template "mysqlr_object_write" . -}}
+    {{- end -}}
+{{- else -}}
+    {{- template "mysqlr_object_query" . -}}
+{{- end -}}
+{{end}}
