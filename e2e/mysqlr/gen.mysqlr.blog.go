@@ -311,9 +311,9 @@ func (m *_BlogDBMgr) Exist(ctx context.Context, pk PrimaryKey) (bool, error) {
 	return (c != 0), nil
 }
 
-// FetchByPK is the same as FetchByPrimaryKey
-// but it returns the specific error type(sql.ErrNoRows) when no rows found
-func (m *_BlogDBMgr) FetchByPK(ctx context.Context, id int64, userId int32) (*Blog, error) {
+// FetchByPrimaryKey fetches a single Blog by its primary key
+// it returns the specific error type(sql.ErrNoRows) when no rows found
+func (m *_BlogDBMgr) FetchByPrimaryKey(ctx context.Context, id int64, userId int32) (*Blog, error) {
 	obj := BlogMgr.NewBlog()
 	pk := &IdUserIdOfBlogPK{
 		Id:     id,
@@ -334,25 +334,6 @@ func (m *_BlogDBMgr) FetchByPK(ctx context.Context, id int64, userId int32) (*Bl
 // err not found check
 func (m *_BlogDBMgr) IsErrNotFound(err error) bool {
 	return strings.Contains(err.Error(), "not found") || err == sql.ErrNoRows
-}
-
-// primary key
-func (m *_BlogDBMgr) FetchByPrimaryKey(ctx context.Context, id int64, userId int32) (*Blog, error) {
-	obj := BlogMgr.NewBlog()
-	pk := &IdUserIdOfBlogPK{
-		Id:     id,
-		UserId: userId,
-	}
-
-	query := fmt.Sprintf("SELECT %s FROM blogs %s", strings.Join(obj.GetColumns(), ","), pk.SQLFormat())
-	objs, err := m.FetchBySQL(ctx, query, pk.SQLParams()...)
-	if err != nil {
-		return nil, err
-	}
-	if len(objs) > 0 {
-		return objs[0], nil
-	}
-	return nil, fmt.Errorf("Blog fetch record not found")
 }
 
 // indexes

@@ -129,9 +129,9 @@ func (m *_{{$obj.Name}}DBMgr) Exist(ctx context.Context, pk PrimaryKey) (bool, e
 	return (c != 0), nil
 }
 
-// FetchByPK is the same as FetchByPrimaryKey
-// but it returns the specific error type(sql.ErrNoRows) when no rows found
-func (m *_{{$obj.Name}}DBMgr) FetchByPK(ctx context.Context,{{$primary.GetFuncParam}}) (*{{$obj.Name}}, error) {
+// FetchByPrimaryKey fetches a single {{$obj.Name}} by its primary key
+// it returns the specific error type(sql.ErrNoRows) when no rows found
+func (m *_{{$obj.Name}}DBMgr) FetchByPrimaryKey(ctx context.Context,{{$primary.GetFuncParam}}) (*{{$obj.Name}}, error) {
 	obj := {{$obj.Name}}Mgr.New{{$obj.Name}}()
 	pk := &{{$primary.Name}}{
 	{{$primary.GetConstructor}}
@@ -154,26 +154,10 @@ func (m *_{{$obj.Name}}DBMgr) IsErrNotFound(err error) bool {
 	return strings.Contains(err.Error(), "not found") || err == sql.ErrNoRows
 }
 
-// primary key
-func (m *_{{$obj.Name}}DBMgr) FetchByPrimaryKey(ctx context.Context,{{$primary.GetFuncParam}}) (*{{$obj.Name}}, error) {
-	obj := {{$obj.Name}}Mgr.New{{$obj.Name}}()
-	pk := &{{$primary.Name}}{
-	{{$primary.GetConstructor}}
-	}
-
-	query := fmt.Sprintf("SELECT %s FROM {{$obj.FromDB}} %s", strings.Join(obj.GetColumns(), ","), pk.SQLFormat())
-	objs, err := m.FetchBySQL(ctx,query, pk.SQLParams()...)
-	if err != nil {
-		return nil, err
-	}
-	if len(objs) > 0 {
-		return objs[0], nil
-	}
-	return nil, fmt.Errorf("{{$obj.Name}} fetch record not found")
-}
-
 {{- if $primary.IsSingleField}}
 
+// FetchByPrimaryKeys fetches a list of {{$obj.Name}} by its primary keys
+// it returns the specific error type(sql.ErrNoRows) when no rows found
 func (m *_{{$obj.Name}}DBMgr) FetchByPrimaryKeys(ctx context.Context,{{$primaryField.GetNames}} []{{$primaryField.GetType}}) ([]*{{$obj.Name}}, error) {
 	size := len({{$primaryField.GetNames}})
 	if size == 0 {
@@ -186,7 +170,14 @@ func (m *_{{$obj.Name}}DBMgr) FetchByPrimaryKeys(ctx context.Context,{{$primaryF
 	obj := {{$obj.Name}}Mgr.New{{$obj.Name}}()
 	query := fmt.Sprintf("SELECT %s FROM {{$obj.FromDB}} WHERE {{$primaryField.FieldName}} IN (?%s)", strings.Join(obj.GetColumns(), ","),
 		strings.Repeat(",?", size -1))
-	return m.FetchBySQL(ctx,query, params...)
+	objs,err := m.FetchBySQL(ctx,query, params...)
+	if err != nil {
+		return nil, err
+	}
+	if len(objs) == 0 {
+		return nil, sql.ErrNoRows
+	}
+	return objs, nil
 }
 {{- end}}
 

@@ -1,4 +1,5 @@
 
+
 USE `test`;
 
 CREATE TABLE `blogs` (

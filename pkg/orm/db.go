@@ -162,6 +162,10 @@ func (tx *DBTx) Close() error {
 	return tx.tx.Commit()
 }
 
+func (tx *DBTx) IsRollback() bool {
+	return tx.err != nil
+}
+
 func (tx *DBTx) Query(ctx context.Context, query string,
 	args ...interface{}) (*sql.Rows, error) {
 	fn := func(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
