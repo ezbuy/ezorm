@@ -3,6 +3,7 @@ package mysqlr
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/ezbuy/ezorm/v2/parser"
 )
@@ -103,17 +104,23 @@ func (o *MetaObject) NoneIncrementFields() []*Field {
 }
 
 func (o *MetaObject) Uniques() []*Index {
-	sort.Sort(IndexArray(o.uniques))
+	sort.Slice(o.uniques, func(i, j int) bool {
+		return strings.Compare(o.uniques[i].Name, o.uniques[j].Name) > 0
+	})
 	return o.uniques
 }
 
 func (o *MetaObject) Indexes() []*Index {
-	sort.Sort(IndexArray(o.indexes))
+	sort.Slice(o.indexes, func(i, j int) bool {
+		return strings.Compare(o.indexes[i].Name, o.indexes[j].Name) > 0
+	})
 	return o.indexes
 }
 
 func (o *MetaObject) Ranges() []*Index {
-	sort.Sort(IndexArray(o.ranges))
+	sort.Slice(o.ranges, func(i, j int) bool {
+		return strings.Compare(o.ranges[i].Name, o.ranges[j].Name) > 0
+	})
 	return o.ranges
 }
 func (o *MetaObject) LastField() *Field {

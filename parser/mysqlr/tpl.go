@@ -49,7 +49,7 @@ func init() {
 var ormTemplate *template.Template
 
 func templates(obj *MetaObject) []string {
-	return []string{"mysqlr", "mysqlr_orm"}
+	return []string{"mysqlr"}
 }
 
 func GenerateGoTemplate(output string, obj *MetaObject) error {
@@ -89,6 +89,17 @@ func GenerateConfTemplate(output string, packageName string) error {
 	}
 	defer fd.Close()
 	if err := ormTemplate.ExecuteTemplate(fd, "mysqlr_config", map[string]interface{}{
+		"GoPackage": packageName,
+	}); err != nil {
+		return err
+	}
+	filename = filepath.Join(output, strings.Join([]string{"gen", "orm", "mysql", "go"}, "."))
+	fd, err = os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		return err
+	}
+	defer fd.Close()
+	if err := ormTemplate.ExecuteTemplate(fd, "mysqlr_orm", map[string]interface{}{
 		"GoPackage": packageName,
 	}); err != nil {
 		return err
