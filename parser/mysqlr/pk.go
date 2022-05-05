@@ -31,7 +31,7 @@ func (pk *PrimaryKey) FirstField() *Field {
 	return nil
 }
 
-func (pk *PrimaryKey) IsAutocrement() bool {
+func (pk *PrimaryKey) IsAutoIncrement() bool {
 	if len(pk.Fields) == 1 {
 		return pk.Fields[0].Flags.Contains("autoinc")
 	}
@@ -64,7 +64,7 @@ func (pk *PrimaryKey) build() error {
 		pk.Fields = append(pk.Fields, f)
 	}
 	if len(pk.Fields) == 0 {
-		return fmt.Errorf("primary key  not declare.")
+		return fmt.Errorf("primary key  not declare")
 	}
 	return nil
 }
