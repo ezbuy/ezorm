@@ -11,3 +11,12 @@ builds:
     ignore:
       - goos: windows
         goarch: arm64
+release:
+  github:
+    owner: ezbuy
+    name: ezorm
+  extra_files:
+    - glob: LICENSE
+    - glob: CHANGELOG.md
+
+
