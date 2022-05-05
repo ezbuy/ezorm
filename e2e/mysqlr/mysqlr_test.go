@@ -61,10 +61,10 @@ func TestBlogsCRUD(t *testing.T) {
 			UpdatedAt: time.Now().Unix(),
 		})
 		assert.NoError(t, err)
-		assert.Equal(t, 1, af)
-		count, err := BlogDBMgr(db).SearchConditionsCount(ctx, []string{"user_id = ?"}, []interface{}{1})
+		assert.Equal(t, int64(1), af)
+		count, err := BlogDBMgr(db).SearchConditionsCount(ctx, []string{"user_id = ?"}, 1)
 		assert.NoError(t, err)
-		assert.Equal(t, 1, count)
+		assert.Equal(t, int64(1), count)
 	})
 
 	t.Run("Update", func(t *testing.T) {
@@ -73,16 +73,16 @@ func TestBlogsCRUD(t *testing.T) {
 		b.Status = 2
 		af, err := BlogDBMgr(db).Update(ctx, b)
 		assert.NoError(t, err)
-		assert.Equal(t, 1, af)
+		assert.Equal(t, int64(1), af)
 	})
 
 	t.Run("Delete", func(t *testing.T) {
 		af, err := BlogDBMgr(db).DeleteByPrimaryKey(ctx, 1, 1)
 		assert.NoError(t, err)
-		assert.Equal(t, 1, af)
-		count, err := BlogDBMgr(db).SearchConditionsCount(ctx, []string{"user_id = ?"}, []interface{}{1})
+		assert.Equal(t, int64(1), af)
+		count, err := BlogDBMgr(db).SearchConditionsCount(ctx, []string{"user_id = ?"}, 1)
 		assert.NoError(t, err)
-		assert.Equal(t, 0, count)
+		assert.Equal(t, int64(0), count)
 	})
 
 }
@@ -107,15 +107,15 @@ func TestBlogsTx(t *testing.T) {
 			UpdatedAt: time.Now().Unix(),
 		})
 		assert.NoError(t, err)
-		assert.Equal(t, 1, af)
+		assert.Equal(t, int64(1), af)
 		// not the same tx
-		count, err := BlogDBMgr(MySQL()).SearchConditionsCount(ctx, []string{"user_id = ?"}, []interface{}{1})
+		count, err := BlogDBMgr(MySQL()).SearchConditionsCount(ctx, []string{"user_id = ?"}, 1)
 		assert.NoError(t, err)
-		assert.Equal(t, 0, count)
+		assert.Equal(t, int64(0), count)
 		// the same tx
-		count, err = BlogDBMgr(tx).SearchConditionsCount(ctx, []string{"user_id = ?"}, []interface{}{1})
+		count, err = BlogDBMgr(tx).SearchConditionsCount(ctx, []string{"user_id = ?"}, 1)
 		assert.NoError(t, err)
-		assert.Equal(t, 1, count)
+		assert.Equal(t, int64(1), count)
 
 		t.Cleanup(func() {
 			MySQL().Exec(ctx, "TRUNCATE TABLE blogs")
@@ -133,22 +133,22 @@ func TestBlogsTx(t *testing.T) {
 			UserId: 1,
 		})
 		assert.NoError(t, err)
-		assert.Equal(t, 1, af)
+		assert.Equal(t, int64(1), af)
 		// produce the duplicate key error
 		af, err = BlogDBMgr(tx).Create(ctx, &Blog{
 			Id:     1,
 			UserId: 1,
 		})
 		assert.Error(t, err)
-		assert.Equal(t, 0, af)
+		assert.Equal(t, int64(0), af)
 		// rollbacked
 		assert.Equal(t, tx.IsRollback(), true)
 		err = tx.Close()
 		assert.NoError(t, err)
 
-		count, err := BlogDBMgr(MySQL()).SearchConditionsCount(ctx, []string{"user_id = ?"}, []interface{}{1})
+		count, err := BlogDBMgr(MySQL()).SearchConditionsCount(ctx, []string{"user_id = ?"}, 1)
 		assert.NoError(t, err)
-		assert.Equal(t, 0, count)
+		assert.Equal(t, int64(0), count)
 		t.Cleanup(func() {
 			MySQL().Exec(ctx, "TRUNCATE TABLE blogs")
 		})
