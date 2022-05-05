@@ -1,0 +1,74 @@
+{{define "mysqlr_object_index"}}
+{{$index := .}}
+{{$obj := .Obj}}
+{{$primary := $obj.PrimaryKey}}
+{{$primaryField := $primary.FirstField }}
+{{$firstField := $index.FirstField }}
+type {{$index.Name}} struct{
+	{{- range $j, $field := $index.Fields}}
+	{{$field.Name}} {{$field.GetType}}
+	{{- end}}
+	offset int
+	limit int
+}
+
+func (u *{{$index.Name}}) Key() string {
+	strs := []string{
+		{{- range $j, $field := $index.Fields}}
+		"{{$field.Name}}",
+			{{- if $field.IsEncode}}
+			orm.Encode(fmt.Sprint(u.{{$field.Name}})),
+			{{- else}}
+			fmt.Sprint(u.{{$field.Name}}),
+			{{- end}}
+		{{- end}}
+	}
+	return strings.Join(strs, ":")
+}
+
+func (u *{{$index.Name}}) SQLFormat(limit bool) string {
+	conditions := []string{
+		{{- range $j, $field := $index.Fields}}
+		"{{$field.FieldName}} = ?",
+		{{- end}}
+	}
+	if limit {
+		return fmt.Sprintf("%s %s", orm.SQLWhere(conditions), orm.SQLOffsetLimit(u.offset, u.limit))
+	}
+	return orm.SQLWhere(conditions)
+}
+
+func (u *{{$index.Name}}) SQLParams() []interface{} {
+	return []interface{}{
+		{{- range $j, $field := $index.Fields}}
+		u.{{$field.Name}},
+		{{- end}}
+	}
+}
+
+func (u *{{$index.Name}}) SQLLimit() int {
+	if u.limit > 0 {
+		return u.limit
+	}
+	return -1
+}
+
+func (u *{{$index.Name}}) Limit(n int) {
+	u.limit = n
+}
+
+func (u *{{$index.Name}}) Offset(n int) {
+	u.offset = n
+}
+
+func (u *{{$index.Name}}) PositionOffsetLimit(len int) (int, int) {
+	if u.limit <= 0 {
+		return 0, len
+	}
+	if u.offset + u.limit > len {
+		return u.offset, len
+	}
+	return u.offset, u.limit
+}
+
+{{end}}

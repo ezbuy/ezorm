@@ -71,6 +71,19 @@ func (f *Field) BJTag() string {
 	return bjTag
 }
 
+type IObject interface {
+	Read(string, map[string]interface{}) error
+	FieldsMap() map[string]IField
+	GetTable() string
+}
+
+type IField interface {
+	GetName() string
+	GetGoType() string
+}
+
+var _ IObject = (*Obj)(nil)
+
 type Obj struct {
 	Db           string
 	Dbs          []string
@@ -102,6 +115,10 @@ func (o *Obj) init() {
 	o.FieldNameMap = make(map[string]*Field)
 }
 
+func (o *Obj) GetTable() string {
+	return o.Table
+}
+
 func (o *Obj) GetFieldNameWithDB(name string) string {
 	if o.DbName != "" {
 		dbname := o.DbName
@@ -111,6 +128,14 @@ func (o *Obj) GetFieldNameWithDB(name string) string {
 		return fmt.Sprintf("%s.%s", dbname, name)
 	}
 	return name
+}
+
+func (o *Obj) FieldsMap() map[string]IField {
+	m := make(map[string]IField)
+	for _, f := range o.Fields {
+		m[f.GetName()] = f
+	}
+	return m
 }
 
 func (o *Obj) GetPrimaryKeyName() string {
@@ -382,7 +407,7 @@ func (o *Obj) DbSwitch(db string) bool {
 	return false
 }
 
-func (o *Obj) Read(data map[string]interface{}) error {
+func (o *Obj) Read(name string, data map[string]interface{}) error {
 	o.init()
 	hasType := false
 	for key, val := range data {

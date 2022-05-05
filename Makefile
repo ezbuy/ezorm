@@ -6,8 +6,9 @@ build:
 gene2e:
 	bin/ezorm gen -i ./e2e/mongo/user/user.yaml -o  ./e2e/mongo/user --goPackage user
 	bin/ezorm gen -i ./e2e/mysql -o ./e2e/mysql --goPackage mysql
+	bin/ezorm gen -i ./e2e/mysqlr -o ./e2e/mysqlr --goPackage mysqlr
 
-test: build gene2e test-mysql test-mongo-go-driver
+test: build gene2e test-mysql test-mysqlr test-mongo-go-driver
 
 .PHONY: test-mongo-go-driver
 test-mongo-go-driver:
@@ -17,3 +18,7 @@ test-mongo-go-driver:
 test-mysql:
 	go test -v ./e2e/mysql/...
 
+
+.PHONY: test-mysqlr
+test-mysqlr:
+	go test -v ./e2e/mysqlr/...
