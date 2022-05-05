@@ -24,6 +24,9 @@ import (
 var CommitHash string
 
 func version(commit string) string {
+	if commit == "" {
+		return fmt.Sprintf("ezorm v%d.%d.%d", vMajor, vMinor, vPatch)
+	}
 	return fmt.Sprintf("ezorm v%d.%d.%d-%s", vMajor, vMinor, vPatch, commit)
 }
 
