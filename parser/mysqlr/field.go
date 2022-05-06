@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"log"
 	"sort"
 	"strings"
 	"unicode"
@@ -81,10 +80,6 @@ func (f *Field) SetType(t string) error {
 	st, ok := SupportedFieldTypes[t]
 	if !ok {
 		return fmt.Errorf("%s type not support", t)
-	}
-	//! special type convert
-	switch f.Obj.Db {
-	case "mysql":
 	}
 	f.Type = st
 	return nil
@@ -270,15 +265,15 @@ type Transform struct {
 // convert `TypeOrigin` in datebase to `TypeTarget` when quering
 // convert `TypeTarget` back to `TypeOrigin` when updating/inserting
 var transformMap = map[string]Transform{
-	"mysql_timestamp": { // TIMESTAMP (string, UTC)
+	"mysqlr_timestamp": { // TIMESTAMP (string, UTC)
 		"string", `orm.TimeParse(%v)`,
 		"time.Time", `orm.TimeFormat(%v)`,
 	},
-	"mysql_timeint": { // INT(11)
+	"mysqlr_timeint": { // INT(11)
 		"int64", "time.Unix(%v, 0)",
 		"time.Time", "%v.Unix()",
 	},
-	"mysql_datetime": { // DATETIME (string, localtime)
+	"mysqlr_datetime": { // DATETIME (string, localtime)
 		"string", "orm.TimeParseLocalTime(%v)",
 		"time.Time", "orm.TimeToLocalTime(%v)",
 	},
@@ -379,8 +374,6 @@ func (f *Field) Read(data map[interface{}]interface{}) error {
 
 		case "default":
 			f.Default = v
-		case "pb":
-			f.extractPBFields(v)
 		default:
 			return errors.New("invalid field name: " + key)
 		}
@@ -405,138 +398,106 @@ func (f *Field) Read(data map[interface{}]interface{}) error {
 	return nil
 }
 
-func (f *Field) extractPBFields(v interface{}) {
-	fds, ok := v.(map[interface{}]interface{})
-	if !ok {
-		log.Printf("pb plugin: field %s has defined pb but not defined any pb mapping", f.Name)
-		return
-	}
-	if len(fds) != 1 {
-		log.Printf("pb plugin: field %s has defined multi pb mapping,but only support one", f.Name)
-		return
-	}
-
-}
-
 //! field SQL script functions
-func (f *Field) SQLColumn(driver string) string {
-	switch strings.ToLower(driver) {
-	case "mysql":
-		columns := make([]string, 0, 6)
-		columns = append(columns, f.SQLName(driver))
-		columns = append(columns, f.SQLType(driver))
-		columns = append(columns, f.SQLNull(driver))
-		if f.IsAutoIncrement() {
-			columns = append(columns, "AUTO_INCREMENT")
-		} else {
-			columns = append(columns, f.SQLDefault(driver))
-		}
-		if f.Comment != "" {
-			columns = append(columns, "COMMENT", "'"+f.Comment+"'")
-		}
-		return strings.Join(columns, " ")
+func (f *Field) SQLColumn() string {
+	columns := make([]string, 0, 6)
+	columns = append(columns, f.SQLName())
+	columns = append(columns, f.SQLType())
+	columns = append(columns, f.SQLNull())
+	if f.IsAutoIncrement() {
+		columns = append(columns, "AUTO_INCREMENT")
+	} else {
+		columns = append(columns, f.SQLDefault())
 	}
-	return ""
-}
-func (f *Field) SQLName(driver string) string {
-	switch strings.ToLower(driver) {
-	case "mysql":
-		return "`" + f.ColumnName() + "`"
+	if f.Comment != "" {
+		columns = append(columns, "COMMENT", "'"+f.Comment+"'")
 	}
-	return ""
+	return strings.Join(columns, " ")
 }
 
-func (f *Field) SQLType(driver string) string {
+func (f *Field) SQLName() string {
+	return "`" + f.ColumnName() + "`"
+}
+
+func (f *Field) SQLType() string {
 	if f.sqlType != "" {
 		return strings.ToUpper(f.sqlType)
 	}
-	switch strings.ToLower(driver) {
-	case "mysql":
-		if f.IsNumber() {
-			switch f.GetType() {
-			case "bool":
-				return "TINYINT(1) UNSIGNED"
-			case "uint8":
-				return "SMALLINT UNSIGNED"
-			case "uint16":
-				return "MEDIUMINT UNSIGNED"
-			case "uint32":
-				return "INT(11) UNSIGNED"
-			case "uint64":
-				return "BIGINT UNSIGNED"
-			case "int8":
-				return "SMALLINT"
-			case "int16":
-				return "MEDIUMINT"
-			case "int32", "int":
-				return "INT(11)"
-			case "int64":
-				return "BIGINT(20)"
-			case "float32", "float64":
-				return "FLOAT"
-			case "time.Time", "*time.Time":
-				return "BIGINT(20)"
-			}
+	if f.IsNumber() {
+		switch f.GetType() {
+		case "bool":
+			return "TINYINT(1) UNSIGNED"
+		case "uint8":
+			return "SMALLINT UNSIGNED"
+		case "uint16":
+			return "MEDIUMINT UNSIGNED"
+		case "uint32":
+			return "INT(11) UNSIGNED"
+		case "uint64":
+			return "BIGINT UNSIGNED"
+		case "int8":
+			return "SMALLINT"
+		case "int16":
+			return "MEDIUMINT"
+		case "int32", "int":
+			return "INT(11)"
+		case "int64":
+			return "BIGINT(20)"
+		case "float32", "float64":
+			return "FLOAT"
+		case "time.Time", "*time.Time":
+			return "BIGINT(20)"
 		}
-		if f.IsString() {
-			switch f.Type {
-			case "datetime":
-				return "DATETIME"
-			case "timestamp", "timeint":
-				return "TIMESTAMP"
-			}
-			if f.Size == 0 {
-				return "VARCHAR(100)"
-			}
-			return fmt.Sprintf("VARCHAR(%d)", f.Size)
-		}
-		return f.GetType()
 	}
-	return ""
+	if f.IsString() {
+		switch f.Type {
+		case "datetime":
+			return "DATETIME"
+		case "timestamp", "timeint":
+			return "TIMESTAMP"
+		}
+		if f.Size == 0 {
+			return "VARCHAR(100)"
+		}
+		return fmt.Sprintf("VARCHAR(%d)", f.Size)
+	}
+	return f.GetType()
 }
 
-func (f *Field) SQLNull(driver string) string {
-	switch strings.ToLower(driver) {
-	case "mysql":
-		if f.IsNullable() {
-			return "NULL"
-		}
-		return "NOT NULL"
+func (f *Field) SQLNull() string {
+	if f.IsNullable() {
+		return "NULL"
 	}
-	return ""
+	return "NOT NULL"
 }
 
-func (f *Field) SQLDefault(driver string) string {
+func (f *Field) SQLDefault() string {
 	if f.IsNullable() {
 		return ""
 	}
-	switch strings.ToLower(driver) {
-	case "mysql":
-		if f.IsTime() {
-			if f.IsString() {
-				return "DEFAULT CURRENT_TIMESTAMP"
-			}
-			if f.IsNumber() {
-				return "DEFAULT '0'"
-			}
+	if f.IsTime() {
+		if f.IsString() {
+			return "DEFAULT CURRENT_TIMESTAMP"
 		}
-
-		if f.IsBool() {
-			switch v, _ := f.Default.(bool); v {
-			case true:
-				return "DEFAULT '1'"
-			default:
-				return "DEFAULT '0'"
-			}
-		}
-
 		if f.IsNumber() {
 			return "DEFAULT '0'"
 		}
-		if f.IsString() {
-			return "DEFAULT ''"
+	}
+
+	if f.IsBool() {
+		switch v, _ := f.Default.(bool); v {
+		case true:
+			return "DEFAULT '1'"
+		default:
+			return "DEFAULT '0'"
 		}
-		return ""
+	}
+
+	if f.IsNumber() {
+		return "DEFAULT '0'"
+	}
+	if f.IsString() {
+		return "DEFAULT ''"
 	}
 	return ""
 }

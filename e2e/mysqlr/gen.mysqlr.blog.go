@@ -21,14 +21,14 @@ var (
 )
 
 type Blog struct {
-	Id        int64  `mysql:"id"`
-	UserId    int32  `mysql:"user_id"`
-	Title     string `mysql:"title"`
-	Content   string `mysql:"content"`
-	Status    int32  `mysql:"status"`
-	Readed    int32  `mysql:"readed"`
-	CreatedAt int64  `mysql:"created_at"`
-	UpdatedAt int64  `mysql:"updated_at"`
+	Id        int64     `mysql:"id"`
+	UserId    int32     `mysql:"user_id"`
+	Title     string    `mysql:"title"`
+	Content   string    `mysql:"content"`
+	Status    int32     `mysql:"status"`
+	Readed    int32     `mysql:"readed"`
+	CreatedAt time.Time `mysql:"created_at"`
+	UpdatedAt time.Time `mysql:"updated_at"`
 }
 
 var BlogColumns = struct {
@@ -287,13 +287,19 @@ func (m *_BlogDBMgr) FetchBySQL(ctx context.Context, q string, args ...interface
 	}
 	defer rows.Close()
 
+	var CreatedAt string
+	var UpdatedAt int64
+
 	for rows.Next() {
 		var result Blog
-		err = rows.Scan(&(result.Id), &(result.UserId), &(result.Title), &(result.Content), &(result.Status), &(result.Readed), &(result.CreatedAt), &(result.UpdatedAt))
+		err = rows.Scan(&(result.Id), &(result.UserId), &(result.Title), &(result.Content), &(result.Status), &(result.Readed), &CreatedAt, &UpdatedAt)
 		if err != nil {
 			m.db.SetError(err)
 			return nil, err
 		}
+
+		result.CreatedAt = orm.TimeParse(CreatedAt)
+		result.UpdatedAt = time.Unix(UpdatedAt, 0)
 
 		results = append(results, &result)
 	}
@@ -467,8 +473,8 @@ func (m *_BlogDBMgr) BatchCreate(ctx context.Context, objs []*Blog) (int64, erro
 		values = append(values, obj.Content)
 		values = append(values, obj.Status)
 		values = append(values, obj.Readed)
-		values = append(values, obj.CreatedAt)
-		values = append(values, obj.UpdatedAt)
+		values = append(values, orm.TimeFormat(obj.CreatedAt))
+		values = append(values, obj.UpdatedAt.Unix())
 	}
 	query := fmt.Sprintf("INSERT INTO blogs(%s) VALUES %s", strings.Join(objs[0].GetNoneIncrementColumns(), ","), strings.Join(params, ","))
 	result, err := m.db.Exec(ctx, query, values...)
@@ -507,8 +513,8 @@ func (m *_BlogDBMgr) Create(ctx context.Context, obj *Blog) (int64, error) {
 	values = append(values, obj.Content)
 	values = append(values, obj.Status)
 	values = append(values, obj.Readed)
-	values = append(values, obj.CreatedAt)
-	values = append(values, obj.UpdatedAt)
+	values = append(values, orm.TimeFormat(obj.CreatedAt))
+	values = append(values, obj.UpdatedAt.Unix())
 	result, err := m.db.Exec(ctx, q, values...)
 	if err != nil {
 		return 0, err
@@ -533,8 +539,8 @@ func (m *_BlogDBMgr) Update(ctx context.Context, obj *Blog) (int64, error) {
 	values = append(values, obj.Content)
 	values = append(values, obj.Status)
 	values = append(values, obj.Readed)
-	values = append(values, obj.CreatedAt)
-	values = append(values, obj.UpdatedAt)
+	values = append(values, orm.TimeFormat(obj.CreatedAt))
+	values = append(values, obj.UpdatedAt.Unix())
 	values = append(values, pk.SQLParams()...)
 
 	result, err := m.db.Exec(ctx, q, values...)

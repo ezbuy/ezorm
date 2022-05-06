@@ -5,9 +5,9 @@ USE `{{$obj.DbName}}`;
 
 CREATE TABLE `{{$obj.DbTable}}` (
 	{{- range $i, $field := $obj.Fields}}
-	{{$field.SQLColumn "mysql"}},
+	{{$field.SQLColumn }},
 	{{- end}}
-	{{$obj.PrimaryKey.SQLColumn "mysql"}}
+	{{$obj.PrimaryKey.SQLColumn }}
 	{{- range $i, $unique := $obj.Uniques}}
 	{{- if not $unique.HasPrimaryKey}},
 	UNIQUE KEY `uniq_{{$unique.Name | camel2name}}` (
