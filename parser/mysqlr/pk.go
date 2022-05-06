@@ -69,16 +69,12 @@ func (pk *PrimaryKey) build() error {
 	return nil
 }
 
-func (pk *PrimaryKey) SQLColumn(driver string) string {
-	switch strings.ToLower(driver) {
-	case "mysql":
-		columns := make([]string, 0, len(pk.Fields))
-		for _, f := range pk.Fields {
-			columns = append(columns, f.SQLName(driver))
-		}
-		return fmt.Sprintf("PRIMARY KEY(%s)", strings.Join(columns, ","))
+func (pk *PrimaryKey) SQLColumn() string {
+	columns := make([]string, 0, len(pk.Fields))
+	for _, f := range pk.Fields {
+		columns = append(columns, f.SQLName())
 	}
-	return ""
+	return fmt.Sprintf("PRIMARY KEY(%s)", strings.Join(columns, ","))
 }
 
 func (pk *PrimaryKey) GetConstructor() string {

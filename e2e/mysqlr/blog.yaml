@@ -11,6 +11,6 @@ Blog:
     - Status: int32
       flags: [index]
     - Readed: int32
-    - CreatedAt: int64
-    - UpdatedAt: int64
+    - CreatedAt: timestamp
+    - UpdatedAt: timeint
   primary: [Id, UserId]
