@@ -57,8 +57,8 @@ func TestBlogsCRUD(t *testing.T) {
 			Content:   "test",
 			Status:    1,
 			Readed:    0,
-			CreatedAt: time.Now().Unix(),
-			UpdatedAt: time.Now().Unix(),
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		})
 		assert.NoError(t, err)
 		assert.Equal(t, int64(1), af)
@@ -103,8 +103,8 @@ func TestBlogsTx(t *testing.T) {
 			Content:   "test",
 			Status:    1,
 			Readed:    0,
-			CreatedAt: time.Now().Unix(),
-			UpdatedAt: time.Now().Unix(),
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		})
 		assert.NoError(t, err)
 		assert.Equal(t, int64(1), af)
