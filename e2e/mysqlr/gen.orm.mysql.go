@@ -1,6 +1,6 @@
 package mysqlr
 
-type SQL interface {
+type SQL interface{
 	SQLFormat(limit bool) string
 	SQLParams() []interface{}
 	SQLLimit() int
@@ -9,7 +9,7 @@ type SQL interface {
 }
 
 //! conf.orm
-type PrimaryKey interface {
+type PrimaryKey interface{
 	Key() string
 	SQLFormat() string
 	SQLParams() []interface{}
@@ -17,11 +17,11 @@ type PrimaryKey interface {
 	Parse(key string) error
 }
 
-type Unique interface {
+type Unique interface{
 	SQL
 	Key() string
 }
-type Index interface {
+type Index interface{
 	SQL
 	Key() string
 	PositionOffsetLimit(len int) (int, int)
@@ -30,3 +30,4 @@ type Index interface {
 type DBFetcher interface {
 	FetchBySQL(sql string, args ...interface{}) ([]interface{}, error)
 }
+

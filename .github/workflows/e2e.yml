@@ -36,10 +36,6 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
-      - name: install-go-bindata
-        run: |
-          apt update && apt install sudo
-          sudo apt-get install -y go-bindata
       - name: generate template
         run: |
           make build
@@ -76,10 +72,6 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
-      - name: install-go-bindata
-        run: |
-          apt update && apt install sudo
-          sudo apt-get install -y go-bindata
       - name: generate template
         run: |
           make build
@@ -109,10 +101,6 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
-      - name: install-go-bindata
-        run: |
-          apt update && apt install sudo
-          sudo apt-get install -y go-bindata
       - name: generate template
         run: |
           make build
@@ -125,3 +113,22 @@ jobs:
           MONGO_PORT: ${{ job.services.mongo.ports[27017] }}
           MONGO_USER: ezbuy
           MONGO_PASSWORD: ezbuyisthebest
+
+  customized-plugin:
+    name: "customized-plugin"
+    strategy:
+      matrix:
+        go: [1.18]
+    runs-on: ubuntu-latest
+    container:
+        image: golang:${{ matrix.go }}-stretch
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: generate template
+        run: |
+          make build
+          make gene2e
+      - name: template testing (hello-driver)
+        run: |
+          make test-plugin

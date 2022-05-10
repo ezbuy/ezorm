@@ -1,4 +1,4 @@
-package parser
+package shared
 
 import (
 	"bytes"
@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/ezbuy/ezorm/v2/internal/generator"
 	"github.com/ezbuy/utils/container/set"
 )
 
@@ -32,7 +33,7 @@ var (
 	}
 )
 
-var _ IField = (*Field)(nil)
+var _ generator.IField = (*Field)(nil)
 
 type Field struct {
 	Attrs        map[string]string

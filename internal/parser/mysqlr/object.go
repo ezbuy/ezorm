@@ -5,10 +5,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/ezbuy/ezorm/v2/parser"
+	"github.com/ezbuy/ezorm/v2/internal/generator"
 )
 
-var _ parser.IObject = (*MetaObject)(nil)
+var _ generator.IObject = (*MetaObject)(nil)
 
 type MetaObject struct {
 	//! package name
@@ -56,8 +56,8 @@ func (o *MetaObject) GetTable() string {
 	return o.DbTable
 }
 
-func (o *MetaObject) FieldsMap() map[string]parser.IField {
-	result := make(map[string]parser.IField, len(o.fields))
+func (o *MetaObject) FieldsMap() map[string]generator.IField {
+	result := make(map[string]generator.IField, len(o.fields))
 	for _, f := range o.fields {
 		result[f.GetName()] = f
 	}
@@ -127,19 +127,13 @@ func (o *MetaObject) LastField() *Field {
 	return o.fields[len(o.fields)-1]
 }
 
-func (o *MetaObject) Read(name string, data map[string]interface{}) error {
+func (o *MetaObject) Read(name string, data generator.Schema) error {
 	o.Name = name
-	hasType := false
 	for key, val := range data {
 		switch key {
 		case "db":
 			o.Db = val.(string)
-			hasType = true
 		}
-	}
-	if hasType {
-		delete(data, "db")
-		delete(data, "dbs")
 	}
 
 	for key, val := range data {
