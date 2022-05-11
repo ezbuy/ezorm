@@ -5,6 +5,7 @@ build:
 
 build-plugin:
 	go build -o bin/ezorm-gen-hello-driver ./e2e/plugins/hello-driver
+	set PATH=$PATH:$(pwd)/bin
 
 gene2e:
 	bin/ezorm gen -i ./e2e/mongo/user/user.yaml -o  ./e2e/mongo/user --goPackage user
