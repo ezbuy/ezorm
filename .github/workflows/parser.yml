@@ -12,7 +12,7 @@ on:
 
 jobs:
   build:
-    name: build-pr
+    name: raw-query
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -24,4 +24,4 @@ jobs:
         uses: actions/checkout@v2
       - name: run parser tests
         run: |
-          go test -v ./parser/...
+          go test -v ./internal/parser/x/query/...
