@@ -21,6 +21,7 @@ ezorm was built with this key idea in mind , but we describe the `database schem
 * MongoDB
 * ~~Redis(deprecated since v2)~~
 * ~~SQL Server(deprecated since v2)~~
+* [3rd customized plugin](./doc/plugin.md)
 
 ## Schema
 
