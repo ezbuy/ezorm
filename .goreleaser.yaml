@@ -17,6 +17,5 @@ release:
     name: ezorm
   extra_files:
     - glob: LICENSE
-    - glob: CHANGELOG.md
 
 

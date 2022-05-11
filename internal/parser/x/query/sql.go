@@ -1,4 +1,4 @@
-package parser
+package query
 
 import (
 	"bytes"
@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+
+	"github.com/ezbuy/ezorm/v2/internal/generator"
 )
 
 type T uint8
@@ -137,11 +139,11 @@ func uglify(col string) string {
 	return col
 }
 
-func typeMatch(fromAST T, fromSchema IField) bool {
+func typeMatch(fromAST T, fromSchema generator.IField) bool {
 	return fromAST.BaseType() == fromSchema.GetGoType()
 }
 
-func (tm TableMetadata) Validate(tableRef map[string]map[string]IField) error {
+func (tm TableMetadata) Validate(tableRef map[string]map[string]generator.IField) error {
 	for t, f := range tm {
 		name := uglify(t.Name)
 		ff, ok := tableRef[name]

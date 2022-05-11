@@ -1,4 +1,4 @@
-package parser
+package query
 
 import (
 	"bytes"
@@ -8,12 +8,14 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"strings"
+	"unicode"
 
+	"github.com/ezbuy/ezorm/v2/internal/generator"
 	"github.com/iancoleman/strcase"
 )
 
 type SQL struct {
-	fieldMap       map[string]map[string]IField
+	fieldMap       map[string]map[string]generator.IField
 	RawQueryParser RawQueryParser
 }
 
@@ -40,11 +42,11 @@ type SQLMethodField struct {
 	Type string
 }
 
-func NewSQL(objs map[string]IObject) *SQL {
-	fieldMap := make(map[string]map[string]IField, len(objs))
+func NewSQL(objs map[string]generator.IObject) *SQL {
+	fieldMap := make(map[string]map[string]generator.IField, len(objs))
 	for table, obj := range objs {
 		name := camel2name(table)
-		fieldMap[name] = make(map[string]IField, len(obj.FieldsMap()))
+		fieldMap[name] = make(map[string]generator.IField, len(obj.FieldsMap()))
 		for _, f := range obj.FieldsMap() {
 			fieldMap[name][f.GetName()] = f
 		}
@@ -129,4 +131,20 @@ func (p *SQL) Read(path string) (*SQLMethod, error) {
 	result.Assign = scan.String()
 	result.SQL = builder.rebuild()
 	return result, nil
+}
+
+func camel2name(s string) string {
+	nameBuf := bytes.NewBuffer(nil)
+	afterSpace := false
+	for i, c := range s {
+		if unicode.IsUpper(c) && unicode.IsLetter(c) {
+			if i > 0 && !afterSpace {
+				nameBuf.WriteRune('_')
+			}
+			c = unicode.ToLower(c)
+		}
+		nameBuf.WriteRune(c)
+		afterSpace = unicode.IsSpace(c)
+	}
+	return nameBuf.String()
 }
