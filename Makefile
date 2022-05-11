@@ -11,6 +11,8 @@ gene2e:
 	bin/ezorm gen -i ./e2e/mongo/user/user.yaml -o  ./e2e/mongo/user --goPackage user
 	bin/ezorm gen -i ./e2e/mysql -o ./e2e/mysql --goPackage mysql
 	bin/ezorm gen -i ./e2e/mysqlr -o ./e2e/mysqlr --goPackage mysqlr
+
+gen-plugin-e2e:
 	bin/ezorm gen -i ./e2e/plugins/hello-driver -o ./e2e/plugins/hello-driver --goPackage hello-driver --plugin hello-driver
 
 test: build build-plugin gene2e test-mysql test-mysqlr test-mongo-go-driver
