@@ -1,4 +1,4 @@
-package parser
+package shared
 
 import (
 	"embed"
@@ -9,6 +9,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/ezbuy/ezorm/v2/internal/generator"
 	"github.com/ezbuy/utils/container/set"
 )
 
@@ -71,18 +72,7 @@ func (f *Field) BJTag() string {
 	return bjTag
 }
 
-type IObject interface {
-	Read(string, map[string]interface{}) error
-	FieldsMap() map[string]IField
-	GetTable() string
-}
-
-type IField interface {
-	GetName() string
-	GetGoType() string
-}
-
-var _ IObject = (*Obj)(nil)
+var _ generator.IObject = (*Obj)(nil)
 
 type Obj struct {
 	Db           string
@@ -130,8 +120,8 @@ func (o *Obj) GetFieldNameWithDB(name string) string {
 	return name
 }
 
-func (o *Obj) FieldsMap() map[string]IField {
-	m := make(map[string]IField)
+func (o *Obj) FieldsMap() map[string]generator.IField {
+	m := make(map[string]generator.IField)
 	for _, f := range o.Fields {
 		m[f.GetName()] = f
 	}
@@ -407,9 +397,8 @@ func (o *Obj) DbSwitch(db string) bool {
 	return false
 }
 
-func (o *Obj) Read(name string, data map[string]interface{}) error {
+func (o *Obj) Read(name string, data generator.Schema) error {
 	o.init()
-	hasType := false
 	for key, val := range data {
 		switch key {
 		case "db":
@@ -418,19 +407,12 @@ func (o *Obj) Read(name string, data map[string]interface{}) error {
 			dbs = append(dbs, o.Db)
 			dbs = append(dbs, o.Dbs...)
 			o.Dbs = dbs
-			hasType = true
 		case "dbs":
 			o.Dbs = ToStringSlice(val.([]interface{}))
 			if len(o.Dbs) != 0 {
 				o.Db = o.Dbs[0]
 			}
-			hasType = true
 		}
-	}
-
-	if hasType {
-		delete(data, "db")
-		delete(data, "dbs")
 	}
 
 	for key, val := range data {
@@ -501,8 +483,9 @@ func (o *Obj) Read(name string, data map[string]interface{}) error {
 			}
 		case "comment":
 			o.Comment = val.(string)
+		case "db", "dbs":
 		default:
-			return errors.New(o.Name + " has invalid obj property: " + key)
+			return errors.New(o.Name + " has invalid obj property: " + string(key))
 		}
 	}
 	if o.ValueType != "" {
