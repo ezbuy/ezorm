@@ -127,6 +127,7 @@ jobs:
         uses: actions/checkout@v2
       - name: generate template
         run: |
+          make build
           make build-plugin
           make gen-plugin-e2e
       - name: template testing (hello-driver)
