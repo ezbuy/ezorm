@@ -22,7 +22,7 @@ func (g *MySQLRGenerator) Generate(meta generator.TMetadata) error {
 			return nil
 		}
 		hasDriver = true
-		m := NewMetaObject(d)
+		m := NewMetaObject(meta.Pkg)
 		if err := m.Read(string(tn), om); err != nil {
 			return fmt.Errorf("%s: %w", d, err)
 		}
