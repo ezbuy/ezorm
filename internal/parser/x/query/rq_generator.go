@@ -41,7 +41,7 @@ func (rg *RawQueryGenerator) Generate(meta generator.TMetadata) error {
 			}
 			tableSchema[table] = s
 		case parser.MySQLRGeneratorName:
-			s := mysqlr.NewMetaObject(dr)
+			s := mysqlr.NewMetaObject(meta.Pkg)
 			if err := s.Read(string(tn), om); err != nil {
 				return err
 			}
