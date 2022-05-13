@@ -2,17 +2,17 @@
 // DO NOT EDIT
 package mysqlr
 
-
 import (
-	"fmt"
-	"time"
-	"strings"
-	"database/sql"
 	"context"
+	"database/sql"
+	"fmt"
+	"strings"
+	"time"
 
 	"github.com/ezbuy/ezorm/v2/pkg/orm"
 	"gopkg.in/go-playground/validator.v9"
 )
+
 var (
 	_ sql.DB
 	_ time.Time
@@ -23,25 +23,25 @@ var (
 )
 
 type Blog struct {
-	Id  int64 `mysql:"id"`
-	UserId  int32 `mysql:"user_id"`
-	Title  string `mysql:"title"`
-	Content  string `mysql:"content"`
-	Status  int32 `mysql:"status"`
-	Readed  int32 `mysql:"readed"`
-	CreatedAt  time.Time `mysql:"created_at"`
-	UpdatedAt  time.Time `mysql:"updated_at"`
+	Id        int64     `mysql:"id"`
+	UserId    int32     `mysql:"user_id"`
+	Title     string    `mysql:"title"`
+	Content   string    `mysql:"content"`
+	Status    int32     `mysql:"status"`
+	Readed    int32     `mysql:"readed"`
+	CreatedAt time.Time `mysql:"created_at"`
+	UpdatedAt time.Time `mysql:"updated_at"`
 }
 
-var BlogColumns = struct{
-	Id  string
-	UserId  string
-	Title  string
-	Content  string
-	Status  string
-	Readed  string
-	CreatedAt  string
-	UpdatedAt  string
+var BlogColumns = struct {
+	Id        string
+	UserId    string
+	Title     string
+	Content   string
+	Status    string
+	Readed    string
+	CreatedAt string
+	UpdatedAt string
 }{
 	"id",
 	"user_id",
@@ -55,15 +55,12 @@ var BlogColumns = struct{
 
 type _BlogMgr struct {
 }
+
 var BlogMgr *_BlogMgr
 
 func (m *_BlogMgr) NewBlog() *Blog {
 	return &Blog{}
 }
-
-
-
-
 
 func (obj *Blog) GetNameSpace() string {
 	return "mysqlr"
@@ -79,28 +76,28 @@ func (obj *Blog) GetTableName() string {
 
 func (obj *Blog) GetColumns() []string {
 	columns := []string{
-	"blogs.id",
-	"blogs.user_id",
-	"blogs.title",
-	"blogs.content",
-	"blogs.status",
-	"blogs.readed",
-	"blogs.created_at",
-	"blogs.updated_at",
+		"blogs.id",
+		"blogs.user_id",
+		"blogs.title",
+		"blogs.content",
+		"blogs.status",
+		"blogs.readed",
+		"blogs.created_at",
+		"blogs.updated_at",
 	}
 	return columns
 }
 
 func (obj *Blog) GetNoneIncrementColumns() []string {
 	columns := []string{
-	"id",
-	"user_id",
-	"title",
-	"content",
-	"status",
-	"readed",
-	"created_at",
-	"updated_at",
+		"id",
+		"user_id",
+		"title",
+		"content",
+		"status",
+		"readed",
+		"created_at",
+		"updated_at",
 	}
 	return columns
 }
@@ -117,39 +114,33 @@ func (obj *Blog) Validate() error {
 	return validate.Struct(obj)
 }
 
-
-
-
-
-
-
-type IdUserIdOfBlogPK struct{
-	Id int64
+type IdUserIdOfBlogPK struct {
+	Id     int64
 	UserId int32
 }
 
 func (m *_BlogMgr) NewPrimaryKey() *IdUserIdOfBlogPK {
-		return &IdUserIdOfBlogPK{}
+	return &IdUserIdOfBlogPK{}
 }
 
 func (u *IdUserIdOfBlogPK) Key() string {
 	strs := []string{
 		"Id",
-			fmt.Sprint(u.Id),
+		fmt.Sprint(u.Id),
 		"UserId",
-			fmt.Sprint(u.UserId),
+		fmt.Sprint(u.UserId),
 	}
-	return  strings.Join(strs, ":")
+	return strings.Join(strs, ":")
 }
 
 func (u *IdUserIdOfBlogPK) Parse(key string) error {
 	arr := strings.Split(key, ":")
-	if len(arr) % 2 != 0 {
+	if len(arr)%2 != 0 {
 		return fmt.Errorf("key (%s) format error", key)
 	}
 	kv := map[string]string{}
-	for i := 0; i < len(arr) / 2; i++ {
-		kv[arr[2*i]] = arr[2*i + 1]
+	for i := 0; i < len(arr)/2; i++ {
+		kv[arr[2*i]] = arr[2*i+1]
 	}
 	vId, ok := kv["Id"]
 	if !ok {
@@ -190,23 +181,16 @@ func (u *IdUserIdOfBlogPK) Columns() []string {
 	}
 }
 
-
-
-
-
-
-
-
-type StatusOfBlogIDX struct{
+type StatusOfBlogIDX struct {
 	Status int32
 	offset int
-	limit int
+	limit  int
 }
 
 func (u *StatusOfBlogIDX) Key() string {
 	strs := []string{
 		"Status",
-			fmt.Sprint(u.Status),
+		fmt.Sprint(u.Status),
 	}
 	return strings.Join(strs, ":")
 }
@@ -246,20 +230,11 @@ func (u *StatusOfBlogIDX) PositionOffsetLimit(len int) (int, int) {
 	if u.limit <= 0 {
 		return 0, len
 	}
-	if u.offset + u.limit > len {
+	if u.offset+u.limit > len {
 		return u.offset, len
 	}
 	return u.offset, u.limit
 }
-
-
-
-
-
-
-
-
-
 
 type _BlogDBMgr struct {
 	db orm.DB
@@ -276,11 +251,11 @@ func BlogDBMgr(db orm.DB) *_BlogDBMgr {
 	return &_BlogDBMgr{db: db}
 }
 
-func (m *_BlogDBMgr) Search (ctx context.Context, where string, orderby string, limit string, args ...interface{}) ([]*Blog, error) {
+func (m *_BlogDBMgr) Search(ctx context.Context, where string, orderby string, limit string, args ...interface{}) ([]*Blog, error) {
 	obj := BlogMgr.NewBlog()
 
-    if limit = strings.ToUpper(strings.TrimSpace(limit)); limit !="" && !strings.HasPrefix(limit, "LIMIT") {
-	    limit = "LIMIT " + limit
+	if limit = strings.ToUpper(strings.TrimSpace(limit)); limit != "" && !strings.HasPrefix(limit, "LIMIT") {
+		limit = "LIMIT " + limit
 	}
 
 	conditions := []string{where, orderby, limit}
@@ -288,57 +263,49 @@ func (m *_BlogDBMgr) Search (ctx context.Context, where string, orderby string, 
 	return m.FetchBySQL(ctx, query, args...)
 }
 
-func (m *_BlogDBMgr) SearchConditions(ctx context.Context,conditions []string, orderby string, offset int, limit int, args ...interface{}) ([]*Blog, error) {
+func (m *_BlogDBMgr) SearchConditions(ctx context.Context, conditions []string, orderby string, offset int, limit int, args ...interface{}) ([]*Blog, error) {
 	obj := BlogMgr.NewBlog()
 	q := fmt.Sprintf("SELECT %s FROM blogs %s %s %s",
-			strings.Join(obj.GetColumns(), ","),
-			orm.SQLWhere(conditions),
-			orderby,
-			orm.SQLOffsetLimit(offset, limit))
+		strings.Join(obj.GetColumns(), ","),
+		orm.SQLWhere(conditions),
+		orderby,
+		orm.SQLOffsetLimit(offset, limit))
 
-	return m.FetchBySQL(ctx,q, args...)
+	return m.FetchBySQL(ctx, q, args...)
 }
 
-
-func (m *_BlogDBMgr) SearchCount(ctx context.Context,where string, args ...interface{}) (int64, error){
-	return m.queryCount(ctx,where, args...)
+func (m *_BlogDBMgr) SearchCount(ctx context.Context, where string, args ...interface{}) (int64, error) {
+	return m.queryCount(ctx, where, args...)
 }
 
-func (m *_BlogDBMgr) SearchConditionsCount(ctx context.Context,conditions []string, args ...interface{}) (int64, error){
-	return m.queryCount(ctx,orm.SQLWhere(conditions), args...)
+func (m *_BlogDBMgr) SearchConditionsCount(ctx context.Context, conditions []string, args ...interface{}) (int64, error) {
+	return m.queryCount(ctx, orm.SQLWhere(conditions), args...)
 }
 
-func (m *_BlogDBMgr) FetchBySQL(ctx context.Context,q string, args ... interface{}) (results []*Blog, err error) {
-	rows, err := m.db.Query(ctx,q, args...)
+func (m *_BlogDBMgr) FetchBySQL(ctx context.Context, q string, args ...interface{}) (results []*Blog, err error) {
+	rows, err := m.db.Query(ctx, q, args...)
 	if err != nil {
 		return nil, fmt.Errorf("Blog fetch error: %v", err)
 	}
 	defer rows.Close()
 
-
-			var CreatedAt string
-			var UpdatedAt int64
+	var CreatedAt string
+	var UpdatedAt int64
 
 	for rows.Next() {
 		var result Blog
-		err = rows.Scan(&(result.Id),&(result.UserId),&(result.Title),&(result.Content),&(result.Status),&(result.Readed),&CreatedAt,&UpdatedAt,)
+		err = rows.Scan(&(result.Id), &(result.UserId), &(result.Title), &(result.Content), &(result.Status), &(result.Readed), &CreatedAt, &UpdatedAt)
 		if err != nil {
 			m.db.SetError(err)
 			return nil, err
 		}
 
-
-
-
-
-
-
-		result.CreatedAt =orm.TimeParse(CreatedAt)
-		result.UpdatedAt =time.Unix(UpdatedAt, 0)
+		result.CreatedAt = orm.TimeParse(CreatedAt)
+		result.UpdatedAt = time.Unix(UpdatedAt, 0)
 
 		results = append(results, &result)
 	}
-	if err = rows.Err() ;err != nil {
+	if err = rows.Err(); err != nil {
 		m.db.SetError(err)
 		return nil, fmt.Errorf("Blog fetch result error: %v", err)
 	}
@@ -354,16 +321,15 @@ func (m *_BlogDBMgr) Exist(ctx context.Context, pk PrimaryKey) (bool, error) {
 
 // FetchByPrimaryKey fetches a single Blog by its primary key
 // it returns the specific error type(sql.ErrNoRows) when no rows found
-func (m *_BlogDBMgr) FetchByPrimaryKey(ctx context.Context,id int64, userId int32) (*Blog, error) {
+func (m *_BlogDBMgr) FetchByPrimaryKey(ctx context.Context, _id int64, _userId int32) (*Blog, error) {
 	obj := BlogMgr.NewBlog()
 	pk := &IdUserIdOfBlogPK{
-	Id : id,
-UserId : userId,
-
+		Id:     _id,
+		UserId: _userId,
 	}
 
 	query := fmt.Sprintf("SELECT %s FROM blogs %s", strings.Join(obj.GetColumns(), ","), pk.SQLFormat())
-	objs, err := m.FetchBySQL(ctx,query, pk.SQLParams()...)
+	objs, err := m.FetchBySQL(ctx, query, pk.SQLParams()...)
 	if err != nil {
 		return nil, err
 	}
@@ -373,7 +339,6 @@ UserId : userId,
 	return nil, sql.ErrNoRows
 }
 
-
 // err not found check
 func (m *_BlogDBMgr) IsErrNotFound(err error) bool {
 	return strings.Contains(err.Error(), "not found") || err == sql.ErrNoRows
@@ -381,29 +346,28 @@ func (m *_BlogDBMgr) IsErrNotFound(err error) bool {
 
 // indexes
 
-func (m *_BlogDBMgr) FindByStatus(ctx context.Context,status int32, limit int, offset int) ([]*Blog, error) {
+func (m *_BlogDBMgr) FindByStatus(ctx context.Context, _status int32, limit int, offset int) ([]*Blog, error) {
 	obj := BlogMgr.NewBlog()
 	idx_ := &StatusOfBlogIDX{
-		Status : status,
-limit:   limit,
-		offset:  offset,
+		Status: _status,
+		limit:  limit,
+		offset: offset,
 	}
 	query := fmt.Sprintf("SELECT %s FROM blogs %s", strings.Join(obj.GetColumns(), ","), idx_.SQLFormat(true))
-	return m.FetchBySQL(ctx,query, idx_.SQLParams()...)
+	return m.FetchBySQL(ctx, query, idx_.SQLParams()...)
 }
 
-func (m *_BlogDBMgr) FindAllByStatus(ctx context.Context,status int32) ([]*Blog, error) {
+func (m *_BlogDBMgr) FindAllByStatus(ctx context.Context, _status int32) ([]*Blog, error) {
 	obj := BlogMgr.NewBlog()
 	idx_ := &StatusOfBlogIDX{
-		Status : status,
-
+		Status: _status,
 	}
 
 	query := fmt.Sprintf("SELECT %s FROM blogs %s", strings.Join(obj.GetColumns(), ","), idx_.SQLFormat(true))
-	return m.FetchBySQL(ctx,query, idx_.SQLParams()...)
+	return m.FetchBySQL(ctx, query, idx_.SQLParams()...)
 }
 
-func (m *_BlogDBMgr) FindByStatusGroup(ctx context.Context,items []int32) ([]*Blog, error) {
+func (m *_BlogDBMgr) FindByStatusGroup(ctx context.Context, items []int32) ([]*Blog, error) {
 	obj := BlogMgr.NewBlog()
 	if len(items) == 0 {
 		return nil, nil
@@ -413,14 +377,14 @@ func (m *_BlogDBMgr) FindByStatusGroup(ctx context.Context,items []int32) ([]*Bl
 		params = append(params, item)
 	}
 	query := fmt.Sprintf("SELECT %s FROM blogs where status in (?", strings.Join(obj.GetColumns(), ",")) +
-		strings.Repeat(",?", len(items) - 1) + ")"
-	return m.FetchBySQL(ctx,query, params...)
+		strings.Repeat(",?", len(items)-1) + ")"
+	return m.FetchBySQL(ctx, query, params...)
 }
 
 // uniques
 
-func (m *_BlogDBMgr) FindOne(ctx context.Context,unique Unique) (PrimaryKey, error) {
-	objs, err := m.queryLimit(ctx,unique.SQLFormat(true), unique.SQLLimit(), unique.SQLParams()...)
+func (m *_BlogDBMgr) FindOne(ctx context.Context, unique Unique) (PrimaryKey, error) {
+	objs, err := m.queryLimit(ctx, unique.SQLFormat(true), unique.SQLLimit(), unique.SQLParams()...)
 	if err != nil {
 		return nil, err
 	}
@@ -430,8 +394,8 @@ func (m *_BlogDBMgr) FindOne(ctx context.Context,unique Unique) (PrimaryKey, err
 	return nil, fmt.Errorf("Blog find record not found")
 }
 
-func (m *_BlogDBMgr) FindFetch(ctx context.Context,index Index) (int64, []*Blog, error) {
-	total, err := m.queryCount(ctx,index.SQLFormat(false), index.SQLParams()...)
+func (m *_BlogDBMgr) FindFetch(ctx context.Context, index Index) (int64, []*Blog, error) {
+	total, err := m.queryCount(ctx, index.SQLFormat(false), index.SQLParams()...)
 	if err != nil {
 		return total, nil, err
 	}
@@ -445,17 +409,16 @@ func (m *_BlogDBMgr) FindFetch(ctx context.Context,index Index) (int64, []*Blog,
 	return total, results, nil
 }
 
-
-func (m *_BlogDBMgr) queryLimit(ctx context.Context,where string, limit int, args ...interface{}) (results []PrimaryKey, err error){
+func (m *_BlogDBMgr) queryLimit(ctx context.Context, where string, limit int, args ...interface{}) (results []PrimaryKey, err error) {
 	pk := BlogMgr.NewPrimaryKey()
 	query := fmt.Sprintf("SELECT %s FROM blogs %s", strings.Join(pk.Columns(), ","), where)
-	rows, err := m.db.Query(ctx,query, args...)
+	rows, err := m.db.Query(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("Blog query limit error: %v", err)
 	}
 	defer rows.Close()
 
-	offset :=0
+	offset := 0
 
 	for rows.Next() {
 		if limit >= 0 && offset >= limit {
@@ -464,28 +427,24 @@ func (m *_BlogDBMgr) queryLimit(ctx context.Context,where string, limit int, arg
 		offset++
 
 		result := BlogMgr.NewPrimaryKey()
-		err = rows.Scan(&(result.Id),&(result.UserId),)
+		err = rows.Scan(&(result.Id), &(result.UserId))
 		if err != nil {
 			m.db.SetError(err)
 			return nil, err
 		}
 
-
-
-
 		results = append(results, result)
 	}
-	if err := rows.Err() ;err != nil {
+	if err := rows.Err(); err != nil {
 		m.db.SetError(err)
 		return nil, fmt.Errorf("Blog query limit result error: %v", err)
 	}
 	return
 }
 
-
-func (m *_BlogDBMgr) queryCount(ctx context.Context,where string, args ...interface{}) (int64, error){
+func (m *_BlogDBMgr) queryCount(ctx context.Context, where string, args ...interface{}) (int64, error) {
 	query := fmt.Sprintf("SELECT count( id ) FROM blogs %s", where)
-	rows, err := m.db.Query(ctx,query, args...)
+	rows, err := m.db.Query(ctx, query, args...)
 	if err != nil {
 		return 0, fmt.Errorf("Blog query count error: %v", err)
 	}
@@ -501,13 +460,7 @@ func (m *_BlogDBMgr) queryCount(ctx context.Context,where string, args ...interf
 	return count, nil
 }
 
-
-
-
-
-
-
-func (m *_BlogDBMgr) BatchCreate(ctx context.Context,objs []*Blog) (int64, error) {
+func (m *_BlogDBMgr) BatchCreate(ctx context.Context, objs []*Blog) (int64, error) {
 	if len(objs) == 0 {
 		return 0, nil
 	}
@@ -516,17 +469,17 @@ func (m *_BlogDBMgr) BatchCreate(ctx context.Context,objs []*Blog) (int64, error
 	values := make([]interface{}, 0, len(objs)*8)
 	for _, obj := range objs {
 		params = append(params, fmt.Sprintf("(%s)", strings.Join(orm.NewStringSlice(8, "?"), ",")))
-					values = append(values, obj.Id)
-					values = append(values, obj.UserId)
-					values = append(values, obj.Title)
-					values = append(values, obj.Content)
-					values = append(values, obj.Status)
-					values = append(values, obj.Readed)
-					values = append(values, orm.TimeFormat(obj.CreatedAt))
-					values = append(values, obj.UpdatedAt.Unix())
+		values = append(values, obj.Id)
+		values = append(values, obj.UserId)
+		values = append(values, obj.Title)
+		values = append(values, obj.Content)
+		values = append(values, obj.Status)
+		values = append(values, obj.Readed)
+		values = append(values, orm.TimeFormat(obj.CreatedAt))
+		values = append(values, obj.UpdatedAt.Unix())
 	}
 	query := fmt.Sprintf("INSERT INTO blogs(%s) VALUES %s", strings.Join(objs[0].GetNoneIncrementColumns(), ","), strings.Join(params, ","))
-	result, err := m.db.Exec(ctx,query, values...)
+	result, err := m.db.Exec(ctx, query, values...)
 	if err != nil {
 		return 0, err
 	}
@@ -537,41 +490,41 @@ func (m *_BlogDBMgr) BatchCreate(ctx context.Context,objs []*Blog) (int64, error
 // set:"a=?, b=?"
 // where:"c=? and d=?"
 // params:[]interface{}{"a", "b", "c", "d"}...
-func (m *_BlogDBMgr) UpdateBySQL(ctx context.Context,set, where string, args ...interface{}) (int64, error) {
+func (m *_BlogDBMgr) UpdateBySQL(ctx context.Context, set, where string, args ...interface{}) (int64, error) {
 	query := fmt.Sprintf("UPDATE blogs SET %s", set)
 	if where != "" {
 		query = fmt.Sprintf("UPDATE blogs SET %s WHERE %s", set, where)
 	}
-	result, err := m.db.Exec(ctx,query, args...)
+	result, err := m.db.Exec(ctx, query, args...)
 	if err != nil {
 		return 0, err
 	}
 	return result.RowsAffected()
 }
 
-func (m *_BlogDBMgr) Create(ctx context.Context,obj *Blog) (int64, error) {
+func (m *_BlogDBMgr) Create(ctx context.Context, obj *Blog) (int64, error) {
 	params := orm.NewStringSlice(8, "?")
 	q := fmt.Sprintf("INSERT INTO blogs(%s) VALUES(%s)",
 		strings.Join(obj.GetNoneIncrementColumns(), ","),
 		strings.Join(params, ","))
 
 	values := make([]interface{}, 0, 8)
-				values = append(values, obj.Id)
-				values = append(values, obj.UserId)
-				values = append(values, obj.Title)
-				values = append(values, obj.Content)
-				values = append(values, obj.Status)
-				values = append(values, obj.Readed)
-				values = append(values, orm.TimeFormat(obj.CreatedAt))
-				values = append(values, obj.UpdatedAt.Unix())
-	result, err := m.db.Exec(ctx,q, values...)
+	values = append(values, obj.Id)
+	values = append(values, obj.UserId)
+	values = append(values, obj.Title)
+	values = append(values, obj.Content)
+	values = append(values, obj.Status)
+	values = append(values, obj.Readed)
+	values = append(values, orm.TimeFormat(obj.CreatedAt))
+	values = append(values, obj.UpdatedAt.Unix())
+	result, err := m.db.Exec(ctx, q, values...)
 	if err != nil {
 		return 0, err
 	}
 	return result.RowsAffected()
 }
 
-func (m *_BlogDBMgr) Update(ctx context.Context,obj *Blog) (int64, error) {
+func (m *_BlogDBMgr) Update(ctx context.Context, obj *Blog) (int64, error) {
 	columns := []string{
 		"title = ?",
 		"content = ?",
@@ -583,61 +536,58 @@ func (m *_BlogDBMgr) Update(ctx context.Context,obj *Blog) (int64, error) {
 
 	pk := obj.GetPrimaryKey()
 	q := fmt.Sprintf("UPDATE blogs SET %s %s", strings.Join(columns, ","), pk.SQLFormat())
-	values := make([]interface{}, 0, 8 - 2)
-					values = append(values, obj.Title)
-					values = append(values, obj.Content)
-					values = append(values, obj.Status)
-					values = append(values, obj.Readed)
-					values = append(values, orm.TimeFormat(obj.CreatedAt))
-					values = append(values, obj.UpdatedAt.Unix())
+	values := make([]interface{}, 0, 8-2)
+	values = append(values, obj.Title)
+	values = append(values, obj.Content)
+	values = append(values, obj.Status)
+	values = append(values, obj.Readed)
+	values = append(values, orm.TimeFormat(obj.CreatedAt))
+	values = append(values, obj.UpdatedAt.Unix())
 	values = append(values, pk.SQLParams()...)
 
-	result, err := m.db.Exec(ctx,q, values...)
+	result, err := m.db.Exec(ctx, q, values...)
 	if err != nil {
 		return 0, err
 	}
 	return result.RowsAffected()
 }
 
-func (m *_BlogDBMgr) Save(ctx context.Context,obj *Blog) (int64, error) {
-	affected, err := m.Update(ctx,obj)
+func (m *_BlogDBMgr) Save(ctx context.Context, obj *Blog) (int64, error) {
+	affected, err := m.Update(ctx, obj)
 	if err != nil {
 		return affected, err
 	}
 	if affected == 0 {
-		return m.Create(ctx,obj)
+		return m.Create(ctx, obj)
 	}
 	return affected, err
 }
 
-func (m *_BlogDBMgr) Delete(ctx context.Context,obj *Blog) (int64, error) {
-	return m.DeleteByPrimaryKey(ctx,obj.Id, obj.UserId)
+func (m *_BlogDBMgr) Delete(ctx context.Context, obj *Blog) (int64, error) {
+	return m.DeleteByPrimaryKey(ctx, obj.Id, obj.UserId)
 }
 
-func (m *_BlogDBMgr) DeleteByPrimaryKey(ctx context.Context,id int64, userId int32) (int64, error) {
-	pk:= &IdUserIdOfBlogPK{
-	Id : id,
-UserId : userId,
-
+func (m *_BlogDBMgr) DeleteByPrimaryKey(ctx context.Context, _id int64, _userId int32) (int64, error) {
+	pk := &IdUserIdOfBlogPK{
+		Id:     _id,
+		UserId: _userId,
 	}
 	q := fmt.Sprintf("DELETE FROM blogs %s", pk.SQLFormat())
-	result, err := m.db.Exec(ctx,q , pk.SQLParams()...)
+	result, err := m.db.Exec(ctx, q, pk.SQLParams()...)
 	if err != nil {
 		return 0, err
 	}
 	return result.RowsAffected()
 }
 
-func (m *_BlogDBMgr) DeleteBySQL(ctx context.Context,where string, args ...interface{}) (int64, error) {
+func (m *_BlogDBMgr) DeleteBySQL(ctx context.Context, where string, args ...interface{}) (int64, error) {
 	query := "DELETE FROM blogs"
 	if where != "" {
 		query = fmt.Sprintf("DELETE FROM blogs WHERE %s", where)
 	}
-	result, err := m.db.Exec(ctx,query, args...)
+	result, err := m.db.Exec(ctx, query, args...)
 	if err != nil {
 		return 0, err
 	}
 	return result.RowsAffected()
 }
-
-

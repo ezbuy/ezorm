@@ -3,6 +3,7 @@ package mysqlr
 import (
 	"bytes"
 	"embed"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -123,8 +124,11 @@ func camel2sep(s string, sep string) string {
 }
 
 func fmtCode(path string) {
-	oscmd := exec.Command("goimport", "-w", path)
-	oscmd.Run()
+	oscmd := exec.Command("goimports", "-w", path)
+	if err := oscmd.Run(); err != nil {
+		fmt.Fprintln(os.Stderr, "run fmt tool: goimports: %w", err)
+		return
+	}
 }
 
 func Add(a, b int) int {

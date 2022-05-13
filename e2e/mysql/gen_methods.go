@@ -6,9 +6,10 @@ import (
 	"context"
 	sql_driver "database/sql"
 	"fmt"
+	"time"
+
 	"github.com/ezbuy/ezorm/v2/db"
 	"github.com/ezbuy/ezorm/v2/pkg/sql"
-	"time"
 )
 
 var (
