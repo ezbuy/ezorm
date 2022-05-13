@@ -315,7 +315,7 @@ func (m *_BlogDBMgr) FetchBySQL(ctx context.Context,q string, args ... interface
 	}
 	defer rows.Close()
 
-	
+
 			var CreatedAt string
 			var UpdatedAt int64
 
@@ -327,15 +327,15 @@ func (m *_BlogDBMgr) FetchBySQL(ctx context.Context,q string, args ... interface
 			return nil, err
 		}
 
-		
-		
-		
-		
-		
-		
+
+
+
+
+
+
 		result.CreatedAt =orm.TimeParse(CreatedAt)
 		result.UpdatedAt =time.Unix(UpdatedAt, 0)
-		
+
 		results = append(results, &result)
 	}
 	if err = rows.Err() ;err != nil {
@@ -470,9 +470,9 @@ func (m *_BlogDBMgr) queryLimit(ctx context.Context,where string, limit int, arg
 			return nil, err
 		}
 
-		
-		
-		
+
+
+
 		results = append(results, result)
 	}
 	if err := rows.Err() ;err != nil {
