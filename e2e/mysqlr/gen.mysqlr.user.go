@@ -238,7 +238,7 @@ func (m *_UserDBMgr) FetchBySQL(ctx context.Context,q string, args ... interface
 	}
 	defer rows.Close()
 
-	
+
 
 	for rows.Next() {
 		var result User
@@ -248,12 +248,12 @@ func (m *_UserDBMgr) FetchBySQL(ctx context.Context,q string, args ... interface
 			return nil, err
 		}
 
-		
-		
-		
-		
-		
-		
+
+
+
+
+
+
 		results = append(results, &result)
 	}
 	if err = rows.Err() ;err != nil {
@@ -352,9 +352,9 @@ func (m *_UserDBMgr) queryLimit(ctx context.Context,where string, limit int, arg
 			return nil, err
 		}
 
-		
-		
-		
+
+
+
 		results = append(results, result)
 	}
 	if err := rows.Err() ;err != nil {
