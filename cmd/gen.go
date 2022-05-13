@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"fmt"
 	"io/fs"
 	"io/ioutil"
 	"os"
@@ -104,8 +105,11 @@ var genCmd = &cobra.Command{
 			return err
 		}
 
-		oscmd := exec.Command("goimport", "-w", output)
-		oscmd.Run()
+		oscmd := exec.Command("goimports", "-w", output)
+		if err := oscmd.Run(); err != nil {
+			fmt.Fprintf(os.Stderr, "run fmt tool: goimports: %q\n", err)
+			// fallthrough ,do not return here
+		}
 		return nil
 	},
 }

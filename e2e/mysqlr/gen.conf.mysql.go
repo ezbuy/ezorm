@@ -3,7 +3,7 @@
 package mysqlr
 
 import (
-    "errors"
+	"errors"
 	"sync"
 	"time"
 
@@ -17,10 +17,10 @@ var (
 
 	mysql_dsns        = map[string]string{}
 	mysql_multi_store = map[string]*orm.DBStore{}
-    mysql_multi_once  sync.Once
+	mysql_multi_once  sync.Once
 
-	_mysql_dsn   string
-	_mysql_once  sync.Once
+	_mysql_dsn  string
+	_mysql_once sync.Once
 )
 
 type MySQLConfig struct {
@@ -42,7 +42,7 @@ func MySQLDSNSetup(dsn string) {
 }
 
 func MySQLMultiDSNSetup(key, dsn string) {
-    if _, ok := mysql_dsns[key]; ok {
+	if _, ok := mysql_dsns[key]; ok {
 		panic(errors.New(key + " exists"))
 	}
 
@@ -50,7 +50,7 @@ func MySQLMultiDSNSetup(key, dsn string) {
 }
 
 func MySQLInstance(key string) *orm.DBStore {
-    mysql_multi_once.Do(func() {
+	mysql_multi_once.Do(func() {
 		for key, dsn := range mysql_dsns {
 			s, err := orm.NewDBDSNStore("mysql", dsn)
 			if err != nil {
@@ -71,32 +71,31 @@ func MySQLInstance(key string) *orm.DBStore {
 func MySQL() *orm.DBStore {
 	var err error
 	_mysql_once.Do(func() {
-	    if _mysql_dsn != "" {
-	        _mysql_store, err = orm.NewDBDSNStore("mysql", _mysql_dsn)
-                if err != nil {
-        	    panic(err)
-            }
-        } else {
-	        _mysql_store, err = orm.NewDBStore("mysql",
-        	_mysql_cfg.Host,
-        	_mysql_cfg.Port,
-        	_mysql_cfg.Database,
-        	_mysql_cfg.UserName,
-        	_mysql_cfg.Password)
-            if err != nil {
-            	panic(err)
-            }
-            _mysql_store.SetConnMaxLifetime(time.Hour)
-            if _mysql_cfg.ConnMaxLifeTime > 0 {
-                   _mysql_store.SetConnMaxLifetime(_mysql_cfg.ConnMaxLifeTime)
-            }
-            _mysql_store.SetMaxIdleConns(_mysql_cfg.PoolSize)
-            _mysql_store.SetMaxOpenConns(_mysql_cfg.PoolSize)
+		if _mysql_dsn != "" {
+			_mysql_store, err = orm.NewDBDSNStore("mysql", _mysql_dsn)
+			if err != nil {
+				panic(err)
+			}
+		} else {
+			_mysql_store, err = orm.NewDBStore("mysql",
+				_mysql_cfg.Host,
+				_mysql_cfg.Port,
+				_mysql_cfg.Database,
+				_mysql_cfg.UserName,
+				_mysql_cfg.Password)
+			if err != nil {
+				panic(err)
+			}
+			_mysql_store.SetConnMaxLifetime(time.Hour)
+			if _mysql_cfg.ConnMaxLifeTime > 0 {
+				_mysql_store.SetConnMaxLifetime(_mysql_cfg.ConnMaxLifeTime)
+			}
+			_mysql_store.SetMaxIdleConns(_mysql_cfg.PoolSize)
+			_mysql_store.SetMaxOpenConns(_mysql_cfg.PoolSize)
 			_mysql_store.AddWrappers(
 				database.NewMySQLTracerWrapper(),
 			)
-	    }
+		}
 	})
 	return _mysql_store
 }
-

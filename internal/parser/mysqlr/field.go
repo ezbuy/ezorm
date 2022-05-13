@@ -69,7 +69,7 @@ var SupportedFieldTypes = map[string]string{
 }
 
 func (f *Field) GetName() string {
-	return CamelName(f.Name)
+	return "_" + CamelName(f.Name)
 }
 
 func (f *Field) GetGoType() string {
@@ -201,7 +201,7 @@ func (f *Field) GetType() string {
 }
 
 func (f *Field) GetNames() string {
-	return CamelName(f.Name) + "s"
+	return "_" + CamelName(f.Name) + "s"
 }
 
 func (f *Field) IsNullablePrimitive() bool {
@@ -507,7 +507,7 @@ type Fields []*Field
 func (fs Fields) GetFuncParam() string {
 	var params []string
 	for _, f := range fs {
-		params = append(params, CamelName(f.Name)+" "+f.GetType())
+		params = append(params, "_"+CamelName(f.Name)+" "+f.GetType())
 	}
 	return strings.Join(params, ", ")
 }
@@ -523,7 +523,7 @@ func (fs Fields) GetObjectParam() string {
 func (fs Fields) GetConstructor() string {
 	params := make([]string, 0, len(fs)+1)
 	for _, f := range fs {
-		params = append(params, f.Name+" : "+CamelName(f.Name))
+		params = append(params, f.Name+" : "+"_"+CamelName(f.Name))
 	}
 	params = append(params, "")
 	return strings.Join(params, ",\n")
