@@ -1,8 +1,10 @@
 package user
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"time"
 
-import "time"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 var _ time.Time
 

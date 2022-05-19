@@ -1,12 +1,40 @@
 {{define "mysqlr_object_unique"}}
 {{$unique := .}}
 {{$obj := .Obj}}
-{{$primaryField := .Obj.PrimaryField}}
+
 
 type {{$unique.Name}} struct{
 	{{- range $j, $field := $unique.Fields}}
 	{{$field.Name}} {{$field.GetType}}
 	{{- end}}
+}
+
+type {{$unique.Name}}s []*{{$unique.Name}}
+
+func New{{$unique.Name}}s(s []*{{$unique.Name}}) {{$unique.Name}}s {
+	return {{$unique.Name}}s(s)
+}
+
+func (us {{$unique.Name}}s) SQLFormat(limit bool) string {
+	in := orm.NewMultiFieldIN({{$unique.GetFieldNames}})
+	for _, u := range us {
+		tuple := make([]any,{{ len $unique.Fields }})
+	{{- range $j, $field := $unique.Fields}}
+		tuple[{{$j}}] = u.{{$field.Name}}
+	{{- end}}
+		in.Add(tuple)
+	}
+	return orm.SQLWhere([]string{in.SQLFormat()})
+}
+
+func (us {{$unique.Name}}s) SQLParams() []any {
+	var ret []any
+	for _, u := range us {
+	{{- range $j, $field := $unique.Fields}}
+		ret = append(ret, u.{{$field.Name}})
+	{{- end }}
+	}
+	return ret
 }
 
 func (u *{{$unique.Name}}) Key() string {
@@ -16,28 +44,29 @@ func (u *{{$unique.Name}}) Key() string {
 			{{- if $field.IsEncode}}
 			orm.Encode(fmt.Sprint(u.{{$field.Name}})),
 			{{- else}}
-			fmt.Sprint(u.{{$field.Name}}),
+			fmt.Sprintf("%v",u.{{$field.Name}}),
 			{{- end}}
 		{{- end}}
 	}
-	return fmt.Sprintf("%s", strings.Join(strs, ":"))
+	return  strings.Join(strs, ":")
 }
 
 func (u *{{$unique.Name}}) SQLFormat(limit bool) string {
-	conditions := []string{
-		{{- range $j, $field := $unique.Fields}}
-		"{{$field.FieldName}} = ?",
-		{{- end}}
-	}
-	return orm.SQLWhere(conditions)
+	in := orm.NewMultiFieldIN({{$unique.GetFieldNames}})
+	tuple := make([]any,{{ len $unique.Fields }})
+	{{- range $j, $field := $unique.Fields}}
+	tuple[{{$j}}] = u.{{$field.Name}}
+	{{- end}}
+	in.Add(tuple)
+	return orm.SQLWhere([]string{in.SQLFormat()})
 }
 
-func (u *{{$unique.Name}}) SQLParams() []interface{} {
-	return []interface{}{
-		{{- range $j, $field := $unique.Fields}}
-		u.{{$field.Name}},
-		{{- end}}
-	}
+func (u *{{$unique.Name}}) SQLParams() []any {
+	var ret []any
+	{{- range $j, $field := $unique.Fields}}
+		ret = append(ret, u.{{$field.Name}})
+	{{- end }}
+	return ret
 }
 
 func (u *{{$unique.Name}}) SQLLimit() int {
