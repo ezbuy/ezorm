@@ -181,6 +181,133 @@ func (u *IdUserIdOfBlogPK) Columns() []string {
 	}
 }
 
+type UserIdTitleOfBlogUK struct {
+	UserId int32
+	Title  string
+}
+
+type UserIdTitleOfBlogUKs []*UserIdTitleOfBlogUK
+
+func NewUserIdTitleOfBlogUKs(s []*UserIdTitleOfBlogUK) UserIdTitleOfBlogUKs {
+	return UserIdTitleOfBlogUKs(s)
+}
+
+func (us UserIdTitleOfBlogUKs) SQLFormat(limit bool) string {
+	in := orm.NewMultiFieldIN([]string{"user_id", "title"})
+	for _, u := range us {
+		tuple := make([]any, 2)
+		tuple[0] = u.UserId
+		tuple[1] = u.Title
+		in.Add(tuple)
+	}
+	return orm.SQLWhere([]string{in.SQLFormat()})
+}
+
+func (us UserIdTitleOfBlogUKs) SQLParams() []any {
+	var ret []any
+	for _, u := range us {
+		ret = append(ret, u.UserId)
+		ret = append(ret, u.Title)
+	}
+	return ret
+}
+
+func (u *UserIdTitleOfBlogUK) Key() string {
+	strs := []string{
+		"UserId",
+		fmt.Sprintf("%v", u.UserId),
+		"Title",
+		fmt.Sprintf("%v", u.Title),
+	}
+	return strings.Join(strs, ":")
+}
+
+func (u *UserIdTitleOfBlogUK) SQLFormat(limit bool) string {
+	in := orm.NewMultiFieldIN([]string{"user_id", "title"})
+	tuple := make([]any, 2)
+	tuple[0] = u.UserId
+	tuple[1] = u.Title
+	in.Add(tuple)
+	return orm.SQLWhere([]string{in.SQLFormat()})
+}
+
+func (u *UserIdTitleOfBlogUK) SQLParams() []any {
+	var ret []any
+	ret = append(ret, u.UserId)
+	ret = append(ret, u.Title)
+	return ret
+}
+
+func (u *UserIdTitleOfBlogUK) SQLLimit() int {
+	return 1
+}
+
+func (u *UserIdTitleOfBlogUK) Limit(n int) {
+}
+
+func (u *UserIdTitleOfBlogUK) Offset(n int) {
+}
+
+type TitleOfBlogUK struct {
+	Title string
+}
+
+type TitleOfBlogUKs []*TitleOfBlogUK
+
+func NewTitleOfBlogUKs(s []*TitleOfBlogUK) TitleOfBlogUKs {
+	return TitleOfBlogUKs(s)
+}
+
+func (us TitleOfBlogUKs) SQLFormat(limit bool) string {
+	in := orm.NewMultiFieldIN([]string{"title"})
+	for _, u := range us {
+		tuple := make([]any, 1)
+		tuple[0] = u.Title
+		in.Add(tuple)
+	}
+	return orm.SQLWhere([]string{in.SQLFormat()})
+}
+
+func (us TitleOfBlogUKs) SQLParams() []any {
+	var ret []any
+	for _, u := range us {
+		ret = append(ret, u.Title)
+	}
+	return ret
+}
+
+func (u *TitleOfBlogUK) Key() string {
+	strs := []string{
+		"Title",
+		fmt.Sprintf("%v", u.Title),
+	}
+	return strings.Join(strs, ":")
+}
+
+func (u *TitleOfBlogUK) SQLFormat(limit bool) string {
+	in := orm.NewMultiFieldIN([]string{"title"})
+	tuple := make([]any, 1)
+	tuple[0] = u.Title
+	in.Add(tuple)
+	return orm.SQLWhere([]string{in.SQLFormat()})
+}
+
+func (u *TitleOfBlogUK) SQLParams() []any {
+	var ret []any
+	ret = append(ret, u.Title)
+	return ret
+}
+
+func (u *TitleOfBlogUK) SQLLimit() int {
+	return 1
+}
+
+func (u *TitleOfBlogUK) Limit(n int) {
+}
+
+func (u *TitleOfBlogUK) Offset(n int) {
+}
+
 type StatusOfBlogIDX struct {
 	Status int32
 	offset int
@@ -382,6 +509,72 @@ func (m *_BlogDBMgr) FindByStatusGroup(ctx context.Context, items []int32) ([]*B
 }
 
 // uniques
+
+func (m *_BlogDBMgr) FetchByUserIdTitle(ctx context.Context, uniq *UserIdTitleOfBlogUK) (*Blog, error) {
+	obj := BlogMgr.NewBlog()
+
+	query := fmt.Sprintf("SELECT %s FROM blogs %s", strings.Join(obj.GetColumns(), ","), uniq.SQLFormat(true))
+	objs, err := m.FetchBySQL(ctx, query, uniq.SQLParams()...)
+	if err != nil {
+		return nil, err
+	}
+	if len(objs) > 0 {
+		return objs[0], nil
+	}
+	return nil, fmt.Errorf("FetchByUserIdTitle: %w", sql.ErrNoRows)
+}
+
+func (m *_BlogDBMgr) FetchByUserIdTitles(ctx context.Context, us []*UserIdTitleOfBlogUK) ([]*Blog, error) {
+	obj := BlogMgr.NewBlog()
+
+	if len(us) == 0 {
+		return nil, nil
+	}
+	u := NewUserIdTitleOfBlogUKs(us)
+	query := fmt.Sprintf("SELECT %s FROM blogs %s", strings.Join(obj.GetColumns(), ","), u.SQLFormat(true))
+	objs, err := m.FetchBySQL(ctx, query, u.SQLParams()...)
+	if err != nil {
+		return nil, err
+	}
+	if len(objs) > 0 {
+		return objs, nil
+	}
+	return nil, fmt.Errorf("FetchByUserIdTitles: %w", sql.ErrNoRows)
+}
+
+func (m *_BlogDBMgr) FetchByTitles(ctx context.Context, _titles []string) ([]*Blog, error) {
+	in := orm.NewFieldIN("title")
+	for _, item := range _titles {
+		in.Add(item)
+	}
+	obj := BlogMgr.NewBlog()
+	where := orm.SQLWhere([]string{in.SQLFormat()})
+	query := fmt.Sprintf("SELECT %s FROM blogs %s", strings.Join(obj.GetColumns(), ","), where)
+	objs, err := m.FetchBySQL(ctx, query, in.SQLParams()...)
+	if err != nil {
+		return nil, err
+	}
+	if len(objs) > 0 {
+		return objs, nil
+	}
+	return nil, fmt.Errorf("FetchByTitles: %w", sql.ErrNoRows)
+}
+
+func (m *_BlogDBMgr) FetchByTitle(ctx context.Context, _title string) (*Blog, error) {
+	in := orm.NewFieldIN("title")
+	in.Add(_title)
+	obj := BlogMgr.NewBlog()
+	where := orm.SQLWhere([]string{in.SQLFormat()})
+	query := fmt.Sprintf("SELECT %s FROM blogs %s", strings.Join(obj.GetColumns(), ","), where)
+	objs, err := m.FetchBySQL(ctx, query, in.SQLParams()...)
+	if err != nil {
+		return nil, err
+	}
+	if len(objs) > 0 {
+		return objs[0], nil
+	}
+	return nil, fmt.Errorf("FetchByTitle: %w", sql.ErrNoRows)
+}
 
 func (m *_BlogDBMgr) FindOne(ctx context.Context, unique Unique) (PrimaryKey, error) {
 	objs, err := m.queryLimit(ctx, unique.SQLFormat(true), unique.SQLLimit(), unique.SQLParams()...)
