@@ -9,3 +9,5 @@ User:
     - CreatedAt: int64
     - UpdatedAt: int64
   primary: [Id, UserId]
+  uniques:
+  - [Name,UserId]

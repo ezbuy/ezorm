@@ -225,11 +225,47 @@ func (m *_{{$obj.Name}}DBMgr) FindBy{{$index.FirstField.Name}}Group(ctx context.
 // uniques
 {{- range $unique:=$uniques}}
 
-func (m *_{{$obj.Name}}DBMgr) FetchBy{{$unique.GetFuncName}}(ctx context.Context,{{$unique.GetFuncParam}}) (*{{$obj.Name}}, error) {
-	obj := {{$obj.Name}}Mgr.New{{$obj.Name}}()
-	uniq := &{{$unique.Name}}{
-	{{$unique.GetConstructor}}
+{{ $firstUniqueField := $unique.FirstField }}
+
+{{- if $unique.IsSingleField}}
+func (m *_{{$obj.Name}}DBMgr) FetchBy{{$unique.GetFuncName}}s(ctx context.Context,{{$firstUniqueField.GetNames}} []{{$firstUniqueField.GetType}}) ([]*{{$obj.Name}}, error) {
+	in:= orm.NewFieldIN("{{$firstUniqueField.FieldName}}")
+	for _, item := range {{$firstUniqueField.GetNames}} {
+		in.Add(item)
 	}
+	obj := {{$obj.Name}}Mgr.New{{$obj.Name}}()
+	where := orm.SQLWhere([]string{in.SQLFormat()})
+	query := fmt.Sprintf("SELECT %s FROM {{$obj.FromDB}} %s", strings.Join(obj.GetColumns(), ","), where)
+	objs, err := m.FetchBySQL(ctx,query, in.SQLParams()...)
+	if err != nil {
+		return nil, err
+	}
+	if len(objs) > 0 {
+		return objs, nil
+	}
+	return nil, fmt.Errorf("FetchBy{{$unique.GetFuncName}}s: %w", sql.ErrNoRows)
+}
+
+func (m *_{{$obj.Name}}DBMgr) FetchBy{{$unique.GetFuncName}}(ctx context.Context,{{$firstUniqueField.GetName}} {{$firstUniqueField.GetType}}) (*{{$obj.Name}}, error) {
+	in:= orm.NewFieldIN("{{$firstUniqueField.FieldName}}")
+	in.Add({{$firstUniqueField.GetName}})
+	obj := {{$obj.Name}}Mgr.New{{$obj.Name}}()
+	where := orm.SQLWhere([]string{in.SQLFormat()})
+	query := fmt.Sprintf("SELECT %s FROM {{$obj.FromDB}} %s", strings.Join(obj.GetColumns(), ","), where)
+	objs, err := m.FetchBySQL(ctx,query, in.SQLParams()...)
+	if err != nil {
+		return nil, err
+	}
+	if len(objs) > 0 {
+		return objs[0], nil
+	}
+	return nil, fmt.Errorf("FetchBy{{$unique.GetFuncName}}: %w", sql.ErrNoRows)
+}
+
+{{- else }}
+
+func (m *_{{$obj.Name}}DBMgr) FetchBy{{$unique.GetFuncName}}(ctx context.Context,uniq *{{$unique.Name}}) (*{{$obj.Name}}, error) {
+	obj := {{$obj.Name}}Mgr.New{{$obj.Name}}()
 
 	query := fmt.Sprintf("SELECT %s FROM {{$obj.FromDB}} %s", strings.Join(obj.GetColumns(), ","), uniq.SQLFormat(true))
 	objs, err := m.FetchBySQL(ctx,query, uniq.SQLParams()...)
@@ -239,8 +275,28 @@ func (m *_{{$obj.Name}}DBMgr) FetchBy{{$unique.GetFuncName}}(ctx context.Context
 	if len(objs) > 0 {
 		return objs[0], nil
 	}
-	return nil, fmt.Errorf("{{$obj.Name}} fetch record not found")
+	return nil, fmt.Errorf("FetchBy{{$unique.GetFuncName}}: %w", sql.ErrNoRows)
 }
+
+func (m *_{{$obj.Name}}DBMgr) FetchBy{{$unique.GetFuncName}}s(ctx context.Context,us []*{{$unique.Name}}) ([]*{{$obj.Name}}, error) {
+	obj := {{$obj.Name}}Mgr.New{{$obj.Name}}()
+
+	if len(us) == 0 {
+		return nil, nil
+	}
+	u := New{{$unique.Name}}s(us)
+	query := fmt.Sprintf("SELECT %s FROM {{$obj.FromDB}} %s", strings.Join(obj.GetColumns(), ","), u.SQLFormat(true))
+	objs, err := m.FetchBySQL(ctx,query, u.SQLParams()...)
+	if err != nil {
+		return nil, err
+	}
+	if len(objs) > 0 {
+		return objs, nil
+	}
+	return nil, fmt.Errorf("FetchBy{{$unique.GetFuncName}}s: %w", sql.ErrNoRows)
+}
+
+{{end}}
 {{- end}}
 
 func (m *_{{$obj.Name}}DBMgr) FindOne(ctx context.Context,unique Unique) (PrimaryKey, error) {

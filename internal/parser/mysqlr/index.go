@@ -83,3 +83,7 @@ func (idx *Index) build(suffix string) error {
 func (idx *Index) GetConstructor() string {
 	return Fields(idx.Fields).GetConstructor()
 }
+
+func (idx *Index) GetFieldNames() string {
+	return Fields(idx.Fields).GetFieldNames()
+}

@@ -14,3 +14,6 @@ Blog:
     - CreatedAt: timestamp
     - UpdatedAt: timeint
   primary: [Id, UserId]
+  uniques:
+  - [Title]
+  - [UserId,Title]
