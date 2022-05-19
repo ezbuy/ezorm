@@ -166,6 +166,73 @@ func (u *IdUserIdOfUserPK) Columns() []string {
 	}
 }
 
+type NameUserIdOfUserUK struct {
+	Name   string
+	UserId int32
+}
+
+type NameUserIdOfUserUKs []*NameUserIdOfUserUK
+
+func NewNameUserIdOfUserUKs(s []*NameUserIdOfUserUK) NameUserIdOfUserUKs {
+	return NameUserIdOfUserUKs(s)
+}
+
+func (us NameUserIdOfUserUKs) SQLFormat(limit bool) string {
+	in := orm.NewMultiFieldIN([]string{"name", "user_id"})
+	for _, u := range us {
+		tuple := make([]any, 2)
+		tuple[0] = u.Name
+		tuple[1] = u.UserId
+		in.Add(tuple)
+	}
+	return orm.SQLWhere([]string{in.SQLFormat()})
+}
+
+func (us NameUserIdOfUserUKs) SQLParams() []any {
+	var ret []any
+	for _, u := range us {
+		ret = append(ret, u.Name)
+		ret = append(ret, u.UserId)
+	}
+	return ret
+}
+
+func (u *NameUserIdOfUserUK) Key() string {
+	strs := []string{
+		"Name",
+		fmt.Sprintf("%v", u.Name),
+		"UserId",
+		fmt.Sprintf("%v", u.UserId),
+	}
+	return strings.Join(strs, ":")
+}
+
+func (u *NameUserIdOfUserUK) SQLFormat(limit bool) string {
+	in := orm.NewMultiFieldIN([]string{"name", "user_id"})
+	tuple := make([]any, 2)
+	tuple[0] = u.Name
+	tuple[1] = u.UserId
+	in.Add(tuple)
+	return orm.SQLWhere([]string{in.SQLFormat()})
+}
+
+func (u *NameUserIdOfUserUK) SQLParams() []any {
+	var ret []any
+	ret = append(ret, u.Name)
+	ret = append(ret, u.UserId)
+	return ret
+}
+
+func (u *NameUserIdOfUserUK) SQLLimit() int {
+	return 1
+}
+
+func (u *NameUserIdOfUserUK) Limit(n int) {
+}
+
+func (u *NameUserIdOfUserUK) Offset(n int) {
+}
+
 type _UserDBMgr struct {
 	db orm.DB
 }
@@ -271,6 +338,38 @@ func (m *_UserDBMgr) IsErrNotFound(err error) bool {
 // indexes
 
 // uniques
+
+func (m *_UserDBMgr) FetchByNameUserId(ctx context.Context, uniq *NameUserIdOfUserUK) (*User, error) {
+	obj := UserMgr.NewUser()
+
+	query := fmt.Sprintf("SELECT %s FROM users %s", strings.Join(obj.GetColumns(), ","), uniq.SQLFormat(true))
+	objs, err := m.FetchBySQL(ctx, query, uniq.SQLParams()...)
+	if err != nil {
+		return nil, err
+	}
+	if len(objs) > 0 {
+		return objs[0], nil
+	}
+	return nil, fmt.Errorf("FetchByNameUserId: %w", sql.ErrNoRows)
+}
+
+func (m *_UserDBMgr) FetchByNameUserIds(ctx context.Context, us []*NameUserIdOfUserUK) ([]*User, error) {
+	obj := UserMgr.NewUser()
+
+	if len(us) == 0 {
+		return nil, nil
+	}
+	u := NewNameUserIdOfUserUKs(us)
+	query := fmt.Sprintf("SELECT %s FROM users %s", strings.Join(obj.GetColumns(), ","), u.SQLFormat(true))
+	objs, err := m.FetchBySQL(ctx, query, u.SQLParams()...)
+	if err != nil {
+		return nil, err
+	}
+	if len(objs) > 0 {
+		return objs, nil
+	}
+	return nil, fmt.Errorf("FetchByNameUserIds: %w", sql.ErrNoRows)
+}
 
 func (m *_UserDBMgr) FindOne(ctx context.Context, unique Unique) (PrimaryKey, error) {
 	objs, err := m.queryLimit(ctx, unique.SQLFormat(true), unique.SQLLimit(), unique.SQLParams()...)

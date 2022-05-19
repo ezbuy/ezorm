@@ -2,6 +2,7 @@ package mysqlr
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"os"
 	"strconv"
@@ -65,6 +66,46 @@ func TestBlogsCRUD(t *testing.T) {
 		count, err := BlogDBMgr(db).SearchConditionsCount(ctx, []string{"user_id = ?"}, 1)
 		assert.NoError(t, err)
 		assert.Equal(t, int64(1), count)
+	})
+
+	t.Run("GetByPrimaryKey", func(t *testing.T) {
+		b, err := BlogDBMgr(db).FetchByPrimaryKey(ctx, 1, 1)
+		assert.NoError(t, err)
+		assert.Equal(t, int64(1), b.Id)
+	})
+
+	t.Run("GetByUniqueKey", func(t *testing.T) {
+		bs, err := BlogDBMgr(db).FetchByTitles(ctx, []string{"test"})
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(bs))
+	})
+
+	t.Run("GetUniqueMultiKey", func(t *testing.T) {
+		b, err := BlogDBMgr(db).FetchByUserIdTitle(ctx, &UserIdTitleOfBlogUK{
+			UserId: 1,
+			Title:  "test",
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, int64(1), b.Id)
+	})
+
+	t.Run("GetUniqueMultiKeyByBatch", func(t *testing.T) {
+		bs, err := BlogDBMgr(db).FetchByUserIdTitles(ctx, []*UserIdTitleOfBlogUK{
+			{UserId: 1, Title: "test"},
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(bs))
+	})
+
+	t.Run("GetByUniqueKeyNoRows", func(t *testing.T) {
+		_, err := BlogDBMgr(db).FetchByTitle(ctx, "tet")
+		assert.ErrorIs(t, err, sql.ErrNoRows)
+	})
+
+	t.Run("GetByIndex", func(t *testing.T) {
+		bs, err := BlogDBMgr(db).FindAllByStatus(ctx, 1)
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(bs))
 	})
 
 	t.Run("Update", func(t *testing.T) {

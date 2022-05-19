@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"unicode"
 
@@ -527,6 +528,14 @@ func (fs Fields) GetConstructor() string {
 	}
 	params = append(params, "")
 	return strings.Join(params, ",\n")
+}
+
+func (fs Fields) GetFieldNames() string {
+	var names []string
+	for _, f := range fs {
+		names = append(names, strconv.Quote(f.FieldName()))
+	}
+	return fmt.Sprintf("[]string{%s}", strings.Join(names, ", "))
 }
 
 func Camel2Name(s string) string {
