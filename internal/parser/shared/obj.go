@@ -96,6 +96,10 @@ type Obj struct {
 	ModelType    string
 	ImportSQL    string
 	Comment      string
+
+	// IsEmbed describes whether the object should embedded in another object.
+	// The embedded object will not generator the orm method but only the db struct.
+	IsEmbed bool
 }
 
 func (o *Obj) init() {
@@ -237,29 +241,25 @@ func (o *Obj) LoadField(f *Field) string {
 }
 
 func (o *Obj) GetGenTypes() []string {
-	gens := map[string]bool{}
+	var gens []string
 	for _, db := range o.Dbs {
 		switch db {
 		case "mongo":
-			gens["struct"] = true
-			gens["mongo_orm"] = true
+			gens = append(gens, "struct")
+			if !o.IsEmbed {
+				gens = append(gens, "mongo_orm")
+			}
 		case "enum":
-			gens["enum"] = true
+			gens = append(gens, "enum")
 		case "mysql":
-			gens["struct"] = true
-			gens["mysql_orm"] = true
-			gens["mysql_fk"] = true
+			gens = append(gens, "struct", "mysql_orm", "mysql_fk")
 		}
 	}
 	if len(gens) == 0 {
-		gens["struct"] = true
+		gens = append(gens, "struct")
 	}
 
-	result := make([]string, 0, len(gens))
-	for k := range gens {
-		result = append(result, k)
-	}
-	return result
+	return gens
 }
 
 func (o *Obj) GetConfigTemplates() []string {
@@ -417,6 +417,12 @@ func (o *Obj) Read(name string, data generator.Schema) error {
 
 	for key, val := range data {
 		switch key {
+		case "embed":
+			v, ok := val.(bool)
+			if !ok {
+				return fmt.Errorf("embed option must be true or false")
+			}
+			o.IsEmbed = v
 		case "indexes":
 			for _, i := range val.([]interface{}) {
 				index := new(Index)
