@@ -10,6 +10,7 @@
 * size
 * flags
 * attrs
+* embed: support the embed-only structure , if this field sets to be true, the structure's orm code will not be generated anymore.
 
 ### Field Types
 * []byte
