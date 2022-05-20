@@ -1,0 +1,20 @@
+User:
+  db: mongo
+  fields:
+    - UserId: uint64
+      attrs: {bsonTag: "uid", jsonTag: "uid"}
+      comment: "the identity of each user"
+    - Username: string
+      comment: "name of user used to login"
+      flags: [index]
+    - Age: int32
+      flags: [sort]
+    - Blogs: list<Blog>
+    - RegisterDate: time.Time
+      attrs: {bsonTag: "registerDate", jsonTag: "registerDate"}
+
+Blog:
+  db: mongo
+  fields:
+    - BlogId: uint64
+      attrs: {bsonTag: "bid", jsonTag: "bid"}

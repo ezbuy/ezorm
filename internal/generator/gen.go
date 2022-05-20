@@ -32,12 +32,22 @@ func (om Schema) GetDriver() (string, error) {
 	return "", fmt.Errorf("driver not found")
 }
 
-func (om Schema) GetTable() (string, error) {
-	if v, ok := om["table"]; ok {
-		if s, ok := v.(string); ok {
-			return s, nil
+func (om Schema) GetTable(dr string) (string, error) {
+	switch dr {
+	case "mysql":
+		if v, ok := om["table"]; ok {
+			if s, ok := v.(string); ok {
+				return s, nil
+			}
+			return "", fmt.Errorf("table is not string")
 		}
-		return "", fmt.Errorf("table is not string")
+	case "mysqlr":
+		if v, ok := om["dbtable"]; ok {
+			if s, ok := v.(string); ok {
+				return s, nil
+			}
+			return "", fmt.Errorf("table is not string")
+		}
 	}
 	return "", fmt.Errorf("table not found")
 }

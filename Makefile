@@ -7,8 +7,17 @@ build-plugin:
 	go build -o bin/ezorm-gen-hello-driver ./e2e/plugins/hello-driver
 	mv bin/ezorm-gen-hello-driver /go/bin
 
+cleane2e:
+	rm -rf e2e/mongo/user/gen_*.go
+	rm -rf e2e/mongo/nested/gen_*.go
+	rm -rf e2e/mysql/gen_*.go
+	rm -rf e2e/mysqlr/gen*.go
+
+regene2e: cleane2e gene2e
+
 gene2e:
 	bin/ezorm gen -i ./e2e/mongo/user/user.yaml -o  ./e2e/mongo/user --goPackage user
+	bin/ezorm gen -i ./e2e/mongo/nested/nested.yaml -o  ./e2e/mongo/nested --goPackage nested
 	bin/ezorm gen -i ./e2e/mysql -o ./e2e/mysql --goPackage mysql
 	bin/ezorm gen -i ./e2e/mysqlr -o ./e2e/mysqlr --goPackage mysqlr
 

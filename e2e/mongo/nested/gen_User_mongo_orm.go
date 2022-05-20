@@ -1,4 +1,4 @@
-package user
+package nested
 
 import (
 	"context"
@@ -11,8 +11,8 @@ import (
 )
 
 func init() {
-	orm.RegisterEzOrmObjByID("user", "User", newUserFindByID)
-	orm.RegisterEzOrmObjRemove("user", "User", newUserRemoveByID)
+	orm.RegisterEzOrmObjByID("nested", "User", newUserFindByID)
+	orm.RegisterEzOrmObjRemove("nested", "User", newUserRemoveByID)
 }
 
 func newUserFindByID(id string) (result orm.EzOrmObj, err error) {
@@ -56,6 +56,7 @@ func (o *User) Save(ctx context.Context) (*mongo.UpdateResult, error) {
 			UserMgoFieldUserId:       o.UserId,
 			UserMgoFieldUsername:     o.Username,
 			UserMgoFieldAge:          o.Age,
+			UserMgoFieldBlogs:        o.Blogs,
 			UserMgoFieldRegisterDate: o.RegisterDate,
 		},
 	}
@@ -88,6 +89,7 @@ func (o *User) InsertUnique(ctx context.Context, query interface{}) (saved bool,
 			UserMgoFieldUserId:       o.UserId,
 			UserMgoFieldUsername:     o.Username,
 			UserMgoFieldAge:          o.Age,
+			UserMgoFieldBlogs:        o.Blogs,
 			UserMgoFieldRegisterDate: o.RegisterDate,
 		},
 	}
@@ -160,19 +162,6 @@ func (o *_UserMgr) Query(ctx context.Context, query interface{}, limit, offset i
 	}
 
 	return col.Find(ctx, query, opts)
-}
-
-func (o *_UserMgr) FindByUsernameAge(ctx context.Context, Username string, Age int32, limit int, offset int, sortFields interface{}) (result []*User, err error) {
-	query := bson.M{
-		"Username": Username,
-		"Age":      Age,
-	}
-	cursor, err := o.Query(ctx, query, limit, offset, sortFields)
-	if err != nil {
-		return nil, err
-	}
-	err = cursor.All(ctx, &result)
-	return
 }
 
 func (o *_UserMgr) FindByUsername(ctx context.Context, Username string, limit int, offset int, sortFields interface{}) (result []*User, err error) {
@@ -286,5 +275,5 @@ func (o *_UserMgr) RemoveByID(ctx context.Context, id string) (err error) {
 }
 
 func (m *_UserMgr) GetCol() *mongo.Collection {
-	return Col("test_user")
+	return Col("nested.User")
 }
