@@ -143,8 +143,8 @@ func (m *sqlMethods) GetUserIn(ctx context.Context, req *GetUserInReq, opts ...R
 }
 
 type UserJoinBlogResp struct {
-	UserId int32 `sql:"user_id"`
 	BlogId int32 `sql:"blog_id"`
+	UserId int32 `sql:"user_id"`
 }
 
 type UserJoinBlogReq struct {
@@ -181,7 +181,7 @@ func (m *sqlMethods) UserJoinBlog(ctx context.Context, req *UserJoinBlogReq, opt
 	var results []*UserJoinBlogResp
 	for rows.Next() {
 		var o UserJoinBlogResp
-		err = rows.Scan(&o.UserId, &o.BlogId)
+		err = rows.Scan(&o.BlogId, &o.UserId)
 		if err != nil {
 			return nil, err
 		}

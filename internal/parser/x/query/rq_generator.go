@@ -1,7 +1,6 @@
 package query
 
 import (
-	"bytes"
 	"io/fs"
 	"log"
 	"os"
@@ -27,7 +26,7 @@ func (rg *RawQueryGenerator) Generate(meta generator.TMetadata) error {
 		if err != nil {
 			return err
 		}
-		table, err := om.GetTable()
+		table, err := om.GetTable(dr)
 		if err != nil {
 			log.Printf("rawquery: warning: %q\n", err)
 			return nil
@@ -103,11 +102,11 @@ func (rg *RawQueryGenerator) Generate(meta generator.TMetadata) error {
 		Dir:       sqlsDir,
 	}
 	goFile := filepath.Join(meta.Output, "gen_methods.go")
-	content, err := os.ReadFile(goFile)
+	fd, err := os.OpenFile(goFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}
-	return shared.Tpl.ExecuteTemplate(bytes.NewBuffer(content), "sql_method", file)
+	return shared.Tpl.ExecuteTemplate(fd, "sql_method", file)
 }
 
 func (rg *RawQueryGenerator) DriverName() string {

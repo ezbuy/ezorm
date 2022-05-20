@@ -39,7 +39,7 @@ jobs:
       - name: generate template
         run: |
           make build
-          make gene2e
+          make regene2e
       - name: template testing
         run: |
           make test-mysql
@@ -75,7 +75,7 @@ jobs:
       - name: generate template
         run: |
           make build
-          make gene2e
+          make regene2e
       - name: template testing
         run: |
           make test-mysqlr
@@ -104,7 +104,7 @@ jobs:
       - name: generate template
         run: |
           make build
-          make gene2e
+          make regene2e
       - name: template testing (mongo-go-driver)
         run: |
           make test-mongo-go-driver

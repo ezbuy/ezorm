@@ -70,6 +70,10 @@ var SupportedFieldTypes = map[string]string{
 }
 
 func (f *Field) GetName() string {
+	return CamelName(f.Name)
+}
+
+func (f *Field) GetUnderlineName() string {
 	return "_" + CamelName(f.Name)
 }
 
@@ -202,6 +206,10 @@ func (f *Field) GetType() string {
 }
 
 func (f *Field) GetNames() string {
+	return CamelName(f.Name) + "s"
+}
+
+func (f *Field) GetUnderlineNames() string {
 	return "_" + CamelName(f.Name) + "s"
 }
 
