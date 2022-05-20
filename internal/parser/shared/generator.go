@@ -1,7 +1,6 @@
 package shared
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -79,11 +78,11 @@ func (g *Generator) Generate(meta generator.TMetadata) error {
 }
 
 func render(path string, name string, obj any) error {
-	data, err := os.ReadFile(path)
+	fd, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		return fmt.Errorf("%w", err)
+		return err
 	}
-	return Tpl.ExecuteTemplate(bytes.NewBuffer(data), name, obj)
+	return Tpl.ExecuteTemplate(fd, name, obj)
 }
 
 func (g *Generator) DriverName() string {

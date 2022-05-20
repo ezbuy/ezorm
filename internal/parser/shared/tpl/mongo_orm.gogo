@@ -222,7 +222,7 @@ func (o *_{{$obj.Name}}Mgr) FindOneBy{{$index.Name}}(ctx context.Context, {{$ind
 
 // MustFindOneBy{{$index.Name}} only use it when you should not trust the query result
 func (o *_{{$obj.Name}}Mgr) MustFindOneBy{{$index.Name}}(ctx context.Context, {{$index.GetFuncParam}}) (result *{{$obj.Name}}) {
-    result, _ = o.FindOneBy{{$index.Name}}({{$index.GetFuncParamNames}})
+    result, _ = o.FindOneBy{{$index.Name}}(ctx,{{$index.GetFuncParamNames}})
     if result == nil {
         result = o.New{{$obj.Name}}()
 		{{- range $field := $index.Fields}}

@@ -1,0 +1,56 @@
+package nested
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/ezbuy/ezorm/v2/db"
+	"github.com/ezbuy/wrapper/database"
+
+	"go.mongodb.org/mongo-driver/mongo"
+)
+
+type SetupOption struct {
+	monitor database.Monitor
+}
+
+type SetupOptionFn func(opts *SetupOption)
+
+func WithStatsDMonitor(app string) SetupOptionFn {
+	return func(opts *SetupOption) {
+		opts.monitor = database.NewStatsDPoolMonitor(app)
+	}
+}
+
+func WithPrometheusMonitor(app, gatewayAddress string) SetupOptionFn {
+	return func(opts *SetupOption) {
+		opts.monitor = database.NewPrometheusPoolMonitor(app, gatewayAddress)
+	}
+}
+
+var mongoDriver *db.MongoDriver
+
+func MgoSetup(config *db.MongoConfig, opts ...SetupOptionFn) {
+	sopt := &SetupOption{}
+	for _, opt := range opts {
+		opt(sopt)
+	}
+	var dopt []db.MongoDriverOption
+	if sopt.monitor != nil {
+		dopt = append(dopt, db.WithPoolMonitor(database.NewMongoDriverMonitor(sopt.monitor)))
+	}
+	db.Setup(config)
+
+	var err error
+	mongoDriver, err = db.NewMongoDriver(
+		context.Background(),
+		dopt...,
+	)
+	if err != nil {
+		panic(fmt.Errorf("failed to create mongodb driver: %s", err))
+	}
+}
+
+func Col(col string) *mongo.Collection {
+	return mongoDriver.GetCol(col)
+}

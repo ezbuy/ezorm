@@ -158,13 +158,13 @@ func (m *_{{$obj.Name}}DBMgr) IsErrNotFound(err error) bool {
 
 // FetchByPrimaryKeys fetches a list of {{$obj.Name}} by its primary keys
 // it returns the specific error type(sql.ErrNoRows) when no rows found
-func (m *_{{$obj.Name}}DBMgr) FetchByPrimaryKeys(ctx context.Context,{{$primaryField.GetNames}} []{{$primaryField.GetType}}) ([]*{{$obj.Name}}, error) {
-	size := len({{$primaryField.GetNames}})
+func (m *_{{$obj.Name}}DBMgr) FetchByPrimaryKeys(ctx context.Context,{{$primaryField.GetUnderlineNames}} []{{$primaryField.GetType}}) ([]*{{$obj.Name}}, error) {
+	size := len({{$primaryField.GetUnderlineNames}})
 	if size == 0 {
 		return nil, nil
 	}
 	params := make([]interface{}, 0, size)
-	for _, pk := range {{$primaryField.GetNames}} {
+	for _, pk := range {{$primaryField.GetUnderlineNames}} {
 		params = append(params, pk)
 	}
 	obj := {{$obj.Name}}Mgr.New{{$obj.Name}}()
@@ -228,9 +228,9 @@ func (m *_{{$obj.Name}}DBMgr) FindBy{{$index.FirstField.Name}}Group(ctx context.
 {{ $firstUniqueField := $unique.FirstField }}
 
 {{- if $unique.IsSingleField}}
-func (m *_{{$obj.Name}}DBMgr) FetchBy{{$unique.GetFuncName}}s(ctx context.Context,{{$firstUniqueField.GetNames}} []{{$firstUniqueField.GetType}}) ([]*{{$obj.Name}}, error) {
+func (m *_{{$obj.Name}}DBMgr) FetchBy{{$unique.GetFuncName}}s(ctx context.Context,{{$firstUniqueField.GetUnderlineNames}} []{{$firstUniqueField.GetType}}) ([]*{{$obj.Name}}, error) {
 	in:= orm.NewFieldIN("{{$firstUniqueField.FieldName}}")
-	for _, item := range {{$firstUniqueField.GetNames}} {
+	for _, item := range {{$firstUniqueField.GetUnderlineNames}} {
 		in.Add(item)
 	}
 	obj := {{$obj.Name}}Mgr.New{{$obj.Name}}()
@@ -246,9 +246,9 @@ func (m *_{{$obj.Name}}DBMgr) FetchBy{{$unique.GetFuncName}}s(ctx context.Contex
 	return nil, fmt.Errorf("FetchBy{{$unique.GetFuncName}}s: %w", sql.ErrNoRows)
 }
 
-func (m *_{{$obj.Name}}DBMgr) FetchBy{{$unique.GetFuncName}}(ctx context.Context,{{$firstUniqueField.GetName}} {{$firstUniqueField.GetType}}) (*{{$obj.Name}}, error) {
+func (m *_{{$obj.Name}}DBMgr) FetchBy{{$unique.GetFuncName}}(ctx context.Context,{{$firstUniqueField.GetUnderlineName}} {{$firstUniqueField.GetType}}) (*{{$obj.Name}}, error) {
 	in:= orm.NewFieldIN("{{$firstUniqueField.FieldName}}")
-	in.Add({{$firstUniqueField.GetName}})
+	in.Add({{$firstUniqueField.GetUnderlineName}})
 	obj := {{$obj.Name}}Mgr.New{{$obj.Name}}()
 	where := orm.SQLWhere([]string{in.SQLFormat()})
 	query := fmt.Sprintf("SELECT %s FROM {{$obj.FromDB}} %s", strings.Join(obj.GetColumns(), ","), where)
