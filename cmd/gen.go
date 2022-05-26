@@ -23,7 +23,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	yaml "gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v3"
 
 	"github.com/ezbuy/ezorm/v2/internal/generator"
 	"github.com/ezbuy/ezorm/v2/internal/parser/mongo"
