@@ -480,7 +480,7 @@ func (o *Obj) Read(name string, data generator.Schema) error {
 				f.Obj = o
 				f.Tag = strconv.Itoa(i + 2)
 
-				err := f.Read(field.(map[interface{}]interface{}))
+				err := f.Read(field.(generator.Schema))
 				if err != nil {
 					return errors.New(o.Name + " obj has " + err.Error())
 				}

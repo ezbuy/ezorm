@@ -158,7 +158,7 @@ func (o *MetaObject) Read(name string, data generator.Schema) error {
 			for i, field := range fieldData {
 				f := NewField()
 				f.Obj = o
-				err := f.Read(field.(map[interface{}]interface{}))
+				err := f.Read(field.(generator.Schema))
 				if err != nil {
 					return fmt.Errorf("object (%s) %s", o.Name, err.Error())
 				}

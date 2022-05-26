@@ -352,11 +352,11 @@ func (f *Field) HasIndex() bool {
 	return f.Flags.Contains("index") || f.Flags.Contains("sort") || f.IsUnique()
 }
 
-func (f *Field) Read(data map[interface{}]interface{}) error {
+func (f *Field) Read(data generator.Schema) error {
 	f.init()
 	foundName := false
 	for k, v := range data {
-		key := k.(string)
+		key := string(k)
 		switch val := v.(type) {
 		case string:
 			if isUpperCase(key[0:1]) {
@@ -433,8 +433,8 @@ func (f *Field) Read(data map[interface{}]interface{}) error {
 
 		if key == "attrs" {
 			attrs := make(map[string]string)
-			for ki, vi := range v.(map[interface{}]interface{}) {
-				attrs[ki.(string)] = vi.(string)
+			for ki, vi := range v.(generator.Schema) {
+				attrs[string(ki)] = vi.(string)
 			}
 			f.Attrs = attrs
 		}

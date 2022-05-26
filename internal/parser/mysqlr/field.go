@@ -9,6 +9,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/ezbuy/ezorm/v2/internal/generator"
 	"github.com/ezbuy/utils/container/set"
 )
 
@@ -341,11 +342,11 @@ func (f *Field) GetTag() string {
 	return ""
 }
 
-func (f *Field) Read(data map[interface{}]interface{}) error {
+func (f *Field) Read(data generator.Schema) error {
 	foundName := false
 
 	for k, v := range data {
-		key := k.(string)
+		key := string(k)
 
 		if isUpperCase(key[0:1]) {
 			if foundName {
