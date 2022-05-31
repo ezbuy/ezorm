@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/ezbuy/utils v0.0.0-20170609090716-8ac4beef008f
-	github.com/ezbuy/wrapper v1.0.2
+	github.com/ezbuy/wrapper v1.0.3
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/iancoleman/strcase v0.2.0
 	github.com/pingcap/parser v0.0.0-20200623164729-3a18f1e5dceb

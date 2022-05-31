@@ -25,7 +25,7 @@ func NewMultiFieldIN(fields []string) *FieldMultiIN {
 	}
 }
 
-func (in *FieldMultiIN) Add(v []any) error {
+func (in *FieldMultiIN) Add(v []interface{}) error {
 	if in.rawFieldsLen == 0 || len(v) == 0 {
 		return errors.New("builder: fields length and passed-in value length should above zero")
 	}
@@ -51,20 +51,20 @@ func (in *FieldMultiIN) SQLFormat() string {
 	return in.in.SQLFormat()
 }
 
-func (in *FieldMultiIN) SQLParams() []any {
+func (in *FieldMultiIN) SQLParams() []interface{} {
 	return in.in.SQLParams()
 }
 
 type FieldIN struct {
 	Field   string
-	Params  []any
+	Params  []interface{}
 	holders []string
 }
 
 func NewFieldIN(field string) *FieldIN {
 	return &FieldIN{
 		Field:   field,
-		Params:  []any{},
+		Params:  []interface{}{},
 		holders: []string{},
 	}
 }
