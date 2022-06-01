@@ -5,6 +5,7 @@ package mysqlr
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -468,7 +469,7 @@ func (m *_BlogDBMgr) FetchByPrimaryKey(ctx context.Context, _id int64, _userId i
 
 // err not found check
 func (m *_BlogDBMgr) IsErrNotFound(err error) bool {
-	return strings.Contains(err.Error(), "not found") || err == sql.ErrNoRows
+	return strings.Contains(err.Error(), "not found") || errors.Is(err, sql.ErrNoRows)
 }
 
 // indexes
