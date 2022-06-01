@@ -10,6 +10,7 @@ import (
 	"strings"
 	"database/sql"
 	"context"
+	"errors"
 
 	"github.com/ezbuy/ezorm/v2/pkg/orm"
 	"gopkg.in/go-playground/validator.v9"

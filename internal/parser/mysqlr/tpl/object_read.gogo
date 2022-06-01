@@ -151,7 +151,7 @@ func (m *_{{$obj.Name}}DBMgr) FetchByPrimaryKey(ctx context.Context,{{$primary.G
 
 // err not found check
 func (m *_{{$obj.Name}}DBMgr) IsErrNotFound(err error) bool {
-	return strings.Contains(err.Error(), "not found") || err == sql.ErrNoRows
+	return strings.Contains(err.Error(), "not found") || errors.Is(err,sql.ErrNoRows)
 }
 
 {{- if $primary.IsSingleField}}
