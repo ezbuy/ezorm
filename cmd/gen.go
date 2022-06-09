@@ -15,11 +15,11 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
 	"io/fs"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -30,6 +30,7 @@ import (
 	"github.com/ezbuy/ezorm/v2/internal/parser/mysql"
 	"github.com/ezbuy/ezorm/v2/internal/parser/mysqlr"
 	"github.com/ezbuy/ezorm/v2/internal/parser/x/query"
+	"github.com/ezbuy/ezorm/v2/pkg/tools"
 
 	"github.com/spf13/cobra"
 )
@@ -104,12 +105,13 @@ var genCmd = &cobra.Command{
 		}, generators...); err != nil {
 			return err
 		}
-
-		oscmd := exec.Command("goimports", "-w", output)
-		if err := oscmd.Run(); err != nil {
-			fmt.Fprintf(os.Stderr, "run fmt tool: goimports: %q\n", err)
+		errBuffer := bytes.NewBuffer(nil)
+		tools.FmtCode(output, errBuffer)
+		if errBuffer.Len() > 0 {
+			fmt.Fprintf(os.Stderr, "run fmt tool: goimports: %s", errBuffer.String())
 			// fallthrough ,do not return here
 		}
+
 		return nil
 	},
 }

@@ -5,11 +5,12 @@ import (
 	"embed"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"text/template"
 	"unicode"
+
+	"github.com/ezbuy/ezorm/v2/pkg/tools"
 )
 
 //go:embed tpl/*.gogo tpl/*.sql
@@ -64,7 +65,11 @@ func GenerateGoTemplate(output string, obj *MetaObject) error {
 			return err
 		}
 		fd.Close()
-		fmtCode(filename)
+		errBuffer := bytes.NewBuffer(nil)
+		tools.FmtCode(filename, errBuffer)
+		if errBuffer.Len() > 0 {
+			fmt.Fprintf(os.Stderr, "run fmt tool: goimports: %s\n", errBuffer.String())
+		}
 	}
 	return nil
 }
@@ -121,14 +126,6 @@ func camel2sep(s string, sep string) string {
 		nameBuf.WriteRune(n)
 	}
 	return nameBuf.String()
-}
-
-func fmtCode(path string) {
-	oscmd := exec.Command("goimports", "-w", path)
-	if err := oscmd.Run(); err != nil {
-		fmt.Fprintln(os.Stderr, "run fmt tool: goimports: %w", err)
-		return
-	}
 }
 
 func Add(a, b int) int {
