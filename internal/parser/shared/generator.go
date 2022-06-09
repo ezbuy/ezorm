@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"github.com/ezbuy/ezorm/v2/internal/generator"
 	"github.com/ezbuy/ezorm/v2/internal/parser"
@@ -58,6 +59,9 @@ func (g *Generator) Generate(meta generator.TMetadata) error {
 	}); err != nil {
 		return err
 	}
+	sort.SliceStable(dbs, func(i, j int) bool {
+		return dbs[i].Name < dbs[j].Name
+	})
 	if len(dbs) > 0 {
 		if err := render(
 			filepath.Join(meta.Output, "create_mysql.sql"),
