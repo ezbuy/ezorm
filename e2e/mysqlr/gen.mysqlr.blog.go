@@ -11,7 +11,8 @@ import (
 	"time"
 
 	"github.com/ezbuy/ezorm/v2/pkg/orm"
-	"gopkg.in/go-playground/validator.v9"
+
+	validator "gopkg.in/go-playground/validator.v9"
 )
 
 var (
