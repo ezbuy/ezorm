@@ -9,9 +9,11 @@ import (
 
 	"github.com/ezbuy/ezorm/v2/db"
 	"github.com/ezbuy/ezorm/v2/e2e/mongo/user"
+	"github.com/ezbuy/ezorm/v2/pkg/orm"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func getConfigFromEnv() *db.MongoConfig {
@@ -29,6 +31,39 @@ func getConfigFromEnv() *db.MongoConfig {
 
 func TestMain(m *testing.M) {
 	user.MgoSetup(getConfigFromEnv())
+	expr := 3600
+	exprInt32 := int32(expr)
+	if err := orm.EnsureAllIndex(orm.WithIndexNameHandler(user.UserIndexKey_Age, &options.IndexOptions{
+		ExpireAfterSeconds: &exprInt32,
+	})); err != nil {
+		panic(err)
+	}
+	indexMap := make(map[string]struct{})
+	indexes, err := user.Col("test_user").Indexes().ListSpecifications(context.Background())
+	if err != nil {
+		panic(err)
+	}
+
+	for _, index := range indexes {
+		indexMap[index.Name] = struct{}{}
+	}
+
+	for _, index := range user.UserIndexes {
+		k := orm.IndexKey(index.Keys)
+		if _, ok := indexMap[k]; !ok {
+			panic(fmt.Errorf("not all index found in mongo: key: %s", k))
+		}
+		if k == "Age_1" {
+			if *index.Options.ExpireAfterSeconds != 3600 {
+				panic(
+					fmt.Errorf("index expire after seconds not match,got %d,expect %d",
+						*index.Options.ExpireAfterSeconds,
+						3600,
+					))
+			}
+		}
+	}
+
 	os.Exit(m.Run())
 }
 

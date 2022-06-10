@@ -4,15 +4,41 @@ import (
 	"context"
 
 	"github.com/ezbuy/ezorm/v2/pkg/orm"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+var UserIndexes = []mongo.IndexModel{
+	{
+		Keys: UserIndexKey_UsernameAge,
+	},
+	{
+		Keys: UserIndexKey_Username,
+	},
+	{
+		Keys: UserIndexKey_Age,
+	},
+}
+var UserIndexKey_UsernameAge = bson.D{
+	{Key: "Username", Value: 1},
+	{Key: "Age", Value: 1},
+}
+var UserIndexKey_Username = bson.D{
+	{Key: "Username", Value: 1},
+}
+var UserIndexKey_Age = bson.D{
+	{Key: "Age", Value: 1},
+}
+
 func init() {
 	orm.RegisterEzOrmObjByID("user", "User", newUserFindByID)
 	orm.RegisterEzOrmObjRemove("user", "User", newUserRemoveByID)
+	orm.RegisterSetupPostHooks(func() {
+		orm.SetupIndexModel(Col("test_user"), UserIndexes)
+	})
 }
 
 func newUserFindByID(id string) (result orm.EzOrmObj, err error) {
