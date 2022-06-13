@@ -15,6 +15,3 @@ User:
   table: test_user
   dbname: test
   comment: "all registered user use our systems"
-
-
-

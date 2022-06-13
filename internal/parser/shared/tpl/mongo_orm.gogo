@@ -6,15 +6,40 @@ import (
     "context"
 
     "github.com/ezbuy/ezorm/v2/pkg/orm"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+{{- if gt (len $obj.Indexes) 0}}
+var {{$obj.Name}}Indexes = []mongo.IndexModel{
+    {{- range $index := $obj.Indexes}}
+    {
+        Keys: {{$obj.Name}}IndexKey_{{$index.Name}},
+        {{- if $index.IsUnique }}
+		Options: options.Index().SetUnique(true),
+        {{- end }}
+    },
+    {{- end}}
+}
+{{- end }}
+
+{{- range $index := $obj.Indexes}}
+var {{$obj.Name}}IndexKey_{{ $index.Name }} = bson.D{
+    {{- range $key := $index.FieldNames }}
+        {Key: "{{$key}}", Value: 1},
+    {{- end }}
+}
+{{- end }}
+
 func init() {
     orm.RegisterEzOrmObjByID("{{.Package}}", "{{.Name}}", new{{.Name}}FindByID)
 	orm.RegisterEzOrmObjRemove("{{.Package}}", "{{.Name}}", new{{.Name}}RemoveByID)
+	orm.RegisterSetupPostHooks(func() {
+		orm.SetupIndexModel(Col({{if eq .Table ""}}"{{.Package}}.{{.Name}}"{{else}}"{{.Table}}"{{end}}), UserIndexes)
+	})
 }
 
 func new{{.Name}}FindByID(id string) (result orm.EzOrmObj, err error) {
