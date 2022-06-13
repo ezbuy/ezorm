@@ -6,6 +6,7 @@ import (
 )
 
 type TemplateName string
+type FieldName string
 
 // Metadata represents the metadata of the generated code.
 // FIXME: concurrent map is not safe
@@ -20,7 +21,7 @@ func (m Metadata) Each(fn func(TemplateName, Schema) error) error {
 	return nil
 }
 
-type Schema map[TemplateName]any
+type Schema map[FieldName]any
 
 func (om Schema) GetDriver() (string, error) {
 	if v, ok := om["db"]; ok {
