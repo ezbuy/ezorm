@@ -4,7 +4,7 @@ import (
     "context"
     "fmt"
 
-    "github.com/ezbuy/ezorm/v2/db"
+    "github.com/ezbuy/ezorm/v2/pkg/db"
     "github.com/ezbuy/wrapper/database"
     "github.com/ezbuy/ezorm/v2/pkg/orm"
 

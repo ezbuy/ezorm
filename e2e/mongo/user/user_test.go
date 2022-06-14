@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ezbuy/ezorm/v2/db"
 	"github.com/ezbuy/ezorm/v2/e2e/mongo/user"
+	"github.com/ezbuy/ezorm/v2/pkg/db"
 	"github.com/ezbuy/ezorm/v2/pkg/orm"
 
 	"go.mongodb.org/mongo-driver/bson"

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ezbuy/ezorm/v2/db"
+	"github.com/ezbuy/ezorm/v2/pkg/db"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ezbuy/ezorm/v2/db"
+	"github.com/ezbuy/ezorm/v2/pkg/db"
 )
 
 var (
