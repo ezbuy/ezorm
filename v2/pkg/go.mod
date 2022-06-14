@@ -2,10 +2,7 @@ module github.com/ezbuy/ezorm/v2/pkg
 
 go 1.18
 
-replace github.com/ezbuy/ezorm/v2 => ../../ezorm
-
 require (
-	github.com/ezbuy/ezorm/v2 v2.0.0-00010101000000-000000000000
 	github.com/ezbuy/wrapper v1.0.3
 	github.com/go-sql-driver/mysql v1.6.0
 	go.mongodb.org/mongo-driver v1.9.1
