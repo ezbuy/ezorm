@@ -44,7 +44,7 @@ func MgoSetup(config *db.MongoConfig, opts ...SetupOptionFn) {
 		opt(sopt)
 	}
 	// setup the indexes
-	postFn, ok := orm.GetPostHooks("user", "UserBlog")
+	postFn, ok := orm.GetPostHooks("user", "User")
 	if ok {
 		sopt.postHooks = append(sopt.postHooks, postFn)
 	}
