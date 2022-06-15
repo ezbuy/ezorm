@@ -19,6 +19,10 @@ var UserIndexes = []mongo.IndexModel{
 		Keys: UserIndexKey_Age,
 	},
 }
+
+var UserIndexesFunc = func() {
+	orm.SetupIndexModel(Col("nested.User"), UserIndexes)
+}
 var UserIndexKey_Username = bson.D{
 	{Key: "Username", Value: 1},
 }
@@ -29,9 +33,6 @@ var UserIndexKey_Age = bson.D{
 func init() {
 	orm.RegisterEzOrmObjByID("nested", "User", newUserFindByID)
 	orm.RegisterEzOrmObjRemove("nested", "User", newUserRemoveByID)
-	orm.RegisterSetupPostHooks("nested", "User", func() {
-		orm.SetupIndexModel(Col("nested.User"), UserIndexes)
-	})
 }
 
 func newUserFindByID(id string) (result orm.EzOrmObj, err error) {

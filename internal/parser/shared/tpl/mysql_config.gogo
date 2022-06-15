@@ -1,4 +1,7 @@
-{{define "mysql_config"}}package {{.GoPackage}}
+{{define "mysql_config"}}
+{{ $first := index . 1}}
+
+package {{ $first.GoPackage }}
 
 import (
 	   "fmt"

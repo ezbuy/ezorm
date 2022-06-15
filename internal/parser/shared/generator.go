@@ -17,7 +17,7 @@ var _ generator.Generator = (*Generator)(nil)
 type Generator struct{}
 
 func (g *Generator) Generate(meta generator.TMetadata) error {
-	drivers := make(map[string]*Obj)
+	drivers := make(map[string][]*Obj)
 	var dbs []*Obj
 	if err := meta.Meta.Each(func(tn generator.TemplateName, s generator.Schema) error {
 		d, err := s.GetDriver()
@@ -54,7 +54,7 @@ func (g *Generator) Generate(meta generator.TMetadata) error {
 				return err
 			}
 		}
-		drivers[d] = o
+		drivers[d] = append(drivers[d], o)
 		return nil
 	}); err != nil {
 		return err
@@ -71,7 +71,10 @@ func (g *Generator) Generate(meta generator.TMetadata) error {
 		}
 	}
 	for _, d := range drivers {
-		for _, t := range d.GetConfigTemplates() {
+		if len(d) <= 0 {
+			continue
+		}
+		for _, t := range d[0].GetConfigTemplates() {
 			fileAbsPath := filepath.Join(meta.Output, fmt.Sprintf("gen_%s.go", t))
 			if err := render(fileAbsPath, t, d); err != nil {
 				return err

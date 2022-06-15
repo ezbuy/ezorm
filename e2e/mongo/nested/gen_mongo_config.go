@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/ezbuy/ezorm/v2/pkg/db"
-	"github.com/ezbuy/ezorm/v2/pkg/orm"
 	"github.com/ezbuy/wrapper/database"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -44,10 +43,9 @@ func MgoSetup(config *db.MongoConfig, opts ...SetupOptionFn) {
 		opt(sopt)
 	}
 	// setup the indexes
-	postFn, ok := orm.GetPostHooks("nested", "User")
-	if ok {
-		sopt.postHooks = append(sopt.postHooks, postFn)
-	}
+	sopt.postHooks = append(sopt.postHooks,
+		UserIndexesFunc,
+	)
 	var dopt []db.MongoDriverOption
 	if sopt.monitor != nil {
 		dopt = append(dopt, db.WithPoolMonitor(database.NewMongoDriverMonitor(sopt.monitor)))
