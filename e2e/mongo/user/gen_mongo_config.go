@@ -44,7 +44,10 @@ func MgoSetup(config *db.MongoConfig, opts ...SetupOptionFn) {
 		opt(sopt)
 	}
 	// setup the indexes
-	sopt.postHooks = append(sopt.postHooks, orm.PostSetupHooks...)
+	postFn, ok := orm.GetPostHooks("user", "UserBlog")
+	if ok {
+		sopt.postHooks = append(sopt.postHooks, postFn)
+	}
 	var dopt []db.MongoDriverOption
 	if sopt.monitor != nil {
 		dopt = append(dopt, db.WithPoolMonitor(database.NewMongoDriverMonitor(sopt.monitor)))

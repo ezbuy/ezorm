@@ -36,7 +36,7 @@ var UserIndexKey_Age = bson.D{
 func init() {
 	orm.RegisterEzOrmObjByID("user", "User", newUserFindByID)
 	orm.RegisterEzOrmObjRemove("user", "User", newUserRemoveByID)
-	orm.RegisterSetupPostHooks(func() {
+	orm.RegisterSetupPostHooks("user", "User", func() {
 		orm.SetupIndexModel(Col("test_user"), UserIndexes)
 	})
 }

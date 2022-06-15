@@ -15,3 +15,18 @@ User:
   table: test_user
   dbname: test
   comment: "all registered user use our systems"
+
+UserBlog:
+  db: mongo
+  fields:
+    - UserId: uint64
+      attrs: {bsonTag: "uid", jsonTag: "uid"}
+      comment: "the identity of each user"
+      flags: [index]
+    - BlogId: uint64
+      attrs: {bsonTag: "bid", jsonTag: "bid"}
+      comment: "the identity of each blog"
+    - Content: string
+  table: test_user_blog
+  dbname: test
+
