@@ -16,6 +16,10 @@ var UserBlogIndexes = []mongo.IndexModel{
 		Keys: UserBlogIndexKey_UserId,
 	},
 }
+
+var UserBlogIndexesFunc = func() {
+	orm.SetupIndexModel(Col("test_user_blog"), UserBlogIndexes)
+}
 var UserBlogIndexKey_UserId = bson.D{
 	{Key: "UserId", Value: 1},
 }
@@ -23,9 +27,6 @@ var UserBlogIndexKey_UserId = bson.D{
 func init() {
 	orm.RegisterEzOrmObjByID("user", "UserBlog", newUserBlogFindByID)
 	orm.RegisterEzOrmObjRemove("user", "UserBlog", newUserBlogRemoveByID)
-	orm.RegisterSetupPostHooks("user", "UserBlog", func() {
-		orm.SetupIndexModel(Col("test_user_blog"), UserBlogIndexes)
-	})
 }
 
 func newUserBlogFindByID(id string) (result orm.EzOrmObj, err error) {

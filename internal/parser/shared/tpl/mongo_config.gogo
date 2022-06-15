@@ -1,4 +1,7 @@
-{{define "mongo_config"}}package {{.GoPackage}}
+{{define "mongo_config"}}
+{{ $first := index . 1}}
+
+package {{ $first.GoPackage }}
 
 import (
     "context"
@@ -6,7 +9,6 @@ import (
 
     "github.com/ezbuy/ezorm/v2/pkg/db"
     "github.com/ezbuy/wrapper/database"
-    "github.com/ezbuy/ezorm/v2/pkg/orm"
 
     "go.mongodb.org/mongo-driver/mongo"
 )
@@ -45,10 +47,13 @@ func MgoSetup(config *db.MongoConfig, opts ...SetupOptionFn) {
 		opt(sopt)
 	}
 	// setup the indexes
-	postFn, ok := orm.GetPostHooks("{{.Package}}","{{.Name}}")
-	if ok {
-		sopt.postHooks = append(sopt.postHooks, postFn)
-	}
+	sopt.postHooks = append(sopt.postHooks,
+	{{- range $index, $obj := .}}
+		{{- if gt (len $obj.Indexes) 0}}
+		{{$obj.Name}}IndexesFunc,
+		{{- end}}
+	{{- end}}
+	)
 	var dopt []db.MongoDriverOption
 	if sopt.monitor != nil {
 		dopt = append(dopt, db.WithPoolMonitor(database.NewMongoDriverMonitor(sopt.monitor)))
