@@ -13,7 +13,7 @@ var (
 	ezOrmObjsByID   = make(map[string]func(id string) (result EzOrmObj, err error))
 	ezOrmObjsRemove = make(map[string]func(id string) (err error))
 	Indexers        = make(map[string]func())
-	PostSetupHooks  = []func(){}
+	postSetupHooks  = make(map[string]func())
 )
 
 func RegisterEzOrmObj(namespace, classname string, constructor func() EzOrmObj) {
@@ -32,8 +32,15 @@ func RegisterIndexer(namespace, classname string, indexer func()) {
 	Indexers[namespace+"."+classname] = indexer
 }
 
-func RegisterSetupPostHooks(fn ...func()) {
-	PostSetupHooks = append(PostSetupHooks, fn...)
+func RegisterSetupPostHooks(name string, className string, fn func()) {
+	postSetupHooks[name+"."+className] = fn
+}
+
+func GetPostHooks(name string, className string) (func(), bool) {
+	if post, ok := postSetupHooks[name+"."+className]; ok {
+		return post, true
+	}
+	return nil, false
 }
 
 func NewEzOrmObjObj(namespace, classname string) EzOrmObj {
