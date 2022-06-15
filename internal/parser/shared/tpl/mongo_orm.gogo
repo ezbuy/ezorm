@@ -24,6 +24,10 @@ var {{$obj.Name}}Indexes = []mongo.IndexModel{
     },
     {{- end}}
 }
+
+var {{$obj.Name}}IndexesFunc = func(){
+	orm.SetupIndexModel(Col({{if eq .Table ""}}"{{.Package}}.{{.Name}}"{{else}}"{{.Table}}"{{end}}),  {{$obj.Name}}Indexes)
+}
 {{- end }}
 
 {{- range $index := $obj.Indexes}}
@@ -37,11 +41,6 @@ var {{$obj.Name}}IndexKey_{{ $index.Name }} = bson.D{
 func init() {
     orm.RegisterEzOrmObjByID("{{.Package}}", "{{.Name}}", new{{.Name}}FindByID)
 	orm.RegisterEzOrmObjRemove("{{.Package}}", "{{.Name}}", new{{.Name}}RemoveByID)
-	orm.RegisterSetupPostHooks("{{.Package}}","{{.Name}}",func() {
-    {{- if gt (len $obj.Indexes) 0}}
-		orm.SetupIndexModel(Col({{if eq .Table ""}}"{{.Package}}.{{.Name}}"{{else}}"{{.Table}}"{{end}}),  {{$obj.Name}}Indexes)
-    {{- end }}
-	})
 }
 
 func new{{.Name}}FindByID(id string) (result orm.EzOrmObj, err error) {
