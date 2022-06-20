@@ -18,7 +18,7 @@ ezorm was built with this key idea in mind , but we describe the `database schem
 * MySQL
 	* driver: `db: mysql`
 	* driver: `db: mysqlr`
-* MongoDB
+* MongoDB (v4.2+)
 * ~~Redis(deprecated since v2)~~
 * ~~SQL Server(deprecated since v2)~~
 * [3rd customized plugin](./doc/plugin.md)
