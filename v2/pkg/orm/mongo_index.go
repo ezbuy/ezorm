@@ -17,6 +17,7 @@ var setupIndexFunc []func(im *IndexModifier) error
 type IndexModifier struct {
 	Key    bson.D
 	Option *options.IndexOptions
+	Result IndexResult
 }
 
 func IndexKey(i any) string {
@@ -42,6 +43,11 @@ func buildKeyFromD(k bson.D) string {
 	return strings.Join(keys, "_")
 }
 
+type IndexResult struct {
+	ExistsIndex  int
+	CreatedIndex int
+}
+
 func SetupIndexModel(c *mongo.Collection, keys []mongo.IndexModel) {
 	ctx := context.Background()
 	setupIndexFunc = append(setupIndexFunc, func(im *IndexModifier) error {
@@ -50,9 +56,12 @@ func SetupIndexModel(c *mongo.Collection, keys []mongo.IndexModel) {
 				keys[index].Options = im.Option
 			}
 		}
-		if err := ensureIndex(ctx, c, keys); err != nil {
+
+		res, err := ensureIndex(ctx, c, keys)
+		if err != nil {
 			return err
 		}
+		im.Result = res
 		return nil
 	})
 }
@@ -63,6 +72,15 @@ func WithIndexNameHandler(index bson.D, opt *options.IndexOptions) IndexOptionsH
 	return func(im *IndexModifier) error {
 		im.Key = index
 		im.Option = opt
+		return nil
+	}
+}
+
+func IndexCreateResult(exist *int, created *int) IndexOptionsHandler {
+	return func(im *IndexModifier) error {
+		ex, cr := im.Result.ExistsIndex, im.Result.CreatedIndex
+		exist = &ex
+		created = &cr
 		return nil
 	}
 }
@@ -84,23 +102,25 @@ func EnsureAllIndex(fns ...IndexOptionsHandler) error {
 // we should directly create the provided index , per the mongo doc, mongo will :
 // 1. (before version v4.2), create the index even if the index (name) already exist , and not returns any errors.
 // 2. (after version v4.2), returns an already exist error if the index (name) already exist , but the duplicate index will still be created.
-func ensureIndex(ctx context.Context, c *mongo.Collection, keys []mongo.IndexModel) error {
+func ensureIndex(ctx context.Context, c *mongo.Collection, keys []mongo.IndexModel) (IndexResult, error) {
 
 	idxs := c.Indexes()
 	cur, err := idxs.List(ctx, options.ListIndexes().SetBatchSize(1))
 	if err != nil {
-		return fmt.Errorf("ensureIndex: unable to list indexes: %w", err)
+		return IndexResult{}, fmt.Errorf("ensureIndex: unable to list indexes: %w", err)
 	}
 
 	var idx []bson.M
 	if err := cur.All(ctx, &idx); err != nil {
-		return fmt.Errorf("ensureIndex: range indexes: %w", err)
+		return IndexResult{}, fmt.Errorf("ensureIndex: range indexes: %w", err)
 	}
 
-	exKeys := make(map[string]mongo.IndexModel)
+	exKeys := make(map[string]struct{})
 	for _, m := range idx {
-		exKeys[m["name"].(string)] = mongo.IndexModel{}
+		exKeys[m["name"].(string)] = struct{}{}
 	}
+
+	keysToCreate := make([]mongo.IndexModel, 0, len(keys))
 
 	for _, k := range keys {
 		var keyName string
@@ -111,11 +131,17 @@ func ensureIndex(ctx context.Context, c *mongo.Collection, keys []mongo.IndexMod
 			keyName = *k.Options.Name
 		}
 		if _, ok := exKeys[keyName]; !ok {
-			if _, err := idxs.CreateOne(ctx, k); err != nil {
-				return fmt.Errorf("ensureIndex: unable to create index: %w", err)
-			}
+			keysToCreate = append(keysToCreate, k)
+		}
+	}
+	if len(keysToCreate) > 0 {
+		if _, err := idxs.CreateMany(ctx, keysToCreate); err != nil {
+			return IndexResult{}, fmt.Errorf("ensureIndex: unable to create index: %w", err)
 		}
 	}
 
-	return nil
+	return IndexResult{
+		ExistsIndex:  len(exKeys),
+		CreatedIndex: len(keysToCreate),
+	}, nil
 }

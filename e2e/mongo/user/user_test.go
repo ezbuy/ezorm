@@ -33,10 +33,21 @@ func TestMain(m *testing.M) {
 	user.MgoSetup(getConfigFromEnv())
 	expr := 3600
 	exprInt32 := int32(expr)
+	var exist, created int
 	if err := orm.EnsureAllIndex(orm.WithIndexNameHandler(user.UserIndexKey_Age, &options.IndexOptions{
 		ExpireAfterSeconds: &exprInt32,
-	})); err != nil {
+	}), orm.IndexCreateResult(&exist, &created)); err != nil {
 		panic(err)
+	}
+	if exist != 0 && created != len(user.UserIndexes) {
+		panic(fmt.Errorf("failed to create index, created: %d, exist: %d", created, exist))
+	}
+	var exist_s, created_s int
+	if err := orm.EnsureAllIndex(orm.IndexCreateResult(&exist_s, &created_s)); err != nil {
+		panic(err)
+	}
+	if created_s != 0 && exist_s != len(user.UserIndexes) {
+		panic(fmt.Errorf("failed to create index, created: %d, exist: %d", created_s, exist_s))
 	}
 	indexMap := make(map[string]struct{})
 	indexes, err := user.Col("test_user").Indexes().ListSpecifications(context.Background())
