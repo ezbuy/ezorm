@@ -21,7 +21,7 @@ var UserIndexes = []mongo.IndexModel{
 }
 
 var UserIndexesFunc = func() {
-	orm.SetupIndexModel(Col("nested.User"), UserIndexes)
+	orm.SetupIndexModel(Col("mongo_e2e.User"), UserIndexes)
 }
 var UserIndexKey_Username = bson.D{
 	{Key: "Username", Value: 1},
@@ -31,8 +31,8 @@ var UserIndexKey_Age = bson.D{
 }
 
 func init() {
-	orm.RegisterEzOrmObjByID("nested", "User", newUserFindByID)
-	orm.RegisterEzOrmObjRemove("nested", "User", newUserRemoveByID)
+	orm.RegisterEzOrmObjByID("mongo_e2e", "User", newUserFindByID)
+	orm.RegisterEzOrmObjRemove("mongo_e2e", "User", newUserRemoveByID)
 }
 
 func newUserFindByID(id string) (result orm.EzOrmObj, err error) {
@@ -295,5 +295,5 @@ func (o *_UserMgr) RemoveByID(ctx context.Context, id string) (err error) {
 }
 
 func (m *_UserMgr) GetCol() *mongo.Collection {
-	return Col("nested.User")
+	return Col("mongo_e2e.User")
 }

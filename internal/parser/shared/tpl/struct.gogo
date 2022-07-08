@@ -54,7 +54,7 @@ var (
 {{- end}}
 
 func (p *{{.Name}}) GetNameSpace() string {
-	return "{{.Package}}"
+	return "{{.Namespace}}"
 }
 
 func (p *{{.Name}}) GetClassName() string {

@@ -65,7 +65,7 @@ func (m *_BlogMgr) NewBlog() *Blog {
 }
 
 func (obj *Blog) GetNameSpace() string {
-	return "mysqlr"
+	return "mysqlr_e2e"
 }
 
 func (obj *Blog) GetClassName() string {

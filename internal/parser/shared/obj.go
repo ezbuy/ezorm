@@ -83,19 +83,21 @@ type Obj struct {
 	FilterFields []string
 	Indexes      []*Index
 	Name         string
-	Package      string
-	GoPackage    string
-	SearchIndex  string
-	SearchType   string
-	Table        string
-	TplWriter    io.Writer
-	DbName       string
-	StoreType    string
-	ValueType    string
-	ValueField   *Field
-	ModelType    string
-	ImportSQL    string
-	Comment      string
+	Namespace    string
+	// Package is deprecated , use Namespace instead
+	Package     string
+	GoPackage   string
+	SearchIndex string
+	SearchType  string
+	Table       string
+	TplWriter   io.Writer
+	DbName      string
+	StoreType   string
+	ValueType   string
+	ValueField  *Field
+	ModelType   string
+	ImportSQL   string
+	Comment     string
 
 	// IsEmbed describes whether the object should embedded in another object.
 	// The embedded object will not generator the orm method but only the db struct.
@@ -103,8 +105,8 @@ type Obj struct {
 }
 
 func (o *Obj) init() {
-	if o.GoPackage == "" {
-		o.GoPackage = o.Package
+	if o.Namespace == "" {
+		o.Namespace = o.GoPackage
 	}
 	o.FieldNameMap = make(map[string]*Field)
 }

@@ -3,7 +3,7 @@
 {{$primary := $obj.PrimaryKey}}
 {{$primaryField := $primary.FirstField }}
 func (obj *{{.Name}}) GetNameSpace() string {
-	return "{{.Package}}"
+	return "{{.Namespace}}"
 }
 
 func (obj *{{.Name}}) GetClassName() string {

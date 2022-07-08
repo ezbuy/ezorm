@@ -26,7 +26,7 @@ var {{$obj.Name}}Indexes = []mongo.IndexModel{
 }
 
 var {{$obj.Name}}IndexesFunc = func(){
-	orm.SetupIndexModel(Col({{if eq .Table ""}}"{{.Package}}.{{.Name}}"{{else}}"{{.Table}}"{{end}}),  {{$obj.Name}}Indexes)
+	orm.SetupIndexModel(Col({{if eq .Table ""}}"{{.Namespace}}.{{.Name}}"{{else}}"{{.Table}}"{{end}}),  {{$obj.Name}}Indexes)
 }
 {{- end }}
 
@@ -39,8 +39,8 @@ var {{$obj.Name}}IndexKey_{{ $index.Name }} = bson.D{
 {{- end }}
 
 func init() {
-    orm.RegisterEzOrmObjByID("{{.Package}}", "{{.Name}}", new{{.Name}}FindByID)
-	orm.RegisterEzOrmObjRemove("{{.Package}}", "{{.Name}}", new{{.Name}}RemoveByID)
+    orm.RegisterEzOrmObjByID("{{.Namespace}}", "{{.Name}}", new{{.Name}}FindByID)
+	orm.RegisterEzOrmObjRemove("{{.Namespace}}", "{{.Name}}", new{{.Name}}RemoveByID)
 }
 
 func new{{.Name}}FindByID(id string) (result orm.EzOrmObj, err error) {
@@ -377,7 +377,7 @@ func (o *_{{.Name}}Mgr) RemoveByID(ctx context.Context, id string) (err error) {
 }
 
 func (m *_{{.Name}}Mgr) GetCol() *mongo.Collection {
-    return Col({{if eq .Table ""}}"{{.Package}}.{{.Name}}"{{else}}"{{.Table}}"{{end}})
+    return Col({{if eq .Table ""}}"{{.Namespace}}.{{.Name}}"{{else}}"{{.Table}}"{{end}})
 }
 
 {{end}}

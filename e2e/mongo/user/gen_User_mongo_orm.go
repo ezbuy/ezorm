@@ -38,8 +38,8 @@ var UserIndexKey_Age = bson.D{
 }
 
 func init() {
-	orm.RegisterEzOrmObjByID("user", "User", newUserFindByID)
-	orm.RegisterEzOrmObjRemove("user", "User", newUserRemoveByID)
+	orm.RegisterEzOrmObjByID("mongo_e2e", "User", newUserFindByID)
+	orm.RegisterEzOrmObjRemove("mongo_e2e", "User", newUserRemoveByID)
 }
 
 func newUserFindByID(id string) (result orm.EzOrmObj, err error) {

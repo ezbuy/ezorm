@@ -18,7 +18,7 @@ const (
 )
 
 func (p *User) GetNameSpace() string {
-	return "mysql"
+	return "mysql_e2e"
 }
 
 func (p *User) GetClassName() string {

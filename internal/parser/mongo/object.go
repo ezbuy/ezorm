@@ -14,7 +14,7 @@ type MongoObject struct {
 func NewMongoObject(pkg string, templateName string) *MongoObject {
 	return &MongoObject{
 		Obj: &shared.Obj{
-			Package:   pkg,
+			Namespace: pkg,
 			GoPackage: pkg,
 			Name:      templateName,
 		},

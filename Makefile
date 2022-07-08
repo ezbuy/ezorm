@@ -16,10 +16,10 @@ cleane2e:
 regene2e: cleane2e gene2e
 
 gene2e:
-	bin/ezorm gen -i ./e2e/mongo/user/user.yaml -o  ./e2e/mongo/user --goPackage user
-	bin/ezorm gen -i ./e2e/mongo/nested/nested.yaml -o  ./e2e/mongo/nested --goPackage nested
-	bin/ezorm gen -i ./e2e/mysql -o ./e2e/mysql --goPackage mysql
-	bin/ezorm gen -i ./e2e/mysqlr -o ./e2e/mysqlr --goPackage mysqlr
+	bin/ezorm gen -i ./e2e/mongo/user/user.yaml -o  ./e2e/mongo/user --goPackage user --namespace mongo_e2e
+	bin/ezorm gen -i ./e2e/mongo/nested/nested.yaml -o  ./e2e/mongo/nested --goPackage nested --namespace mongo_e2e
+	bin/ezorm gen -i ./e2e/mysql -o ./e2e/mysql --goPackage mysql --namespace mysql_e2e
+	bin/ezorm gen -i ./e2e/mysqlr -o ./e2e/mysqlr --goPackage mysqlr --namespace mysqlr_e2e
 
 gen-plugin-e2e:
 	bin/ezorm gen -i ./e2e/plugins/hello-driver -o ./e2e/plugins/hello-driver --goPackage hello-driver --plugin hello-driver

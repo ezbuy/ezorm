@@ -42,7 +42,7 @@ var (
 )
 
 func (p *User) GetNameSpace() string {
-	return "user"
+	return "mongo_e2e"
 }
 
 func (p *User) GetClassName() string {

@@ -25,10 +25,14 @@ func (g *Generator) Generate(meta generator.TMetadata) error {
 			return fmt.Errorf("template: %s: %q", string(tn), err)
 		}
 		var o *Obj
+		ns := meta.Namespace
+		if meta.Namespace == "" {
+			ns = meta.Pkg
+		}
 		switch d {
 		case parser.MongoGeneratorName:
 			o = &Obj{
-				Package:   meta.Pkg,
+				Namespace: ns,
 				GoPackage: meta.Pkg,
 				Name:      string(tn),
 			}
@@ -37,7 +41,7 @@ func (g *Generator) Generate(meta generator.TMetadata) error {
 			}
 		case parser.MySQLGeneratorName:
 			o = &Obj{
-				Package:   meta.Pkg,
+				Namespace: ns,
 				GoPackage: meta.Pkg,
 				Name:      string(tn),
 			}
