@@ -32,7 +32,7 @@ const (
 )
 
 func (p *Blog) GetNameSpace() string {
-	return "mysql"
+	return "mysql_e2e"
 }
 
 func (p *Blog) GetClassName() string {

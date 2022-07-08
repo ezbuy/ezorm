@@ -56,7 +56,7 @@ func (m *_UserMgr) NewUser() *User {
 }
 
 func (obj *User) GetNameSpace() string {
-	return "mysqlr"
+	return "mysqlr_e2e"
 }
 
 func (obj *User) GetClassName() string {

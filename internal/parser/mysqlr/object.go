@@ -12,8 +12,10 @@ var _ generator.IObject = (*MetaObject)(nil)
 
 type MetaObject struct {
 	//! package name
+	// Package is deprecated, use Namespace instead.
 	Package   string
 	GoPackage string
+	Namespace string
 	//! model name
 	Name string
 	Tag  string
@@ -37,9 +39,9 @@ type MetaObject struct {
 	ImportSQL string
 }
 
-func NewMetaObject(packageName string) *MetaObject {
+func NewMetaObject(namespace string, packageName string) *MetaObject {
 	return &MetaObject{
-		Package:      packageName,
+		Namespace:    namespace,
 		GoPackage:    packageName,
 		fieldNameMap: make(map[string]*Field),
 	}

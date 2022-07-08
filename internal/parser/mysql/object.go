@@ -14,7 +14,7 @@ type MySQLObject struct {
 func NewMySQLObject(pkg string, templateName string) *MySQLObject {
 	return &MySQLObject{
 		Obj: &shared.Obj{
-			Package:   pkg,
+			Namespace: pkg,
 			GoPackage: pkg,
 			Name:      templateName,
 		},
