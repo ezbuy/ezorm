@@ -31,16 +31,20 @@ func (rg *RawQueryGenerator) Generate(meta generator.TMetadata) error {
 			log.Printf("rawquery: warning: %q\n", err)
 			return nil
 		}
+		ns := meta.Namespace
+		if meta.Namespace == "" {
+			ns = meta.Pkg
+		}
 
 		switch dr {
 		case parser.MySQLGeneratorName:
-			s := mysql.NewMySQLObject(meta.Pkg, string(tn))
+			s := mysql.NewMySQLObject(ns, string(tn))
 			if err := s.Read(string(tn), om); err != nil {
 				return err
 			}
 			tableSchema[table] = s
 		case parser.MySQLRGeneratorName:
-			s := mysqlr.NewMetaObject(meta.Pkg)
+			s := mysqlr.NewMetaObject(ns, meta.Pkg)
 			if err := s.Read(string(tn), om); err != nil {
 				return err
 			}

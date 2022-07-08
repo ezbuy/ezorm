@@ -54,6 +54,7 @@ func (om Schema) GetTable(dr string) (string, error) {
 }
 
 type TMetadata struct {
+	Namespace     string
 	Pkg           string
 	Meta          Metadata
 	Input         string

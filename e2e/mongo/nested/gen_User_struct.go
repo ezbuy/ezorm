@@ -43,7 +43,7 @@ var (
 )
 
 func (p *User) GetNameSpace() string {
-	return "nested"
+	return "mongo_e2e"
 }
 
 func (p *User) GetClassName() string {

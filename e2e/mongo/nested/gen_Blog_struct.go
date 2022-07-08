@@ -29,7 +29,7 @@ var (
 )
 
 func (p *Blog) GetNameSpace() string {
-	return "nested"
+	return "mongo_e2e"
 }
 
 func (p *Blog) GetClassName() string {

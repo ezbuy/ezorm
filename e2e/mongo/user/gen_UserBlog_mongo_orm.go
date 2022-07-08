@@ -25,8 +25,8 @@ var UserBlogIndexKey_UserId = bson.D{
 }
 
 func init() {
-	orm.RegisterEzOrmObjByID("user", "UserBlog", newUserBlogFindByID)
-	orm.RegisterEzOrmObjRemove("user", "UserBlog", newUserBlogRemoveByID)
+	orm.RegisterEzOrmObjByID("mongo_e2e", "UserBlog", newUserBlogFindByID)
+	orm.RegisterEzOrmObjRemove("mongo_e2e", "UserBlog", newUserBlogRemoveByID)
 }
 
 func newUserBlogFindByID(id string) (result orm.EzOrmObj, err error) {
