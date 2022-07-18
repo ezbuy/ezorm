@@ -36,10 +36,16 @@ type MySQLConfig struct {
 
 func MySQLSetup(cf *MySQLConfig) {
 	_mysql_cfg = *cf
+	// ensure the setup is valid
+	// will panic if setup is not valid
+	MySQL()
 }
 
 func MySQLDSNSetup(dsn string) {
 	_mysql_dsn = dsn
+	// ensure the setup is valid
+	// will panic if setup is not valid
+	MySQL()
 }
 
 func MySQLMultiDSNSetup(key, dsn string) {
@@ -48,6 +54,12 @@ func MySQLMultiDSNSetup(key, dsn string) {
 	}
 
 	mysql_dsns[key] = dsn
+
+	// ensure the setup are all valid
+	// will panic if either setup is not valid
+	for k := range mysql_dsns {
+		MySQLInstance(k)
+	}
 }
 
 func MySQLInstance(key string) *orm.DBStore {
