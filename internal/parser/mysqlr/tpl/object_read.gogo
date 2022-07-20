@@ -54,7 +54,7 @@ func (m *_{{$obj.Name}}DBMgr) SearchConditionsCount(ctx context.Context,conditio
 func (m *_{{$obj.Name}}DBMgr) FetchBySQL(ctx context.Context,q string, args ... interface{}) (results []*{{$obj.Name}}, err error) {
 	rows, err := m.db.Query(ctx,q, args...)
 	if err != nil {
-		return nil, fmt.Errorf("{{$obj.Name}} fetch error: %v", err)
+		return nil, fmt.Errorf("{{$obj.Name}} fetch error: %w", err)
 	}
 	defer rows.Close()
 
@@ -115,7 +115,7 @@ func (m *_{{$obj.Name}}DBMgr) FetchBySQL(ctx context.Context,q string, args ... 
 	}
 	if err = rows.Err() ;err != nil {
 		m.db.SetError(err)
-		return nil, fmt.Errorf("{{$obj.Name}} fetch result error: %v", err)
+		return nil, fmt.Errorf("{{$obj.Name}} fetch result error: %w", err)
 	}
 	return
 }

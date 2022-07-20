@@ -41,7 +41,7 @@ func (m *_UserMgr) Query(ctx context.Context, query string, args ...interface{})
 func (*_UserMgr) queryLimit(ctx context.Context, query string, limit int, args ...interface{}) (results []*User, err error) {
 	rows, err := db.MysqlQuery(ctx, query, args...)
 	if err != nil {
-		return nil, fmt.Errorf("test.User query error: %v", err)
+		return nil, fmt.Errorf("test.User query error: %w", err)
 	}
 	defer rows.Close()
 
@@ -64,7 +64,7 @@ func (*_UserMgr) queryLimit(ctx context.Context, query string, limit int, args .
 		results = append(results, &result)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("test.User fetch result error: %v", err)
+		return nil, fmt.Errorf("test.User fetch result error: %w", err)
 	}
 
 	return

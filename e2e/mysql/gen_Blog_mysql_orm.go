@@ -41,7 +41,7 @@ func (m *_BlogMgr) Query(ctx context.Context, query string, args ...interface{})
 func (*_BlogMgr) queryLimit(ctx context.Context, query string, limit int, args ...interface{}) (results []*Blog, err error) {
 	rows, err := db.MysqlQuery(ctx, query, args...)
 	if err != nil {
-		return nil, fmt.Errorf("test.Blog query error: %v", err)
+		return nil, fmt.Errorf("test.Blog query error: %w", err)
 	}
 	defer rows.Close()
 
@@ -77,7 +77,7 @@ func (*_BlogMgr) queryLimit(ctx context.Context, query string, limit int, args .
 		results = append(results, &result)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("test.Blog fetch result error: %v", err)
+		return nil, fmt.Errorf("test.Blog fetch result error: %w", err)
 	}
 
 	return

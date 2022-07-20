@@ -414,7 +414,7 @@ func (m *_BlogDBMgr) SearchConditionsCount(ctx context.Context, conditions []str
 func (m *_BlogDBMgr) FetchBySQL(ctx context.Context, q string, args ...interface{}) (results []*Blog, err error) {
 	rows, err := m.db.Query(ctx, q, args...)
 	if err != nil {
-		return nil, fmt.Errorf("Blog fetch error: %v", err)
+		return nil, fmt.Errorf("Blog fetch error: %w", err)
 	}
 	defer rows.Close()
 
@@ -436,7 +436,7 @@ func (m *_BlogDBMgr) FetchBySQL(ctx context.Context, q string, args ...interface
 	}
 	if err = rows.Err(); err != nil {
 		m.db.SetError(err)
-		return nil, fmt.Errorf("Blog fetch result error: %v", err)
+		return nil, fmt.Errorf("Blog fetch result error: %w", err)
 	}
 	return
 }

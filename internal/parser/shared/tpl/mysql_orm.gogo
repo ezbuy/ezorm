@@ -55,7 +55,7 @@ func (m *_{{$obj.Name}}Mgr) Query(ctx context.Context, query string, args ...int
 func (*_{{$obj.Name}}Mgr) queryLimit(ctx context.Context, query string, limit int, args ...interface{}) (results []*{{$obj.Name}}, err error){
 	rows, err := db.MysqlQuery(ctx, query, args...)
 	if err != nil {
-		return nil, fmt.Errorf("{{$tag}} query error: %v", err)
+		return nil, fmt.Errorf("{{$tag}} query error: %w", err)
 	}
 	defer rows.Close()
 
@@ -105,7 +105,7 @@ func (*_{{$obj.Name}}Mgr) queryLimit(ctx context.Context, query string, limit in
 		results = append(results, &result)
 	}
 	if err := rows.Err() ;err != nil {
-		return nil, fmt.Errorf("{{$tag}} fetch result error: %v", err)
+		return nil, fmt.Errorf("{{$tag}} fetch result error: %w", err)
 	}
 
 	return

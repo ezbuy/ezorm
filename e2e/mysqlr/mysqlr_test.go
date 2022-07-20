@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ezbuy/ezorm/v2/pkg/orm"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -106,6 +107,12 @@ func TestBlogsCRUD(t *testing.T) {
 		bs, err := BlogDBMgr(db).FindAllByStatus(ctx, 1)
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(bs))
+	})
+
+	t.Run("GetByIndex_NoRows", func(t *testing.T) {
+		_, err := BlogDBMgr(db).FindAllByStatus(ctx, -1)
+		assert.Error(t, err)
+		assert.Equal(t, orm.IsErrNotFound(err), true)
 	})
 
 	t.Run("Update", func(t *testing.T) {
