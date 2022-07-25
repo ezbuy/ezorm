@@ -6,10 +6,16 @@ CREATE TABLE `{{$obj.Table}}` (
   {{$field.MysqlCreation}},
 {{- end}}
   PRIMARY KEY (`{{camel2name $obj.GetPrimaryKeyName}}`)
-{{- range $index := $obj.Indexes}}
+  {{- if gt (len $obj.Indexes) 0 -}}
+  ,
+  {{- end}}
+{{- range $i, $index := $obj.Indexes}}
+  {{- if eq (add $i 1) (len $obj.Indexes)}}
+  {{$index.MysqlCreation $obj}}
+  {{- else}}
   {{$index.MysqlCreation $obj}},
-{{- end}}
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT '{{$obj.Comment}}';
+  {{- end}}
+{{- end}}) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT '{{$obj.Comment}}';
 
 {{end}}
 
