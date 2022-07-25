@@ -11,17 +11,14 @@ CREATE TABLE `blog` (
   `group_id` BIGINT NOT NULL DEFAULT 0,
   `create` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `update` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`blog_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT '';
-
--- Indexes for object Blog.
-CREATE INDEX `idx_blog_user_is_published` ON `blog`(`user`, `is_published`);
-CREATE UNIQUE INDEX `idx_blog_slug` ON `blog`(`slug`);
-CREATE INDEX `idx_blog_user` ON `blog`(`user`);
-CREATE INDEX `idx_blog_is_published` ON `blog`(`is_published`);
-CREATE INDEX `idx_blog_group_id` ON `blog`(`group_id`);
-CREATE INDEX `idx_blog_create` ON `blog`(`create`);
-CREATE INDEX `idx_blog_update` ON `blog`(`update`);
+  PRIMARY KEY (`blog_id`),
+  KEY `idx_blog_user_is_published` (`user`, `is_published`),
+  UNIQUE KEY `idx_blog_slug` (`slug`),
+  KEY `idx_blog_user` (`user`),
+  KEY `idx_blog_is_published` (`is_published`),
+  KEY `idx_blog_group_id` (`group_id`),
+  KEY `idx_blog_create` (`create`),
+  KEY `idx_blog_update` (`update`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT '';
 
 
 -- DDL for object User.
@@ -29,10 +26,7 @@ CREATE TABLE `test_user` (
   `user_id` INT NOT NULL DEFAULT 0,
   `user_number` INT NOT NULL DEFAULT 0,
   `name` VARCHAR(200) NOT NULL DEFAULT '',
-  PRIMARY KEY (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT '';
-
--- Indexes for object User.
-CREATE UNIQUE INDEX `idx_test_user_user_number` ON `test_user`(`user_number`);
-CREATE INDEX `idx_test_user_name` ON `test_user`(`name`);
+  PRIMARY KEY (`user_id`),
+  UNIQUE KEY `idx_test_user_user_number` (`user_number`),
+  KEY `idx_test_user_name` (`name`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT '';
 

@@ -30,6 +30,7 @@ func init() {
 		"strDefault":    strDefault,
 		"strif":         strif,
 		"toids":         toIds,
+		"add":           add,
 	}
 
 	files := []string{
