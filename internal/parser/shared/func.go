@@ -48,6 +48,10 @@ func toIds(bufName, typeName, name string) string {
 	return name
 }
 
+func add(a, b int) int {
+	return a + b
+}
+
 func strif(a bool, b, c string) string {
 	if a {
 		return b
