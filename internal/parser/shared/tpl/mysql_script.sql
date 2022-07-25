@@ -7,7 +7,7 @@ CREATE TABLE `{{$obj.Table}}` (
 {{- end}}
   PRIMARY KEY (`{{camel2name $obj.GetPrimaryKeyName}}`)
 {{- range $index := $obj.Indexes}}
-  {{$index.MysqlCreation $obj}}
+  {{$index.MysqlCreation $obj}},
 {{- end}}
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT '{{$obj.Comment}}';
 

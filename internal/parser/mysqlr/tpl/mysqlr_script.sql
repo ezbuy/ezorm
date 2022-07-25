@@ -15,10 +15,10 @@ CREATE TABLE `{{$obj.DbTable}}` (
 			{{- if eq (add $i 1) (len $unique.Fields) -}}
 				`{{- $f.Name | camel2name -}}`
 			{{- else -}}
-				`{{- $f.Name | camel2name -}}`
+				`{{- $f.Name | camel2name -}}`,
 			{{- end -}}
 		{{- end -}}
-	)
+	),
 	{{- end}}
 	{{- end}}
 	{{- range $i, $index := $obj.Indexes}}
@@ -31,7 +31,7 @@ CREATE TABLE `{{$obj.DbTable}}` (
 				{{- $f.Name | camel2name -}}
 			{{- end -}}
 		{{- end -}}
-	`)
+	`),
 	{{- end}}
 	{{- end}}) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '{{$obj.Comment}}';
 
