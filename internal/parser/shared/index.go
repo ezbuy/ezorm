@@ -96,10 +96,11 @@ func (i *Index) GetFuncParamNames(prefixs ...string) string {
 
 func (i *Index) MysqlCreation(obj *Obj) string {
 	var buffer bytes.Buffer
-	buffer.WriteString("CREATE ")
 	if i.IsUnique {
 		buffer.WriteString(" UNIQUE ")
 	}
+
+	buffer.WriteString(" KEY ")
 
 	fnames := make([]string, len(i.Fields))
 	for idx, f := range i.Fields {
@@ -109,8 +110,8 @@ func (i *Index) MysqlCreation(obj *Obj) string {
 	idxName := fmt.Sprintf("idx_%s_%s", obj.Table,
 		strings.Join(fnames, "_"))
 	idxName = fmt.Sprintf("`%s`", idxName)
-	buffer.WriteString(" INDEX " + idxName)
-	buffer.WriteString(" ON `" + obj.Table + "`(")
+	buffer.WriteString(idxName)
+	buffer.WriteString(" " + "(")
 
 	for idx, f := range fnames {
 		fnames[idx] = fmt.Sprintf("`%s`", f)
