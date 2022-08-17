@@ -1,5 +1,5 @@
 {{define "mongo_config"}}
-{{ $first := index . 1}}
+{{ $first := index . 0}}
 
 package {{ $first.GoPackage }}
 
