@@ -1,5 +1,5 @@
 SELECT
-	title
+	SUM(`title`) AS title_count
 FROM
 	blogs
 WHERE

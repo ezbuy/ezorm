@@ -18,6 +18,7 @@ const (
 	T_STRING
 	T_ARRAY_STRING
 	T_ARRAY_INT
+	T_ANY
 )
 
 func (t T) String() string {
@@ -32,6 +33,8 @@ func (t T) String() string {
 		return "[]string"
 	case T_ARRAY_INT:
 		return "[]int64"
+	case T_ANY:
+		return "any"
 	}
 	panic("parser: unknown type")
 }
@@ -44,13 +47,16 @@ func (t T) BaseType() string {
 		return "int64"
 	case T_STRING, T_ARRAY_STRING:
 		return "string"
+	case T_ANY:
+		return "any"
 	}
 	panic("parser: unknown type")
 }
 
 type QueryField struct {
-	Name string
-	Type T
+	Name  string
+	Type  T
+	Alias string
 }
 
 var _ fmt.Stringer = (*QueryMetadata)(nil)
@@ -153,16 +159,16 @@ func (tm TableMetadata) Validate(tableRef map[string]map[string]generator.IField
 		for _, p := range f.params {
 			pName := uglify(p.Name)
 			col, ok := ff[pName]
-			if !ok {
+			if !ok && p.Type != T_ANY {
 				return fmt.Errorf("metadata: param %s not found in table %s", pName, name)
 			}
-			if !typeMatch(p.Type, col) {
+			if !typeMatch(p.Type, col) && p.Type != T_ANY {
 				return fmt.Errorf("metadata: param %s type mismatch, expect %s, got %s", pName, col.GetGoType(), p.Type.BaseType())
 			}
 		}
 		for _, r := range f.result {
 			rName := uglify(r.Name)
-			if _, ok := ff[rName]; !ok {
+			if _, ok := ff[rName]; !ok && r.Type != T_ANY {
 				return fmt.Errorf("metadata: result %s not found in table %s", r.Name, name)
 			}
 		}
