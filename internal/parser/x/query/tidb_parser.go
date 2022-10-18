@@ -91,6 +91,24 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 			// Field Ref
 			if x.Fields != nil {
 				for _, f := range x.Fields.Fields {
+					if expr, ok := f.Expr.(*ast.AggregateFuncExpr); ok {
+						field := &QueryField{}
+						var txt bytes.Buffer
+						txt.WriteString(expr.F)
+						for _, args := range expr.Args {
+							txt.WriteString("_")
+							var arg strings.Builder
+							args.Format(&arg)
+							txt.WriteString(arg.String())
+						}
+						field.Name = txt.String()
+						field.Type = T_ANY
+						if len(expr.Args) > 0 {
+							if col, ok := expr.Args[0].(*ast.ColumnNameExpr); ok {
+								tp.meta.AppendResult(col.Name.Table.String(), field)
+							}
+						}
+					}
 					if expr, ok := f.Expr.(*ast.ColumnNameExpr); ok {
 						field := &QueryField{}
 						ff := &strings.Builder{}

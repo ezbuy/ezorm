@@ -41,7 +41,11 @@ func WithDB(db *sql_driver.DB) RawQueryOptionHandler {
 {{- range $method := .Methods}}
 type {{$method.Name}}Resp struct {
 	{{- range $field := $method.Result}}
+	{{- if $field.Raw }}
 	{{$field.Name}} {{$field.Type}} `sql:"{{$field.Raw}}"`
+	{{- else }}
+	{{$field.Name}} {{$field.Type}}
+	{{- end }}
 	{{- end }}
 }
 

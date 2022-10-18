@@ -110,6 +110,13 @@ func (p *SQL) Read(path string) (*SQLMethod, error) {
 		}
 		for _, c := range f.result {
 			name := uglify(c.Name)
+			if c.Type == T_ANY {
+				result.Result = append(result.Result, &SQLMethodField{
+					Name: strcase.ToCamel(name),
+					Type: c.Type.String(),
+				})
+				continue
+			}
 			tp, err := p.retypeResult(t.Name, name)
 			if err != nil {
 				return nil, err
