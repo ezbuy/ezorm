@@ -156,6 +156,11 @@ func (store *DBStore) BeginTx() (*DBTx, error) {
 }
 
 func (tx *DBTx) Close() error {
+	if re := recover(); re != nil {
+		tx.tx.Rollback()
+		panic(re)
+	}
+
 	if tx.err != nil {
 		return tx.tx.Rollback()
 	}
