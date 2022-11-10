@@ -125,7 +125,6 @@ func TestBlogsCRUD(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, int64(0), count)
 	})
-
 }
 
 func TestBlogsTx(t *testing.T) {
@@ -198,5 +197,37 @@ func TestBlogsTx(t *testing.T) {
 		t.Cleanup(func() {
 			MySQL().Exec(ctx, "TRUNCATE TABLE blogs")
 		})
+	})
+
+	t.Run("PanicTransaction", func(t *testing.T) {
+		ctx := context.Background()
+		id, uid := int64(0o33), int32(0o33)
+
+		defer func() {
+			if err := recover(); err == nil {
+				t.Fatal("panic error should be recover")
+			}
+
+			blogDBMgr := BlogDBMgr(MySQL())
+			_, err := blogDBMgr.FetchByPrimaryKey(ctx, id, uid)
+			if err == nil || !blogDBMgr.IsErrNotFound(err) {
+				t.Fatalf("unexpected error during fetch blog: %s", err)
+			}
+		}()
+
+		tx, err := MySQL().BeginTx()
+		assert.NoError(t, err)
+		defer tx.Close()
+
+		_, err = BlogDBMgr(tx).Create(ctx, &Blog{
+			Id:        id,
+			UserId:    uid,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		})
+		assert.NoError(t, err)
+
+		arr := make([]any, 0)
+		_ = arr[100]
 	})
 }
