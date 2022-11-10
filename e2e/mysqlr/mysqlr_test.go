@@ -125,7 +125,6 @@ func TestBlogsCRUD(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, int64(0), count)
 	})
-
 }
 
 func TestBlogsTx(t *testing.T) {
@@ -211,7 +210,7 @@ func TestBlogsTx(t *testing.T) {
 
 			blogDBMgr := BlogDBMgr(MySQL())
 			_, err := blogDBMgr.FetchByPrimaryKey(ctx, id, uid)
-			if err == nil || blogDBMgr.IsErrNotFound(err) {
+			if err == nil || !blogDBMgr.IsErrNotFound(err) {
 				t.Fatalf("unexpected error during fetch blog: %s", err)
 			}
 		}()
@@ -221,7 +220,10 @@ func TestBlogsTx(t *testing.T) {
 		defer tx.Close()
 
 		_, err = BlogDBMgr(tx).Create(ctx, &Blog{
-			Id: id, UserId: uid,
+			Id:        id,
+			UserId:    uid,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		})
 		assert.NoError(t, err)
 
