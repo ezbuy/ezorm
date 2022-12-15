@@ -11,6 +11,7 @@ require (
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.5.0
 	github.com/stretchr/testify v1.2.2
+	golang.org/x/sys v0.0.0-20221013171732-95e765b1cc43 // indirect
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
 	gopkg.in/redis.v5 v5.2.9
 	gopkg.in/yaml.v2 v2.2.5
