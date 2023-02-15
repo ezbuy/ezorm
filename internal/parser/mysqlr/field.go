@@ -482,6 +482,12 @@ func (f *Field) SQLNull() string {
 }
 
 func (f *Field) SQLDefault() string {
+	if f.Default != nil {
+		if f.IsString() || (!f.IsBool() && f.IsNumber()) {
+			return fmt.Sprintf("DEFAULT '%v'", f.Default)
+		}
+	}
+
 	if f.IsNullable() {
 		return ""
 	}
