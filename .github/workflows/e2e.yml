@@ -14,10 +14,10 @@ jobs:
     name: "mysql"
     strategy:
       matrix:
-        go: [1.18]
+        go: ["1.18","1.19","1.20"]
     runs-on: ubuntu-latest
     container:
-        image: golang:${{ matrix.go }}-stretch
+        image: golang:${{ matrix.go }}
     services:
       mysql:
         image: mysql:5.7
@@ -35,7 +35,7 @@ jobs:
           --health-retries=3
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: generate template
         run: |
           make build
@@ -50,10 +50,10 @@ jobs:
     name: "mysqlr"
     strategy:
       matrix:
-        go: [1.18]
+        go: [1.18,1.19,"1.20"]
     runs-on: ubuntu-latest
     container:
-        image: golang:${{ matrix.go }}-stretch
+        image: golang:${{ matrix.go }}
     services:
       mysql:
         image: mysql:5.7
@@ -71,7 +71,7 @@ jobs:
           --health-retries=3
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: generate template
         run: |
           make build
@@ -86,10 +86,10 @@ jobs:
     name: "mongo"
     strategy:
       matrix:
-        go: [1.18]
+        go: [1.18,1.19,"1.20"]
     runs-on: ubuntu-latest
     container:
-        image: golang:${{ matrix.go }}-stretch
+        image: golang:${{ matrix.go }}
     services:
       mongo:
         image: mongo:4.2
@@ -100,7 +100,7 @@ jobs:
           MONGO_INITDB_ROOT_PASSWORD: ezbuyisthebest
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: generate template
         run: |
           make build
@@ -118,13 +118,13 @@ jobs:
     name: "customized-plugin"
     strategy:
       matrix:
-        go: [1.18]
+        go: [1.18,1.19,"1.20"]
     runs-on: ubuntu-latest
     container:
-        image: golang:${{ matrix.go }}-stretch
+        image: golang:${{ matrix.go }}
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: generate template
         run: |
           make build
