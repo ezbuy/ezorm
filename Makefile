@@ -1,10 +1,10 @@
 all:
 
 build:
-	go build -ldflags "-X main.Commit=$(shell git rev-parse --short HEAD)" -o bin/ezorm
+	go build -buildvcs=false -ldflags "-X main.Commit=$(shell git rev-parse --short HEAD)" -o bin/ezorm
 
 build-plugin:
-	go build -o bin/ezorm-gen-hello-driver ./e2e/plugins/hello-driver
+	go build -buildvcs=false -o bin/ezorm-gen-hello-driver ./e2e/plugins/hello-driver
 	mv bin/ezorm-gen-hello-driver /go/bin
 
 cleane2e:
