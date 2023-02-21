@@ -10,7 +10,7 @@ require (
 	github.com/iancoleman/strcase v0.2.0
 	github.com/pingcap/parser v0.0.0-20200623164729-3a18f1e5dceb
 	github.com/pingcap/tidb v1.1.0-beta.0.20200630082100-328b6d0a955c
-	github.com/spf13/cobra v1.3.0
+	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.10.1
 	github.com/stretchr/testify v1.8.1
 	go.mongodb.org/mongo-driver v1.9.1
@@ -55,6 +55,7 @@ require (
 	github.com/go-playground/locales v0.13.0 // indirect
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
+	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.0.1 // indirect
@@ -63,7 +64,7 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
