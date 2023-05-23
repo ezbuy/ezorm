@@ -68,8 +68,7 @@ var genCmd = &cobra.Command{
 				if err != nil {
 					return err
 				}
-				err = yaml.Unmarshal(data, &objs)
-				if err != nil {
+				if err := yaml.NewDecoder(bytes.NewReader(data)).Decode(&objs); err != nil {
 					return err
 				}
 				return nil
@@ -81,8 +80,7 @@ var genCmd = &cobra.Command{
 			if err != nil {
 				return err
 			}
-			err = yaml.Unmarshal(data, &objs)
-			if err != nil {
+			if err := yaml.NewDecoder(bytes.NewReader(data)).Decode(&objs); err != nil {
 				return err
 			}
 		}
@@ -117,13 +115,15 @@ var genCmd = &cobra.Command{
 	},
 }
 
-var input string
-var output string
-var genPackageName string
-var genGoPackageName string
-var disableSQLs bool
-var plugin string
-var namespace string
+var (
+	input            string
+	output           string
+	genPackageName   string
+	genGoPackageName string
+	disableSQLs      bool
+	plugin           string
+	namespace        string
+)
 
 func init() {
 	RootCmd.AddCommand(genCmd)
