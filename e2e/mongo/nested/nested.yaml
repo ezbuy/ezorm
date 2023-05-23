@@ -1,3 +1,4 @@
+---
 User:
   db: mongo
   fields:
@@ -12,7 +13,7 @@ User:
     - Blogs: list<Blog>
     - RegisterDate: time.Time
       attrs: {bsonTag: "registerDate", jsonTag: "registerDate"}
-
+---
 Blog:
   db: mongo
   # To describe that the Blog should only generate the structure , exclude the orm methods
