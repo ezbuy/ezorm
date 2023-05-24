@@ -17,6 +17,7 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/fs"
 	"io/ioutil"
 	"os"
@@ -68,7 +69,7 @@ var genCmd = &cobra.Command{
 				if err != nil {
 					return err
 				}
-				if err := yaml.NewDecoder(bytes.NewReader(data)).Decode(&objs); err != nil {
+				if err := decode(data, &objs); err != nil {
 					return err
 				}
 				return nil
@@ -80,7 +81,7 @@ var genCmd = &cobra.Command{
 			if err != nil {
 				return err
 			}
-			if err := yaml.NewDecoder(bytes.NewReader(data)).Decode(&objs); err != nil {
+			if err := decode(data, &objs); err != nil {
 				return err
 			}
 		}
@@ -90,7 +91,6 @@ var genCmd = &cobra.Command{
 		if genGoPackageName == "" {
 			genGoPackageName = genPackageName
 		}
-
 		if plugin != "" {
 			generators = append(generators, generator.NewPluginGenerator(plugin))
 		}
@@ -113,6 +113,19 @@ var genCmd = &cobra.Command{
 
 		return nil
 	},
+}
+
+func decode(data []byte, meta *generator.Metadata) error {
+	dc := yaml.NewDecoder(bytes.NewReader(data))
+	for {
+		if err := dc.Decode(meta); err != nil {
+			if err == io.EOF {
+				return nil
+			} else {
+				return err
+			}
+		}
+	}
 }
 
 var (
