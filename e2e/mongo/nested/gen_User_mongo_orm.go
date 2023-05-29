@@ -2,6 +2,7 @@ package nested
 
 import (
 	"context"
+	"time"
 
 	"github.com/ezbuy/ezorm/v2/pkg/orm"
 
@@ -10,6 +11,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+// To import `time` package globally to satisfy `time.Time` index in yaml definition
+var _ time.Time
 
 var UserIndexes = []mongo.IndexModel{
 	{

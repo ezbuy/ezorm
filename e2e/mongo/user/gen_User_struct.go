@@ -35,10 +35,12 @@ const (
 type UserMgoSortField_WRP = primitive.D
 
 var (
-	UserMgoSortFieldIDAsc   = primitive.E{Key: "_id", Value: 1}
-	UserMgoSortFieldIDDesc  = primitive.E{Key: "_id", Value: -1}
-	UserMgoSortFieldAgeAsc  = primitive.E{Key: "Age", Value: 1}
-	UserMgoSortFieldAgeDesc = primitive.E{Key: "Age", Value: -1}
+	UserMgoSortFieldIDAsc            = primitive.E{Key: "_id", Value: 1}
+	UserMgoSortFieldIDDesc           = primitive.E{Key: "_id", Value: -1}
+	UserMgoSortFieldAgeAsc           = primitive.E{Key: "Age", Value: 1}
+	UserMgoSortFieldAgeDesc          = primitive.E{Key: "Age", Value: -1}
+	UserMgoSortFieldRegisterDateAsc  = primitive.E{Key: "registerDate", Value: 1}
+	UserMgoSortFieldRegisterDateDesc = primitive.E{Key: "registerDate", Value: -1}
 )
 
 func (p *User) GetNameSpace() string {
