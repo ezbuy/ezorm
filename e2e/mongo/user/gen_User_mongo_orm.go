@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"time"
 
 	"github.com/ezbuy/ezorm/v2/pkg/orm"
 
@@ -10,6 +11,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+// To import `time` package globally to satisfy `time.Time` index in yaml definition
+var _ time.Time
 
 var UserIndexes = []mongo.IndexModel{
 	{
@@ -20,6 +24,9 @@ var UserIndexes = []mongo.IndexModel{
 	},
 	{
 		Keys: UserIndexKey_Age,
+	},
+	{
+		Keys: UserIndexKey_RegisterDate,
 	},
 }
 
@@ -35,6 +42,9 @@ var UserIndexKey_Username = bson.D{
 }
 var UserIndexKey_Age = bson.D{
 	{Key: "Age", Value: 1},
+}
+var UserIndexKey_RegisterDate = bson.D{
+	{Key: "RegisterDate", Value: 1},
 }
 
 func init() {
@@ -217,6 +227,18 @@ func (o *_UserMgr) FindByUsername(ctx context.Context, Username string, limit in
 func (o *_UserMgr) FindByAge(ctx context.Context, Age int32, limit int, offset int, sortFields interface{}) (result []*User, err error) {
 	query := bson.M{
 		"Age": Age,
+	}
+	cursor, err := o.Query(ctx, query, limit, offset, sortFields)
+	if err != nil {
+		return nil, err
+	}
+	err = cursor.All(ctx, &result)
+	return
+}
+
+func (o *_UserMgr) FindByRegisterDate(ctx context.Context, RegisterDate time.Time, limit int, offset int, sortFields interface{}) (result []*User, err error) {
+	query := bson.M{
+		"RegisterDate": RegisterDate,
 	}
 	cursor, err := o.Query(ctx, query, limit, offset, sortFields)
 	if err != nil {

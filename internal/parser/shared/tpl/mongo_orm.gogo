@@ -4,16 +4,20 @@
 {{if ($obj.DbSwitch "mongo")}}
 import (
     "context"
+    "time"
 
     "github.com/ezbuy/ezorm/v2/pkg/orm"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+    "go.mongodb.org/mongo-driver/bson"
+    "go.mongodb.org/mongo-driver/bson/primitive"
+    "go.mongodb.org/mongo-driver/mongo"
+    "go.mongodb.org/mongo-driver/mongo/options"
 )
 
-{{- if gt (len $obj.Indexes) 0}}
+// To import `time` package globally to satisfy `time.Time` index in yaml definition
+var _ time.Time
+
+{{if gt (len $obj.Indexes) 0}}
 var {{$obj.Name}}Indexes = []mongo.IndexModel{
     {{- range $index := $obj.Indexes}}
     {
