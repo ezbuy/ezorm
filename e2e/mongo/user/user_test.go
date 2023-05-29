@@ -299,11 +299,13 @@ func TestFindByIndexes(t *testing.T) {
 	u1.UserId = uid1
 	u1.Username = uname1
 	u1.Age = globalAge
+	u1.RegisterDate = time.Now()
 
 	u2 := user.Get_UserMgr().NewUser()
 	u2.UserId = uid2
 	u2.Username = uname2
 	u2.Age = globalAge
+	u2.RegisterDate = time.Now().Add(time.Hour)
 
 	cleanFn := initUsersHelper(t, u1, u2)
 	{
@@ -326,11 +328,24 @@ func TestFindByIndexes(t *testing.T) {
 			t.Fatalf("unexpected length of users, got %d, expect: %d", l, 0)
 		}
 	}
+	{
+		users, err := user.Get_UserMgr().FindAll(ctx, bson.M{}, user.UserMgoSortField_WRP{user.UserMgoSortFieldRegisterDateDesc})
+		if err != nil {
+			t.Fatalf("failed to find by username and age: %s", err)
+		}
+		if l := len(users); l != 2 {
+			t.Fatalf("unexpected length of users, got %d, expect: %d", l, 2)
+		}
+		if uid := users[0].UserId; uid != uid2 {
+			t.Fatalf("unexpected uid of users, got: %d, expect: %d", uid, uid2)
+		}
+	}
 
 	if err := cleanFn(ctx); err != nil {
 		t.Fatalf("failed to remove all users: %s", err)
 	}
 }
+
 func TestCount(t *testing.T) {
 	const (
 		uid1   = 1
