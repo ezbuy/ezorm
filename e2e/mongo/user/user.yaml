@@ -12,6 +12,7 @@ User:
       flags: [sort]
     - RegisterDate: time.Time
       attrs: {bsonTag: "registerDate", jsonTag: "registerDate"}
+      flags: [sort]
   indexes: [[Username, Age]]
   table: test_user
   dbname: test
