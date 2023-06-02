@@ -192,7 +192,8 @@ func (qm *QueryMetadata) String() string {
 
 type QueryBuilder struct {
 	*bytes.Buffer
-	raw *Raw
+	raw          *Raw
+	resultFields []*QueryField
 }
 
 func (qb *QueryBuilder) IsQueryIn() bool {

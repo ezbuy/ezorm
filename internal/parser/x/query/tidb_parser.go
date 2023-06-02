@@ -108,6 +108,7 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 						if len(expr.Args) > 0 {
 							if col, ok := expr.Args[0].(*ast.ColumnNameExpr); ok {
 								tp.meta.AppendResult(col.Name.Table.String(), field)
+								tp.b.resultFields = append(tp.b.resultFields, field)
 							}
 						}
 					}
@@ -120,6 +121,7 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 						field.Name = ff.String()
 						field.Type = T_PLACEHOLDER
 						tp.meta.AppendResult(expr.Name.Table.String(), field)
+						tp.b.resultFields = append(tp.b.resultFields, field)
 					}
 				}
 			}
@@ -273,6 +275,7 @@ func (tp *TiDBParser) Flush() {
 		ins:   map[string]struct{}{},
 		limit: &LimitOption{},
 	}
+	tp.b.resultFields = []*QueryField{}
 	tp.b.Reset()
 	tp.meta = make(map[Table]*QueryMetadata)
 }

@@ -139,8 +139,13 @@ func (p *SQL) Read(path string) (*SQLMethod, error) {
 	}
 
 	var scan bytes.Buffer
-	for _, r := range result.Result {
-		scan.WriteString(fmt.Sprintf("&o.%s, ", r.Name))
+	for _, r := range builder.resultFields {
+		name := r.Alias
+		if name == "" {
+			name = uglify(r.Name)
+		}
+		name = strcase.ToCamel(name)
+		scan.WriteString(fmt.Sprintf("&o.%s, ", name))
 	}
 
 	result.Assign = scan.String()

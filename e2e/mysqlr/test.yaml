@@ -1,0 +1,86 @@
+# 库位表
+StorageBin:
+  db: mysqlr
+  dbname: drwms
+  dbtable: oper_storage_bin
+  comment: 基础库位表
+  fields:
+    - Id: int64
+      flags: [primary, autoinc]
+      comment: 库位表主键
+    - TypeId: int64
+      comment: 库位类型ID
+    - Code: string
+      size: 100
+      comment: 库位代码（自动生成）
+    - State: int32
+      comment: 库位状态
+    - WarehouseId: int64
+      comment: 仓库ID
+    - RegionId: int64
+      comment: 库域ID
+    - AreaId: int64
+      comment: 库区ID
+    - Aisle: int32
+      comment: 巷道
+    - RackRow: int32
+      comment: 货架行数
+    - RackCol: int32
+      comment: 货架列数
+    - CapacityPreempted: int64
+      comment: 预占库容（单位：g）
+    - CapacityOccupied: int64
+      comment: 实占库容（单位：g）
+    - CapacityLock: int64
+      comment: 锁定库容（单位：g）
+    - CreateAt: int64
+      comment: 创建时间
+    - UpdateAt: int64
+      flags: [index]
+      comment: 更新时间
+    - CreateBy: string
+      size: 100
+      comment: 创建人
+    - UpdateBy: string
+      size: 100
+      comment: 更新人
+  indexes: [[TypeId], [Code], [Aisle], [RackRow], [RackCol]]
+
+# 库存明细表
+Inventory:
+  db: mysqlr
+  dbname: drwms
+  dbtable: oper_inventory
+  comment: 库存明细表
+  fields:
+    - Id: int64
+      flags: [primary, autoinc]
+      comment: 库存明细表主键
+    - WarehouseId: int64
+      comment: 仓库ID
+    - BinId: int64
+      comment: 库位表
+    - SkuCode: string
+      size: 500
+      comment: sku号
+    - Barcode: string
+      size: 500
+      comment: 条形码
+    - QuantityTotal: int64
+      comment: 总库存
+    - QuantityAvailable: int64
+      comment: 可用库存
+    - QuantityLocked: int64
+      comment: 锁定库存
+    - CreateAt: int64
+      comment: 创建时间
+    - UpdateAt: int64
+      flags: [index]
+      comment: 更新时间
+    - CreateBy: string
+      size: 100
+      comment: 创建人
+    - UpdateBy: string
+      size: 100
+      comment: 更新人
+  indexes: [[WarehouseId, BinId, Barcode]]
