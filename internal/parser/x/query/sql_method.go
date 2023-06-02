@@ -5,7 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"unicode"
@@ -71,7 +71,7 @@ func (p *SQL) retypeResult(table string, col string) (string, error) {
 }
 
 func (p *SQL) Read(path string) (*SQLMethod, error) {
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
