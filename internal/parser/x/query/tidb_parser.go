@@ -92,7 +92,9 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 			if x.Fields != nil {
 				for _, f := range x.Fields.Fields {
 					if expr, ok := f.Expr.(*ast.AggregateFuncExpr); ok {
-						field := &QueryField{}
+						field := &QueryField{
+							Alias: f.AsName.String(),
+						}
 						var txt bytes.Buffer
 						txt.WriteString(expr.F)
 						for _, args := range expr.Args {

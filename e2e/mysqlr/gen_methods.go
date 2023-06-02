@@ -40,7 +40,7 @@ func WithDB(db *sql_driver.DB) RawQueryOptionHandler {
 }
 
 type BlogResp struct {
-	Blog any
+	TitleCount any `sql:"title_count"`
 }
 
 type BlogReq struct {
@@ -77,7 +77,7 @@ func (m *sqlMethods) Blog(ctx context.Context, req *BlogReq, opts ...RawQueryOpt
 	var results []*BlogResp
 	for rows.Next() {
 		var o BlogResp
-		err = rows.Scan(&o.Blog)
+		err = rows.Scan(&o.TitleCount)
 		if err != nil {
 			return nil, err
 		}
