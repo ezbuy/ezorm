@@ -7,7 +7,7 @@ CREATE TABLE `{{$obj.DbTable}}` (
 	{{- range $i, $field := $obj.Fields}}
 	{{$field.SQLColumn }},
 	{{- end}}
-	{{$obj.PrimaryKey.SQLColumn }},
+	{{$obj.PrimaryKey.SQLColumn }}
 	{{- range $i, $unique := $obj.Uniques}}
 	{{- if not $unique.HasPrimaryKey}},
 	{{- if and (eq (add $i 1) (len $obj.Uniques)) (eq (len $obj.Indexes) 0)}}
