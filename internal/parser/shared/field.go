@@ -10,28 +10,27 @@ import (
 
 	"github.com/ezbuy/ezorm/v2/internal/generator"
 	"github.com/ezbuy/utils/container/set"
+	"github.com/iancoleman/strcase"
 )
 
 const (
 	flagNullable = "nullable"
 )
 
-var (
-	nullablePrimitiveSet = map[string]bool{
-		"uint8":   true,
-		"uint16":  true,
-		"uint32":  true,
-		"uint64":  true,
-		"int8":    true,
-		"int16":   true,
-		"int32":   true,
-		"int64":   true,
-		"float32": true,
-		"float64": true,
-		"bool":    true,
-		"string":  true,
-	}
-)
+var nullablePrimitiveSet = map[string]bool{
+	"uint8":   true,
+	"uint16":  true,
+	"uint32":  true,
+	"uint64":  true,
+	"int8":    true,
+	"int16":   true,
+	"int32":   true,
+	"int64":   true,
+	"float32": true,
+	"float64": true,
+	"bool":    true,
+	"string":  true,
+}
 
 var _ generator.IField = (*Field)(nil)
 
@@ -162,7 +161,7 @@ func (f *Field) DbName() string {
 }
 
 func (f *Field) GetName() string {
-	return camel2name(f.Name)
+	return strcase.ToLowerCamel(f.Name)
 }
 
 func (f *Field) GetTag() string {

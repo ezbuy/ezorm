@@ -11,24 +11,23 @@ import (
 
 	"github.com/ezbuy/ezorm/v2/internal/generator"
 	"github.com/ezbuy/utils/container/set"
+	"github.com/iancoleman/strcase"
 )
 
-var (
-	nullablePrimitiveSet = map[string]bool{
-		"uint8":   true,
-		"uint16":  true,
-		"uint32":  true,
-		"uint64":  true,
-		"int8":    true,
-		"int16":   true,
-		"int32":   true,
-		"int64":   true,
-		"float32": true,
-		"float64": true,
-		"bool":    true,
-		"string":  true,
-	}
-)
+var nullablePrimitiveSet = map[string]bool{
+	"uint8":   true,
+	"uint16":  true,
+	"uint32":  true,
+	"uint64":  true,
+	"int8":    true,
+	"int16":   true,
+	"int32":   true,
+	"int64":   true,
+	"float32": true,
+	"float64": true,
+	"bool":    true,
+	"string":  true,
+}
 
 type Field struct {
 	Name      string
@@ -71,7 +70,7 @@ var SupportedFieldTypes = map[string]string{
 }
 
 func (f *Field) GetName() string {
-	return CamelName(f.Name)
+	return strcase.ToLowerCamel(f.Name)
 }
 
 func (f *Field) GetUnderlineName() string {
@@ -408,7 +407,7 @@ func (f *Field) Read(data generator.Schema) error {
 	return nil
 }
 
-//! field SQL script functions
+// ! field SQL script functions
 func (f *Field) SQLColumn() string {
 	columns := make([]string, 0, 6)
 	columns = append(columns, f.SQLName())

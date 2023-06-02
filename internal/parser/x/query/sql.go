@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/ezbuy/ezorm/v2/internal/generator"
+	"github.com/iancoleman/strcase"
 )
 
 type T uint8
@@ -158,6 +159,7 @@ func (tm TableMetadata) Validate(tableRef map[string]map[string]generator.IField
 		}
 		for _, p := range f.params {
 			pName := uglify(p.Name)
+			pName = strcase.ToLowerCamel(pName)
 			col, ok := ff[pName]
 			if !ok && p.Type != T_ANY {
 				return fmt.Errorf("metadata: param %s not found in table %s", pName, name)
@@ -168,8 +170,9 @@ func (tm TableMetadata) Validate(tableRef map[string]map[string]generator.IField
 		}
 		for _, r := range f.result {
 			rName := uglify(r.Name)
+			rName = strcase.ToLowerCamel(rName)
 			if _, ok := ff[rName]; !ok && r.Type != T_ANY {
-				return fmt.Errorf("metadata: result %s not found in table %s", r.Name, name)
+				return fmt.Errorf("metadata: result %s not found in table %s", rName, name)
 			}
 		}
 	}

@@ -110,7 +110,9 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 						}
 					}
 					if expr, ok := f.Expr.(*ast.ColumnNameExpr); ok {
-						field := &QueryField{}
+						field := &QueryField{
+							Alias: f.AsName.String(),
+						}
 						ff := &strings.Builder{}
 						expr.Format(ff)
 						field.Name = ff.String()
@@ -241,7 +243,8 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 }
 
 func (tp *TiDBParser) Parse(ctx context.Context,
-	query string) (TableMetadata, *QueryBuilder, error) {
+	query string,
+) (TableMetadata, *QueryBuilder, error) {
 	queries := strings.Split(query, ";")
 	for _, q := range queries {
 		if len(strings.TrimSpace(q)) == 0 {
@@ -273,7 +276,8 @@ func (tp *TiDBParser) Flush() {
 }
 
 func (tp *TiDBParser) parseOne(ctx context.Context,
-	query string) error {
+	query string,
+) error {
 	node, err := parser.New().ParseOneStmt(query, "", "")
 	if err != nil {
 		return fmt.Errorf("raw query parser: %w(query: %s)", err, query)

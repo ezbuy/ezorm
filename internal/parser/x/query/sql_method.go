@@ -62,6 +62,7 @@ func (p *SQL) retypeResult(table string, col string) (string, error) {
 	if !ok {
 		return "", fmt.Errorf("res: retype: table: %s not found", table)
 	}
+	col = strcase.ToLowerCamel(col)
 	f, ok := t[col]
 	if !ok {
 		return "", fmt.Errorf("res: retype: field: %s not found", col)
@@ -101,7 +102,10 @@ func (p *SQL) Read(path string) (*SQLMethod, error) {
 	}
 	for t, f := range meta {
 		for _, c := range f.params {
-			name := uglify(c.Name)
+			name := c.Alias
+			if name == "" {
+				name = uglify(c.Name)
+			}
 			result.Fields = append(result.Fields, &SQLMethodField{
 				Name: strcase.ToCamel(name),
 				Raw:  name,
@@ -109,7 +113,6 @@ func (p *SQL) Read(path string) (*SQLMethod, error) {
 			})
 		}
 		for _, c := range f.result {
-			name := uglify(c.Name)
 			if c.Type == T_ANY {
 				result.Result = append(result.Result, &SQLMethodField{
 					Name: strcase.ToCamel(name),
@@ -117,9 +120,13 @@ func (p *SQL) Read(path string) (*SQLMethod, error) {
 				})
 				continue
 			}
-			tp, err := p.retypeResult(t.Name, name)
+			tp, err := p.retypeResult(t.Name, uglify(c.Name))
 			if err != nil {
 				return nil, err
+			}
+			name := c.Alias
+			if name == "" {
+				name = uglify(c.Name)
 			}
 			result.Result = append(result.Result, &SQLMethodField{
 				Name: strcase.ToCamel(name),
