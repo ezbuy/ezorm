@@ -40,7 +40,9 @@ func WithDB(db *sql_driver.DB) RawQueryOptionHandler {
 }
 
 type BlogResp struct {
-	SUMTitle any
+	Id         int64 `sql:"id"`
+	TitleCount any   `sql:"title_count"`
+	Status     int32 `sql:"status"`
 }
 
 type BlogReq struct {
@@ -55,7 +57,7 @@ func (req *BlogReq) Params() []any {
 	return params
 }
 
-const _BlogSQL = "SELECT SUM(`title`) AS `title_count` FROM `blogs` WHERE `id`=?"
+const _BlogSQL = "SELECT `Id`,SUM(`title`) AS `title_count`,`status` FROM `blogs` WHERE `id`=?"
 
 // Blog is a raw query handler generated function for `e2e/mysqlr/sqls/blog.sql`.
 func (m *sqlMethods) Blog(ctx context.Context, req *BlogReq, opts ...RawQueryOptionHandler) ([]*BlogResp, error) {
@@ -77,7 +79,7 @@ func (m *sqlMethods) Blog(ctx context.Context, req *BlogReq, opts ...RawQueryOpt
 	var results []*BlogResp
 	for rows.Next() {
 		var o BlogResp
-		err = rows.Scan(&o.SUMTitle)
+		err = rows.Scan(&o.Id, &o.TitleCount, &o.Status)
 		if err != nil {
 			return nil, err
 		}

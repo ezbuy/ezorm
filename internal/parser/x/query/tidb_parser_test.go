@@ -55,6 +55,15 @@ WHERE
 	u.name = 'me'
 `
 
+const queryWithColAs = `
+SELECT
+	u.id as uid
+FROM
+	user  u
+WHERE
+	u.name = 'me'
+`
+
 const queryWithSubquery = `
 SELECT
 	id
@@ -98,19 +107,21 @@ func TestTiDBParserParseMetadata(t *testing.T) {
 		query    string
 		metadata TableMetadata
 	}{
-		{"query", query, map[Table]*QueryMetadata{
-			{Name: "user"}: {
-				params: []*QueryField{
-					{Name: "col:`name`", Type: T_ARRAY_STRING},
-					{Name: "col:`id`", Type: T_INT},
-					{Name: "col:`phone`", Type: T_STRING},
-					{Name: "limit:count", Type: T_INT},
-					{Name: "limit:offset", Type: T_INT},
+		{
+			"query", query, map[Table]*QueryMetadata{
+				{Name: "user"}: {
+					params: []*QueryField{
+						{Name: "col:`name`", Type: T_ARRAY_STRING},
+						{Name: "col:`id`", Type: T_INT},
+						{Name: "col:`phone`", Type: T_STRING},
+						{Name: "limit:count", Type: T_INT},
+						{Name: "limit:offset", Type: T_INT},
+					},
+					result: []*QueryField{
+						{Name: "`id`", Type: T_PLACEHOLDER},
+					},
 				},
-				result: []*QueryField{
-					{Name: "`id`", Type: T_PLACEHOLDER},
-				},
-			}},
+			},
 		},
 		{"queryIn", queryIn, map[Table]*QueryMetadata{
 			{Name: "user"}: {
@@ -170,6 +181,16 @@ func TestTiDBParserParseMetadata(t *testing.T) {
 				},
 				result: []*QueryField{
 					{Name: "`id`", Type: T_PLACEHOLDER},
+				},
+			},
+		}},
+		{"queryWithColAs", queryWithColAs, map[Table]*QueryMetadata{
+			{Name: "user", Alias: "u"}: {
+				params: []*QueryField{
+					{Name: "col:`u`.`name`", Type: T_STRING},
+				},
+				result: []*QueryField{
+					{Name: "`u`.`id`", Type: T_PLACEHOLDER, Alias: "uid"},
 				},
 			},
 		}},

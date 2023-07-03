@@ -1,5 +1,7 @@
 SELECT
-	SUM(`title`) AS title_count
+	Id ,
+	SUM(`title`) AS title_count ,
+	status
 FROM
 	blogs
 WHERE
