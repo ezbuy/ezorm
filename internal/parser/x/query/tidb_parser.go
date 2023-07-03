@@ -92,7 +92,9 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 			if x.Fields != nil {
 				for _, f := range x.Fields.Fields {
 					if expr, ok := f.Expr.(*ast.AggregateFuncExpr); ok {
-						field := &QueryField{}
+						field := &QueryField{
+							Alias: f.AsName.String(),
+						}
 						var txt bytes.Buffer
 						txt.WriteString(expr.F)
 						for _, args := range expr.Args {
@@ -106,16 +108,20 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 						if len(expr.Args) > 0 {
 							if col, ok := expr.Args[0].(*ast.ColumnNameExpr); ok {
 								tp.meta.AppendResult(col.Name.Table.String(), field)
+								tp.b.resultFields = append(tp.b.resultFields, field)
 							}
 						}
 					}
 					if expr, ok := f.Expr.(*ast.ColumnNameExpr); ok {
-						field := &QueryField{}
+						field := &QueryField{
+							Alias: f.AsName.String(),
+						}
 						ff := &strings.Builder{}
 						expr.Format(ff)
 						field.Name = ff.String()
 						field.Type = T_PLACEHOLDER
 						tp.meta.AppendResult(expr.Name.Table.String(), field)
+						tp.b.resultFields = append(tp.b.resultFields, field)
 					}
 				}
 			}
@@ -241,7 +247,8 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 }
 
 func (tp *TiDBParser) Parse(ctx context.Context,
-	query string) (TableMetadata, *QueryBuilder, error) {
+	query string,
+) (TableMetadata, *QueryBuilder, error) {
 	queries := strings.Split(query, ";")
 	for _, q := range queries {
 		if len(strings.TrimSpace(q)) == 0 {
@@ -268,12 +275,14 @@ func (tp *TiDBParser) Flush() {
 		ins:   map[string]struct{}{},
 		limit: &LimitOption{},
 	}
+	tp.b.resultFields = []*QueryField{}
 	tp.b.Reset()
 	tp.meta = make(map[Table]*QueryMetadata)
 }
 
 func (tp *TiDBParser) parseOne(ctx context.Context,
-	query string) error {
+	query string,
+) error {
 	node, err := parser.New().ParseOneStmt(query, "", "")
 	if err != nil {
 		return fmt.Errorf("raw query parser: %w(query: %s)", err, query)
