@@ -34,6 +34,20 @@ func (m *_{{$obj.Name}}DBMgr) BatchCreate(ctx context.Context,objs []*{{$obj.Nam
 	if err != nil {
 		return 0, err
 	}
+	{{- if $primary.IsAutoIncrement}}
+	lastInsertID,err:= result.LastInsertId()
+	if err!=nil {
+		return 0, err
+	}
+	aff,err:= result.RowsAffected()
+	if err!=nil {
+		return 0,err
+	}
+	for i:=0;i<int(aff);i++{
+		objs[i].{{$primaryField.Name}} = {{$primaryField.GetType}}(lastInsertID+int64(i))
+	}
+	{{- end}}
+
 	return result.RowsAffected()
 }
 
