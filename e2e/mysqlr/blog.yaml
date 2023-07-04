@@ -17,3 +17,19 @@ Blog:
   uniques:
   - [Title]
   - [UserId,Title]
+---
+AutoBlog:
+  db: mysqlr
+  dbname: test
+  dbtable: auto_blogs
+  fields:
+    - Id: int64
+      flags: [primary, autoinc]
+    - UserId: int32
+    - Title: string
+    - Content: string
+    - Status: int32
+      flags: [index]
+    - Readed: int32
+    - CreatedAt: timestamp
+    - UpdatedAt: timeint

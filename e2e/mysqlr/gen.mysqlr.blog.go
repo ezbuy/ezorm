@@ -678,6 +678,7 @@ func (m *_BlogDBMgr) BatchCreate(ctx context.Context, objs []*Blog) (int64, erro
 	if err != nil {
 		return 0, err
 	}
+
 	return result.RowsAffected()
 }
 
