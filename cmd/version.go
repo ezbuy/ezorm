@@ -33,7 +33,7 @@ func version(commit string) string {
 const (
 	vMajor = 2
 	vMinor = 6
-	vPatch = 8
+	vPatch = 9
 )
 
 // versionCmd represents the version command
