@@ -91,7 +91,6 @@ func (o *MetaObject) FromDB() string {
 }
 
 func (o *MetaObject) Fields() []*Field {
-
 	return o.fields
 }
 
@@ -112,11 +111,33 @@ func (o *MetaObject) Uniques() []*Index {
 	return o.uniques
 }
 
+func (o *MetaObject) NotPrimaryUniques() []*Index {
+	unique := make([]*Index, 0, len(o.uniques))
+	for _, u := range o.uniques {
+		if u.HasPrimaryKey() {
+			continue
+		}
+		unique = append(unique, u)
+	}
+	return unique
+}
+
 func (o *MetaObject) Indexes() []*Index {
 	sort.Slice(o.indexes, func(i, j int) bool {
 		return strings.Compare(o.indexes[i].Name, o.indexes[j].Name) > 0
 	})
 	return o.indexes
+}
+
+func (o *MetaObject) NotPrimaryIndexes() []*Index {
+	indexes := make([]*Index, 0, len(o.indexes))
+	for _, i := range o.indexes {
+		if i.HasPrimaryKey() {
+			continue
+		}
+		indexes = append(indexes, i)
+	}
+	return indexes
 }
 
 func (o *MetaObject) Ranges() []*Index {
@@ -125,6 +146,7 @@ func (o *MetaObject) Ranges() []*Index {
 	})
 	return o.ranges
 }
+
 func (o *MetaObject) LastField() *Field {
 	return o.fields[len(o.fields)-1]
 }

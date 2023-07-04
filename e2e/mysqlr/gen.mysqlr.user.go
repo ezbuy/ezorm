@@ -470,6 +470,7 @@ func (m *_UserDBMgr) BatchCreate(ctx context.Context, objs []*User) (int64, erro
 	if err != nil {
 		return 0, err
 	}
+
 	return result.RowsAffected()
 }
 

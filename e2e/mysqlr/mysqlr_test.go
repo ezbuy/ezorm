@@ -26,19 +26,24 @@ func TestMain(m *testing.M) {
 		Password: "ezbuyisthebest",
 		Database: "test",
 	})
-	sql, err := os.ReadFile("gen.script.mysqlr.blog.sql")
-	if err != nil {
-		panic(fmt.Errorf("failed to read gen.script.mysqlr.blog.sql: %s", err))
-	}
-	if _, err := MySQL().Exec(ctx, "CREATE DATABASE IF NOT EXISTS test"); err != nil {
-		panic(fmt.Errorf("failed to create database: %s", err))
-	}
-	for _, q := range strings.Split(string(sql), ";") {
-		if len(strings.TrimSpace(q)) == 0 {
-			continue
+
+	sqls := []string{"gen.script.mysqlr.blog.sql", "gen.script.mysqlr.auto.blog.sql"}
+
+	for _, s := range sqls {
+		sql, err := os.ReadFile(s)
+		if err != nil {
+			panic(fmt.Errorf("failed to read gen.script.mysqlr.blog.sql: %s", err))
 		}
-		if _, err := MySQL().Exec(ctx, q); err != nil {
-			panic(fmt.Errorf("failed to create table: %s", err))
+		if _, err := MySQL().Exec(ctx, "CREATE DATABASE IF NOT EXISTS test"); err != nil {
+			panic(fmt.Errorf("failed to create database: %s", err))
+		}
+		for _, q := range strings.Split(string(sql), ";") {
+			if len(strings.TrimSpace(q)) == 0 {
+				continue
+			}
+			if _, err := MySQL().Exec(ctx, q); err != nil {
+				panic(fmt.Errorf("failed to create table: %s", err))
+			}
 		}
 	}
 	os.Exit(m.Run())
@@ -49,9 +54,10 @@ func TestBlogsCRUD(t *testing.T) {
 	db := MySQL()
 	defer t.Cleanup(func() {
 		MySQL().Exec(ctx, "TRUNCATE TABLE blogs")
+		MySQL().Exec(ctx, "TRUNCATE TABLE auto_blogs")
 	})
 	t.Run("Create", func(t *testing.T) {
-		af, err := BlogDBMgr(db).Create(ctx, &Blog{
+		bl := &Blog{
 			Id:        1,
 			UserId:    1,
 			Title:     "test",
@@ -60,7 +66,8 @@ func TestBlogsCRUD(t *testing.T) {
 			Readed:    0,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
-		})
+		}
+		af, err := BlogDBMgr(db).Create(ctx, bl)
 		assert.NoError(t, err)
 		assert.Equal(t, int64(1), af)
 		count, err := BlogDBMgr(db).SearchConditionsCount(ctx, []string{"user_id = ?"}, 1)
@@ -124,6 +131,34 @@ func TestBlogsCRUD(t *testing.T) {
 		count, err := BlogDBMgr(db).SearchConditionsCount(ctx, []string{"user_id = ?"}, 1)
 		assert.NoError(t, err)
 		assert.Equal(t, int64(0), count)
+	})
+
+	t.Run("BatchCreate", func(t *testing.T) {
+		blogs := []*AutoBlog{
+			{
+				UserId:    2,
+				Title:     "test2",
+				Content:   "test2",
+				Status:    1,
+				Readed:    0,
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			},
+			{
+				UserId:    3,
+				Title:     "test3",
+				Content:   "test3",
+				Status:    1,
+				Readed:    0,
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			},
+		}
+		af, err := AutoBlogDBMgr(db).BatchCreate(ctx, blogs)
+		assert.NoError(t, err)
+		assert.Equal(t, int64(2), af)
+		assert.Equal(t, int64(1), blogs[0].Id)
+		assert.Equal(t, int64(2), blogs[1].Id)
 	})
 }
 
