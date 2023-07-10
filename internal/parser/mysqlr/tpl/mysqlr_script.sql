@@ -37,7 +37,7 @@ CREATE TABLE `{{$obj.DbTable}}` (
 	{{- end}}
 	{{- range $i, $index := $obj.NotPrimaryIndexes}}
 	{{- if eq (add $i 1) (len $obj.NotPrimaryIndexes) }}
-	KEY `{{$index.Name | camel2name}}` (`
+	KEY `{{$index.GetPrettyName | camel2name}}` (`
 		{{- range $i, $f := $index.Fields -}}
 			{{- if eq (add $i 1) (len $index.Fields) -}}
 				{{- $f.Name | camel2name -}}
@@ -47,7 +47,7 @@ CREATE TABLE `{{$obj.DbTable}}` (
 		{{- end -}}
 	`)
 	{{- else}}
-	KEY `{{$index.Name | camel2name}}` (`
+	KEY `{{$index.GetPrettyName | camel2name}}` (`
 		{{- range $i, $f := $index.Fields -}}
 			{{- if eq (add $i 1) (len $index.Fields) -}}
 				{{- $f.Name | camel2name -}}

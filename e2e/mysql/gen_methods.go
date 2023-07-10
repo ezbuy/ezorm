@@ -143,8 +143,8 @@ func (m *sqlMethods) GetUserIn(ctx context.Context, req *GetUserInReq, opts ...R
 }
 
 type UserJoinBlogResp struct {
-	UserId int32 `sql:"user_id"`
 	BlogId int32 `sql:"blog_id"`
+	UserId int32 `sql:"user_id"`
 }
 
 type UserJoinBlogReq struct {
