@@ -12,5 +12,5 @@ CREATE TABLE `auto_blogs` (
 	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`updated_at` BIGINT(20) NOT NULL DEFAULT '0',
 	PRIMARY KEY(`id`),
-	KEY `status_of_auto_blog_idx` (`status`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'auto_blogs';
+	KEY `idx_status` (`status`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'auto_blogs';
 

@@ -3,12 +3,15 @@ package mysqlr
 import (
 	"fmt"
 	"strings"
+
+	"github.com/iancoleman/strcase"
 )
 
 type IndexArray []*Index
 
 type Index struct {
 	Name       string
+	PrettyName string
 	Fields     []*Field
 	FieldNames []string
 	Obj        *MetaObject
@@ -29,6 +32,10 @@ func (idx *Index) HasPrimaryKey() bool {
 		}
 	}
 	return false
+}
+
+func (idx *Index) GetPrettyName() string {
+	return idx.PrettyName
 }
 
 func (idx *Index) GetFuncParam() string {
@@ -54,9 +61,11 @@ func (idx *Index) LastField() *Field {
 func (idx *Index) buildUnique() error {
 	return idx.build("UK")
 }
+
 func (idx *Index) buildIndex() error {
 	return idx.build("IDX")
 }
+
 func (idx *Index) buildRange() error {
 	err := idx.build("RNG")
 	if err != nil {
@@ -67,8 +76,10 @@ func (idx *Index) buildRange() error {
 	}
 	return nil
 }
+
 func (idx *Index) build(suffix string) error {
 	idx.Name = fmt.Sprintf("%sOf%s%s", strings.Join(idx.FieldNames, ""), idx.Obj.Name, suffix)
+	idx.PrettyName = strcase.ToSnake(fmt.Sprintf("%s%s", suffix, strings.Join(idx.FieldNames, "")))
 	for _, name := range idx.FieldNames {
 		f := idx.Obj.FieldByName(name)
 		if f == nil {
