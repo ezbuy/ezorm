@@ -12,6 +12,6 @@ CREATE TABLE `blogs` (
 	`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`updated_at` BIGINT(20) NOT NULL DEFAULT '0',
 	PRIMARY KEY(`id`,`user_id`),
-	UNIQUE KEY `uniq_title_of_blog_uk` (`title`),
+	UNIQUE KEY `uk_title` (`title`),
 	KEY `idx_status` (`status`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'blogs';
 
