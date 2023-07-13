@@ -14,7 +14,7 @@ CREATE TABLE `{{$obj.DbTable}}` (
 	{{- end}}
 	{{- range $i, $unique := $obj.NotPrimaryUniques}}
 	{{- if and (eq (add $i 1) (len $obj.NotPrimaryUniques)) (eq (len $obj.NotPrimaryIndexes) 0)}}
-	UNIQUE KEY `uniq_{{$unique.Name | camel2name}}` (
+	UNIQUE KEY `{{$unique.PrettyName | camel2name}}` (
 		{{- range $i, $f := $unique.Fields -}}
 			{{- if eq (add $i 1) (len $unique.Fields) -}}
 				`{{- $f.Name | camel2name -}}`
@@ -24,7 +24,7 @@ CREATE TABLE `{{$obj.DbTable}}` (
 		{{- end -}}
 	)
 	{{- else}}
-	UNIQUE KEY `uniq_{{$unique.Name | camel2name}}` (
+	UNIQUE KEY `{{$unique.PrettyName | camel2name}}` (
 		{{- range $i, $f := $unique.Fields -}}
 			{{- if eq (add $i 1) (len $unique.Fields) -}}
 				`{{- $f.Name | camel2name -}}`
