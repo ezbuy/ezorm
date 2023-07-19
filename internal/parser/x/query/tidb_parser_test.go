@@ -84,12 +84,12 @@ func TestTiDBParserParseQuery(t *testing.T) {
 		query  string
 		expect string
 	}{
-		{"query", query, "SELECT `id` FROM `user` WHERE `name` IN %s AND `id`=? AND `phone`=? LIMIT ?,?"},
-		{"queryIn", queryIn, "SELECT `id` FROM `user` WHERE `name` IN %s"},
-		{"queryOneLimit", queryOneLimit, "SELECT `id` FROM `user` WHERE `name` IN %s AND `id`=? AND `phone`=? LIMIT ?"},
-		{"queryNoLimit", queryNoLimit, "SELECT `id` FROM `user` WHERE `name` IN %s AND `id`=? AND `phone`=?"},
-		{"queryWithTableJoin", queryWithTableJoin, "SELECT `u`.`id`,`b`.`id` FROM `user` AS `u` JOIN `blog` AS `b` ON `u`.`id`=`b`.`user_id` WHERE `u`.`name`=?"},
-		{"queryWithSubquery", queryWithSubquery, "SELECT `id` FROM `user` WHERE `name` IN (SELECT `name` FROM `user` WHERE `id`=?)"},
+		{"query", query, "SELECT `id` FROM `user` %s"},
+		{"queryIn", queryIn, "SELECT `id` FROM `user` %s"},
+		{"queryOneLimit", queryOneLimit, "SELECT `id` FROM `user` %s"},
+		{"queryNoLimit", queryNoLimit, "SELECT `id` FROM `user` %s"},
+		{"queryWithTableJoin", queryWithTableJoin, "SELECT `u`.`id`,`b`.`id` FROM `user` AS `u` JOIN `blog` AS `b` ON `u`.`id`=`b`.`user_id` %s"},
+		{"queryWithSubquery", queryWithSubquery, "SELECT `id` FROM `user` %s"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -114,8 +114,8 @@ func TestTiDBParserParseMetadata(t *testing.T) {
 						{Name: "col:`name`", Type: T_ARRAY_STRING},
 						{Name: "col:`id`", Type: T_INT},
 						{Name: "col:`phone`", Type: T_STRING},
-						{Name: "limit:count", Type: T_INT},
 						{Name: "limit:offset", Type: T_INT},
+						{Name: "limit:count", Type: T_INT},
 					},
 					result: []*QueryField{
 						{Name: "`id`", Type: T_PLACEHOLDER},
