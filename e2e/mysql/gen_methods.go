@@ -4,9 +4,11 @@ package mysql
 
 import (
 	"context"
-	sql_driver "database/sql"
 	"fmt"
+	"strings"
 	"time"
+
+	sql_driver "database/sql"
 
 	"github.com/ezbuy/ezorm/v2/pkg/db"
 	"github.com/ezbuy/ezorm/v2/pkg/sql"
@@ -50,12 +52,25 @@ type GetUserReq struct {
 func (req *GetUserReq) Params() []any {
 	var params []any
 
-	params = append(params, req.Name)
+	if req.Name != "" {
+		params = append(params, req.Name)
+	}
 
 	return params
 }
 
-const _GetUserSQL = "SELECT `name` FROM `test_user` WHERE `name`=?"
+func (req *GetUserReq) Condition() string {
+	var conditions []string
+	if req.Name != "" {
+		conditions = append(conditions, "name = ?")
+	}
+	if len(conditions) > 0 {
+		return " WHERE " + strings.Join(conditions, " AND ")
+	}
+	return ""
+}
+
+const _GetUserSQL = "SELECT `name` FROM `test_user` %s"
 
 // GetUser is a raw query handler generated function for `e2e/mysql/sqls/get_user.sql`.
 func (m *sqlMethods) GetUser(ctx context.Context, req *GetUserReq, opts ...RawQueryOptionHandler) ([]*GetUserResp, error) {
@@ -66,7 +81,7 @@ func (m *sqlMethods) GetUser(ctx context.Context, req *GetUserReq, opts ...RawQu
 		o(rawQueryOption)
 	}
 
-	query := _GetUserSQL
+	query := fmt.Sprintf(_GetUserSQL, req.Condition())
 
 	rows, err := db.GetMysql(db.WithDB(rawQueryOption.db)).QueryContext(ctx, query, req.Params()...)
 	if err != nil {
@@ -104,6 +119,17 @@ func (req *GetUserInReq) Params() []any {
 	return params
 }
 
+func (req *GetUserInReq) Condition() string {
+	var conditions []string
+	if len(req.Name) > 0 {
+		conditions = append(conditions, sql.NewIn(len(req.Name)).String())
+	}
+	if len(conditions) > 0 {
+		return " WHERE " + strings.Join(conditions, " AND ")
+	}
+	return ""
+}
+
 func (req *GetUserInReq) QueryIn() []any {
 	var qs []any
 
@@ -111,7 +137,7 @@ func (req *GetUserInReq) QueryIn() []any {
 	return qs
 }
 
-const _GetUserInSQL = "SELECT `user_id` FROM `test_user` WHERE `name` IN %s"
+const _GetUserInSQL = "SELECT `user_id` FROM `test_user` %s"
 
 // GetUserIn is a raw query handler generated function for `e2e/mysql/sqls/get_user_in.sql`.
 func (m *sqlMethods) GetUserIn(ctx context.Context, req *GetUserInReq, opts ...RawQueryOptionHandler) ([]*GetUserInResp, error) {
@@ -122,7 +148,7 @@ func (m *sqlMethods) GetUserIn(ctx context.Context, req *GetUserInReq, opts ...R
 		o(rawQueryOption)
 	}
 
-	query := fmt.Sprintf(_GetUserInSQL, req.QueryIn()...)
+	query := fmt.Sprintf(_GetUserInSQL, req.Condition())
 
 	rows, err := db.GetMysql(db.WithDB(rawQueryOption.db)).QueryContext(ctx, query, req.Params()...)
 	if err != nil {
@@ -143,23 +169,44 @@ func (m *sqlMethods) GetUserIn(ctx context.Context, req *GetUserInReq, opts ...R
 }
 
 type UserJoinBlogResp struct {
-	BlogId int32 `sql:"blog_id"`
 	UserId int32 `sql:"user_id"`
+	BlogId int32 `sql:"blog_id"`
 }
 
 type UserJoinBlogReq struct {
 	Name string `sql:"name"`
+
+	Offset int32 `sql:"offset"`
+
+	Limit int32 `sql:"limit"`
 }
 
 func (req *UserJoinBlogReq) Params() []any {
 	var params []any
 
-	params = append(params, req.Name)
+	if req.Name != "" {
+		params = append(params, req.Name)
+	}
+
+	params = append(params, req.Offset)
+
+	params = append(params, req.Limit)
 
 	return params
 }
 
-const _UserJoinBlogSQL = "SELECT `u`.`user_id`,`b`.`blog_id` FROM `test_user` AS `u` JOIN `blog` AS `b` ON `u`.`user_id`=`b`.`user` WHERE `u`.`name`=?"
+func (req *UserJoinBlogReq) Condition() string {
+	var conditions []string
+	if req.Name != "" {
+		conditions = append(conditions, "name = ?")
+	}
+	if len(conditions) > 0 {
+		return " WHERE " + strings.Join(conditions, " AND ")
+	}
+	return ""
+}
+
+const _UserJoinBlogSQL = "SELECT `u`.`user_id`,`b`.`blog_id` FROM `test_user` AS `u` JOIN `blog` AS `b` ON `u`.`user_id`=`b`.`user` %s"
 
 // UserJoinBlog is a raw query handler generated function for `e2e/mysql/sqls/user_join_blog.sql`.
 func (m *sqlMethods) UserJoinBlog(ctx context.Context, req *UserJoinBlogReq, opts ...RawQueryOptionHandler) ([]*UserJoinBlogResp, error) {
@@ -170,7 +217,7 @@ func (m *sqlMethods) UserJoinBlog(ctx context.Context, req *UserJoinBlogReq, opt
 		o(rawQueryOption)
 	}
 
-	query := _UserJoinBlogSQL
+	query := fmt.Sprintf(_UserJoinBlogSQL, req.Condition())
 
 	rows, err := db.GetMysql(db.WithDB(rawQueryOption.db)).QueryContext(ctx, query, req.Params()...)
 	if err != nil {

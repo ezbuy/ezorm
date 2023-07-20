@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	mock "github.com/DATA-DOG/go-sqlmock"
@@ -13,14 +14,19 @@ func TestGetUser(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	mock.ExpectQuery(_GetUserSQL).WithArgs("me").WillReturnRows(
+
+	req := &GetUserReq{
+		Name: "me",
+	}
+
+	sql := fmt.Sprintf(_GetUserSQL, req.Condition())
+
+	mock.ExpectQuery(sql).WithArgs("me").WillReturnRows(
 		mock.NewRows([]string{"name"}).AddRow("me"),
 	)
 
 	ctx := context.TODO()
-	resp, err := GetRawQuery().GetUser(ctx, &GetUserReq{
-		Name: "me",
-	}, WithDB(mockDB))
+	resp, err := GetRawQuery().GetUser(ctx, req, WithDB(mockDB))
 	if !assert.NoError(t, err) {
 		return
 	}

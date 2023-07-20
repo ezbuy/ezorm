@@ -6,6 +6,8 @@ import (
 	"time"
 	"context"
 	 "fmt"
+	"strings"
+
 	sql_driver "database/sql"
 	"github.com/ezbuy/ezorm/v2/pkg/sql"
 	"github.com/ezbuy/ezorm/v2/pkg/db"
@@ -53,6 +55,12 @@ type {{$method.Name}}Req struct {
 	{{- range $field := $method.Fields}}
 	{{$field.Name}} {{$field.Type}} `sql:"{{$field.Raw}}"`
 	{{- end }}
+	{{if $method.Offset }}
+	  Offset int32 `sql:"offset"`
+	{{end}}
+	{{if $method.Limit }}
+	  Limit int32 `sql:"limit"`
+	{{end}}
 }
 
 func (req *{{$method.Name}}Req) Params() []any {
@@ -63,10 +71,49 @@ func (req *{{$method.Name}}Req) Params() []any {
 		params = append(params, v)
 	}
 	{{else}}
+	{{- if (eq $field.Type "int64")}}
+	if req.{{$field.Name}} != 0 {
+		params = append(params, req.{{$field.Name}})
+	}
+	{{- else if (eq $field.Type "string")}}
+	if req.{{$field.Name}} != "" {
+		params = append(params, req.{{$field.Name}})
+	}
+	{{- else}}
 	params = append(params, req.{{$field.Name}})
-	{{end}}
+	{{- end}}
+	{{- end}}
 	{{- end }}
+	{{if $method.Offset }}
+	params = append(params, req.Offset)
+	{{end}}
+	{{if $method.Limit }}
+	params = append(params, req.Limit)
+	{{end}}
 	return params
+}
+
+func (req *{{$method.Name}}Req) Condition() string {
+	var conditions []string
+	{{- range $field := $method.Fields}}
+	{{- if or (eq $field.Type "[]string") (eq $field.Type "[]int64")}}
+	if len(req.{{$field.Name}}) > 0 {
+		conditions = append(conditions, sql.NewIn(len(req.{{$field.Name}})).String())
+	}
+	{{- else if (eq $field.Type "int64")}}
+	if req.{{$field.Name}} != 0 {
+		conditions = append(conditions, "{{$field.Raw}} = ?")
+	}
+	{{- else if (eq $field.Type "string")}}
+	if req.{{$field.Name}} != "" {
+		conditions = append(conditions, "{{$field.Raw}} = ?")
+	}
+	{{- end }}
+	{{- end }}
+	if len(conditions) > 0 {
+		return " WHERE " + strings.Join(conditions, " AND ")
+	}
+	return ""
 }
 
 {{if $method.QueryIn}}
@@ -93,11 +140,7 @@ func (m *sqlMethods) {{$method.Name}}(ctx context.Context, req *{{$method.Name}}
 		o(rawQueryOption)
 	}
 
-	{{if $method.QueryIn }}
-	query := fmt.Sprintf(_{{$method.Name}}SQL,req.QueryIn()...)
-	{{else}}
-	query := _{{$method.Name}}SQL
-	{{end}}
+	query := fmt.Sprintf(_{{$method.Name}}SQL, req.Condition())
 
 	rows, err := db.GetMysql(db.WithDB(rawQueryOption.db)).QueryContext(ctx, query, req.Params()...)
 	if err != nil {

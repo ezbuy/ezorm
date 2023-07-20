@@ -29,7 +29,10 @@ type SQLMethod struct {
 	Name   string
 	Fields []*SQLMethodField
 	Result []*SQLMethodField
-	SQL    string
+	Limit  *SQLMethodField
+	Offset *SQLMethodField
+
+	SQL string
 
 	Assign   string
 	FromFile string
@@ -106,11 +109,26 @@ func (p *SQL) Read(path string) (*SQLMethod, error) {
 			if name == "" {
 				name = uglify(c.Name)
 			}
-			result.Fields = append(result.Fields, &SQLMethodField{
-				Name: strcase.ToCamel(name),
-				Raw:  name,
-				Type: c.Type.String(),
-			})
+			switch name {
+			case "count":
+				result.Limit = &SQLMethodField{
+					Name: "Count",
+					Raw:  name,
+					Type: c.Type.String(),
+				}
+			case "offset":
+				result.Offset = &SQLMethodField{
+					Name: "Offset",
+					Raw:  name,
+					Type: c.Type.String(),
+				}
+			default:
+				result.Fields = append(result.Fields, &SQLMethodField{
+					Name: strcase.ToCamel(name),
+					Raw:  name,
+					Type: c.Type.String(),
+				})
+			}
 		}
 		for _, c := range f.result {
 			name := c.Alias

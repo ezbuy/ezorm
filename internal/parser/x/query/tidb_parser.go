@@ -21,6 +21,12 @@ type TiDBParser struct {
 	b    *QueryBuilder
 }
 
+const (
+	PREFIX_LIMIT = "LIMIT"
+	LIMIT_COUNT  = "limit:count"
+	LIMIT_OFFSET = "limit:offset"
+)
+
 func NewTiDBParser() *TiDBParser {
 	return &TiDBParser{
 		meta: make(map[Table]*QueryMetadata),
@@ -134,22 +140,22 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 		}
 		// LIMIT
 		if x.Limit != nil {
-			if _, ok := x.Limit.Count.(*driver.ValueExpr); ok {
-				tp.b.raw.limit.count = true
-				// FIXME
-				for t := range tp.meta {
-					tp.meta[t].params = append(tp.meta[t].params, &QueryField{
-						Name: "limit:count",
-						Type: T_INT,
-					})
-				}
-			}
 			if _, ok := x.Limit.Offset.(*driver.ValueExpr); ok {
 				tp.b.raw.limit.offset = true
 				// FIXME
 				for t := range tp.meta {
 					tp.meta[t].params = append(tp.meta[t].params, &QueryField{
-						Name: "limit:offset",
+						Name: LIMIT_OFFSET,
+						Type: T_INT,
+					})
+				}
+			}
+			if _, ok := x.Limit.Count.(*driver.ValueExpr); ok {
+				tp.b.raw.limit.count = true
+				// FIXME
+				for t := range tp.meta {
+					tp.meta[t].params = append(tp.meta[t].params, &QueryField{
+						Name: LIMIT_COUNT,
 						Type: T_INT,
 					})
 				}
@@ -161,7 +167,7 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 			}
 			start := strings.Index(tp.b.String(), limitBuffer.String())
 			end := start + limitBuffer.Len()
-			tp.b.raw.lo["LIMIT"] = LocationOffset{
+			tp.b.raw.lo[PREFIX_LIMIT] = LocationOffset{
 				// FIXME: solve no well-formated query
 				start: start + 5 + 1,
 				end:   end,
