@@ -89,7 +89,7 @@ func (t TableMetadata) String() string {
 		return tables[i].Name < tables[j].Name
 	})
 	for _, table := range tables {
-		if qm, ok := t[table]; !ok {
+		if qm, ok := t[table]; ok {
 			buffer.WriteString(fmt.Sprintf("table: %s\n", table))
 			buffer.WriteString(qm.String())
 		}
@@ -161,10 +161,10 @@ func (tm TableMetadata) Validate(tableRef map[string]map[string]generator.IField
 			pName := uglify(p.Name)
 			pName = strcase.ToLowerCamel(pName)
 			col, ok := ff[pName]
-			if !ok && p.Type != T_ANY {
+			if !ok && p.Type != T_ANY && p.Name != LIMIT_COUNT && p.Name != LIMIT_OFFSET {
 				return fmt.Errorf("metadata: param %s not found in table %s", pName, name)
 			}
-			if !typeMatch(p.Type, col) && p.Type != T_ANY {
+			if p.Name != LIMIT_COUNT && p.Name != LIMIT_OFFSET && !typeMatch(p.Type, col) && p.Type != T_ANY {
 				return fmt.Errorf("metadata: param %s type mismatch, expect %s, got %s", pName, col.GetGoType(), p.Type.BaseType())
 			}
 		}
@@ -181,6 +181,9 @@ func (tm TableMetadata) Validate(tableRef map[string]map[string]generator.IField
 
 func (qm *QueryMetadata) String() string {
 	var buffer bytes.Buffer
+	sort.Slice(qm.params, func(i, j int) bool {
+		return qm.params[i].Name < qm.params[j].Name
+	})
 	for _, p := range qm.params {
 		buffer.WriteString(fmt.Sprintf("param: name: %s, type: %s\n", p.Name, p.Type))
 	}
@@ -202,35 +205,13 @@ func (qb *QueryBuilder) IsQueryIn() bool {
 
 func (qb *QueryBuilder) rebuild() string {
 	query := qb.String()
-	los := make([]LocationOffset, len(qb.raw.lo))
-	reversed := make(map[LocationOffset]string)
-	var index int
-	for col, lo := range qb.raw.lo {
-		los[index] = lo
-		index++
-		reversed[lo] = col
-	}
-	sort.SliceStable(los, func(i, j int) bool {
-		return los[i].start < los[j].start
-	})
 
-	var s int
+	i := strings.Index(query, "WHERE")
+
 	rebuildQuery := bytes.NewBuffer(nil)
-	for _, lo := range los {
-		e := lo.start
-		rebuildQuery.WriteString(query[s:e])
-		_, ok := qb.raw.ins[reversed[lo]]
-		switch {
-		case ok:
-			rebuildQuery.WriteString("%s")
-		case reversed[lo] == "LIMIT" && qb.raw.limit.count && qb.raw.limit.offset:
-			rebuildQuery.WriteString("?,?")
-		default:
-			rebuildQuery.WriteString("?")
-		}
-		s = lo.end
-	}
-	rebuildQuery.WriteString(query[s:])
+	rebuildQuery.WriteString(query[:i])
+	rebuildQuery.WriteString("%s")
+	// rebuildQuery.WriteString(query[s:])
 	return rebuildQuery.String()
 }
 

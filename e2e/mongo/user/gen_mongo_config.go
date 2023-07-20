@@ -44,8 +44,8 @@ func MgoSetup(config *db.MongoConfig, opts ...SetupOptionFn) {
 	}
 	// setup the indexes
 	sopt.postHooks = append(sopt.postHooks,
-		UserBlogIndexesFunc,
 		UserIndexesFunc,
+		UserBlogIndexesFunc,
 	)
 	var dopt []db.MongoDriverOption
 	if sopt.monitor != nil {

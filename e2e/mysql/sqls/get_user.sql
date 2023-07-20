@@ -3,4 +3,4 @@ SELECT
 FROM
 	test_user
 WHERE
-	name = "me"
+	name = "me";
