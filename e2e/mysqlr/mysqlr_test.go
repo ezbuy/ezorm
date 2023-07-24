@@ -124,6 +124,26 @@ func TestBlogsCRUD(t *testing.T) {
 		assert.Equal(t, int64(1), af)
 	})
 
+	t.Run("GetByLimitOffset_NO_CONDITION", func(t *testing.T) {
+		resp, err := GetRawQuery().Blog(ctx, &BlogReq{
+			Limit:  1,
+			Offset: 0,
+		}, WithDB(db.DB))
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(resp))
+	})
+
+	t.Run("GetByLimitOffset_WITH_CONDITION", func(t *testing.T) {
+		resp, err := GetRawQuery().Blog(ctx, &BlogReq{
+			// not exist id
+			Id:     9999,
+			Limit:  1,
+			Offset: 0,
+		}, WithDB(db.DB))
+		assert.NoError(t, err)
+		assert.Equal(t, 0, len(resp))
+	})
+
 	t.Run("Delete", func(t *testing.T) {
 		af, err := BlogDBMgr(db).DeleteByPrimaryKey(ctx, 1, 1)
 		assert.NoError(t, err)

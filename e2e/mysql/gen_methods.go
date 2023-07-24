@@ -64,11 +64,11 @@ func (req *GetUserReq) Condition() string {
 	if req.Name != "" {
 		conditions = append(conditions, "name = ?")
 	}
+	var query string
 	if len(conditions) > 0 {
-		query := " WHERE " + strings.Join(conditions, " AND ")
-		return query
+		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
-	return ""
+	return query
 }
 
 const _GetUserSQL = "SELECT `name` FROM `test_user` %s"
@@ -125,11 +125,11 @@ func (req *GetUserInReq) Condition() string {
 	if len(req.Name) > 0 {
 		conditions = append(conditions, sql.NewIn(len(req.Name)).String())
 	}
+	var query string
 	if len(conditions) > 0 {
-		query := " WHERE " + strings.Join(conditions, " AND ")
-		return query
+		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
-	return ""
+	return query
 }
 
 func (req *GetUserInReq) QueryIn() []any {
@@ -202,12 +202,12 @@ func (req *UserJoinBlogReq) Condition() string {
 	if req.Name != "" {
 		conditions = append(conditions, "name = ?")
 	}
+	var query string
 	if len(conditions) > 0 {
-		query := " WHERE " + strings.Join(conditions, " AND ")
-		query += " LIMIT ?, ?"
-		return query
+		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
-	return ""
+	query += " LIMIT ?, ?"
+	return query
 }
 
 const _UserJoinBlogSQL = "SELECT `u`.`user_id`,`b`.`blog_id` FROM `test_user` AS `u` JOIN `blog` AS `b` ON `u`.`user_id`=`b`.`user` %s"
