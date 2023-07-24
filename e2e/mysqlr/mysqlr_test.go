@@ -160,6 +160,15 @@ func TestBlogsCRUD(t *testing.T) {
 		assert.Equal(t, int64(1), blogs[0].Id)
 		assert.Equal(t, int64(2), blogs[1].Id)
 	})
+
+	t.Run("GetByLimitOffset", func(t *testing.T) {
+		resp, err := GetRawQuery().Blog(ctx, &BlogReq{
+			Limit:  1,
+			Offset: 0,
+		}, WithDB(db.DB))
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(resp))
+	})
 }
 
 func TestBlogsTx(t *testing.T) {

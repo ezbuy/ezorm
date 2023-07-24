@@ -74,12 +74,12 @@ func (req *BlogReq) Condition() string {
 	if req.Id != 0 {
 		conditions = append(conditions, "id = ?")
 	}
+	var query string
 	if len(conditions) > 0 {
-		query := " WHERE " + strings.Join(conditions, " AND ")
-		query += " LIMIT ?, ?"
-		return query
+		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
-	return ""
+	query += " LIMIT ?, ?"
+	return query
 }
 
 const _BlogSQL = "SELECT `Id`,SUM(`title`) AS `title_count`,`status` FROM `blogs` %s"
