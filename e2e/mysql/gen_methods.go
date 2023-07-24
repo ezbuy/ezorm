@@ -65,7 +65,8 @@ func (req *GetUserReq) Condition() string {
 		conditions = append(conditions, "name = ?")
 	}
 	if len(conditions) > 0 {
-		return " WHERE " + strings.Join(conditions, " AND ")
+		query := " WHERE " + strings.Join(conditions, " AND ")
+		return query
 	}
 	return ""
 }
@@ -125,7 +126,8 @@ func (req *GetUserInReq) Condition() string {
 		conditions = append(conditions, sql.NewIn(len(req.Name)).String())
 	}
 	if len(conditions) > 0 {
-		return " WHERE " + strings.Join(conditions, " AND ")
+		query := " WHERE " + strings.Join(conditions, " AND ")
+		return query
 	}
 	return ""
 }
@@ -201,7 +203,9 @@ func (req *UserJoinBlogReq) Condition() string {
 		conditions = append(conditions, "name = ?")
 	}
 	if len(conditions) > 0 {
-		return " WHERE " + strings.Join(conditions, " AND ")
+		query := " WHERE " + strings.Join(conditions, " AND ")
+		query += " LIMIT ?, ?"
+		return query
 	}
 	return ""
 }
