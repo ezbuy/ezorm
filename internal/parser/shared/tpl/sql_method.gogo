@@ -111,7 +111,15 @@ func (req *{{$method.Name}}Req) Condition() string {
 	{{- end }}
 	{{- end }}
 	if len(conditions) > 0 {
-		return " WHERE " + strings.Join(conditions, " AND ")
+		query := " WHERE " + strings.Join(conditions, " AND ")
+		{{- if and $method.Offset $method.Limit}}
+		query += " LIMIT ?, ?"
+		{{- else if $method.Limit}}
+		query += " LIMIT ?"
+		{{- else if $method.Offset}}
+		query += " OFFSET ?"
+		{{- end}}
+		return query
 	}
 	return ""
 }

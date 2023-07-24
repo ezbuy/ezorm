@@ -75,7 +75,9 @@ func (req *BlogReq) Condition() string {
 		conditions = append(conditions, "id = ?")
 	}
 	if len(conditions) > 0 {
-		return " WHERE " + strings.Join(conditions, " AND ")
+		query := " WHERE " + strings.Join(conditions, " AND ")
+		query += " LIMIT ?, ?"
+		return query
 	}
 	return ""
 }
