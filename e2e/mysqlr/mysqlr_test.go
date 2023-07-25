@@ -97,11 +97,27 @@ func TestBlogsCRUD(t *testing.T) {
 	})
 
 	t.Run("GetUniqueMultiKeyByBatch", func(t *testing.T) {
+		bl := &Blog{
+			Id:        2,
+			UserId:    1,
+			Title:     "test2",
+			Content:   "test",
+			Status:    1,
+			Readed:    0,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		}
+		_, err := BlogDBMgr(db).Create(ctx, bl)
+		assert.NoError(t, err)
+
 		bs, err := BlogDBMgr(db).FetchByUserIdTitles(ctx, []*UserIdTitleOfBlogUK{
 			{UserId: 1, Title: "test"},
 		})
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(bs))
+
+		_, err = BlogDBMgr(db).DeleteByPrimaryKey(ctx, 2, 1)
+		assert.NoError(t, err)
 	})
 
 	t.Run("GetByUniqueKeyNoRows", func(t *testing.T) {
