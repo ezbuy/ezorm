@@ -118,6 +118,29 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 							}
 						}
 					}
+					if expr, ok := f.Expr.(*ast.FuncCallExpr); ok {
+						field := &QueryField{
+							Alias: f.AsName.String(),
+						}
+						var txt bytes.Buffer
+						txt.WriteString(expr.FnName.O)
+						for _, args := range expr.Args {
+							txt.WriteString("_")
+							var arg strings.Builder
+							args.Format(&arg)
+							txt.WriteString(arg.String())
+						}
+						field.Name = txt.String()
+						field.Type = T_ANY
+						if len(expr.Args) > 0 {
+							for _, arg := range expr.Args {
+								if col, ok := arg.(*ast.ColumnNameExpr); ok {
+									tp.meta.AppendResult(col.Name.Table.String(), field)
+									tp.b.resultFields = append(tp.b.resultFields, field)
+								}
+							}
+						}
+					}
 					if expr, ok := f.Expr.(*ast.ColumnNameExpr); ok {
 						field := &QueryField{
 							Alias: f.AsName.String(),
