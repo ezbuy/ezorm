@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ezbuy/ezorm/v2/pkg/orm"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -158,6 +159,35 @@ func TestBlogsCRUD(t *testing.T) {
 		}, WithDB(db.DB))
 		assert.NoError(t, err)
 		assert.Equal(t, 0, len(resp))
+	})
+
+	t.Run("MySQLFunction", func(t *testing.T) {
+		resps, err := GetRawQuery().BlogAggr(ctx, &BlogAggrReq{
+			Id: 0,
+		}, WithDB(db.DB))
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(resps))
+		resp := resps[0]
+		i, err := orm.ToResult[sql.NullInt64](resp.Count)
+		assert.NoError(t, err)
+		assert.Equal(t, int64(1), i.Int64)
+
+		resp2s, err := GetRawQuery().BlogFunc(ctx, &BlogFuncReq{
+			Id: 1,
+		}, WithDB(db.DB))
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(resp2s))
+		resp2 := resp2s[0]
+		s, err := orm.ToResult[sql.NullString](resp2.UTitle)
+		assert.NoError(t, err)
+		if !assert.Equal(t, "TEST", s.String) {
+			t.Errorf("resp2.UTitle: %#v\n", resp2.UTitle)
+		}
+		i2, err := orm.ToResult[sql.NullInt64](resp2.LenTitle)
+		assert.NoError(t, err)
+		if !assert.Equal(t, int64(4), i2.Int64) {
+			t.Errorf("resp2.LenTitle: %#v\n", resp2.LenTitle)
+		}
 	})
 
 	t.Run("Delete", func(t *testing.T) {
