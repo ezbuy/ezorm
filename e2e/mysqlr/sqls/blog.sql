@@ -1,8 +1,8 @@
 SELECT
-	id ,
+	id,
 	status
 FROM
-	blogs
+	blogs AS b
 WHERE
-	id = 1
+	b.id = 1
 LIMIT 1,2;

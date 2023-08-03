@@ -40,9 +40,10 @@ type SQLMethod struct {
 }
 
 type SQLMethodField struct {
-	Name string
-	Raw  string
-	Type string
+	Name     string
+	Raw      string
+	Type     string
+	FullName string
 }
 
 func NewSQL(objs map[string]generator.IObject) *SQL {
@@ -124,9 +125,10 @@ func (p *SQL) Read(path string) (*SQLMethod, error) {
 				}
 			default:
 				result.Fields = append(result.Fields, &SQLMethodField{
-					Name: strcase.ToCamel(name),
-					Raw:  name,
-					Type: c.Type.String(),
+					FullName: strings.Split(c.Name, ":")[1],
+					Name:     strcase.ToCamel(name),
+					Raw:      name,
+					Type:     c.Type.String(),
 				})
 			}
 		}

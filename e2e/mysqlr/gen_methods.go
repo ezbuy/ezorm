@@ -42,8 +42,6 @@ func WithDB(db *sql_driver.DB) RawQueryOptionHandler {
 }
 
 type BlogResp struct {
-	Id     int64 `sql:"id"`
-	Status int32 `sql:"status"`
 }
 
 type BlogReq struct {
@@ -71,7 +69,7 @@ func (req *BlogReq) Params() []any {
 func (req *BlogReq) Condition() string {
 	var conditions []string
 	if req.Id != 0 {
-		conditions = append(conditions, "id = ?")
+		conditions = append(conditions, "`b`.`id` = ?")
 	}
 	var query string
 	if len(conditions) > 0 {
@@ -81,7 +79,7 @@ func (req *BlogReq) Condition() string {
 	return query
 }
 
-const _BlogSQL = "SELECT `id`,`status` FROM `blogs` %s"
+const _BlogSQL = "SELECT `id`,`status` FROM `blogs` AS `b` %s"
 
 // Blog is a raw query handler generated function for `e2e/mysqlr/sqls/blog.sql`.
 func (m *sqlMethods) Blog(ctx context.Context, req *BlogReq, opts ...RawQueryOptionHandler) ([]*BlogResp, error) {
@@ -133,7 +131,7 @@ func (req *BlogAggrReq) Params() []any {
 func (req *BlogAggrReq) Condition() string {
 	var conditions []string
 	if req.Id != 0 {
-		conditions = append(conditions, "id = ?")
+		conditions = append(conditions, "`id` = ?")
 	}
 	var query string
 	if len(conditions) > 0 {
@@ -195,7 +193,7 @@ func (req *BlogFuncReq) Params() []any {
 func (req *BlogFuncReq) Condition() string {
 	var conditions []string
 	if req.Id != 0 {
-		conditions = append(conditions, "id = ?")
+		conditions = append(conditions, "`id` = ?")
 	}
 	var query string
 	if len(conditions) > 0 {
