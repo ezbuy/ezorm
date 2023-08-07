@@ -18,10 +18,10 @@ LIMIT 0,10
 
 const queryIn = `
 SELECT
-	id
+	u.id
 FROM
-	user
-WHERE name IN ('me','him')
+	user AS u
+WHERE u.name IN ('me','him')
 `
 
 const queryOneLimit = `
@@ -85,7 +85,7 @@ func TestTiDBParserParseQuery(t *testing.T) {
 		expect string
 	}{
 		{"query", query, "SELECT `id` FROM `user` %s"},
-		{"queryIn", queryIn, "SELECT `id` FROM `user` %s"},
+		{"queryIn", queryIn, "SELECT `u`.`id` FROM `user` AS `u` %s"},
 		{"queryOneLimit", queryOneLimit, "SELECT `id` FROM `user` %s"},
 		{"queryNoLimit", queryNoLimit, "SELECT `id` FROM `user` %s"},
 		{"queryWithTableJoin", queryWithTableJoin, "SELECT `u`.`id`,`b`.`id` FROM `user` AS `u` JOIN `blog` AS `b` ON `u`.`id`=`b`.`user_id` %s"},
@@ -124,12 +124,12 @@ func TestTiDBParserParseMetadata(t *testing.T) {
 			},
 		},
 		{"queryIn", queryIn, map[Table]*QueryMetadata{
-			{Name: "user"}: {
+			{Name: "user", Alias: "u"}: {
 				params: []*QueryField{
-					{Name: "col:`name`", Type: T_ARRAY_STRING},
+					{Name: "col:`u`.`name`", Type: T_ARRAY_STRING},
 				},
 				result: []*QueryField{
-					{Name: "`id`", Type: T_PLACEHOLDER},
+					{Name: "`u`.`id`", Type: T_PLACEHOLDER},
 				},
 			},
 		}},
