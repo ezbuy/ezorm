@@ -62,7 +62,7 @@ func (req *GetUserReq) Params() []any {
 func (req *GetUserReq) Condition() string {
 	var conditions []string
 	if req.Name != "" {
-		conditions = append(conditions, "name = ?")
+		conditions = append(conditions, "`name` = ?")
 	}
 	var query string
 	if len(conditions) > 0 {
@@ -200,7 +200,7 @@ func (req *UserJoinBlogReq) Params() []any {
 func (req *UserJoinBlogReq) Condition() string {
 	var conditions []string
 	if req.Name != "" {
-		conditions = append(conditions, "name = ?")
+		conditions = append(conditions, "`u`.`name` = ?")
 	}
 	var query string
 	if len(conditions) > 0 {

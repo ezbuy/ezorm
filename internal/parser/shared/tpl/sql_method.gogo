@@ -102,11 +102,11 @@ func (req *{{$method.Name}}Req) Condition() string {
 	}
 	{{- else if (eq $field.Type "int64")}}
 	if req.{{$field.Name}} != 0 {
-		conditions = append(conditions, "{{$field.Raw}} = ?")
+		conditions = append(conditions, "{{$field.FullName}} = ?")
 	}
 	{{- else if (eq $field.Type "string")}}
 	if req.{{$field.Name}} != "" {
-		conditions = append(conditions, "{{$field.Raw}} = ?")
+		conditions = append(conditions, "{{$field.FullName}} = ?")
 	}
 	{{- end }}
 	{{- end }}
