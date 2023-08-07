@@ -1,6 +1,6 @@
 SELECT
-	id,
-	status
+	b.id,
+	b.status
 FROM
 	blogs AS b
 WHERE
