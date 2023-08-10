@@ -22,7 +22,6 @@ type TiDBParser struct {
 }
 
 const (
-	PREFIX_LIMIT = "LIMIT"
 	LIMIT_COUNT  = "limit:count"
 	LIMIT_OFFSET = "limit:offset"
 )
@@ -33,9 +32,7 @@ func NewTiDBParser() *TiDBParser {
 		b: &QueryBuilder{
 			Buffer: bytes.NewBuffer(nil),
 			raw: &Raw{
-				ins:   map[string]struct{}{},
-				lo:    map[string]LocationOffset{},
-				limit: &LimitOption{},
+				ins: map[string]struct{}{},
 			},
 		},
 	}
@@ -57,8 +54,6 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 	if err := node.Restore(subCtx); err != nil {
 		return err
 	}
-	start := strings.Index(tp.b.String(), buffer.String())
-	end := start + buffer.Len()
 
 	switch x := node.(type) {
 	case *ast.Join:
@@ -164,8 +159,6 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 		// LIMIT
 		if x.Limit != nil {
 			if _, ok := x.Limit.Offset.(*driver.ValueExpr); ok {
-				tp.b.raw.limit.offset = true
-				// FIXME
 				for t := range tp.meta {
 					tp.meta[t].params = append(tp.meta[t].params, &QueryField{
 						Name: LIMIT_OFFSET,
@@ -174,8 +167,6 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 				}
 			}
 			if _, ok := x.Limit.Count.(*driver.ValueExpr); ok {
-				tp.b.raw.limit.count = true
-				// FIXME
 				for t := range tp.meta {
 					tp.meta[t].params = append(tp.meta[t].params, &QueryField{
 						Name: LIMIT_COUNT,
@@ -187,13 +178,6 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 			subCtx := format.NewRestoreCtx(format.DefaultRestoreFlags, limitBuffer)
 			if err := x.Limit.Restore(subCtx); err != nil {
 				return err
-			}
-			start := strings.Index(tp.b.String(), limitBuffer.String())
-			end := start + limitBuffer.Len()
-			tp.b.raw.lo[PREFIX_LIMIT] = LocationOffset{
-				// FIXME: solve no well-formated query
-				start: start + 5 + 1,
-				end:   end,
 			}
 		}
 	case *ast.BinaryOperationExpr:
@@ -210,10 +194,6 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 			l.Format(nameBuilder)
 			field := &QueryField{
 				Name: nameBuilder.String(),
-			}
-			tp.b.raw.lo[field.Name] = LocationOffset{
-				start: start + len(field.Name) + 1,
-				end:   end,
 			}
 			if v, ook := x.R.(*driver.ValueExpr); ook {
 				switch v.Kind() {
@@ -253,10 +233,6 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 					}
 				}
 				tp.b.raw.ins[field.Name] = struct{}{}
-				tp.b.raw.lo[field.Name] = LocationOffset{
-					start: start + len(field.Name) + 4,
-					end:   end,
-				}
 				field.Name = fmt.Sprintf("col:%s", field.Name)
 				t := expr.Name.Table.String()
 				tp.meta.AppendParams(t, field)
@@ -300,9 +276,7 @@ func (tp *TiDBParser) Parse(ctx context.Context,
 
 func (tp *TiDBParser) Flush() {
 	tp.b.raw = &Raw{
-		lo:    make(map[string]LocationOffset),
-		ins:   map[string]struct{}{},
-		limit: &LimitOption{},
+		ins: map[string]struct{}{},
 	}
 	tp.b.resultFields = []*QueryField{}
 	tp.b.Reset()

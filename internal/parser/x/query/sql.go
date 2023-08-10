@@ -220,9 +220,7 @@ type LocationOffset struct {
 }
 
 type Raw struct {
-	ins   map[string]struct{}
-	lo    map[string]LocationOffset
-	limit *LimitOption
+	ins map[string]struct{}
 }
 
 // RawQueryParser is a parser to extract metedata from sql query
