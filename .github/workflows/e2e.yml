@@ -14,7 +14,7 @@ jobs:
     name: "mysql"
     strategy:
       matrix:
-        go: ["1.18","1.19","1.20"]
+        go: ["1.18","1.20","1.21"]
     runs-on: ubuntu-latest
     container:
         image: golang:${{ matrix.go }}
@@ -50,7 +50,7 @@ jobs:
     name: "mysqlr"
     strategy:
       matrix:
-        go: [1.18,1.19,"1.20"]
+        go: ["1.18","1.20","1.21"]
     runs-on: ubuntu-latest
     container:
         image: golang:${{ matrix.go }}
@@ -86,7 +86,7 @@ jobs:
     name: "mongo"
     strategy:
       matrix:
-        go: [1.18,1.19,"1.20"]
+        go: ["1.18","1.20","1.21"]
     runs-on: ubuntu-latest
     container:
         image: golang:${{ matrix.go }}
@@ -118,7 +118,7 @@ jobs:
     name: "customized-plugin"
     strategy:
       matrix:
-        go: [1.18,1.19,"1.20"]
+        go: ["1.18","1.20","1.21"]
     runs-on: ubuntu-latest
     container:
         image: golang:${{ matrix.go }}
