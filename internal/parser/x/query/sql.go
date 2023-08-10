@@ -55,9 +55,10 @@ func (t T) BaseType() string {
 }
 
 type QueryField struct {
-	Name  string
-	Type  T
-	Alias string
+	Name   string
+	Type   T
+	Alias  string
+	IsLike bool
 }
 
 var _ fmt.Stringer = (*QueryMetadata)(nil)

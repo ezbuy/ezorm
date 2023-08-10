@@ -44,6 +44,7 @@ type SQLMethodField struct {
 	Raw      string
 	Type     string
 	FullName string
+	IsLike   bool
 }
 
 func NewSQL(objs map[string]generator.IObject) *SQL {
@@ -129,6 +130,7 @@ func (p *SQL) Read(path string) (*SQLMethod, error) {
 					Name:     strcase.ToCamel(name),
 					Raw:      name,
 					Type:     c.Type.String(),
+					IsLike:   c.IsLike,
 				})
 			}
 		}

@@ -240,7 +240,20 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 
 		}
 	case *ast.PatternLikeExpr:
-		// TODO
+		if expr, ok := x.Expr.(*ast.ColumnNameExpr); ok {
+			nameBuilder := &strings.Builder{}
+			expr.Format(nameBuilder)
+			field := &QueryField{
+				Name: nameBuilder.String(),
+			}
+			// LIKE value must be string
+			field.Type = T_STRING
+			field.IsLike = true
+			field.Name = fmt.Sprintf("col:%s", field.Name)
+			t := expr.Name.Table.String()
+			tp.meta.AppendParams(t, field)
+		}
+
 	case *ast.SubqueryExpr:
 		if err := tp.parse(x.Query, n+1); err != nil {
 			return err
