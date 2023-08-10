@@ -188,6 +188,12 @@ func TestBlogsCRUD(t *testing.T) {
 		if !assert.Equal(t, int64(4), i2.Int64) {
 			t.Errorf("resp2.LenTitle: %#v\n", resp2.LenTitle)
 		}
+
+		r3s, err := GetRawQuery().BlogLike(ctx, &BlogLikeReq{
+			Title: "te%",
+		}, WithDB(db.DB))
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(r3s))
 	})
 
 	t.Run("Delete", func(t *testing.T) {
