@@ -8,7 +8,7 @@ require (
 	github.com/ezbuy/utils v0.0.0-20170609090716-8ac4beef008f
 	github.com/ezbuy/wrapper v1.0.3
 	github.com/iancoleman/strcase v0.2.0
-	github.com/pingcap/parser v0.0.0-20200623164729-3a18f1e5dceb
+	github.com/pingcap/parser v4.0.0-alpha+incompatible
 	github.com/pingcap/tidb v1.1.0-beta.0.20200630082100-328b6d0a955c
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.15.0
