@@ -105,9 +105,15 @@ func (req *{{$method.Name}}Req) Condition() string {
 		conditions = append(conditions, "{{$field.FullName}} = ?")
 	}
 	{{- else if (eq $field.Type "string")}}
+	{{- if $field.IsLike}}
+	if req.{{$field.Name}} != "" {
+		conditions = append(conditions, "{{$field.FullName}} LIKE ?")
+	}
+	{{- else}}
 	if req.{{$field.Name}} != "" {
 		conditions = append(conditions, "{{$field.FullName}} = ?")
 	}
+	{{- end }}
 	{{- end }}
 	{{- end }}
 	var query string

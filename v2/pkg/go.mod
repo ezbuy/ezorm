@@ -1,6 +1,6 @@
 module github.com/ezbuy/ezorm/v2/pkg
 
-go 1.20
+go 1.21
 
 require (
 	github.com/ezbuy/wrapper v1.0.3

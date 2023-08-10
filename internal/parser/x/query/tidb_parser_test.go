@@ -78,6 +78,13 @@ WHERE name IN (
 )
 `
 
+const queryLike = `
+SELECT
+	id
+FROM user
+WHERE name LIKE 'ezorm%'
+`
+
 func TestTiDBParserParseQuery(t *testing.T) {
 	tests := []struct {
 		name   string
@@ -90,6 +97,7 @@ func TestTiDBParserParseQuery(t *testing.T) {
 		{"queryNoLimit", queryNoLimit, "SELECT `id` FROM `user` %s"},
 		{"queryWithTableJoin", queryWithTableJoin, "SELECT `u`.`id`,`b`.`id` FROM `user` AS `u` JOIN `blog` AS `b` ON `u`.`id`=`b`.`user_id` %s"},
 		{"queryWithSubquery", queryWithSubquery, "SELECT `id` FROM `user` %s"},
+		{"queryWithLike", queryLike, "SELECT `id` FROM `user` %s"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -191,6 +199,16 @@ func TestTiDBParserParseMetadata(t *testing.T) {
 				},
 				result: []*QueryField{
 					{Name: "`u`.`id`", Type: T_PLACEHOLDER, Alias: "uid"},
+				},
+			},
+		}},
+		{"queryWithLike", queryLike, map[Table]*QueryMetadata{
+			{Name: "user"}: {
+				params: []*QueryField{
+					{Name: "col:`name`", Type: T_STRING},
+				},
+				result: []*QueryField{
+					{Name: "`id`", Type: T_PLACEHOLDER},
 				},
 			},
 		}},

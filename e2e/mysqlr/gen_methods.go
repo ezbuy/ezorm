@@ -234,3 +234,65 @@ func (m *sqlMethods) BlogFunc(ctx context.Context, req *BlogFuncReq, opts ...Raw
 	}
 	return results, nil
 }
+
+type BlogLikeResp struct {
+	Id     int64 `sql:"id"`
+	Status int32 `sql:"status"`
+}
+
+type BlogLikeReq struct {
+	Title string `sql:"title"`
+}
+
+func (req *BlogLikeReq) Params() []any {
+	var params []any
+
+	if req.Title != "" {
+		params = append(params, req.Title)
+	}
+
+	return params
+}
+
+func (req *BlogLikeReq) Condition() string {
+	var conditions []string
+	if req.Title != "" {
+		conditions = append(conditions, "`b`.`title` LIKE ?")
+	}
+	var query string
+	if len(conditions) > 0 {
+		query += " WHERE " + strings.Join(conditions, " AND ")
+	}
+	return query
+}
+
+const _BlogLikeSQL = "SELECT `b`.`id`,`b`.`status` FROM `blogs` AS `b` %s"
+
+// BlogLike is a raw query handler generated function for `e2e/mysqlr/sqls/blog_like.sql`.
+func (m *sqlMethods) BlogLike(ctx context.Context, req *BlogLikeReq, opts ...RawQueryOptionHandler) ([]*BlogLikeResp, error) {
+
+	rawQueryOption := &RawQueryOption{}
+
+	for _, o := range opts {
+		o(rawQueryOption)
+	}
+
+	query := fmt.Sprintf(_BlogLikeSQL, req.Condition())
+
+	rows, err := db.GetMysql(db.WithDB(rawQueryOption.db)).QueryContext(ctx, query, req.Params()...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []*BlogLikeResp
+	for rows.Next() {
+		var o BlogLikeResp
+		err = rows.Scan(&o.Id, &o.Status)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, &o)
+	}
+	return results, nil
+}
