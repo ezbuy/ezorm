@@ -39,10 +39,9 @@ func init() {
 		"tpl/mysql_orm.gogo",
 		"tpl/mysql_fk.gogo",
 		"tpl/mongo_config.gogo",
+		"tpl/mongo_orm.gogo",
 		"tpl/mysql_script.sql",
 		"tpl/sql_method.gogo",
-		"tpl/mongo_config.gogo",
-		"tpl/mongo_orm.gogo",
 	}
 
 	Tpl = template.New("ezorm").Funcs(funcMap)
@@ -50,7 +49,6 @@ func init() {
 	if _, err := Tpl.ParseFS(content, files...); err != nil {
 		panic(err)
 	}
-
 }
 
 func (f *Field) BJTag() string {
@@ -389,7 +387,7 @@ func (o *Obj) DbContains(db string) bool {
 	return false
 }
 
-//! for the multiple dbs support struct template switch
+// ! for the multiple dbs support struct template switch
 func (o *Obj) DbSwitch(db string) bool {
 	for _, v := range o.Dbs {
 		if strings.EqualFold(v, db) {
