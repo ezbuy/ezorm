@@ -174,8 +174,8 @@ func (m *sqlMethods) BlogAggr(ctx context.Context, req *BlogAggrReq, opts ...Raw
 }
 
 type BlogFuncResp struct {
-	UTitle   any `sql:"u_title"`
 	LenTitle any `sql:"len_title"`
+	UTitle   any `sql:"u_title"`
 }
 
 type BlogFuncReq struct {
