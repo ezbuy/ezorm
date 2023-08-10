@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"unicode"
 
@@ -159,6 +160,13 @@ func (p *SQL) Read(path string) (*SQLMethod, error) {
 		}
 		result.QueryIn = builder.IsQueryIn()
 	}
+
+	sort.SliceStable(result.Fields, func(i, j int) bool {
+		return result.Fields[i].Name < result.Fields[j].Name
+	})
+	sort.SliceStable(result.Result, func(i, j int) bool {
+		return result.Result[i].Name < result.Result[j].Name
+	})
 
 	var scan bytes.Buffer
 	for _, r := range builder.resultFields {
