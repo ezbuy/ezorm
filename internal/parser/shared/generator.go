@@ -78,6 +78,9 @@ func (g *Generator) Generate(meta generator.TMetadata) error {
 		if len(d) <= 0 {
 			continue
 		}
+		sort.SliceStable(d, func(i, j int) bool {
+			return d[i].Name < d[j].Name
+		})
 		for _, t := range d[0].GetConfigTemplates() {
 			fileAbsPath := filepath.Join(meta.Output, fmt.Sprintf("gen_%s.go", t))
 			if err := render(fileAbsPath, t, d); err != nil {
@@ -89,7 +92,7 @@ func (g *Generator) Generate(meta generator.TMetadata) error {
 }
 
 func render(path string, name string, obj any) error {
-	fd, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	fd, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {
 		return err
 	}
