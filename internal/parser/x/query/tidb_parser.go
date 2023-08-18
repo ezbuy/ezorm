@@ -24,6 +24,8 @@ type TiDBParser struct {
 const (
 	LIMIT_COUNT  = "limit:count"
 	LIMIT_OFFSET = "limit:offset"
+	ORDERBY_ASC  = "orderby-asc"
+	ORDERBY_DESC = "orderby-desc"
 )
 
 func NewTiDBParser() *TiDBParser {
@@ -178,6 +180,28 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 			subCtx := format.NewRestoreCtx(format.DefaultRestoreFlags, limitBuffer)
 			if err := x.Limit.Restore(subCtx); err != nil {
 				return err
+			}
+		}
+		// ORDERBY
+		if x.OrderBy != nil {
+			for t := range tp.meta {
+				for _, item := range x.OrderBy.Items {
+					if item.Desc {
+						if col, ok := item.Expr.(*ast.ColumnNameExpr); ok {
+							tp.meta[t].params = append(tp.meta[t].params, &QueryField{
+								Name: fmt.Sprintf("%s:`%s`", ORDERBY_DESC, col.Name.Name.String()),
+								Type: T_ANY,
+							})
+						}
+					} else {
+						if col, ok := item.Expr.(*ast.ColumnNameExpr); ok {
+							tp.meta[t].params = append(tp.meta[t].params, &QueryField{
+								Name: fmt.Sprintf("%s:`%s`", ORDERBY_ASC, col.Name.Name.String()),
+								Type: T_ANY,
+							})
+						}
+					}
+				}
 			}
 		}
 	case *ast.BinaryOperationExpr:

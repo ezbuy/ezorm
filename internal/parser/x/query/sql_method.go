@@ -27,11 +27,12 @@ type SQLFile struct {
 }
 
 type SQLMethod struct {
-	Name   string
-	Fields []*SQLMethodField
-	Result []*SQLMethodField
-	Limit  *SQLMethodField
-	Offset *SQLMethodField
+	Name    string
+	Fields  []*SQLMethodField
+	Result  []*SQLMethodField
+	Limit   *SQLMethodField
+	Offset  *SQLMethodField
+	OrderBy []*SQLMethodField
 
 	SQL string
 
@@ -41,11 +42,12 @@ type SQLMethod struct {
 }
 
 type SQLMethodField struct {
-	Name     string
-	Raw      string
-	Type     string
-	FullName string
-	IsLike   bool
+	Name          string
+	Raw           string
+	Type          string
+	FullName      string
+	IsLike        bool
+	IsOrderByDESC bool
 }
 
 func NewSQL(objs map[string]generator.IObject) *SQL {
@@ -108,24 +110,32 @@ func (p *SQL) Read(path string) (*SQLMethod, error) {
 	}
 	for t, f := range meta {
 		for _, c := range f.params {
+			parts := strings.Split(c.Name, ":")
+			if len(parts) != 2 {
+				fmt.Fprintf(os.Stderr, "invalid param name: %s\n", c.Name)
+				continue
+			}
 			name := c.Alias
 			if name == "" {
 				name = uglify(c.Name)
 			}
-			switch name {
-			case "count":
-				result.Limit = &SQLMethodField{
-					Name: "Count",
-					Raw:  name,
-					Type: c.Type.String(),
+			switch parts[0] {
+			case "limit":
+				switch parts[1] {
+				case "count":
+					result.Limit = &SQLMethodField{
+						Name: "Count",
+						Raw:  name,
+						Type: c.Type.String(),
+					}
+				case "offset":
+					result.Offset = &SQLMethodField{
+						Name: "Offset",
+						Raw:  name,
+						Type: c.Type.String(),
+					}
 				}
-			case "offset":
-				result.Offset = &SQLMethodField{
-					Name: "Offset",
-					Raw:  name,
-					Type: c.Type.String(),
-				}
-			default:
+			case "col":
 				result.Fields = append(result.Fields, &SQLMethodField{
 					FullName: strings.Split(c.Name, ":")[1],
 					Name:     strcase.ToCamel(name),
@@ -133,6 +143,23 @@ func (p *SQL) Read(path string) (*SQLMethod, error) {
 					Type:     c.Type.String(),
 					IsLike:   c.IsLike,
 				})
+			case "orderby-asc":
+				result.OrderBy = append(result.OrderBy, &SQLMethodField{
+					FullName:      strings.Split(c.Name, ":")[1],
+					Name:          strcase.ToCamel(name),
+					Raw:           name,
+					Type:          c.Type.String(),
+					IsOrderByDESC: false,
+				})
+			case "orderby-desc":
+				result.OrderBy = append(result.OrderBy, &SQLMethodField{
+					FullName:      strings.Split(c.Name, ":")[1],
+					Name:          strcase.ToCamel(name),
+					Raw:           name,
+					Type:          c.Type.String(),
+					IsOrderByDESC: true,
+				})
+
 			}
 		}
 		for _, c := range f.result {

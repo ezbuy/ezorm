@@ -68,6 +68,7 @@ func (req *GetUserReq) Condition() string {
 	if len(conditions) > 0 {
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
+
 	return query
 }
 
@@ -129,6 +130,7 @@ func (req *GetUserInReq) Condition() string {
 	if len(conditions) > 0 {
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
+
 	return query
 }
 
@@ -176,11 +178,9 @@ type UserJoinBlogResp struct {
 }
 
 type UserJoinBlogReq struct {
-	Name string `sql:"name"`
-
-	Offset int32 `sql:"offset"`
-
-	Limit int32 `sql:"limit"`
+	Name   string `sql:"name"`
+	Offset int32  `sql:"offset"`
+	Limit  int32  `sql:"limit"`
 }
 
 func (req *UserJoinBlogReq) Params() []any {
@@ -207,6 +207,7 @@ func (req *UserJoinBlogReq) Condition() string {
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
 	query += " LIMIT ?, ?"
+
 	return query
 }
 

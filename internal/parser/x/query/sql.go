@@ -148,6 +148,9 @@ func uglify(col string) string {
 }
 
 func typeMatch(fromAST T, fromSchema generator.IField) bool {
+	if strings.Contains(fromAST.BaseType(), "int") && strings.Contains(fromSchema.GetGoType(), "int") {
+		return true
+	}
 	return fromAST.BaseType() == fromSchema.GetGoType()
 }
 

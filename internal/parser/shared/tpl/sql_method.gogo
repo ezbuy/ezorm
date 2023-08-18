@@ -55,12 +55,12 @@ type {{$method.Name}}Req struct {
 	{{- range $field := $method.Fields}}
 	{{$field.Name}} {{$field.Type}} `sql:"{{$field.Raw}}"`
 	{{- end }}
-	{{if $method.Offset }}
+	{{- if $method.Offset }}
 	  Offset int32 `sql:"offset"`
-	{{end}}
-	{{if $method.Limit }}
+	{{- end}}
+	{{- if $method.Limit }}
 	  Limit int32 `sql:"limit"`
-	{{end}}
+	{{- end}}
 }
 
 func (req *{{$method.Name}}Req) Params() []any {
@@ -120,6 +120,15 @@ func (req *{{$method.Name}}Req) Condition() string {
 	if len(conditions) > 0 {
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
+
+	{{- range $orderBy := $method.OrderBy }}
+	{{- if $orderBy.IsOrderByDESC }}
+		query += " ORDER BY {{$orderBy.FullName}} DESC"
+	{{- else}}
+		query += " ORDER BY {{$orderBy.FullName}} ASC"
+	{{- end}}
+	{{- end }}
+
 	{{- if and $method.Offset $method.Limit}}
 	query += " LIMIT ?, ?"
 	{{- else if $method.Limit}}
@@ -127,6 +136,7 @@ func (req *{{$method.Name}}Req) Condition() string {
 	{{- else if $method.Offset}}
 	query += " OFFSET ?"
 	{{- end}}
+
 	return query
 }
 
