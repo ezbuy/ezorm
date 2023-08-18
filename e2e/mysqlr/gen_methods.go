@@ -47,11 +47,9 @@ type BlogResp struct {
 }
 
 type BlogReq struct {
-	Id int64 `sql:"id"`
-
+	Id     int64 `sql:"id"`
 	Offset int32 `sql:"offset"`
-
-	Limit int32 `sql:"limit"`
+	Limit  int32 `sql:"limit"`
 }
 
 func (req *BlogReq) Params() []any {
@@ -78,6 +76,7 @@ func (req *BlogReq) Condition() string {
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
 	query += " LIMIT ?, ?"
+
 	return query
 }
 
@@ -139,6 +138,7 @@ func (req *BlogAggrReq) Condition() string {
 	if len(conditions) > 0 {
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
+
 	return query
 }
 
@@ -201,6 +201,7 @@ func (req *BlogFuncReq) Condition() string {
 	if len(conditions) > 0 {
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
+
 	return query
 }
 
@@ -263,6 +264,7 @@ func (req *BlogLikeReq) Condition() string {
 	if len(conditions) > 0 {
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
+
 	return query
 }
 
@@ -289,6 +291,77 @@ func (m *sqlMethods) BlogLike(ctx context.Context, req *BlogLikeReq, opts ...Raw
 	for rows.Next() {
 		var o BlogLikeResp
 		err = rows.Scan(&o.Id, &o.Status)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, &o)
+	}
+	return results, nil
+}
+
+type BlogOrderByResp struct {
+	Status int32 `sql:"status"`
+	UserId int32 `sql:"user_id"`
+}
+
+type BlogOrderByReq struct {
+	UserId int64 `sql:"user_id"`
+	Offset int32 `sql:"offset"`
+	Limit  int32 `sql:"limit"`
+}
+
+func (req *BlogOrderByReq) Params() []any {
+	var params []any
+
+	if req.UserId != 0 {
+		params = append(params, req.UserId)
+	}
+
+	params = append(params, req.Offset)
+
+	params = append(params, req.Limit)
+
+	return params
+}
+
+func (req *BlogOrderByReq) Condition() string {
+	var conditions []string
+	if req.UserId != 0 {
+		conditions = append(conditions, "`b`.`user_id` = ?")
+	}
+	var query string
+	if len(conditions) > 0 {
+		query += " WHERE " + strings.Join(conditions, " AND ")
+	}
+	query += " ORDER BY `id` DESC"
+	query += " LIMIT ?, ?"
+
+	return query
+}
+
+const _BlogOrderBySQL = "SELECT `b`.`user_id`,`b`.`status` FROM `blogs` AS `b` %s"
+
+// BlogOrderBy is a raw query handler generated function for `e2e/mysqlr/sqls/blog_order_by.sql`.
+func (m *sqlMethods) BlogOrderBy(ctx context.Context, req *BlogOrderByReq, opts ...RawQueryOptionHandler) ([]*BlogOrderByResp, error) {
+
+	rawQueryOption := &RawQueryOption{}
+
+	for _, o := range opts {
+		o(rawQueryOption)
+	}
+
+	query := fmt.Sprintf(_BlogOrderBySQL, req.Condition())
+
+	rows, err := db.GetMysql(db.WithDB(rawQueryOption.db)).QueryContext(ctx, query, req.Params()...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []*BlogOrderByResp
+	for rows.Next() {
+		var o BlogOrderByResp
+		err = rows.Scan(&o.UserId, &o.Status)
 		if err != nil {
 			return nil, err
 		}
