@@ -188,15 +188,19 @@ func (tp *TiDBParser) parse(node ast.Node, n int) error {
 				for _, item := range x.OrderBy.Items {
 					if item.Desc {
 						if col, ok := item.Expr.(*ast.ColumnNameExpr); ok {
+							orderByBuffer := bytes.NewBuffer(nil)
+							col.Format(orderByBuffer)
 							tp.meta[t].params = append(tp.meta[t].params, &QueryField{
-								Name: fmt.Sprintf("%s:`%s`", ORDERBY_DESC, col.Name.Name.String()),
+								Name: fmt.Sprintf("%s:%s", ORDERBY_DESC, orderByBuffer.String()),
 								Type: T_ANY,
 							})
 						}
 					} else {
 						if col, ok := item.Expr.(*ast.ColumnNameExpr); ok {
+							orderByBuffer := bytes.NewBuffer(nil)
+							col.Format(orderByBuffer)
 							tp.meta[t].params = append(tp.meta[t].params, &QueryField{
-								Name: fmt.Sprintf("%s:`%s`", ORDERBY_ASC, col.Name.Name.String()),
+								Name: fmt.Sprintf("%s:%s", ORDERBY_ASC, orderByBuffer.String()),
 								Type: T_ANY,
 							})
 						}

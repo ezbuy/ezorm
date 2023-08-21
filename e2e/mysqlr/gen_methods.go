@@ -236,6 +236,70 @@ func (m *sqlMethods) BlogFunc(ctx context.Context, req *BlogFuncReq, opts ...Raw
 	return results, nil
 }
 
+type BlogJoinOrderByResp struct {
+	Bid int64 `sql:"bid"`
+	Uid int64 `sql:"uid"`
+}
+
+type BlogJoinOrderByReq struct {
+	Id int64 `sql:"id"`
+}
+
+func (req *BlogJoinOrderByReq) Params() []any {
+	var params []any
+
+	if req.Id != 0 {
+		params = append(params, req.Id)
+	}
+
+	return params
+}
+
+func (req *BlogJoinOrderByReq) Condition() string {
+	var conditions []string
+	if req.Id != 0 {
+		conditions = append(conditions, "`u`.`id` = ?")
+	}
+	var query string
+	if len(conditions) > 0 {
+		query += " WHERE " + strings.Join(conditions, " AND ")
+	}
+	query += " ORDER BY `u`.`id` DESC"
+
+	return query
+}
+
+const _BlogJoinOrderBySQL = "SELECT `u`.`id` AS `uid`,`b`.`id` AS `bid` FROM `users` AS `u` JOIN `blogs` AS `b` ON `u`.`id`=`b`.`user_id` %s"
+
+// BlogJoinOrderBy is a raw query handler generated function for `e2e/mysqlr/sqls/blog_join_order_by.sql`.
+func (m *sqlMethods) BlogJoinOrderBy(ctx context.Context, req *BlogJoinOrderByReq, opts ...RawQueryOptionHandler) ([]*BlogJoinOrderByResp, error) {
+
+	rawQueryOption := &RawQueryOption{}
+
+	for _, o := range opts {
+		o(rawQueryOption)
+	}
+
+	query := fmt.Sprintf(_BlogJoinOrderBySQL, req.Condition())
+
+	rows, err := db.GetMysql(db.WithDB(rawQueryOption.db)).QueryContext(ctx, query, req.Params()...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []*BlogJoinOrderByResp
+	for rows.Next() {
+		var o BlogJoinOrderByResp
+		err = rows.Scan(&o.Uid, &o.Bid)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, &o)
+	}
+	return results, nil
+}
+
 type BlogLikeResp struct {
 	Id     int64 `sql:"id"`
 	Status int32 `sql:"status"`
@@ -333,7 +397,7 @@ func (req *BlogOrderByReq) Condition() string {
 	if len(conditions) > 0 {
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
-	query += " ORDER BY `id` DESC"
+	query += " ORDER BY `b`.`id` DESC"
 	query += " LIMIT ?, ?"
 
 	return query

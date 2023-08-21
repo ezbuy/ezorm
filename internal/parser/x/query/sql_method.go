@@ -108,6 +108,9 @@ func (p *SQL) Read(path string) (*SQLMethod, error) {
 	if err := meta.Validate(p.fieldMap); err != nil {
 		return nil, err
 	}
+
+	orderBySet := make(map[string]struct{})
+
 	for t, f := range meta {
 		for _, c := range f.params {
 			parts := strings.Split(c.Name, ":")
@@ -144,16 +147,33 @@ func (p *SQL) Read(path string) (*SQLMethod, error) {
 					IsLike:   c.IsLike,
 				})
 			case "orderby-asc":
+
+				fname := strings.Split(c.Name, ":")[1]
+
+				if _, ok := orderBySet[fname]; ok {
+					continue
+				} else {
+					orderBySet[fname] = struct{}{}
+				}
+
 				result.OrderBy = append(result.OrderBy, &SQLMethodField{
-					FullName:      strings.Split(c.Name, ":")[1],
+					FullName:      fname,
 					Name:          strcase.ToCamel(name),
 					Raw:           name,
 					Type:          c.Type.String(),
 					IsOrderByDESC: false,
 				})
 			case "orderby-desc":
+				fname := strings.Split(c.Name, ":")[1]
+
+				if _, ok := orderBySet[fname]; ok {
+					continue
+				} else {
+					orderBySet[fname] = struct{}{}
+				}
+
 				result.OrderBy = append(result.OrderBy, &SQLMethodField{
-					FullName:      strings.Split(c.Name, ":")[1],
+					FullName:      fname,
 					Name:          strcase.ToCamel(name),
 					Raw:           name,
 					Type:          c.Type.String(),

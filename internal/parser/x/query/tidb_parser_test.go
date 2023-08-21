@@ -99,6 +99,21 @@ FROM user
 WHERE name LIKE 'ezorm%'
 ORDER BY id ASC`
 
+const queryWithTableJoinOrderBy = `
+SELECT
+	u.id,
+	b.id
+FROM
+	user  u
+INNER JOIN
+	blog  b
+ON
+	u.id = b.user_id
+WHERE
+	u.name LIKE 'ezorm%'
+ORDER BY u.id DESC
+`
+
 func TestTiDBParserParseQuery(t *testing.T) {
 	tests := []struct {
 		name   string
@@ -114,6 +129,7 @@ func TestTiDBParserParseQuery(t *testing.T) {
 		{"queryWithLike", queryLike, "SELECT `id` FROM `user` %s"},
 		{"queryWithOrderByDESC", queryOrderByDESC, "SELECT `id` FROM `user` %s"},
 		{"queryWithOrderByASC", queryOrderByASC, "SELECT `id` FROM `user` %s"},
+		{"queryWithTableJoinOrderBy", queryWithTableJoinOrderBy, "SELECT `u`.`id`,`b`.`id` FROM `user` AS `u` JOIN `blog` AS `b` ON `u`.`id`=`b`.`user_id` %s"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -247,6 +263,25 @@ func TestTiDBParserParseMetadata(t *testing.T) {
 				},
 				result: []*QueryField{
 					{Name: "`id`", Type: T_PLACEHOLDER},
+				},
+			},
+		}},
+		{"queryWithTableJoinOrderBy", queryWithTableJoinOrderBy, map[Table]*QueryMetadata{
+			{Name: "user", Alias: "u"}: {
+				params: []*QueryField{
+					{Name: "col:`u`.`name`", Type: T_STRING},
+					{Name: "orderby-desc:`u`.`id`", Type: T_ANY},
+				},
+				result: []*QueryField{
+					{Name: "`u`.`id`", Type: T_PLACEHOLDER},
+				},
+			},
+			{Name: "blog", Alias: "b"}: {
+				params: []*QueryField{
+					{Name: "orderby-desc:`u`.`id`", Type: T_ANY},
+				},
+				result: []*QueryField{
+					{Name: "`b`.`id`", Type: T_PLACEHOLDER},
 				},
 			},
 		}},
