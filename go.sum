@@ -173,8 +173,8 @@ github.com/envoyproxy/go-control-plane v0.9.9-0.20210217033140-668b12f5399d/go.m
 github.com/envoyproxy/go-control-plane v0.9.9-0.20210512163311-63b5d3c536b0/go.mod h1:hliV/p42l8fGbc6Y9bQ70uLwIvmJyVE5k4iMKlh8wCQ=
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
 github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5/go.mod h1:a2zkGnVExMxdzMo3M0Hi/3sEU+cWnZpSni0O6/Yb/P0=
-github.com/ezbuy/ezorm/v2/pkg v0.0.7 h1:matAr6ZIS2OL/mGsxuwGkU8fMDbw/9Bf76EzA+O37D4=
-github.com/ezbuy/ezorm/v2/pkg v0.0.7/go.mod h1:GKp6uq6XqAe6+VrMT8Y/ZK3PsSjlKECp1TPFrWXfWfU=
+github.com/ezbuy/ezorm/v2/pkg v0.0.9 h1:DHh4vyhxLCDS+X46TtQqZ68Oefqh3nnB7nl5fRNqAfE=
+github.com/ezbuy/ezorm/v2/pkg v0.0.9/go.mod h1:OJv0Xk6t+tGCClK0OaRMubrdjfDVb/uEgqVLs6btC7E=
 github.com/ezbuy/statsd v0.0.0-20190521031639-ae237584062d h1:SeHyPo+ykKm5DKcBUDEqTW5FNDS2kIBx6iFie3OttPw=
 github.com/ezbuy/statsd v0.0.0-20190521031639-ae237584062d/go.mod h1:RUr3GtpMTjto7ygeUCLHDs6uBzvV5aHSzGUbr8YZkJU=
 github.com/ezbuy/utils v0.0.0-20170609090716-8ac4beef008f h1:f6mjy3cXO0yeEROA2hs94Gj3iOpQExCZt0bP9O4dW98=
@@ -240,8 +240,8 @@ github.com/go-playground/universal-translator v0.17.0 h1:icxd5fm+REJzpZx7ZfpaD87
 github.com/go-playground/universal-translator v0.17.0/go.mod h1:UkSxE5sNxxRwHyU+Scu5vgOQjsIJAF8j9muTVoKLVtA=
 github.com/go-sql-driver/mysql v1.4.1/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
 github.com/go-sql-driver/mysql v1.5.0/go.mod h1:DCzpHaOWr8IXmIStZouvnhqoel9Qv2LBy8hT2VhHyBg=
-github.com/go-sql-driver/mysql v1.6.0 h1:BCTh4TKNUYmOmMUcQ3IipzF5prigylS7XXjEkfCHuOE=
-github.com/go-sql-driver/mysql v1.6.0/go.mod h1:DCzpHaOWr8IXmIStZouvnhqoel9Qv2LBy8hT2VhHyBg=
+github.com/go-sql-driver/mysql v1.7.0 h1:ueSltNNllEqE3qcWBTD0iQd3IpL/6U+mJxLkazJ7YPc=
+github.com/go-sql-driver/mysql v1.7.0/go.mod h1:OXbVy3sEdcQ2Doequ6Z5BW6fXNQTmx+9S1MCJN5yJMI=
 github.com/go-stack/stack v1.8.0 h1:5SgMzNM5HxrEjV0ww2lTmX6E2Izsfxas4+YHWRs3Lsk=
 github.com/go-stack/stack v1.8.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/melR3HDY=
 github.com/goccy/go-graphviz v0.0.5/go.mod h1:wXVsXxmyMQU6TN3zGRttjNn3h+iCAS7xQFC6TlNvLhk=
