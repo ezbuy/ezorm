@@ -405,7 +405,7 @@ func TestErrNotFound(t *testing.T) {
 	if err == nil {
 		t.Fatalf("should not return empty error cause user not exist: %s", err)
 	}
-	if err != mongo.ErrNoDocuments {
+	if !orm.IsErrNotFound(err) {
 		t.Fatalf("not found error not match, got: %s, expect: %s", err, mongo.ErrNoDocuments)
 	}
 }

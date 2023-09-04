@@ -80,6 +80,9 @@ func TestBlogsCRUD(t *testing.T) {
 		b, err := BlogDBMgr(db).FetchByPrimaryKey(ctx, 1, 1)
 		assert.NoError(t, err)
 		assert.Equal(t, int64(1), b.Id)
+		_, err = BlogDBMgr(db).FetchByPrimaryKey(ctx, 1, 2)
+		assert.ErrorIs(t, err, sql.ErrNoRows)
+		assert.Equal(t, true, orm.IsErrNotFound(err))
 	})
 
 	t.Run("GetByUniqueKey", func(t *testing.T) {
