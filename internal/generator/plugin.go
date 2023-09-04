@@ -32,6 +32,7 @@ func (g *PluginGenerator) Generate(t TMetadata) error {
 	cmd := exec.Command(path)
 	cmd.Stdin = bytes.NewBuffer(m)
 	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	return cmd.Run()
 }
 
