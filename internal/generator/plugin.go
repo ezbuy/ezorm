@@ -3,7 +3,6 @@ package generator
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -28,7 +27,6 @@ func (g *PluginGenerator) Generate(t TMetadata) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("path: %s\n", path)
 	cmd := exec.Command(path)
 	cmd.Stdin = bytes.NewBuffer(m)
 	cmd.Stdout = os.Stdout

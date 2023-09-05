@@ -92,6 +92,9 @@ var genCmd = &cobra.Command{
 			genGoPackageName = genPackageName
 		}
 		if plugin != "" {
+			if pluginOnly {
+				generators = []generator.Generator{}
+			}
 			generators = append(generators, generator.NewPluginGenerator(plugin))
 		}
 
@@ -136,6 +139,7 @@ var (
 	disableSQLs      bool
 	plugin           string
 	namespace        string
+	pluginOnly       bool
 )
 
 func init() {
@@ -147,6 +151,7 @@ func init() {
 	genCmd.PersistentFlags().StringVar(&genGoPackageName, "goPackage", "", "go package name")
 	genCmd.PersistentFlags().BoolVarP(&disableSQLs, "disable-sql", "", false, "disable sql generate")
 	genCmd.PersistentFlags().StringVar(&plugin, "plugin", "", "The external generation plugin")
+	genCmd.PersistentFlags().BoolVar(&pluginOnly, "plugin-only", false, "to generate plugin only")
 	genCmd.PersistentFlags().MarkDeprecated("package name", "package flag is deprecated , should use namespace instead")
 	genCmd.PersistentFlags().StringVarP(&namespace, "namespace", "n", "",
 		"the namespace for the generated table (or collection) , users can use `GetNamespace()` and `GetClassName()`to build their own table(collection) name if `table` not set")
