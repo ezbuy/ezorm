@@ -35,7 +35,7 @@ jobs:
           --health-retries=3
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: generate template
         run: |
           make build
@@ -71,7 +71,7 @@ jobs:
           --health-retries=3
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: generate template
         run: |
           make build
@@ -100,7 +100,7 @@ jobs:
           MONGO_INITDB_ROOT_PASSWORD: ezbuyisthebest
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: generate template
         run: |
           make build
@@ -124,7 +124,7 @@ jobs:
         image: golang:${{ matrix.go }}
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: generate template
         run: |
           make build
