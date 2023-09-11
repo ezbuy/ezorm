@@ -1,12 +1,15 @@
 package plugin
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 )
 
-type Metadata map[TemplateName]Schema
-type FieldName string
+type (
+	Metadata  map[TemplateName]Schema
+	FieldName string
+)
 
 type TMetadata struct {
 	Pkg           string
@@ -18,6 +21,7 @@ type TMetadata struct {
 
 type GeneratorRequest struct {
 	meta *TMetadata
+	args map[string]string
 }
 
 // Schema exports the internal generator Schema type.
@@ -36,13 +40,23 @@ func (om Schema) GetDriver() (string, error) {
 // TemplateName exports the internal generator TemplateName type.
 type TemplateName string
 
+// Metadata exports the internal generator Metadata type.
+type MetadataWithArgs struct {
+	TMetadata
+	Args map[string]string `json:"args"`
+}
+
 func Decode(data []byte) (*GeneratorRequest, error) {
 	req := &GeneratorRequest{
 		meta: &TMetadata{},
+		args: map[string]string{},
 	}
-	if err := json.Unmarshal(data, req.meta); err != nil {
+	ma := &MetadataWithArgs{}
+	if err := json.NewDecoder(bytes.NewReader(data)).Decode(ma); err != nil {
 		return nil, err
 	}
+	req.args = ma.Args
+	req.meta = &(ma.TMetadata)
 	return req, nil
 }
 

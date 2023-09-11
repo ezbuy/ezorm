@@ -66,7 +66,7 @@ type TMetadata struct {
 
 type MetadataArgs struct {
 	TMetadata
-	args map[string]string
+	Args map[string]string `json:"args"`
 }
 
 func (tm TMetadata) IsDisableRawSQL() bool {
@@ -76,7 +76,7 @@ func (tm TMetadata) IsDisableRawSQL() bool {
 func (tm TMetadata) Encode(args map[string]string) ([]byte, error) {
 	ma := MetadataArgs{
 		TMetadata: tm,
-		args:      args,
+		Args:      args,
 	}
 	return json.Marshal(ma)
 }
