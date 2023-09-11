@@ -11,15 +11,30 @@ import (
 var _ Generator = (*PluginGenerator)(nil)
 
 type PluginGenerator struct {
-	bin string
+	bin  string
+	args map[string]string
 }
 
-func NewPluginGenerator(bin string) *PluginGenerator {
-	return &PluginGenerator{bin: bin}
+type PluginGeneratorOption func(*PluginGenerator)
+
+func WithGeneratorArgs(args map[string]string) PluginGeneratorOption {
+	return func(g *PluginGenerator) {
+		g.args = args
+	}
+}
+
+func NewPluginGenerator(bin string, opts ...PluginGeneratorOption) *PluginGenerator {
+	g := &PluginGenerator{
+		bin: bin,
+	}
+	for _, opt := range opts {
+		opt(g)
+	}
+	return g
 }
 
 func (g *PluginGenerator) Generate(t TMetadata) error {
-	m, err := t.Encode()
+	m, err := t.Encode(g.args)
 	if err != nil {
 		return err
 	}

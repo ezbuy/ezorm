@@ -5,8 +5,10 @@ import (
 	"fmt"
 )
 
-type TemplateName string
-type FieldName string
+type (
+	TemplateName string
+	FieldName    string
+)
 
 // Metadata represents the metadata of the generated code.
 // FIXME: concurrent map is not safe
@@ -62,16 +64,33 @@ type TMetadata struct {
 	DisableRawSQL bool
 }
 
+type MetadataArgs struct {
+	TMetadata
+	args map[string]string
+}
+
 func (tm TMetadata) IsDisableRawSQL() bool {
 	return tm.DisableRawSQL
 }
 
-func (tm TMetadata) Encode() ([]byte, error) {
-	return json.Marshal(tm)
+func (tm TMetadata) Encode(args map[string]string) ([]byte, error) {
+	ma := MetadataArgs{
+		TMetadata: tm,
+		args:      args,
+	}
+	return json.Marshal(ma)
 }
 
 func (tm *TMetadata) Decode(data []byte) error {
 	return json.Unmarshal(data, &tm)
+}
+
+func DecodeToMetadataArgs(data []byte) (*MetadataArgs, error) {
+	ma := &MetadataArgs{}
+	if err := json.Unmarshal(data, ma); err != nil {
+		return nil, err
+	}
+	return ma, nil
 }
 
 type Generator interface {
@@ -80,7 +99,6 @@ type Generator interface {
 }
 
 func Render(meta TMetadata, generators ...Generator) error {
-
 	for _, generator := range generators {
 		if err := generator.Generate(meta); err != nil {
 			return err
