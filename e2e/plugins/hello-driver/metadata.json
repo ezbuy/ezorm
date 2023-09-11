@@ -1,1 +1,1 @@
-{"Args":{},"Pkg":"hello-driver","Meta":{"Hello":{"db":"hello-driver"}},"Input":"./e2e/plugins/hello-driver","Output":"./e2e/plugins/hello-driver","DisableRawSQL":false}
+{"Pkg":"hello-driver","Meta":{"Hello":{"db":"hello-driver"}},"Input":"./e2e/plugins/hello-driver","Output":"./e2e/plugins/hello-driver","DisableRawSQL":false,"args":{}}
