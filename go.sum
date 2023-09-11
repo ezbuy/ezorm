@@ -173,8 +173,8 @@ github.com/envoyproxy/go-control-plane v0.9.9-0.20210217033140-668b12f5399d/go.m
 github.com/envoyproxy/go-control-plane v0.9.9-0.20210512163311-63b5d3c536b0/go.mod h1:hliV/p42l8fGbc6Y9bQ70uLwIvmJyVE5k4iMKlh8wCQ=
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
 github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5/go.mod h1:a2zkGnVExMxdzMo3M0Hi/3sEU+cWnZpSni0O6/Yb/P0=
-github.com/ezbuy/ezorm/v2/pkg v0.0.9 h1:DHh4vyhxLCDS+X46TtQqZ68Oefqh3nnB7nl5fRNqAfE=
-github.com/ezbuy/ezorm/v2/pkg v0.0.9/go.mod h1:OJv0Xk6t+tGCClK0OaRMubrdjfDVb/uEgqVLs6btC7E=
+github.com/ezbuy/ezorm/v2/pkg v0.0.10 h1:F5NCRrW+1pn67OBZgSp5XzUJPIcDS47xLzkgt8quhrw=
+github.com/ezbuy/ezorm/v2/pkg v0.0.10/go.mod h1:OJv0Xk6t+tGCClK0OaRMubrdjfDVb/uEgqVLs6btC7E=
 github.com/ezbuy/statsd v0.0.0-20190521031639-ae237584062d h1:SeHyPo+ykKm5DKcBUDEqTW5FNDS2kIBx6iFie3OttPw=
 github.com/ezbuy/statsd v0.0.0-20190521031639-ae237584062d/go.mod h1:RUr3GtpMTjto7ygeUCLHDs6uBzvV5aHSzGUbr8YZkJU=
 github.com/ezbuy/utils v0.0.0-20170609090716-8ac4beef008f h1:f6mjy3cXO0yeEROA2hs94Gj3iOpQExCZt0bP9O4dW98=
