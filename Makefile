@@ -22,7 +22,7 @@ gene2e:
 	bin/ezorm gen -i ./e2e/mysqlr -o ./e2e/mysqlr --goPackage mysqlr --namespace mysqlr_e2e
 
 gen-plugin-e2e:
-	bin/ezorm gen -i ./e2e/plugins/hello-driver -o ./e2e/plugins/hello-driver --goPackage hello-driver --plugin hello-driver
+	bin/ezorm gen -i ./e2e/plugins/hello-driver -o ./e2e/plugins/hello-driver --goPackage hello-driver --plugin hello-driver --plugin-only --plugin-args 'key=value'
 
 test: build build-plugin gene2e test-mysql test-mysqlr test-mongo-go-driver
 

@@ -20,7 +20,9 @@ func TestRequest(t *testing.T) {
 		"Output":        "./e2e/plugins/hello-driver",
 		"DisableRawSQL": false,
 		"Namespace":     "",
-		"args":          map[string]string{},
+		"args": map[string]string{
+			"key": "value",
+		},
 	}
 	b, err := json.Marshal(expect)
 	assert.NoError(t, err)
