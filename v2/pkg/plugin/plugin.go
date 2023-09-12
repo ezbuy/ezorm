@@ -76,6 +76,10 @@ func (req *GeneratorRequest) Each(fn func(TemplateName, Schema) error) error {
 	return req.meta.Meta.Each(fn)
 }
 
+func (req *GeneratorRequest) GetArgs() map[string]string {
+	return req.args
+}
+
 func (m Metadata) Each(fn func(TemplateName, Schema) error) error {
 	for tn, om := range m {
 		if err := fn(tn, om); err != nil {
