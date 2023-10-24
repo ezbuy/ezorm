@@ -2,8 +2,6 @@ module github.com/ezbuy/ezorm/v2/pkg
 
 go 1.20
 
-toolchain go1.21.0
-
 require (
 	github.com/ezbuy/wrapper v1.0.3
 	github.com/go-sql-driver/mysql v1.7.0
