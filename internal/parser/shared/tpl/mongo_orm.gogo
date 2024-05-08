@@ -76,8 +76,8 @@ func (o *{{.Name}}) Id() string {
     return o.ID.Hex()
 }
 
-// FindAndSave finds by `query`,  and then upsert the result with the current object
-func (o *{{.Name}}) FindAndSave(ctx context.Context, query interface{}) (*mongo.SingleResult, error) {
+// FindOneAndSave try to find one doc by `query`,  and then upsert the result with the current object
+func (o *{{.Name}}) FindOneAndSave(ctx context.Context, query interface{}) (*mongo.SingleResult, error) {
     col := {{.Name}}Mgr.GetCol()
     opts := options.FindOneAndUpdate().SetUpsert(true)
     opts.SetReturnDocument(options.After)

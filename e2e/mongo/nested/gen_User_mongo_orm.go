@@ -68,8 +68,8 @@ func (o *User) Id() string {
 	return o.ID.Hex()
 }
 
-// FindAndSave finds by `query`,  and then upsert the result with the current object
-func (o *User) FindAndSave(ctx context.Context, query interface{}) (*mongo.SingleResult, error) {
+// FindOneAndSave try to find one doc by `query`,  and then upsert the result with the current object
+func (o *User) FindOneAndSave(ctx context.Context, query interface{}) (*mongo.SingleResult, error) {
 	col := UserMgr.GetCol()
 	opts := options.FindOneAndUpdate().SetUpsert(true)
 	opts.SetReturnDocument(options.After)
@@ -89,6 +89,7 @@ func (o *User) FindAndSave(ctx context.Context, query interface{}) (*mongo.Singl
 	return ret, nil
 }
 
+// Save upserts the document , Save itself is concurrent-safe , but maybe it is not atomic together with other operations, such as `Find`
 func (o *User) Save(ctx context.Context) (*mongo.UpdateResult, error) {
 	isNew := o.isNew
 	if o.ID == primitive.NilObjectID {
