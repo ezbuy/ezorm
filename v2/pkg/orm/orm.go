@@ -7,6 +7,8 @@ import (
 	"net/url"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -351,13 +353,13 @@ func PrintToJson(obj interface{}) {
 }
 
 func GetIDFromSingleResult(single *mongo.SingleResult) (string, error) {
-	var result map[string]interface{}
+	var result bson.M
 	err := single.Decode(&result)
 	if err != nil {
 		return "", fmt.Errorf("decode error: %w", err)
 	}
-	if id, ok := result["_id"].(string); ok {
-		return id, nil
+	if id, ok := result["_id"].(primitive.ObjectID); ok {
+		return id.Hex(), nil
 	}
 	return "", errors.New("id not found")
 }
