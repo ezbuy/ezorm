@@ -76,6 +76,29 @@ func (o *{{.Name}}) Id() string {
     return o.ID.Hex()
 }
 
+// FindAndSave finds by `query`,  and then upsert the result with the current object
+func (o *{{.Name}}) FindAndSave(ctx context.Context, query interface{}) (*mongo.SingleResult, error) {
+    col := {{.Name}}Mgr.GetCol()
+    opts := options.FindOneAndUpdate().SetUpsert(true)
+    opts.SetReturnDocument(options.After)
+    update := bson.M{
+        "$set": bson.M{
+        {{- range $field := .Fields -}}
+        {{- if eq $field.Name "ID" -}}
+            {{continue}}
+        {{- end}}
+            {{$obj.Name}}MgoField{{$field.Name}}: o.{{$field.Name}},
+        {{- end}}
+        },
+    }
+    ret := col.FindOneAndUpdate(ctx, query, update, opts)
+    if ret.Err() != nil {
+        return nil, ret.Err()
+    }
+    return ret, nil
+}
+
+// Save upserts the document , Save itself is concurrent-safe , but maybe it is not atomic together with other operations, such as `Find`
 func (o *{{.Name}}) Save(ctx context.Context) (*mongo.UpdateResult, error) {
     isNew := o.isNew
     {{- range $field := .Fields}}

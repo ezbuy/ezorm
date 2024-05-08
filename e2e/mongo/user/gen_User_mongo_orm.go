@@ -81,6 +81,26 @@ func (o *User) Id() string {
 	return o.ID.Hex()
 }
 
+// FindAndSave finds by `query`,  and then upsert the result with the current object
+func (o *User) FindAndSave(ctx context.Context, query interface{}) (*mongo.SingleResult, error) {
+	col := UserMgr.GetCol()
+	opts := options.FindOneAndUpdate().SetUpsert(true)
+	opts.SetReturnDocument(options.After)
+	update := bson.M{
+		"$set": bson.M{
+			UserMgoFieldUserId:       o.UserId,
+			UserMgoFieldUsername:     o.Username,
+			UserMgoFieldAge:          o.Age,
+			UserMgoFieldRegisterDate: o.RegisterDate,
+		},
+	}
+	ret := col.FindOneAndUpdate(ctx, query, update, opts)
+	if ret.Err() != nil {
+		return nil, ret.Err()
+	}
+	return ret, nil
+}
+
 func (o *User) Save(ctx context.Context) (*mongo.UpdateResult, error) {
 	isNew := o.isNew
 	if o.ID == primitive.NilObjectID {
