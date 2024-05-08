@@ -1,0 +1,6 @@
+[env]
+GOBIN = '/Users/scnace/go/bin'
+GOPROXY = 'goproxy.cn,direct'
+GOSUMDB = 'sum.golang.google.cn'
+
+[tools]
