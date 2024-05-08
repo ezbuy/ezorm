@@ -10,6 +10,7 @@ import (
 	"github.com/ezbuy/ezorm/v2/e2e/mongo/user"
 	"github.com/ezbuy/ezorm/v2/pkg/db"
 	"github.com/ezbuy/ezorm/v2/pkg/orm"
+	"github.com/stretchr/testify/assert"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -84,7 +85,7 @@ func TestSave(t *testing.T) {
 	u1.Username = "username_1"
 
 	t.Log("insert user start")
-	fmt.Println("insert user start")
+
 	if _, err := u1.Save(ctx); err != nil {
 		t.Fatalf("failed to insert user_1 by Save: %s", err)
 	}
@@ -98,7 +99,7 @@ func TestSave(t *testing.T) {
 	}
 
 	t.Log("update user start")
-	fmt.Println("update user start")
+
 	u1.Username = "username_1_new"
 	if _, err := u1.Save(ctx); err != nil {
 		t.Fatalf("failed to update user_1 by Save: %s", err)
@@ -115,6 +116,23 @@ func TestSave(t *testing.T) {
 	if _, err := user.Get_UserMgr().RemoveAll(ctx, nil); err != nil {
 		t.Fatalf("failed to remove all users: %s", err)
 	}
+}
+
+func TestFindAndSave(t *testing.T) {
+	ctx := context.TODO()
+	u1 := user.Get_UserMgr().NewUser()
+	u1.Username = "username_1"
+	_, err := u1.FindAndSave(ctx, bson.M{
+		user.UserMgoFieldUsername: u1.Username,
+	})
+	assert.NoError(t, err)
+	u1.Username = "username_1_new"
+	res, err := u1.FindAndSave(ctx, bson.M{
+		user.UserMgoFieldUsername: "username_1",
+	})
+	assert.NoError(t, err)
+	_, err = orm.GetIDFromSingleResult(res)
+	assert.NoError(t, err)
 }
 
 func TestInsertUnique(t *testing.T) {

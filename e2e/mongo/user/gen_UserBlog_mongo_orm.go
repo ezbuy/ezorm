@@ -62,6 +62,25 @@ func (o *UserBlog) Id() string {
 	return o.ID.Hex()
 }
 
+// FindAndSave finds by `query`,  and then upsert the result with the current object
+func (o *UserBlog) FindAndSave(ctx context.Context, query interface{}) (*mongo.SingleResult, error) {
+	col := UserBlogMgr.GetCol()
+	opts := options.FindOneAndUpdate().SetUpsert(true)
+	opts.SetReturnDocument(options.After)
+	update := bson.M{
+		"$set": bson.M{
+			UserBlogMgoFieldUserId:  o.UserId,
+			UserBlogMgoFieldBlogId:  o.BlogId,
+			UserBlogMgoFieldContent: o.Content,
+		},
+	}
+	ret := col.FindOneAndUpdate(ctx, query, update, opts)
+	if ret.Err() != nil {
+		return nil, ret.Err()
+	}
+	return ret, nil
+}
+
 func (o *UserBlog) Save(ctx context.Context) (*mongo.UpdateResult, error) {
 	isNew := o.isNew
 	if o.ID == primitive.NilObjectID {

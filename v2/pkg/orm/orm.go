@@ -6,6 +6,10 @@ import (
 	"fmt"
 	"net/url"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var (
@@ -65,7 +69,6 @@ func RemoveEzOrmObj(namespace, classname, id string) (err error) {
 	f, ok := ezOrmObjsRemove[namespace+"."+classname]
 	if !ok {
 		return errors.New(namespace + "." + classname + " remove func not found")
-
 	}
 
 	return f(id)
@@ -82,9 +85,11 @@ type SearchObj interface {
 	GetSearchTip() string
 }
 
-var DateTimeLayout = "2006-01-02 15:04"
-var DateLayout = "2006-01-02"
-var TimeLayout = "15:04"
+var (
+	DateTimeLayout = "2006-01-02 15:04"
+	DateLayout     = "2006-01-02"
+	TimeLayout     = "15:04"
+)
 
 func I64DateTime(c int64) string {
 	if c == 0 {
@@ -345,4 +350,16 @@ func ToJsonString(obj interface{}) string {
 
 func PrintToJson(obj interface{}) {
 	fmt.Println(ToJsonString(obj))
+}
+
+func GetIDFromSingleResult(single *mongo.SingleResult) (string, error) {
+	var result bson.M
+	err := single.Decode(&result)
+	if err != nil {
+		return "", fmt.Errorf("decode error: %w", err)
+	}
+	if id, ok := result["_id"].(primitive.ObjectID); ok {
+		return id.Hex(), nil
+	}
+	return "", errors.New("id not found")
 }
