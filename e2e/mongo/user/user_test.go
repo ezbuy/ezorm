@@ -122,12 +122,12 @@ func TestFindAndSave(t *testing.T) {
 	ctx := context.TODO()
 	u1 := user.Get_UserMgr().NewUser()
 	u1.Username = "username_1"
-	_, err := u1.FindAndSave(ctx, bson.M{
+	_, err := u1.FindOneAndSave(ctx, bson.M{
 		user.UserMgoFieldUsername: u1.Username,
 	})
 	assert.NoError(t, err)
 	u1.Username = "username_1_new"
-	res, err := u1.FindAndSave(ctx, bson.M{
+	res, err := u1.FindOneAndSave(ctx, bson.M{
 		user.UserMgoFieldUsername: "username_1",
 	})
 	assert.NoError(t, err)
