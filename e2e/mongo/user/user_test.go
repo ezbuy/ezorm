@@ -131,8 +131,13 @@ func TestFindAndSave(t *testing.T) {
 		user.UserMgoFieldUsername: "username_1",
 	})
 	assert.NoError(t, err)
-	_, err = orm.GetIDFromSingleResult(res)
+	oid, err := orm.GetIDFromSingleResult(res)
 	assert.NoError(t, err)
+	u, err := user.Get_UserMgr().FindOne(ctx, bson.M{
+		user.UserMgoFieldUsername: "username_1_new",
+	}, nil)
+	assert.NoError(t, err)
+	assert.Equal(t, u.ID.Hex(), oid)
 }
 
 func TestInsertUnique(t *testing.T) {
