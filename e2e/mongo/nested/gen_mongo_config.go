@@ -3,6 +3,7 @@ package nested
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/ezbuy/ezorm/v2/pkg/db"
 	"github.com/ezbuy/wrapper/database"
@@ -36,6 +37,7 @@ func WithPostHooks(fn ...func()) SetupOptionFn {
 }
 
 var mongoDriver *db.MongoDriver
+var mongoDriverOnce sync.Once
 
 func MgoSetup(config *db.MongoConfig, opts ...SetupOptionFn) {
 	sopt := &SetupOption{}
@@ -46,23 +48,30 @@ func MgoSetup(config *db.MongoConfig, opts ...SetupOptionFn) {
 	sopt.postHooks = append(sopt.postHooks,
 		UserIndexesFunc,
 	)
-	var dopt []db.MongoDriverOption
+	var dopt []db.MongoDriverConnOptionFn
 	if sopt.monitor != nil {
-		dopt = append(dopt, db.WithPoolMonitor(database.NewMongoDriverMonitor(sopt.monitor)))
+		clientOpt := db.WithClientOption(db.WithPoolMonitor(database.NewMongoDriverMonitor(sopt.monitor)))
+		dopt = append(dopt, clientOpt)
 	}
-	db.Setup(config)
+	if config.DBName == "" {
+		panic("db name is required")
+	}
+	db.SetupMany(config)
+	dopt = append(dopt, db.WithDBName(config.DBName))
 
-	var err error
-	mongoDriver, err = db.NewMongoDriver(
-		context.Background(),
-		dopt...,
-	)
-	if err != nil {
-		panic(fmt.Errorf("failed to create mongodb driver: %s", err))
-	}
-	for _, hook := range sopt.postHooks {
-		hook()
-	}
+	mongoDriverOnce.Do(func() {
+		var err error
+		mongoDriver, err = db.NewMongoDriverBy(
+			context.Background(),
+			dopt...,
+		)
+		if err != nil {
+			panic(fmt.Errorf("failed to create mongodb driver: %s", err))
+		}
+		for _, hook := range sopt.postHooks {
+			hook()
+		}
+	})
 }
 
 func Col(col string) *mongo.Collection {
