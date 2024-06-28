@@ -94,3 +94,5 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	sourcegraph.com/sourcegraph/appdash v0.0.0-20190731080439-ebfcffb1b5c0 // indirect
 )
+
+replace github.com/ezbuy/ezorm/v2/pkg => ./v2/pkg

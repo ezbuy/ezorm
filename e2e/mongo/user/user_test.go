@@ -7,19 +7,21 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ezbuy/ezorm/v2/e2e/mongo/nested"
 	"github.com/ezbuy/ezorm/v2/e2e/mongo/user"
 	"github.com/ezbuy/ezorm/v2/pkg/db"
 	"github.com/ezbuy/ezorm/v2/pkg/orm"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func getConfigFromEnv() *db.MongoConfig {
+func getConfigFromEnv(dbName string) *db.MongoConfig {
 	return &db.MongoConfig{
-		DBName: "ezorm",
+		DBName: dbName,
 		MongoDB: fmt.Sprintf(
 			"mongodb://%s:%s@%s:%s",
 			os.Getenv("MONGO_USER"),
@@ -31,7 +33,7 @@ func getConfigFromEnv() *db.MongoConfig {
 }
 
 func TestMain(m *testing.M) {
-	user.MgoSetup(getConfigFromEnv())
+	user.MgoSetup(getConfigFromEnv("ezorm"))
 	expr := 3600
 	exprInt32 := int32(expr)
 	var exist, created int
@@ -77,6 +79,43 @@ func TestMain(m *testing.M) {
 	}
 
 	os.Exit(m.Run())
+}
+
+func TestOperateMultipleDB(t *testing.T) {
+	// fetch user from ezorm
+	user.MgoSetup(getConfigFromEnv("ezorm"))
+	// fetch user from ezorm_nested
+	nested.MgoSetup(getConfigFromEnv("ezorm_nested"))
+
+	u1 := user.Get_UserMgr().NewUser()
+	u1.Username = "username_1"
+	if _, err := u1.Save(context.TODO()); err != nil {
+		t.Fatalf("failed to save user: %s", err)
+	}
+
+	c := nested.Get_UserMgr().Count(context.TODO(), bson.M{})
+	require.Equalf(t, 0, c, "unexpected count of users, got: %d, expect: %d", c, 0)
+
+	u2 := nested.Get_UserMgr().NewUser()
+	u2.Username = "username_2"
+	if _, err := u2.Save(context.TODO()); err != nil {
+		t.Fatalf("failed to save user: %s", err)
+	}
+
+	c2 := nested.Get_UserMgr().Count(context.TODO(), bson.M{})
+	require.Equalf(t, 1, c2, "unexpected count of users, got: %d, expect: %d", c2, 1)
+
+	c3 := user.Get_UserMgr().Count(context.TODO(), bson.M{})
+	require.Equalf(t, 1, c3, "unexpected count of users, got: %d, expect: %d", c3, 1)
+
+	t.Cleanup(func() {
+		if _, err := user.Get_UserMgr().RemoveAll(context.TODO(), nil); err != nil {
+			t.Fatalf("failed to remove all users: %s", err)
+		}
+		if _, err := nested.Get_UserMgr().RemoveAll(context.TODO(), nil); err != nil {
+			t.Fatalf("failed to remove all users: %s", err)
+		}
+	})
 }
 
 func TestSave(t *testing.T) {
