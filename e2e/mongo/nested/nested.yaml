@@ -21,3 +21,5 @@ Blog:
   fields:
     - BlogId: uint64
       attrs: {bsonTag: "bid", jsonTag: "bid"}
+    - BlogTitle: string
+      flags: [index]
