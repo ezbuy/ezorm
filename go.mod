@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
-	github.com/ezbuy/ezorm/v2/pkg v0.0.10
+	github.com/ezbuy/ezorm/v2/pkg v0.0.14
 	github.com/ezbuy/utils v0.0.0-20170609090716-8ac4beef008f
 	github.com/ezbuy/wrapper v1.0.3
 	github.com/iancoleman/strcase v0.2.0
@@ -94,5 +94,3 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	sourcegraph.com/sourcegraph/appdash v0.0.0-20190731080439-ebfcffb1b5c0 // indirect
 )
-
-replace github.com/ezbuy/ezorm/v2/pkg => ./v2/pkg

@@ -9,14 +9,16 @@ import (
 var _ time.Time
 
 type Blog struct {
-	ID     primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	BlogId uint64             `bson:"bid" json:"bid"`
-	isNew  bool
+	ID        primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	BlogId    uint64             `bson:"bid" json:"bid"`
+	BlogTitle string             `bson:"BlogTitle" json:"BlogTitle"`
+	isNew     bool
 }
 
 const (
-	BlogMgoFieldID     = "_id"
-	BlogMgoFieldBlogId = "bid"
+	BlogMgoFieldID        = "_id"
+	BlogMgoFieldBlogId    = "bid"
+	BlogMgoFieldBlogTitle = "BlogTitle"
 )
 
 // BlogMgoSortField_WRP is a wrapper of Blog sort fields e.g.:
