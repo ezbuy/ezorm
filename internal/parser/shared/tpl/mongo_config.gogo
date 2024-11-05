@@ -51,8 +51,10 @@ func MgoSetup(config *db.MongoConfig, opts ...SetupOptionFn) {
 	// setup the indexes
 	sopt.postHooks = append(sopt.postHooks,
 	{{- range $index, $obj := .}}
+		{{- if not $obj.IsEmbed}}
 		{{- if gt (len $obj.Indexes) 0}}
 		{{$obj.Name}}IndexesFunc,
+		{{- end}}
 		{{- end}}
 	{{- end}}
 	)
