@@ -9,11 +9,14 @@ import (
 	"github.com/ezbuy/wrapper/database"
 
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/integration/mtest"
 )
 
 type SetupOption struct {
 	monitor   database.Monitor
 	postHooks []func()
+	// mockStub is for mocking purpose
+	mockStub *mtest.T
 }
 
 type SetupOptionFn func(opts *SetupOption)
@@ -36,6 +39,12 @@ func WithPostHooks(fn ...func()) SetupOptionFn {
 	}
 }
 
+func WithMockStub(t *mtest.T) SetupOptionFn {
+	return func(opts *SetupOption) {
+		opts.mockStub = t
+	}
+}
+
 var mongoDriver *db.MongoDriver
 var mongoDriverOnce sync.Once
 
@@ -43,6 +52,16 @@ func MgoSetup(config *db.MongoConfig, opts ...SetupOptionFn) {
 	sopt := &SetupOption{}
 	for _, opt := range opts {
 		opt(sopt)
+	}
+	if sopt.mockStub != nil {
+		// reset the mongo driver if it was already initialized
+		mongoDriverOnce = sync.Once{}
+		mongoDriver = nil
+		mongoDriver = db.NewMockMongoDriver(sopt.mockStub)
+		for _, hook := range sopt.postHooks {
+			hook()
+		}
+		return
 	}
 	// setup the indexes
 	sopt.postHooks = append(sopt.postHooks,
