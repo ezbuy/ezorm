@@ -12,6 +12,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/integration/mtest"
 )
 
+var _ time.Time
+
 type UserBlogSuite struct {
 	suite.Suite
 	ctx context.Context
