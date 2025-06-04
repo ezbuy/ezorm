@@ -1,4 +1,4 @@
-{{define "mongo_orm_test"}}package {{.GoPackage | lower}}
+{{define "mongo_orm_test"}}package {{.GoPackage}}
 {{$obj := .}}
 
 {{if ($obj.DbSwitch "mongo")}}
