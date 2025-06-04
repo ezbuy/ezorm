@@ -17,6 +17,8 @@ import (
 // To import `time` package globally to satisfy `time.Time` index in yaml definition
 var _ time.Time
 
+const Col{{.Name}} = "{{if eq .Table ""}}{{.Namespace}}.{{.Name}}{{else}}{{.Table}}{{end}}"
+
 {{if gt (len $obj.Indexes) 0}}
 var {{$obj.Name}}Indexes = []mongo.IndexModel{
     {{- range $index := $obj.Indexes}}
@@ -30,7 +32,7 @@ var {{$obj.Name}}Indexes = []mongo.IndexModel{
 }
 
 var {{$obj.Name}}IndexesFunc = func(){
-	orm.SetupIndexModel(Col({{if eq .Table ""}}"{{.Namespace}}.{{.Name}}"{{else}}"{{.Table}}"{{end}}),  {{$obj.Name}}Indexes)
+	orm.SetupIndexModel(Col(Col{{.Name}}),  {{$obj.Name}}Indexes)
 }
 {{- end }}
 
