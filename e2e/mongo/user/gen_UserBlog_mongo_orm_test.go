@@ -310,20 +310,20 @@ func (s *UserBlogSuite) TestQuery() {
 // TestFindByUserId tests the FindByUserId method
 func (s *UserBlogSuite) TestFindByUserId() {
 	cases := []struct {
-		name       string
-		userid     uint64
-		limit      int
-		offset     int
-		sortFields interface{}
-		wantErr    bool
+		name         string
+		field_userid uint64
+		limit        int
+		offset       int
+		sortFields   interface{}
+		wantErr      bool
 	}{
 		{
-			name:       "findbyuserid_success",
-			userid:     uint64(1),
-			limit:      10,
-			offset:     0,
-			sortFields: nil,
-			wantErr:    false,
+			name:         "findbyuserid_success",
+			field_userid: uint64(1),
+			limit:        10,
+			offset:       0,
+			sortFields:   nil,
+			wantErr:      false,
 		},
 	}
 	mt := mtest.New(
@@ -346,14 +346,14 @@ func (s *UserBlogSuite) TestFindByUserId() {
 				})
 				killCursors := mtest.CreateCursorResponse(0, "test.userblog", mtest.NextBatch)
 				t.AddMockResponses(first, killCursors)
-				result, err := Get_UserBlogMgr().FindByUserId(s.ctx, c.userid, c.limit, c.offset, c.sortFields)
+				result, err := Get_UserBlogMgr().FindByUserId(s.ctx, c.field_userid, c.limit, c.offset, c.sortFields)
 				if c.wantErr {
 					assert.Error(t, err)
 				} else {
 					assert.NoError(t, err)
 					assert.NotNil(t, result)
 					assert.Len(t, result, 1)
-					assert.Equal(t, c.userid, result[0].UserId)
+					assert.Equal(t, c.field_userid, result[0].UserId)
 				}
 			})
 		})

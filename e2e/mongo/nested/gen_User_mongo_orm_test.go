@@ -324,20 +324,20 @@ func (s *UserSuite) TestQuery() {
 // TestFindByUsername tests the FindByUsername method
 func (s *UserSuite) TestFindByUsername() {
 	cases := []struct {
-		name       string
-		username   string
-		limit      int
-		offset     int
-		sortFields interface{}
-		wantErr    bool
+		name           string
+		field_username string
+		limit          int
+		offset         int
+		sortFields     interface{}
+		wantErr        bool
 	}{
 		{
-			name:       "findbyusername_success",
-			username:   "test_username",
-			limit:      10,
-			offset:     0,
-			sortFields: nil,
-			wantErr:    false,
+			name:           "findbyusername_success",
+			field_username: "test_username",
+			limit:          10,
+			offset:         0,
+			sortFields:     nil,
+			wantErr:        false,
 		},
 	}
 	mt := mtest.New(
@@ -362,14 +362,14 @@ func (s *UserSuite) TestFindByUsername() {
 				})
 				killCursors := mtest.CreateCursorResponse(0, "test.user", mtest.NextBatch)
 				t.AddMockResponses(first, killCursors)
-				result, err := Get_UserMgr().FindByUsername(s.ctx, c.username, c.limit, c.offset, c.sortFields)
+				result, err := Get_UserMgr().FindByUsername(s.ctx, c.field_username, c.limit, c.offset, c.sortFields)
 				if c.wantErr {
 					assert.Error(t, err)
 				} else {
 					assert.NoError(t, err)
 					assert.NotNil(t, result)
 					assert.Len(t, result, 1)
-					assert.Equal(t, c.username, result[0].Username)
+					assert.Equal(t, c.field_username, result[0].Username)
 				}
 			})
 		})
@@ -380,7 +380,7 @@ func (s *UserSuite) TestFindByUsername() {
 func (s *UserSuite) TestFindByAge() {
 	cases := []struct {
 		name       string
-		age        int32
+		field_age  int32
 		limit      int
 		offset     int
 		sortFields interface{}
@@ -388,7 +388,7 @@ func (s *UserSuite) TestFindByAge() {
 	}{
 		{
 			name:       "findbyage_success",
-			age:        int32(1),
+			field_age:  int32(1),
 			limit:      10,
 			offset:     0,
 			sortFields: nil,
@@ -417,14 +417,14 @@ func (s *UserSuite) TestFindByAge() {
 				})
 				killCursors := mtest.CreateCursorResponse(0, "test.user", mtest.NextBatch)
 				t.AddMockResponses(first, killCursors)
-				result, err := Get_UserMgr().FindByAge(s.ctx, c.age, c.limit, c.offset, c.sortFields)
+				result, err := Get_UserMgr().FindByAge(s.ctx, c.field_age, c.limit, c.offset, c.sortFields)
 				if c.wantErr {
 					assert.Error(t, err)
 				} else {
 					assert.NoError(t, err)
 					assert.NotNil(t, result)
 					assert.Len(t, result, 1)
-					assert.Equal(t, c.age, result[0].Age)
+					assert.Equal(t, c.field_age, result[0].Age)
 				}
 			})
 		})
