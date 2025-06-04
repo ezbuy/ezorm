@@ -118,7 +118,9 @@ func TestOperateMultipleDB(t *testing.T) {
 	})
 }
 
-func TestSave(t *testing.T) {
+func TestE2ESave(t *testing.T) {
+	user.MgoSetup(getConfigFromEnv("ezorm"))
+
 	ctx := context.TODO()
 	u1 := user.Get_UserMgr().NewUser()
 	u1.Username = "username_1"

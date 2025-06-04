@@ -8,6 +8,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/integration/mtest"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -100,6 +101,13 @@ func NewMongoDriver(ctx context.Context, opts ...MongoDriverOption) (*MongoDrive
 	}
 
 	return &MongoDriver{cli: cli}, nil
+}
+
+func NewMockMongoDriver(t *mtest.T) *MongoDriver {
+	return &MongoDriver{
+		cli:    t.Client,
+		dbName: t.DB.Name(),
+	}
 }
 
 type MongoDriverOption func(*options.ClientOptions)
