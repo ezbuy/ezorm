@@ -59,6 +59,7 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.0.1 // indirect
+	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/pprof v0.0.0-20210827144239-02619b876842 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
