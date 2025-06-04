@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -65,7 +64,7 @@ var genCmd = &cobra.Command{
 				if filepath.Ext(path) != ".yaml" {
 					return nil
 				}
-				data, err := ioutil.ReadFile(path)
+				data, err := os.ReadFile(path)
 				if err != nil {
 					return err
 				}
@@ -77,7 +76,7 @@ var genCmd = &cobra.Command{
 				return err
 			}
 		default:
-			data, err := ioutil.ReadFile(input)
+			data, err := os.ReadFile(input)
 			if err != nil {
 				return err
 			}

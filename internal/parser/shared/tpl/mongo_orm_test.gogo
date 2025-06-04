@@ -50,6 +50,10 @@ func (s *{{.Name}}Suite) TestSave() {
 				{{$field.Name}}: 1,
 				{{- else if eq $field.Type "uint64"}}
 				{{$field.Name}}: 1,
+				{{- else if eq $field.Type "float32"}}
+				{{$field.Name}}: 1.0,
+				{{- else if eq $field.Type "float64"}}
+				{{$field.Name}}: 1.0,
 				{{- else if eq $field.Type "time.Time"}}
 				{{$field.Name}}: time.Now(),
 				{{- else if eq $field.Type "bool"}}
@@ -116,6 +120,10 @@ func (s *{{.Name}}Suite) TestFindOneAndSave() {
 				{{$field.Name}}: 2,
 				{{- else if eq $field.Type "uint64"}}
 				{{$field.Name}}: 2,
+				{{- else if eq $field.Type "float32"}}
+				{{$field.Name}}: 2.0,
+				{{- else if eq $field.Type "float64"}}
+				{{$field.Name}}: 2.0,
 				{{- else if eq $field.Type "time.Time"}}
 				{{$field.Name}}: time.Now(),
 				{{- else if eq $field.Type "bool"}}
@@ -196,6 +204,10 @@ func (s *{{.Name}}Suite) TestInsertUnique() {
 				{{$field.Name}}: 3,
 				{{- else if eq $field.Type "uint64"}}
 				{{$field.Name}}: 3,
+				{{- else if eq $field.Type "float32"}}
+				{{$field.Name}}: 3.0,
+				{{- else if eq $field.Type "float64"}}
+				{{$field.Name}}: 3.0,
 				{{- else if eq $field.Type "time.Time"}}
 				{{$field.Name}}: time.Now(),
 				{{- else if eq $field.Type "bool"}}
@@ -445,7 +457,7 @@ func (s *{{$obj.Name}}Suite) TestFindBy{{$index.Name}}() {
 	cases := []struct {
 		name       string
 		{{- range $field := $index.Fields}}
-		{{$field.Name | lower}}   {{$field.GetGoType}}
+		field_{{$field.Name | lower}}   {{$field.GetGoType}}
 		{{- end}}
 		limit      int
 		offset     int
@@ -456,19 +468,23 @@ func (s *{{$obj.Name}}Suite) TestFindBy{{$index.Name}}() {
 			name: "findby{{$index.Name | lower}}_success",
 			{{- range $field := $index.Fields}}
 			{{- if eq $field.Type "string"}}
-			{{$field.Name | lower}}: "test_{{$field.Name | lower}}",
+			field_{{$field.Name | lower}}: "test_{{$field.Name | lower}}",
 			{{- else if eq $field.Type "int32"}}
-			{{$field.Name | lower}}: int32(1),
+			field_{{$field.Name | lower}}: int32(1),
 			{{- else if eq $field.Type "int64"}}
-			{{$field.Name | lower}}: int64(1),
+			field_{{$field.Name | lower}}: int64(1),
 			{{- else if eq $field.Type "uint64"}}
-			{{$field.Name | lower}}: uint64(1),
+			field_{{$field.Name | lower}}: uint64(1),
+			{{- else if eq $field.Type "float32"}}
+			field_{{$field.Name | lower}}: float32(2.0),
+			{{- else if eq $field.Type "float64"}}
+			field_{{$field.Name | lower}}: float64(2.0),
 			{{- else if eq $field.Type "time.Time"}}
-			{{$field.Name | lower}}: time.Date(2023, 1, 1, 12, 0, 0, 0, time.UTC),
+			field_{{$field.Name | lower}}: time.Date(2023, 1, 1, 12, 0, 0, 0, time.UTC),
 			{{- else if eq $field.Type "bool"}}
-			{{$field.Name | lower}}: true,
+			field_{{$field.Name | lower}}: true,
 			{{- else}}
-			{{$field.Name | lower}}: {{$field.GetGoType}}{}, // TODO: Set appropriate test value
+			field_{{$field.Name | lower}}: {{$field.GetGoType}}{}, // TODO: Set appropriate test value
 			{{- end}}
 			{{- end}}
 			limit:      10,
@@ -513,7 +529,7 @@ func (s *{{$obj.Name}}Suite) TestFindBy{{$index.Name}}() {
 				})
 				killCursors := mtest.CreateCursorResponse(0, "test.{{$obj.Name | lower}}", mtest.NextBatch)
 				t.AddMockResponses(first, killCursors)
-				result, err := Get_{{$obj.Name}}Mgr().FindBy{{$index.Name}}(s.ctx, {{range $i, $field := $index.Fields}}{{if $i}}, {{end}}c.{{$field.Name | lower}}{{end}}, c.limit, c.offset, c.sortFields)
+				result, err := Get_{{$obj.Name}}Mgr().FindBy{{$index.Name}}(s.ctx, {{range $i, $field := $index.Fields}}{{if $i}}, {{end}}c.field_{{$field.Name | lower}}{{end}}, c.limit, c.offset, c.sortFields)
 				if c.wantErr {
 					assert.Error(t, err)
 				} else {
@@ -522,9 +538,9 @@ func (s *{{$obj.Name}}Suite) TestFindBy{{$index.Name}}() {
 					assert.Len(t, result, 1)
 					{{- range $field := $index.Fields}}
 					{{- if eq $field.Type "time.Time"}}
-					assert.Equal(t, c.{{$field.Name | lower}}.Unix(), result[0].{{$field.Name}}.Unix())
+					assert.Equal(t, c.field_{{$field.Name | lower}}.Unix(), result[0].{{$field.Name}}.Unix())
 					{{- else}}
-					assert.Equal(t, c.{{$field.Name | lower}}, result[0].{{$field.Name}})
+					assert.Equal(t, c.field_{{$field.Name | lower}}, result[0].{{$field.Name}})
 					{{- end}}
 					{{- end}}
 				}
