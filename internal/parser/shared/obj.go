@@ -31,6 +31,7 @@ func init() {
 		"strif":         strif,
 		"toids":         toIds,
 		"add":           add,
+		"lower":         strings.ToLower,
 	}
 
 	files := []string{
@@ -40,6 +41,7 @@ func init() {
 		"tpl/mysql_fk.gogo",
 		"tpl/mongo_config.gogo",
 		"tpl/mongo_orm.gogo",
+		"tpl/mongo_orm_test.gogo",
 		"tpl/mysql_script.sql",
 		"tpl/sql_method.gogo",
 	}
@@ -249,6 +251,7 @@ func (o *Obj) GetGenTypes() []string {
 			gens = append(gens, "struct")
 			if !o.IsEmbed {
 				gens = append(gens, "mongo_orm")
+				gens = append(gens, "mongo_orm_test")
 			}
 		case "enum":
 			gens = append(gens, "enum")

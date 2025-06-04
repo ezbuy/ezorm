@@ -15,6 +15,8 @@ import (
 // To import `time` package globally to satisfy `time.Time` index in yaml definition
 var _ time.Time
 
+const ColUser = "mongo_e2e.User"
+
 var UserIndexes = []mongo.IndexModel{
 	{
 		Keys: UserIndexKey_Username,
@@ -25,7 +27,7 @@ var UserIndexes = []mongo.IndexModel{
 }
 
 var UserIndexesFunc = func() {
-	orm.SetupIndexModel(Col("mongo_e2e.User"), UserIndexes)
+	orm.SetupIndexModel(Col(ColUser), UserIndexes)
 }
 var UserIndexKey_Username = bson.D{
 	{Key: "Username", Value: 1},
