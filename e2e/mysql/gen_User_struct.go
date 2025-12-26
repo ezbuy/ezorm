@@ -1,8 +1,12 @@
 package mysql
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 var _ time.Time
+var _ json.Marshaler
 
 type User struct {
 	UserId     int32  `db:"user_id"`
