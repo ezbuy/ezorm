@@ -2,6 +2,7 @@ package nested
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/ezbuy/ezorm/v2/pkg/orm"
@@ -14,6 +15,9 @@ import (
 
 // To import `time` package globally to satisfy `time.Time` index in yaml definition
 var _ time.Time
+
+// To import `json` package globally to satisfy `json.Marshaler` interface in yaml definition
+var _ json.Marshaler
 
 const ColUser = "mongo_e2e.User"
 

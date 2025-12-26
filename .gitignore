@@ -4,3 +4,4 @@ db/config.go
 .vscode/
 .idea/
 bin/
+mise*
