@@ -4,8 +4,10 @@
 import "go.mongodb.org/mongo-driver/bson/primitive"
 {{end}}
 import "time"
+import "encoding/json"
 
 var _ time.Time
+var _ json.Marshaler
 
 {{- if (ne .Comment "")}}
 // {{.Name}} {{.Comment}}

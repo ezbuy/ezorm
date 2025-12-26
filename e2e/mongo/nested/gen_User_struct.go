@@ -1,12 +1,14 @@
 package nested
 
 import (
+	"encoding/json"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var _ time.Time
+var _ json.Marshaler
 
 type User struct {
 	ID primitive.ObjectID `json:"id" bson:"_id,omitempty"`
