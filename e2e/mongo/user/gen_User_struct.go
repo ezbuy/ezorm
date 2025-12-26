@@ -1,12 +1,14 @@
 package user
 
 import (
+	"encoding/json"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var _ time.Time
+var _ json.Marshaler
 
 // User all registered user use our systems
 type User struct {
