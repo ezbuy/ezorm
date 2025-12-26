@@ -14,10 +14,10 @@ jobs:
     name: "mysql"
     strategy:
       matrix:
-        go: ["1.18","1.20","1.21"]
+        go: ["1.18", "1.24"]
     runs-on: ubuntu-latest
     container:
-        image: golang:${{ matrix.go }}
+      image: golang:${{ matrix.go }}
     services:
       mysql:
         image: mysql:5.7
@@ -50,10 +50,10 @@ jobs:
     name: "mysqlr"
     strategy:
       matrix:
-        go: ["1.18","1.20","1.21"]
+        go: ["1.18", "1.24"]
     runs-on: ubuntu-latest
     container:
-        image: golang:${{ matrix.go }}
+      image: golang:${{ matrix.go }}
     services:
       mysql:
         image: mysql:5.7
@@ -86,10 +86,10 @@ jobs:
     name: "mongo"
     strategy:
       matrix:
-        go: ["1.18","1.20","1.21"]
+        go: ["1.18", "1.24"]
     runs-on: ubuntu-latest
     container:
-        image: golang:${{ matrix.go }}
+      image: golang:${{ matrix.go }}
     services:
       mongo:
         image: mongo:4.2
@@ -118,10 +118,10 @@ jobs:
     name: "customized-plugin"
     strategy:
       matrix:
-        go: ["1.18","1.20","1.21"]
+        go: ["1.18", "1.24"]
     runs-on: ubuntu-latest
     container:
-        image: golang:${{ matrix.go }}
+      image: golang:${{ matrix.go }}
     steps:
       - name: checkout
         uses: actions/checkout@v4
