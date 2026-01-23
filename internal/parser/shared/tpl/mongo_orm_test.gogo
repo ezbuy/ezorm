@@ -42,7 +42,8 @@ func (s *{{.Name}}Suite) TestSave() {
 				{{- range $field := .Fields}}
 				{{- if eq $field.Name "ID"}}
 				// ID will be auto-generated
-				{{- else if eq $field.Type "string"}}
+				{{- else if not $field.IsNullable}}
+				{{- if eq $field.Type "string"}}
 				{{$field.Name}}: "test_{{$field.Name | lower}}",
 				{{- else if eq $field.Type "int32"}}
 				{{$field.Name}}: 1,
@@ -60,6 +61,7 @@ func (s *{{.Name}}Suite) TestSave() {
 				{{$field.Name}}: true,
 				{{- else}}
 				{{$field.Name}}: {{$field.GetGoType}}{}, // TODO: Set appropriate test value
+				{{- end}}
 				{{- end}}
 				{{- end}}
 			},
@@ -112,7 +114,8 @@ func (s *{{.Name}}Suite) TestFindOneAndSave() {
 				{{- range $field := .Fields}}
 				{{- if eq $field.Name "ID"}}
 				// ID will be auto-generated
-				{{- else if eq $field.Type "string"}}
+				{{- else if not $field.IsNullable}}
+				{{- if eq $field.Type "string"}}
 				{{$field.Name}}: "test_{{$field.Name | lower}}",
 				{{- else if eq $field.Type "int32"}}
 				{{$field.Name}}: 2,
@@ -130,6 +133,7 @@ func (s *{{.Name}}Suite) TestFindOneAndSave() {
 				{{$field.Name}}: false,
 				{{- else}}
 				{{$field.Name}}: {{$field.GetGoType}}{}, // TODO: Set appropriate test value
+				{{- end}}
 				{{- end}}
 				{{- end}}
 			},
@@ -196,7 +200,8 @@ func (s *{{.Name}}Suite) TestInsertUnique() {
 				{{- range $field := .Fields}}
 				{{- if eq $field.Name "ID"}}
 				// ID will be auto-generated
-				{{- else if eq $field.Type "string"}}
+				{{- else if not $field.IsNullable}}
+				{{- if eq $field.Type "string"}}
 				{{$field.Name}}: "unique_{{$field.Name | lower}}",
 				{{- else if eq $field.Type "int32"}}
 				{{$field.Name}}: 3,
@@ -214,6 +219,7 @@ func (s *{{.Name}}Suite) TestInsertUnique() {
 				{{$field.Name}}: true,
 				{{- else}}
 				{{$field.Name}}: {{$field.GetGoType}}{}, // TODO: Set appropriate test value
+				{{- end}}
 				{{- end}}
 				{{- end}}
 			},

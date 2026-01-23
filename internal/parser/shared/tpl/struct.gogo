@@ -21,7 +21,7 @@ type {{.Name}} struct {
 
         // {{$field.Comment}}
         {{- end }}
-		{{$field.Name}}  {{$field.GetGoType}} {{$field.GetTag}}
+		{{$field.Name}}  {{$field.GetStructGoType}} {{$field.GetTag}}
 		{{- end -}}
 	{{- end}}
 	{{- if or ($obj.DbContains "mysql") ($obj.DbContains "mongo") ($obj.DbContains "mongo")}}

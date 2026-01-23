@@ -67,6 +67,7 @@ func MgoSetup(config *db.MongoConfig, opts ...SetupOptionFn) {
 	sopt.postHooks = append(sopt.postHooks,
 		UserIndexesFunc,
 		UserBlogIndexesFunc,
+		UserNullableIndexesFunc,
 	)
 	var dopt []db.MongoDriverConnOptionFn
 	if sopt.monitor != nil {

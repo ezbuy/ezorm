@@ -3,7 +3,7 @@ User:
   db: mongo
   fields:
     - UserId: uint64
-      attrs: {bsonTag: "uid", jsonTag: "uid"}
+      attrs: { bsonTag: "uid", jsonTag: "uid" }
       comment: "the identity of each user"
     - Username: string
       comment: "name of user used to login"
@@ -11,7 +11,7 @@ User:
     - Age: int32
       flags: [sort]
     - RegisterDate: time.Time
-      attrs: {bsonTag: "registerDate", jsonTag: "registerDate"}
+      attrs: { bsonTag: "registerDate", jsonTag: "registerDate" }
       flags: [sort]
   indexes: [[Username, Age]]
   table: test_user
@@ -22,13 +22,32 @@ UserBlog:
   db: mongo
   fields:
     - UserId: uint64
-      attrs: {bsonTag: "uid", jsonTag: "uid"}
+      attrs: { bsonTag: "uid", jsonTag: "uid" }
       comment: "the identity of each user"
       flags: [index]
     - BlogId: uint64
-      attrs: {bsonTag: "bid", jsonTag: "bid"}
+      attrs: { bsonTag: "bid", jsonTag: "bid" }
       comment: "the identity of each blog"
     - Content: string
   table: test_user_blog
   dbname: test
-
+---
+UserNullable:
+  db: mongo
+  fields:
+    - UserId: uint64
+      attrs: { bsonTag: "uid", jsonTag: "uid" }
+      comment: "the identity of each user"
+    - Username: string
+      comment: "name of user used to login"
+      flags: [index]
+    - Age: int32
+      flags: [nullable]
+    - Nickname: string
+      flags: [nullable]
+    - RegisterDate: time.Time
+      attrs: { bsonTag: "registerDate", jsonTag: "registerDate" }
+      flags: [nullable]
+  table: test_user_nullable
+  dbname: test
+  comment: "user model for nullable field tests"

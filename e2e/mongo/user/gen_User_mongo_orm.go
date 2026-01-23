@@ -92,13 +92,13 @@ func (o *User) FindOneAndSave(ctx context.Context, query interface{}) (*mongo.Si
 	col := UserMgr.GetCol()
 	opts := options.FindOneAndUpdate().SetUpsert(true)
 	opts.SetReturnDocument(options.After)
+	setFields := bson.M{}
+	setFields[UserMgoFieldUserId] = o.UserId
+	setFields[UserMgoFieldUsername] = o.Username
+	setFields[UserMgoFieldAge] = o.Age
+	setFields[UserMgoFieldRegisterDate] = o.RegisterDate
 	update := bson.M{
-		"$set": bson.M{
-			UserMgoFieldUserId:       o.UserId,
-			UserMgoFieldUsername:     o.Username,
-			UserMgoFieldAge:          o.Age,
-			UserMgoFieldRegisterDate: o.RegisterDate,
-		},
+		"$set": setFields,
 	}
 	ret := col.FindOneAndUpdate(ctx, query, update, opts)
 	if ret.Err() != nil {
@@ -115,13 +115,13 @@ func (o *User) Save(ctx context.Context) (*mongo.UpdateResult, error) {
 	}
 
 	filter := bson.M{"_id": o.ID}
+	setFields := bson.M{}
+	setFields[UserMgoFieldUserId] = o.UserId
+	setFields[UserMgoFieldUsername] = o.Username
+	setFields[UserMgoFieldAge] = o.Age
+	setFields[UserMgoFieldRegisterDate] = o.RegisterDate
 	update := bson.M{
-		"$set": bson.M{
-			UserMgoFieldUserId:       o.UserId,
-			UserMgoFieldUsername:     o.Username,
-			UserMgoFieldAge:          o.Age,
-			UserMgoFieldRegisterDate: o.RegisterDate,
-		},
+		"$set": setFields,
 	}
 
 	opts := options.Update().SetUpsert(true)
@@ -146,14 +146,14 @@ func (o *User) Save(ctx context.Context) (*mongo.UpdateResult, error) {
 }
 
 func (o *User) InsertUnique(ctx context.Context, query interface{}) (saved bool, err error) {
+	setFields := bson.M{}
+	setFields[UserMgoFieldID] = o.ID
+	setFields[UserMgoFieldUserId] = o.UserId
+	setFields[UserMgoFieldUsername] = o.Username
+	setFields[UserMgoFieldAge] = o.Age
+	setFields[UserMgoFieldRegisterDate] = o.RegisterDate
 	update := bson.M{
-		"$setOnInsert": bson.M{
-			UserMgoFieldID:           o.ID,
-			UserMgoFieldUserId:       o.UserId,
-			UserMgoFieldUsername:     o.Username,
-			UserMgoFieldAge:          o.Age,
-			UserMgoFieldRegisterDate: o.RegisterDate,
-		},
+		"$setOnInsert": setFields,
 	}
 
 	opts := options.Update().SetUpsert(true)
