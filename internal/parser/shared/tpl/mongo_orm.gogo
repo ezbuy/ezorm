@@ -86,15 +86,21 @@ func (o *{{.Name}}) FindOneAndSave(ctx context.Context, query interface{}) (*mon
     col := {{.Name}}Mgr.GetCol()
     opts := options.FindOneAndUpdate().SetUpsert(true)
     opts.SetReturnDocument(options.After)
+    setFields := bson.M{}
+    {{- range $field := .Fields -}}
+    {{- if eq $field.Name "ID" -}}
+        {{continue}}
+    {{- end}}
+    {{- if $field.IsNullable}}
+    if o.{{$field.Name}} != nil {
+        setFields[{{$obj.Name}}MgoField{{$field.Name}}] = o.{{$field.Name}}
+    }
+    {{- else}}
+    setFields[{{$obj.Name}}MgoField{{$field.Name}}] = o.{{$field.Name}}
+    {{- end}}
+    {{- end}}
     update := bson.M{
-        "$set": bson.M{
-        {{- range $field := .Fields -}}
-        {{- if eq $field.Name "ID" -}}
-            {{continue}}
-        {{- end}}
-            {{$obj.Name}}MgoField{{$field.Name}}: o.{{$field.Name}},
-        {{- end}}
-        },
+        "$set": setFields,
     }
     ret := col.FindOneAndUpdate(ctx, query, update, opts)
     if ret.Err() != nil {
@@ -123,15 +129,21 @@ func (o *{{.Name}}) Save(ctx context.Context) (*mongo.UpdateResult, error) {
     }
 
     filter := bson.M{"_id": o.ID}
+    setFields := bson.M{}
+    {{- range $field := .Fields -}}
+    {{- if eq $field.Name "ID" -}}
+        {{continue}}
+    {{- end}}
+    {{- if $field.IsNullable}}
+    if o.{{$field.Name}} != nil {
+        setFields[{{$obj.Name}}MgoField{{$field.Name}}] = o.{{$field.Name}}
+    }
+    {{- else}}
+    setFields[{{$obj.Name}}MgoField{{$field.Name}}] = o.{{$field.Name}}
+    {{- end}}
+    {{- end}}
     update := bson.M{
-        "$set": bson.M{
-        {{- range $field := .Fields -}}
-        {{- if eq $field.Name "ID" -}}
-            {{continue}}
-        {{- end}}
-            {{$obj.Name}}MgoField{{$field.Name}}: o.{{$field.Name}},
-        {{- end}}
-        },
+        "$set": setFields,
     }
 
     opts := options.Update().SetUpsert(true)
@@ -156,12 +168,18 @@ func (o *{{.Name}}) Save(ctx context.Context) (*mongo.UpdateResult, error) {
 }
 
 func (o *{{.Name}}) InsertUnique(ctx context.Context, query interface{}) (saved bool, err error) {
+    setFields := bson.M{}
+    {{- range $field := .Fields}}
+    {{- if $field.IsNullable}}
+    if o.{{$field.Name}} != nil {
+        setFields[{{$obj.Name}}MgoField{{$field.Name}}] = o.{{$field.Name}}
+    }
+    {{- else}}
+    setFields[{{$obj.Name}}MgoField{{$field.Name}}] = o.{{$field.Name}}
+    {{- end}}
+    {{- end}}
     update := bson.M{
-        "$setOnInsert": bson.M{
-        {{- range $field := .Fields}}
-            {{$obj.Name}}MgoField{{$field.Name}}: o.{{$field.Name}},
-        {{- end}}
-        },
+        "$setOnInsert": setFields,
     }
 
     opts := options.Update().SetUpsert(true)
@@ -201,11 +219,27 @@ func {{.Name}}UpdateCallback(o *{{.Name}}) {
 {{range $field := $obj.Fields}}
 {{if $field.HasForeign}}
 func (p *{{$obj.Name}}) Get{{$field.Foreign}}(ctx context.Context) (result *{{$field.ForeignType}}, err error) {
+    {{- if $field.IsNullable}}
+    if p.{{$field.Name}} == nil {
+        return nil, nil
+    }
+    return {{$field.ForeignType}}Mgr.FindByID(ctx, *p.{{$field.Name}})
+    {{- else}}
     return {{$field.ForeignType}}Mgr.FindByID(ctx, p.{{$field.Name}})
+    {{- end}}
 }
 
 func (p *{{$obj.Name}}) Set{{$field.Foreign}}(obj *{{$field.ForeignType}}) {
+    {{- if $field.IsNullable}}
+    if obj == nil {
+        p.{{$field.Name}} = nil
+        return
+    }
+    id := obj.ID.Hex()
+    p.{{$field.Name}} = &id
+    {{- else}}
     p.{{$field.Name}} = obj.ID.Hex()
+    {{- end}}
 }
 
 {{if eq $field.Foreign $field.ForeignType}}

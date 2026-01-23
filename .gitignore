@@ -5,3 +5,4 @@ db/config.go
 .idea/
 bin/
 mise*
+.aoi
