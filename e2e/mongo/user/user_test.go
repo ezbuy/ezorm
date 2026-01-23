@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"reflect"
 	"testing"
 	"time"
 
@@ -471,5 +472,68 @@ func TestErrNotFound(t *testing.T) {
 	}
 	if !orm.IsErrNotFound(err) {
 		t.Fatalf("not found error not match, got: %s, expect: %s", err, mongo.ErrNoDocuments)
+	}
+}
+
+func TestNullableFields(t *testing.T) {
+	objType := reflect.TypeOf(user.UserNullable{})
+	ageField, ok := objType.FieldByName("Age")
+	require.True(t, ok)
+	assert.Equal(t, reflect.Pointer, ageField.Type.Kind())
+	assert.Contains(t, ageField.Tag.Get("bson"), "omitempty")
+	assert.Contains(t, ageField.Tag.Get("json"), "omitempty")
+
+	nicknameField, ok := objType.FieldByName("Nickname")
+	require.True(t, ok)
+	assert.Equal(t, reflect.Pointer, nicknameField.Type.Kind())
+	assert.Contains(t, nicknameField.Tag.Get("bson"), "omitempty")
+	assert.Contains(t, nicknameField.Tag.Get("json"), "omitempty")
+
+	registerDateField, ok := objType.FieldByName("RegisterDate")
+	require.True(t, ok)
+	assert.Equal(t, reflect.TypeOf((*time.Time)(nil)), registerDateField.Type)
+	assert.Contains(t, registerDateField.Tag.Get("bson"), "omitempty")
+	assert.Contains(t, registerDateField.Tag.Get("json"), "omitempty")
+}
+
+func TestNullableSaveSkipNil(t *testing.T) {
+	user.MgoSetup(getConfigFromEnv("ezorm"))
+	ctx := context.TODO()
+
+	u := user.Get_UserNullableMgr().NewUserNullable()
+	u.UserId = 101
+	u.Username = "nullable_user"
+
+	if _, err := u.Save(ctx); err != nil {
+		t.Fatalf("failed to save nullable user: %s", err)
+	}
+
+	age := int32(20)
+	nickname := "nick"
+	registerDate := time.Now().UTC()
+	u.Age = &age
+	u.Nickname = &nickname
+	u.RegisterDate = &registerDate
+	if _, err := u.Save(ctx); err != nil {
+		t.Fatalf("failed to update nullable user: %s", err)
+	}
+
+	u.Age = nil
+	u.Nickname = nil
+	u.RegisterDate = nil
+	if _, err := u.Save(ctx); err != nil {
+		t.Fatalf("failed to save nullable user with nil fields: %s", err)
+	}
+
+	got, err := user.Get_UserNullableMgr().FindByID(ctx, u.Id())
+	if err != nil {
+		t.Fatalf("failed to find nullable user: %s", err)
+	}
+	require.NotNil(t, got.Age)
+	require.NotNil(t, got.Nickname)
+	require.NotNil(t, got.RegisterDate)
+
+	if _, err := user.Get_UserNullableMgr().RemoveAll(ctx, nil); err != nil {
+		t.Fatalf("failed to remove all nullable users: %s", err)
 	}
 }

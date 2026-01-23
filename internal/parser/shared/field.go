@@ -125,6 +125,17 @@ func (f *Field) GetGoType() string {
 	return f.getGoType(f.Type)
 }
 
+func (f *Field) GetStructGoType() string {
+	goType := f.GetGoType()
+	if f.IsNullable() && f.Obj != nil && f.Obj.DbContains("mongo") {
+		if strings.HasPrefix(goType, "*") {
+			return goType
+		}
+		return "*" + goType
+	}
+	return goType
+}
+
 func (f *Field) GetNullSQLType() string {
 	t := f.GetGoType()
 	if t == "bool" {
@@ -183,12 +194,12 @@ func (f *Field) GetTag() string {
 	tagstr := []string{}
 	for tag, camel := range tags {
 		if val, ok := f.Attrs[tag+"Tag"]; ok {
-			tagstr = append(tagstr, fmt.Sprintf("%s:\"%s\"", tag, val))
+			tagstr = append(tagstr, fmt.Sprintf("%s:\"%s\"", tag, f.tagWithOmitEmpty(tag, val)))
 		} else {
 			if camel {
-				tagstr = append(tagstr, fmt.Sprintf("%s:\"%s\"", tag, f.Name))
+				tagstr = append(tagstr, fmt.Sprintf("%s:\"%s\"", tag, f.tagWithOmitEmpty(tag, f.Name)))
 			} else {
-				tagstr = append(tagstr, fmt.Sprintf("%s:\"%s\"", tag, camel2name(f.Name)))
+				tagstr = append(tagstr, fmt.Sprintf("%s:\"%s\"", tag, f.tagWithOmitEmpty(tag, camel2name(f.Name))))
 			}
 		}
 	}
@@ -300,6 +311,19 @@ func (f *Field) IsNullable() bool {
 
 func (f *Field) IsNullablePrimitive() bool {
 	return f.IsNullable() && nullablePrimitiveSet[f.GetGoType()]
+}
+
+func (f *Field) tagWithOmitEmpty(tag, val string) string {
+	if !f.IsNullable() {
+		return val
+	}
+	if tag != "bson" && tag != "json" {
+		return val
+	}
+	if strings.Contains(val, "omitempty") {
+		return val
+	}
+	return val + ",omitempty"
 }
 
 type Transform struct {

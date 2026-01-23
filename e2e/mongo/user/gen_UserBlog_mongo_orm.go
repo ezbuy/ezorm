@@ -73,12 +73,12 @@ func (o *UserBlog) FindOneAndSave(ctx context.Context, query interface{}) (*mong
 	col := UserBlogMgr.GetCol()
 	opts := options.FindOneAndUpdate().SetUpsert(true)
 	opts.SetReturnDocument(options.After)
+	setFields := bson.M{}
+	setFields[UserBlogMgoFieldUserId] = o.UserId
+	setFields[UserBlogMgoFieldBlogId] = o.BlogId
+	setFields[UserBlogMgoFieldContent] = o.Content
 	update := bson.M{
-		"$set": bson.M{
-			UserBlogMgoFieldUserId:  o.UserId,
-			UserBlogMgoFieldBlogId:  o.BlogId,
-			UserBlogMgoFieldContent: o.Content,
-		},
+		"$set": setFields,
 	}
 	ret := col.FindOneAndUpdate(ctx, query, update, opts)
 	if ret.Err() != nil {
@@ -95,12 +95,12 @@ func (o *UserBlog) Save(ctx context.Context) (*mongo.UpdateResult, error) {
 	}
 
 	filter := bson.M{"_id": o.ID}
+	setFields := bson.M{}
+	setFields[UserBlogMgoFieldUserId] = o.UserId
+	setFields[UserBlogMgoFieldBlogId] = o.BlogId
+	setFields[UserBlogMgoFieldContent] = o.Content
 	update := bson.M{
-		"$set": bson.M{
-			UserBlogMgoFieldUserId:  o.UserId,
-			UserBlogMgoFieldBlogId:  o.BlogId,
-			UserBlogMgoFieldContent: o.Content,
-		},
+		"$set": setFields,
 	}
 
 	opts := options.Update().SetUpsert(true)
@@ -125,13 +125,13 @@ func (o *UserBlog) Save(ctx context.Context) (*mongo.UpdateResult, error) {
 }
 
 func (o *UserBlog) InsertUnique(ctx context.Context, query interface{}) (saved bool, err error) {
+	setFields := bson.M{}
+	setFields[UserBlogMgoFieldID] = o.ID
+	setFields[UserBlogMgoFieldUserId] = o.UserId
+	setFields[UserBlogMgoFieldBlogId] = o.BlogId
+	setFields[UserBlogMgoFieldContent] = o.Content
 	update := bson.M{
-		"$setOnInsert": bson.M{
-			UserBlogMgoFieldID:      o.ID,
-			UserBlogMgoFieldUserId:  o.UserId,
-			UserBlogMgoFieldBlogId:  o.BlogId,
-			UserBlogMgoFieldContent: o.Content,
-		},
+		"$setOnInsert": setFields,
 	}
 
 	opts := options.Update().SetUpsert(true)
