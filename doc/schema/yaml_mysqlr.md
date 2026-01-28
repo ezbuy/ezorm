@@ -1,5 +1,21 @@
 ## mysqlr
 
+### Required vs Optional
+
+Required:
+- `db`
+- `fields`
+
+Recommended:
+- `dbname`
+- `dbtable`
+
+Optional:
+- `comment`
+- `indexes`
+- `uniques`
+- `primary`
+
 ### Field Properties
 
 * size
