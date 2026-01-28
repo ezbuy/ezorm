@@ -1,6 +1,22 @@
 
 ## mysql
 
+### Required vs Optional
+
+Required:
+- `db`
+- `fields`
+
+Recommended:
+- `dbname`
+- `table`
+
+Optional:
+- `comment`
+- `indexes`
+- `uniques`
+- `primary`
+
 ### Field Properties
 
 * label
