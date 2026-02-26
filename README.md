@@ -112,6 +112,25 @@ func (*sqlMethods) GetUser(ctx context.Context, req *GetUserReq) ([]*GetUserResp
 
 > ezorm requires **Go 1.18** or later.
 
+### 🤖 For Agent Users
+
+Agent skills live in [`skills/`](./skills). Install them with:
+
+```shell
+	$ npx skills add ezbuy/ezorm
+```
+
+Or you have [xurl](https://github.com/Xuanwo/xurl), using
+
+```shell
+ $ xurl skills://github.com/ezbuy/ezorm/skills 
+```
+
+to read our skills 👏 .
+
+### 🧑‍💻 For Human Developers
+
+
 ```shell
 	$ go install github.com/ezbuy/ezorm/v2
 	$ ezorm gen -i blog.yaml -o .
@@ -139,4 +158,3 @@ if err == nil {
   ```
 
 > use `ezorm -h` for more help
-
